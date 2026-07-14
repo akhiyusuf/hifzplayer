@@ -272,11 +272,11 @@ input, select { font-family:inherit; }
 
 /* tajweed palette (quran.com rule classes) */
 .tj { font-style:normal; }
-.tj-ham_wasl, .tj-slnt, .tj-silent, .tj-laam_shamsiyah { color:#9A958C; }
+.tj-ham_wasl, .tj-slnt, .tj-silent, .tj-laam_shamsiyah, .tj-idgham_mutajanisayn { color:#9A958C; }
 .tj-madda_normal { color:#537FFF; }
 .tj-madda_permissible { color:#4050FF; }
 .tj-madda_necessary { color:#0018C9; }
-.tj-madda_obligatory, .tj-madda_pbligatory { color:#2144C1; }
+.tj-madda_obligatory, .tj-madda_pbligatory, .tj-madda_obligatory_monfasel, .tj-madda_obligatory_mottasel { color:#2144C1; }
 .tj-qalaqah { color:#DD0008; }
 .tj-ikhafa { color:#9400A8; }
 .tj-ikhafa_shafawi { color:#D500B7; }
@@ -287,7 +287,7 @@ input, select { font-family:inherit; }
 .tj-ghunnah { color:#FF7E1E; }
 [data-theme="dark"] .tj-madda_necessary { color:#7B8CFF; }
 [data-theme="dark"] .tj-madda_permissible { color:#7B8CFF; }
-[data-theme="dark"] .tj-madda_obligatory, [data-theme="dark"] .tj-madda_pbligatory { color:#8FA0FF; }
+[data-theme="dark"] .tj-madda_obligatory, [data-theme="dark"] .tj-madda_pbligatory, [data-theme="dark"] .tj-madda_obligatory_monfasel, [data-theme="dark"] .tj-madda_obligatory_mottasel { color:#8FA0FF; }
 [data-theme="dark"] .tj-ikhafa { color:#D07BFF; }
 [data-theme="dark"] .tj-idgham_wo_ghunnah { color:#7ED957; }
 .w.cur .tj { color:inherit !important; }
@@ -655,7 +655,9 @@ function tajToSpans(src) {
         if (c.nodeType === 3) out += esc(c.nodeValue);
         else if (c.nodeType === 1) {
           const cls = ((c.getAttribute && c.getAttribute('class')) || '').trim().split(/\s+/)[0];
-          if (c.tagName.toLowerCase() === 'tajweed' && /^[\w-]+$/.test(cls)) {
+          const tag = c.tagName.toLowerCase();
+          /* verse-level markup uses <tajweed>, word-level uses <rule> */
+          if ((tag === 'tajweed' || tag === 'rule') && /^[\w-]+$/.test(cls)) {
             out += '<i class="tj tj-' + cls + '">' + walk(c) + '</i>';
           } else out += walk(c);
         }
@@ -698,7 +700,8 @@ function splitTajweedVerse(src, wordCount) {
         if (c.nodeType === 3) emitText(c.nodeValue);
         else if (c.nodeType === 1) {
           const cls = ((c.getAttribute && c.getAttribute('class')) || '').trim().split(/\s+/)[0];
-          if (c.tagName.toLowerCase() === 'tajweed' && /^[\w-]+$/.test(cls)) {
+          const tag = c.tagName.toLowerCase();
+          if ((tag === 'tajweed' || tag === 'rule') && /^[\w-]+$/.test(cls)) {
             stack.push(cls); cur += '<i class="tj tj-' + cls + '">';
             walk(c);
             stack.pop(); cur += '</i>';
@@ -1108,9 +1111,10 @@ async function openPassage(chapter, from, to) {
           marks.push({ afterPos: words.length ? words[words.length - 1].pos : 0, ar: w.text_uthmani || w.text || '', kind });
         }
       }
-      /* Word-level tajweed is not reliably returned by the API — if every
-         word came back bare, split the verse-level markup instead. */
-      if (!words.some(w => w.taj)) {
+      /* Word-level tajweed is not reliably returned by the API — rule-less
+         words come back as bare text, and some responses carry no markup at
+         all. Only skip the verse-level split when real markup is present. */
+      if (!words.some(w => w.taj && /<(tajweed|rule)[\s>]/i.test(w.taj))) {
         const chunks = splitTajweedVerse(v.text_uthmani_tajweed, words.length);
         if (chunks) for (let i = 0; i < words.length; i++) words[i].tajHTML = chunks[i];
       }
@@ -1702,7 +1706,7 @@ function renderPlayerBody() {
 
 function wordInner(w) {
   if (S.taj) {
-    if (w._tj === undefined) w._tj = w.taj ? tajToSpans(w.taj) : (w.tajHTML || null);
+    if (w._tj === undefined) w._tj = w.tajHTML || (w.taj ? tajToSpans(w.taj) : null);
     if (w._tj) return w._tj;
   }
   return esc(w.ar);
