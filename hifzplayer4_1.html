@@ -751,6 +751,7 @@ const S = {
 };
 const audio = $('audio');
 const RATES = [0.75, 1, 1.25, 1.5];
+const LOOP_BREATH_MS = 600; // pause between loop passes, like a reciter taking a breath
 const MODES = [
   { id: 'word',   name: 'Word',   ic: 'textCursor', desc: 'Step through each word with repeats — drill pronunciation.' },
   { id: 'verse',  name: 'Verse',  ic: 'play',       desc: 'Continuous recitation with a word-by-word highlight.' },
@@ -1327,9 +1328,23 @@ function handleLoopEdge(v) {
     toast('Loop done — continuing');
     return;
   }
-  const s = segForWord(v, L.startW);
-  if (s) { try { audio.currentTime = Math.max(0, s.start - 0.02); } catch (e) {} }
   syncLoopChip();
+  const s = segForWord(v, L.startW);
+  if (!s) return;
+  /* Replay like a reciter repeating the phrase: let the last word finish,
+     rewind to the first word, breathe, then recite the range again — never
+     a mid-stream jump cut. The gap rides wordGapTimer so the 'pause'
+     listener keeps S.playing true and every existing cancel path
+     (pauseAudio / loadVerseAudio / stopAudio) also cancels the replay. */
+  audio.pause();
+  try { audio.currentTime = Math.max(0, s.start - 0.02); } catch (e) {}
+  S.playing = true; updatePlayBtn();
+  clearTimeout(wordGapTimer);
+  wordGapTimer = setTimeout(() => {
+    wordGapTimer = null;
+    if (!S.playing || S.mode === 'word' || !audio.paused || audio.ended) return;
+    playAudio();
+  }, LOOP_BREATH_MS / S.rate);
 }
 
 /* verse ended */
@@ -1348,7 +1363,7 @@ audio.addEventListener('ended', () => {
   if (S.oneshot && S.oneshot.vIdx === S.vIdx) { S.oneshot = null; S.playing = false; updatePlayBtn(); return; }
   if (S.loop && S.loop.vIdx === S.vIdx) {
     handleLoopEdge(v);
-    if (S.loop) { playAudio(); return; }
+    if (S.loop) return; /* handleLoopEdge rewound and scheduled the replay */
   }
   if (S.verseLoop) { armSeek(0, true); return; }
   if (S.vIdx < S.verses.length - 1) {
