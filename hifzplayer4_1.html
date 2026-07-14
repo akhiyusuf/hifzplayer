@@ -1239,6 +1239,10 @@ function loadVerseAudio(vIdx, autoplay, opts) {
 }
 
 function playAudio() {
+  /* a fresh play intent supersedes any scheduled resume (loop breath or
+     word gap) — otherwise the stale timer's window makes the 'pause'
+     listener swallow a bare element pause (e.g. OS media keys) */
+  clearTimeout(wordGapTimer); wordGapTimer = null;
   audio.playbackRate = S.rate;
   const tok = ++playToken;
   const p = audio.play();
@@ -1337,7 +1341,12 @@ function handleLoopEdge(v) {
      listener keeps S.playing true and every existing cancel path
      (pauseAudio / loadVerseAudio / stopAudio) also cancels the replay. */
   audio.pause();
-  try { audio.currentTime = Math.max(0, s.start - 0.02); } catch (e) {}
+  /* rewind lands just before the first word; if the -0.02 lead-in falls
+     inside the PREVIOUS word's segment, wordAt would highlight that word
+     for the whole breath — snap to the exact start instead */
+  let t0 = Math.max(0, s.start - 0.02);
+  if (wordAt(v, t0) !== L.startW) t0 = s.start;
+  try { audio.currentTime = t0; } catch (e) {}
   S.playing = true; updatePlayBtn();
   clearTimeout(wordGapTimer);
   wordGapTimer = setTimeout(() => {
