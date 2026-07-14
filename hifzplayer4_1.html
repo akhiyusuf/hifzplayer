@@ -274,9 +274,11 @@ input, select { font-family:inherit; }
 .tj { font-style:normal; }
 .tj-ham_wasl, .tj-slnt, .tj-silent, .tj-laam_shamsiyah, .tj-idgham_mutajanisayn { color:#9A958C; }
 .tj-madda_normal { color:#537FFF; }
-.tj-madda_permissible { color:#4050FF; }
+/* munfasil (separated) madd is jaiz/permissible → permissible blue;
+   muttasil (connected) madd is wajib/obligatory → obligatory blue */
+.tj-madda_permissible, .tj-madda_obligatory_monfasel { color:#4050FF; }
 .tj-madda_necessary { color:#0018C9; }
-.tj-madda_obligatory, .tj-madda_pbligatory, .tj-madda_obligatory_monfasel, .tj-madda_obligatory_mottasel { color:#2144C1; }
+.tj-madda_obligatory, .tj-madda_pbligatory, .tj-madda_obligatory_mottasel { color:#2144C1; }
 .tj-qalaqah { color:#DD0008; }
 .tj-ikhafa { color:#9400A8; }
 .tj-ikhafa_shafawi { color:#D500B7; }
@@ -286,8 +288,8 @@ input, select { font-family:inherit; }
 .tj-iqlab { color:#26BFFD; }
 .tj-ghunnah { color:#FF7E1E; }
 [data-theme="dark"] .tj-madda_necessary { color:#7B8CFF; }
-[data-theme="dark"] .tj-madda_permissible { color:#7B8CFF; }
-[data-theme="dark"] .tj-madda_obligatory, [data-theme="dark"] .tj-madda_pbligatory, [data-theme="dark"] .tj-madda_obligatory_monfasel, [data-theme="dark"] .tj-madda_obligatory_mottasel { color:#8FA0FF; }
+[data-theme="dark"] .tj-madda_permissible, [data-theme="dark"] .tj-madda_obligatory_monfasel { color:#7B8CFF; }
+[data-theme="dark"] .tj-madda_obligatory, [data-theme="dark"] .tj-madda_pbligatory, [data-theme="dark"] .tj-madda_obligatory_mottasel { color:#8FA0FF; }
 [data-theme="dark"] .tj-ikhafa { color:#D07BFF; }
 [data-theme="dark"] .tj-idgham_wo_ghunnah { color:#7ED957; }
 .w.cur .tj { color:inherit !important; }
