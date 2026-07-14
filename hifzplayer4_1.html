@@ -297,6 +297,8 @@ input, select { font-family:inherit; }
 .legend-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px 14px; padding:12px 4px; }
 .legend-grid .lg { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-secondary); }
 .legend-grid .dot { width:12px; height:12px; border-radius:50%; flex:none; }
+.legend-grid .lg-t { display:flex; flex-direction:column; line-height:1.25; min-width:0; }
+.legend-grid .lg-en { font-size:11px; color:var(--text-muted); }
 
 
 /* relay order rows + popover repeat count */
@@ -401,10 +403,12 @@ input, select { font-family:inherit; }
   .transport { justify-content:center; gap:12px; }
   .transport .side { display:contents; }
   #loopverse-btn { order:1; } #prev-btn { order:2; } #play-btn { order:3; } #next-btn { order:4; }
-  .transport .icon-btn { width:42px; height:42px; border-radius:8px; border:1px solid var(--border-default); background:var(--bg-surface); }
-  .play-btn { width:54px; height:54px; border-radius:8px; }
+  /* rounded transport to match the mobile look: circular controls + a
+     round orange play button (mode stays in the header pills, not here) */
+  .transport .icon-btn { width:44px; height:44px; border-radius:50%; border:1px solid var(--border-default); background:var(--bg-surface); }
+  .play-btn { width:56px; height:56px; border-radius:50%; }
   #mode-btn { display:none; }
-  .transport .speed-btn { order:5; width:42px; height:42px; min-width:0; padding:0; border-radius:8px; border:1px solid var(--border-default); background:var(--bg-surface); }
+  .transport .speed-btn { order:5; width:44px; height:44px; min-width:0; padding:0; border-radius:50%; border:1px solid var(--border-default); background:var(--bg-surface); }
 
   /* sheets become centered modals */
   .sheet-scrim { align-items:center; padding:24px; }
@@ -887,8 +891,7 @@ function renderSidePanel() {
     if (glossed.length) html += '<div class="ps-sec"><span class="ps-chip">Word meanings</span><div>' + glossed.map(w =>
       '<div class="ps-gloss-row"><span>' + esc(w.gloss) + '</span><span class="ps-ar">' + esc(w.ar) + '</span></div>').join('') + '</div></div>';
   }
-  if (S.taj) html += '<div class="ps-sec"><span class="ps-chip">Tajweed colours</span><div class="legend-grid">' + TAJ_LEGEND.map(l =>
-    '<span class="lg"><span class="dot" style="background:' + l[0] + '"></span>' + l[1] + '</span>').join('') + '</div></div>';
+  if (S.taj) html += '<div class="ps-sec"><span class="ps-chip">Tajweed colours</span><div class="legend-grid">' + TAJ_LEGEND.map(legendItemHTML).join('') + '</div></div>';
   el.innerHTML = html;
 }
 
@@ -1539,17 +1542,29 @@ function syncTajSwitch() {
   $('taj-switch').classList.toggle('on', S.taj);
   $('taj-switch').setAttribute('aria-checked', String(S.taj));
 }
+/* [colour, name, English meaning] */
 const TAJ_LEGEND = [
-  ['#FF7E1E', 'Ghunnah'], ['#9400A8', 'Ikhfa'], ['#D500B7', 'Ikhfa shafawi'],
-  ['#26BFFD', 'Iqlab'], ['#169777', 'Idgham (ghunnah)'], ['#169200', 'Idgham (no ghunnah)'],
-  ['#58B800', 'Idgham shafawi'], ['#DD0008', 'Qalqalah'], ['#537FFF', 'Madd (2)'],
-  ['#4050FF', 'Madd (4–5)'], ['#0018C9', 'Madd (6)'], ['#9A958C', 'Silent / hamzat wasl']
+  ['#FF7E1E', 'Ghunnah', 'Nasalisation'],
+  ['#9400A8', 'Ikhfa', 'Concealment'],
+  ['#D500B7', 'Ikhfa shafawi', 'Labial concealment'],
+  ['#26BFFD', 'Iqlab', 'Conversion to “m”'],
+  ['#169777', 'Idgham (ghunnah)', 'Merging with nasalisation'],
+  ['#169200', 'Idgham (no ghunnah)', 'Merging without nasalisation'],
+  ['#58B800', 'Idgham shafawi', 'Labial merging'],
+  ['#DD0008', 'Qalqalah', 'Echoing bounce'],
+  ['#537FFF', 'Madd (2)', 'Prolongation · 2 counts'],
+  ['#4050FF', 'Madd (4–5)', 'Prolongation · 4–5 counts'],
+  ['#0018C9', 'Madd (6)', 'Prolongation · 6 counts'],
+  ['#9A958C', 'Silent / hamzat wasl', 'Unpronounced letter']
 ];
+function legendItemHTML(l) {
+  return '<span class="lg"><span class="dot" style="background:' + l[0] + '"></span>' +
+    '<span class="lg-t"><span>' + l[1] + '</span>' + (l[2] ? '<span class="lg-en">' + l[2] + '</span>' : '') + '</span></span>';
+}
 $('taj-legend-btn').onclick = () => {
   const el = $('taj-legend');
   if (el.style.display === 'none') {
-    el.innerHTML = '<div class="legend-grid">' + TAJ_LEGEND.map(l =>
-      '<span class="lg"><span class="dot" style="background:' + l[0] + '"></span>' + l[1] + '</span>').join('') + '</div>';
+    el.innerHTML = '<div class="legend-grid">' + TAJ_LEGEND.map(legendItemHTML).join('') + '</div>';
     el.style.display = 'block';
     $('taj-legend-btn').textContent = 'Hide colour legend';
   } else {
