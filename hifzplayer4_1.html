@@ -132,7 +132,7 @@ input, select { font-family:inherit; }
 .style-toggle button { padding:6px 10px; border-radius:6px; font-size:12px; font-weight:600; color:var(--text-secondary); }
 .style-toggle button.on { background:var(--bg-surface); color:var(--text-primary); box-shadow:var(--shadow-sm); }
 
-.player-body { flex:1; overflow-y:auto; padding:18px 18px 8px; }
+.player-body { flex:1; min-height:0; overflow-y:auto; padding:18px 18px 8px; }
 
 /* mushaf text */
 .mushaf { direction:rtl; text-align:justify; text-align-last:right; font-family:var(--font-arabic); font-size:var(--ar-size, 27px); line-height:2.15; color:var(--text-primary); user-select:none; }
@@ -317,7 +317,17 @@ input, select { font-family:inherit; }
 
 /* ---------- desktop chrome: hidden on mobile ---------- */
 .side-nav, .pl-side, .mode-pills, .seek-cap { display:none; }
-.pl-main { display:flex; flex-direction:column; flex:1; min-width:0; }
+.pl-main { display:flex; flex-direction:column; flex:1; min-width:0; min-height:0; }
+/* Player is a fixed-height app shell: the ayah text scrolls inside
+   .player-body while the header and transport stay put. Without a definite
+   height the body grew to its full content and the whole PAGE scrolled,
+   which on phones let the transport drift under the browser's dynamic
+   toolbar. flex:none is required because the shared `.screen { flex:1 }`
+   sets flex-basis:0, which otherwise ignores the height. Scoped below the
+   desktop breakpoint, which sets its own height:100dvh + row layout. */
+@media (max-width:1099px) {
+  #scr-player { flex:none; height:100dvh; }
+}
 .loopband { position:absolute; top:0; bottom:0; background:rgba(240,164,0,.35); border-radius:5px; display:none; pointer-events:none; }
 #set-arsize { accent-color:var(--action-primary); }
 
