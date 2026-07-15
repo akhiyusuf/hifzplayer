@@ -329,6 +329,15 @@ input, select { font-family:inherit; }
    desktop breakpoint, which sets its own height:100dvh + row layout. */
 @media (max-width:1099px) {
   #scr-player { flex:none; height:100dvh; }
+  /* Mode picker ALSO at the top: a full-width pill strip on its own row
+     under the header. The "Verse ▾" button stays in the transport too, so
+     both are available and syncModePill() keeps them in step. */
+  .player-head { flex-wrap:wrap; }
+  .mode-pills { display:flex; order:9; flex-basis:100%; width:100%; gap:6px; margin-top:10px; overflow-x:auto; scrollbar-width:none; }
+  .mode-pills::-webkit-scrollbar { display:none; }
+  .mode-pills button { flex:1 1 0; min-width:max-content; white-space:nowrap; padding:8px 10px; border-radius:8px; border:1px solid var(--border-default); background:var(--bg-surface-alt); font-size:13px; font-weight:600; color:var(--text-secondary); }
+  .mode-pills button.on { background:var(--action-secondary); color:var(--bg-surface); border-color:transparent; }
+  [data-theme="dark"] .mode-pills button.on { color:#1A1712; }
 }
 .loopband { position:absolute; top:0; bottom:0; background:rgba(240,164,0,.35); border-radius:5px; display:none; pointer-events:none; }
 #set-arsize { accent-color:var(--action-primary); }
