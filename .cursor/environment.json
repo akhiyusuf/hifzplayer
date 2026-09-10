@@ -5,7 +5,7 @@
     {
       "name": "static-server",
       "command": "cd /workspace && python3 -m http.server 3000 --bind 0.0.0.0",
-      "description": "Serves the static app. Open http://localhost:3000/hifzplayer4_1.html"
+      "description": "Serves the static app. Open http://localhost:3000/ (index.html)"
     }
   ],
   "ports": [
