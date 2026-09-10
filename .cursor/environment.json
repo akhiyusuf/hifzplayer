@@ -1,0 +1,17 @@
+{
+  "name": "Hifz Player",
+  "install": "echo 'Hifz Player is a self-contained static HTML app; no dependencies to install.'",
+  "terminals": [
+    {
+      "name": "static-server",
+      "command": "cd /workspace && python3 -m http.server 3000 --bind 0.0.0.0",
+      "description": "Serves the static app. Open http://localhost:3000/hifzplayer4_1.html"
+    }
+  ],
+  "ports": [
+    {
+      "name": "web",
+      "port": 3000
+    }
+  ]
+}
