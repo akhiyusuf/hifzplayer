@@ -1302,6 +1302,7 @@ function k(e) {
     focus = "focus" === s.style && "verse" === s.mode,
     [transOpen, setTransOpen] = useState(!1),
     [toolsOpen, setToolsOpen] = useState(!1),
+    listenMenu = useRef(null),
     p = s.wordStep.range,
     m = s.loop
       ? {
@@ -1333,12 +1334,21 @@ function k(e) {
         : null;
   useEffect(() => {
     if (!toolsOpen) return;
-    let e = (e) => {
+    let onKey = (e) => {
       "Escape" === e.key && setToolsOpen(!1);
-    };
+    },
+      onDown = (e) => {
+        listenMenu.current &&
+          !listenMenu.current.contains(e.target) &&
+          setToolsOpen(!1);
+      };
     return (
-      window.addEventListener("keydown", e),
-      () => window.removeEventListener("keydown", e)
+      window.addEventListener("keydown", onKey),
+      document.addEventListener("pointerdown", onDown),
+      () => {
+        (window.removeEventListener("keydown", onKey),
+          document.removeEventListener("pointerdown", onDown));
+      }
     );
   }, [toolsOpen]);
   return _jsxs("footer", {
@@ -1394,120 +1404,98 @@ function k(e) {
         }),
       !u && _jsx(b, { engine: t, disabled: c }),
       _jsxs("div", {
-        className: "listen-pill".concat(toolsOpen ? " open" : ""),
+        className: "listen-menu".concat(toolsOpen ? " open" : ""),
+        ref: listenMenu,
         children: [
-          _jsx("div", {
-            className: "listen-pill-clip",
-            children: _jsxs("div", {
-              id: "listen-tools",
-              className: "listen-pill-panel",
-              inert: toolsOpen ? undefined : true,
-              children: [
-                !u &&
-                  _jsxs("button", {
-                    className: "speed-btn tap",
-                    onClick: () => t.cycleRate(),
-                    "aria-label": "Playback speed ".concat(
-                      s.rate,
-                      "\xd7. Tap to change",
-                    ),
-                    children: [0.75 === s.rate ? "\xbe" : s.rate, "\xd7"],
-                  }),
-                !u &&
-                  _jsx("button", {
-                    className: "tr-btn tap".concat(
-                      s.verseLoop || (focus && s.loop) ? " on" : " muted",
-                    ).concat(!plusOn ? " locked" : ""),
-                    onClick: () => {
-                      if (focus) {
-                        if (s.loop) {
-                          t.clearLoop();
-                          return;
-                        }
-                        let count = s.loopCount;
-                        if (isPaidRepeat(count) && !plusOn) {
-                          ask("repeats");
-                          return;
-                        }
-                        t.loopPhrase(count);
-                        return;
-                      }
-                      !plusOn && !s.verseLoop
-                        ? ask("repeats")
-                        : t.toggleVerseLoop();
-                    },
-                    "aria-label": focus
-                      ? plusOn
-                        ? "Loop this phrase"
-                        : "Loop this phrase — Diras Plus"
-                      : plusOn
-                        ? "Repeat this verse"
-                        : "Repeat this verse until you stop — Diras Plus",
-                    "aria-pressed": !!(s.verseLoop || (focus && s.loop)),
-                    disabled: c,
-                    children: _jsx(Icon, { name: "repeat", size: 20 }),
-                  }),
+          _jsxs("div", {
+            id: "listen-tools",
+            className: "listen-menu-drop",
+            role: "menu",
+            inert: toolsOpen ? undefined : true,
+            children: [
+              !u &&
                 _jsxs("button", {
-                  className: "mode-chip tap",
-                  onClick: n,
-                  "aria-label": "Listening mode: ".concat(
-                    i.name,
-                    ". Change mode",
-                  ),
+                  type: "button",
+                  role: "menuitem",
+                  className: "listen-menu-item tap",
+                  onClick: () => t.cycleRate(),
                   children: [
-                    _jsx(Icon, {
-                      name: i.icon,
-                      size: 14,
-                      style: { color: "var(--action-primary)" },
-                    }),
-                    i.name,
-                    _jsx(Icon, {
-                      name: "chevron-up",
-                      size: 13,
-                      style: { color: "var(--text-muted)" },
+                    _jsx("span", { children: "Speed" }),
+                    _jsxs("span", {
+                      className: "val",
+                      children: [
+                        0.75 === s.rate ? "\xbe" : s.rate,
+                        "\xd7",
+                      ],
                     }),
                   ],
                 }),
-              ],
-            }),
+              !u &&
+                _jsxs("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: "listen-menu-item tap".concat(
+                    s.verseLoop || (focus && s.loop) ? " on" : "",
+                  ),
+                  onClick: () => {
+                    if (focus) {
+                      if (s.loop) {
+                        t.clearLoop();
+                        return;
+                      }
+                      let count = s.loopCount;
+                      if (isPaidRepeat(count) && !plusOn) {
+                        (setToolsOpen(!1), ask("repeats"));
+                        return;
+                      }
+                      t.loopPhrase(count);
+                      return;
+                    }
+                    if (!plusOn && !s.verseLoop) {
+                      (setToolsOpen(!1), ask("repeats"));
+                      return;
+                    }
+                    t.toggleVerseLoop();
+                  },
+                  "aria-pressed": !!(s.verseLoop || (focus && s.loop)),
+                  disabled: c,
+                  children: [
+                    _jsx("span", { children: "Repeat" }),
+                    _jsx("span", {
+                      className: "val",
+                      children:
+                        s.verseLoop || (focus && s.loop) ? "On" : "Off",
+                    }),
+                  ],
+                }),
+              _jsxs("button", {
+                type: "button",
+                role: "menuitem",
+                className: "listen-menu-item tap",
+                onClick: () => {
+                  (setToolsOpen(!1), n());
+                },
+                children: [
+                  _jsx("span", { children: "Mode" }),
+                  _jsx("span", { className: "val", children: i.name }),
+                ],
+              }),
+            ],
           }),
-          _jsxs("button", {
+          _jsx("button", {
             type: "button",
-            className: "listen-pill-toggle tap",
+            className: "listen-menu-btn tap",
             "aria-expanded": toolsOpen,
+            "aria-haspopup": "menu",
             "aria-controls": "listen-tools",
             "aria-label": toolsOpen
               ? "Hide listening controls"
-              : "Show listening controls: ".concat(i.name),
+              : "Listening controls",
             onClick: () => setToolsOpen((e) => !e),
-            children: [
-              _jsx(Icon, {
-                name: i.icon,
-                size: 15,
-                style: { color: "var(--action-primary)", flex: "none" },
-              }),
-              _jsx("span", { children: i.name }),
-              !u &&
-                _jsxs("span", {
-                  className: "listen-pill-meta",
-                  children: [
-                    "\xb7 ",
-                    0.75 === s.rate ? "\xbe" : s.rate,
-                    "\xd7",
-                  ],
-                }),
-              (s.verseLoop || (focus && s.loop)) &&
-                _jsx(Icon, {
-                  name: "repeat",
-                  size: 14,
-                  style: { color: "var(--action-primary)", flex: "none" },
-                }),
-              _jsx(Icon, {
-                name: toolsOpen ? "chevron-down" : "chevron-up",
-                size: 14,
-                style: { color: "var(--text-muted)", flex: "none" },
-              }),
-            ],
+            children: _jsx(Icon, {
+              name: "sliders-horizontal",
+              size: 18,
+            }),
           }),
         ],
       }),
