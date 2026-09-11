@@ -39,10 +39,9 @@ export function PracticeSheet({
   if (versesCount > 12) presets.push({ label: "First 10", from: 1, to: 10 });
   if (versesCount > 1) presets.push({ label: "Whole surah", from: 1, to: versesCount });
   const nums = Array.from({ length: versesCount }, (_, i) => i + 1);
-  const modeName = MODES.find((m) => m.id === mode)?.name || "Verse";
 
   return (
-    <Sheet title={modeOnly ? "How to repeat" : `Practise ${surahName}`} onClose={onClose}>
+    <Sheet title={modeOnly ? "Listening mode" : `Practise ${surahName}`} onClose={onClose}>
       {!modeOnly && (
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <span className="label-eyebrow">Which verses</span>
@@ -97,15 +96,20 @@ export function PracticeSheet({
         </div>
       )}
       {!modeOnly && <div style={{ height: 1, background: "var(--border-default)" }} />}
-      <span className="label-eyebrow" style={{ marginBottom: -4 }}>
-        How to repeat
-      </span>
+      {!modeOnly && (
+        <span className="label-eyebrow" style={{ marginBottom: -4 }}>
+          How to listen
+        </span>
+      )}
       <div className="sheet-list">
         {MODES.map((m) => (
           <button
             key={m.id}
             className={`mode-opt${mode === m.id ? " on" : ""}`}
-            onClick={() => setMode(m.id)}
+            onClick={() => {
+              setMode(m.id);
+              if (modeOnly) onStart(from, to, m.id);
+            }}
             aria-pressed={mode === m.id}
           >
             <span className="mo-ic">
@@ -157,10 +161,13 @@ export function PracticeSheet({
           )}
         </>
       )}
-      <button className="btn-primary" onClick={() => onStart(from, to, mode)}>
-        <Icon name="play" size={18} />
-        {modeOnly ? `Use ${modeName}` : `Start ${surahName} ${from}${to > from ? `–${to}` : ""}`}
-      </button>
+      {!modeOnly && (
+        <button className="btn-primary" onClick={() => onStart(from, to, mode)}>
+          <Icon name="play" size={18} />
+          Start {surahName} {from}
+          {to > from ? `–${to}` : ""}
+        </button>
+      )}
     </Sheet>
   );
 }

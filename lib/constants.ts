@@ -9,27 +9,27 @@ export const LOOP_COUNTS = [1, 2, 3, 5, 10, 0] as const;
 export const MODES = [
   {
     id: "word",
-    name: "Word range",
+    name: "Drill words",
     icon: "brackets",
-    desc: "Loop a chosen span of words",
+    desc: "Pick a span and loop it until it sticks",
   },
   {
     id: "verse",
     name: "Verse",
     icon: "book-open",
-    desc: "Continuous recitation, live highlight",
+    desc: "Play through, or repeat the ayah from the player",
   },
   {
     id: "masked",
     name: "Masked",
     icon: "eye-off",
-    desc: "Words hidden until the audio arrives",
+    desc: "Words stay covered until the reciter reaches them",
   },
   {
     id: "relay",
     name: "Relay",
     icon: "users",
-    desc: "Take turns with one or more qaris",
+    desc: "You recite a verse, then the qari recites the next",
   },
 ] as const;
 
