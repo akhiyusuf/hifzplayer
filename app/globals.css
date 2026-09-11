@@ -32,3 +32,8 @@
 .account-plus{margin-top:8px;font-size:12.5px;font-weight:600;color:var(--action-primary)!important}
 .account-btn{display:inline-flex;align-items:center;justify-content:center}
 .app-sidebar .as-account{display:flex;align-items:center;padding:4px 6px}
+.pricing-detected{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:var(--radius-card);background:var(--bg-surface-alt);border:1px solid var(--border-default)}
+.pricing-detected b{font-size:14px;font-weight:600;color:var(--text-primary)}
+.pricing-detected span{font-size:12px;line-height:1.45;color:var(--text-muted)}
+.recover-form{display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px;text-align:left;margin-top:8px}
+.recover-form p{font-size:12.5px;line-height:1.5;color:var(--text-secondary);max-width:none}

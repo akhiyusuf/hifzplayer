@@ -51,9 +51,28 @@ export async function resolveEntitlement(): Promise<Entitlement | null> {
   return null;
 }
 
-export async function grantPlusToAccount(ent: Entitlement, userId: string | null) {
+export async function grantPlusToAccount(
+  ent: Entitlement,
+  userId: string | null,
+  opts: { setCookie?: boolean } = {},
+) {
   const next = userId ? { ...ent, userId } : ent;
-  await writeEntitlement(next);
-  if (userId) await savePlusToClerk(userId, next);
+  if (opts.setCookie !== false) {
+    await writeEntitlement(next);
+  }
+  if (userId) {
+    try {
+      await savePlusToClerk(userId, next);
+    } catch {
+      const { logBillingEvent } = await import("@/lib/billing/analytics");
+      logBillingEvent({
+        type: "clerk_save_failed",
+        processor: next.processor,
+        planId: next.planId,
+        regionId: next.regionId,
+        hasUserId: true,
+      });
+    }
+  }
   return next;
 }

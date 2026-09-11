@@ -1,3 +1,4 @@
+import { PLUS_NAME } from "@/lib/brand";
 import { paystackPlanCode, paystackSecretKey } from "./env";
 import type { PlanId, Region } from "./plans";
 
@@ -12,6 +13,7 @@ async function paystack<T>(path: string, init?: RequestInit): Promise<T> {
       Authorization: `Bearer ${key}`,
       Accept: "application/json",
       "Content-Type": "application/json",
+      "User-Agent": "DirasBilling/1.0",
       ...(init?.headers || {}),
     },
   });
@@ -40,6 +42,14 @@ export async function createPaystackCheckout(opts: {
       regionId: opts.region.id,
       processor: "paystack",
       ...(opts.userId ? { userId: opts.userId } : {}),
+      custom_fields: [
+        { display_name: "Product", variable_name: "product", value: PLUS_NAME },
+        { display_name: "Plan", variable_name: "planId", value: opts.planId },
+        { display_name: "Region", variable_name: "regionId", value: opts.region.id },
+        ...(opts.userId
+          ? [{ display_name: "Account", variable_name: "userId", value: opts.userId }]
+          : []),
+      ],
     },
   };
   if (opts.planId === "monthly" || opts.planId === "annual") {

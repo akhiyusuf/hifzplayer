@@ -16,6 +16,14 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: SECURITY_HEADERS,
       },
+      {
+        source: "/pricing/success",
+        headers: [{ key: "Cross-Origin-Resource-Policy", value: "cross-origin" }],
+      },
+      {
+        source: "/api/billing/return",
+        headers: [{ key: "Cross-Origin-Resource-Policy", value: "cross-origin" }],
+      },
       { source: "/api/:path*", headers: noIndex },
       { source: "/account", headers: noIndex },
       { source: "/account/:path*", headers: noIndex },

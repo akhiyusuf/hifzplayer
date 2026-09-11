@@ -12,6 +12,7 @@ import {
 } from "react";
 import { Icon } from "@/components/icon";
 import { Sheet } from "@/components/sheet";
+import { PLUS_NAME } from "@/lib/brand";
 import { PLUS_COPY, type PlusFeature } from "@/lib/billing/gates";
 import { PLUS_STORAGE_KEY } from "@/lib/billing/keys";
 import { getStore } from "@/lib/storage";
@@ -76,7 +77,7 @@ export function usePlus() {
 function PlusGate({ feature, onClose }: { feature: PlusFeature; onClose: () => void }) {
   const copy = PLUS_COPY[feature];
   return (
-    <Sheet title="Hifz Plus" onClose={onClose}>
+    <Sheet title={PLUS_NAME} onClose={onClose}>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <span
           className="status-medallion"

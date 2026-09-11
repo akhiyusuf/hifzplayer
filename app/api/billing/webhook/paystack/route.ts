@@ -1,5 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { logBillingEvent } from "@/lib/billing/analytics";
 import { paystackSecretKey } from "@/lib/billing/env";
+import { fulfillPaystackReference } from "@/lib/billing/fulfill";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,12 +25,28 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid Paystack signature" }, { status: 400 });
   }
 
-  let event: { event?: string };
+  let event: { event?: string; data?: { reference?: string } };
   try {
-    event = JSON.parse(raw) as { event?: string };
+    event = JSON.parse(raw) as { event?: string; data?: { reference?: string } };
   } catch {
     return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  return Response.json({ received: true, type: event.event || "unknown" });
+  const type = event.event || "unknown";
+  logBillingEvent({ type: "webhook_received", processor: "paystack", source: "webhook", reason: type });
+
+  if (type === "charge.success") {
+    const reference = event.data?.reference || "";
+    const result = await fulfillPaystackReference(reference, {
+      source: "webhook",
+      setCookie: false,
+      signedInUserId: null,
+    });
+    if (!result.ok) {
+      return Response.json({ received: true, type, fulfilled: false }, { status: result.status >= 500 ? 500 : 200 });
+    }
+    return Response.json({ received: true, type, fulfilled: true });
+  }
+
+  return Response.json({ received: true, type });
 }

@@ -4,6 +4,7 @@ import { AppDataProvider } from "@/lib/app-data";
 import { PlusProvider } from "@/lib/plus";
 import { ThemeProvider, themeInitScript } from "@/lib/theme";
 import { ToastProvider } from "@/lib/toast";
+import { APP_NAME, APP_TAGLINE } from "@/lib/brand";
 import { AuthRoot } from "@/components/auth-root";
 import { AppSidebar } from "@/components/sidebar";
 import "./globals.css";
@@ -34,10 +35,10 @@ const arabic = Amiri_Quran({
 });
 
 export const metadata: Metadata = {
-  title: "Hifz — Quran reading & memorisation",
+  title: `${APP_NAME} — ${APP_TAGLINE}`,
   description:
     "A mobile-first Quran reading and memorisation player with word-level audio timing, tajweed colouring, masked recall and relay practice.",
-  appleWebApp: { capable: true, title: "Hifz" },
+  appleWebApp: { capable: true, title: APP_NAME },
 };
 
 export const viewport: Viewport = {

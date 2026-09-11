@@ -2,15 +2,15 @@
 
 import { useUser } from "@clerk/nextjs";
 import { useMemo, useState } from "react";
-import { Icon } from "@/components/icon";
+import { APP_NAME, PLUS_NAME } from "@/lib/brand";
 import { clerkBrowserReady } from "@/lib/auth/config";
-import type { Catalog, PlanId, RegionId } from "@/lib/billing/plans";
+import type { Catalog, PlanId } from "@/lib/billing/plans";
 
 type Processors = { stripe: boolean; paystack: boolean };
+type RegionQuote = Catalog[number];
 
 export function PricingView(props: {
-  initialRegion: RegionId;
-  catalog: Catalog;
+  region: RegionQuote;
   processors: Processors;
   canceled?: boolean;
 }) {
@@ -19,8 +19,7 @@ export function PricingView(props: {
 }
 
 function PricingViewSigned(props: {
-  initialRegion: RegionId;
-  catalog: Catalog;
+  region: RegionQuote;
   processors: Processors;
   canceled?: boolean;
 }) {
@@ -36,30 +35,29 @@ function PricingViewSigned(props: {
 }
 
 function PricingForm({
-  initialRegion,
-  catalog: regions,
+  region,
   processors,
   canceled,
   accountsOn,
   signedIn,
   accountEmail,
 }: {
-  initialRegion: RegionId;
-  catalog: Catalog;
+  region: RegionQuote;
   processors: Processors;
   canceled?: boolean;
   accountsOn: boolean;
   signedIn: boolean;
   accountEmail: string;
 }) {
-  const [regionId, setRegionId] = useState<RegionId>(initialRegion);
   const [planId, setPlanId] = useState<PlanId>("annual");
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(canceled ? "Checkout was canceled. Nothing was charged." : "");
 
-  const region = useMemo(() => regions.find((r) => r.id === regionId) ?? regions[0], [regions, regionId]);
-  const selected = region.plans.find((p) => p.planId === planId) ?? region.plans[1];
+  const selected = useMemo(
+    () => region.plans.find((p) => p.planId === planId) ?? region.plans[1],
+    [region, planId],
+  );
   const ready = region.processor === "paystack" ? processors.paystack : processors.stripe;
   const receiptEmail = accountEmail || email;
 
@@ -74,7 +72,7 @@ function PricingForm({
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId, regionId, email: receiptEmail }),
+        body: JSON.stringify({ planId, email: receiptEmail }),
       });
       const data = (await res.json()) as { url?: string; error?: string; code?: string };
       if (data.code === "SIGN_IN_REQUIRED" || res.status === 401) {
@@ -99,7 +97,7 @@ function PricingForm({
   return (
     <div className="pricing">
       <p className="pricing-lead">
-        Quran reading, audio, translation, tajweed, masked recall, and relay with one qari stay free. Hifz Plus
+        Quran reading, audio, translation, tajweed, masked recall, and relay with one qari stay free. {PLUS_NAME}{" "}
         unlocks Focus mode, three or more repeats of any loop, and more than one qari in relay.
       </p>
       <ul className="pricing-includes">
@@ -111,29 +109,14 @@ function PricingForm({
         Recurring phrases and near-twin words are coming soon, and stay off the paywall.
       </p>
 
-      <label className="pricing-region">
-        <span className="label-eyebrow">Price for</span>
-        <span className="select-box">
-          {region.label}
-          <Icon name="chevron-down" size={16} />
-          <select
-            value={regionId}
-            aria-label="Price region"
-            onChange={(e) => setRegionId(e.target.value as RegionId)}
-          >
-            {regions.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.label} · {r.currency}
-              </option>
-            ))}
-          </select>
+      <div className="pricing-detected">
+        <span className="label-eyebrow">Priced for</span>
+        <b>{region.label}</b>
+        <span>
+          {region.processor === "paystack" ? "Paystack" : "Stripe"} · {region.currency}. Detected from your
+          location — not a choice at checkout.
         </span>
-      </label>
-
-      <p className="pricing-processor">
-        <Icon name="credit-card" size={14} />
-        {region.processor === "paystack" ? "Paystack" : "Stripe"} · {region.currency}
-      </p>
+      </div>
 
       <div className="pricing-plans" role="radiogroup" aria-label="Plan">
         {region.plans.map((plan) => {
@@ -202,7 +185,7 @@ function PricingForm({
 
       <p className="pricing-foot">
         You will finish payment on {region.processor === "paystack" ? "Paystack" : "Stripe"}. Card details never
-        touch Hifz servers. Quran reading stays free either way.
+        touch {APP_NAME} servers. Quran reading stays free either way.
       </p>
     </div>
   );

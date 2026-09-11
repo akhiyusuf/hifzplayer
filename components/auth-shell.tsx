@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Icon } from "@/components/icon";
+import { PLUS_NAME } from "@/lib/brand";
 
 export function AuthShell({
   title,
@@ -30,7 +31,7 @@ export function AccountsNotConfigured() {
         secret keys), redeploy, and this page becomes a real sign-in form.
       </p>
       <p className="pricing-note" style={{ textAlign: "center", maxWidth: 360 }}>
-        Quran reading stays open either way. Accounts lock Hifz Plus to you, not to a shared browser cookie.
+        Quran reading stays open either way. Accounts lock {PLUS_NAME} to you, not to a shared browser cookie.
       </p>
     </>
   );

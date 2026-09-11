@@ -1,6 +1,8 @@
+import { PLUS_NAME } from "@/lib/brand";
 import { signedInEmail, signedInUserId } from "@/lib/auth/session";
 import { clerkConfigured } from "@/lib/auth/config";
-import { countryFromHeaders } from "@/lib/billing/country";
+import { logBillingEvent } from "@/lib/billing/analytics";
+import { checkoutRegionId } from "@/lib/billing/country";
 import { appUrl, processorsReady } from "@/lib/billing/env";
 import {
   badRequest,
@@ -11,7 +13,7 @@ import {
   unauthorized,
 } from "@/lib/billing/http";
 import { createPaystackCheckout } from "@/lib/billing/paystack";
-import { isPlanId, isRegionId, REGIONS, regionForCountry } from "@/lib/billing/plans";
+import { isPlanId, REGIONS } from "@/lib/billing/plans";
 import { createStripeCheckout } from "@/lib/billing/stripe";
 
 export const runtime = "nodejs";
@@ -28,14 +30,14 @@ export async function POST(request: Request) {
   const accountsOn = clerkConfigured();
   const userId = accountsOn ? await signedInUserId() : null;
   if (accountsOn && !userId) {
-    return unauthorized("Sign in to buy Hifz Plus", { code: "SIGN_IN_REQUIRED" });
+    return unauthorized(`Sign in to buy ${PLUS_NAME}`, { code: "SIGN_IN_REQUIRED" });
   }
 
   const planId = body.planId || "";
   if (!isPlanId(planId)) return badRequest("Choose monthly, annual, or lifetime");
 
-  const regionId =
-    body.regionId && isRegionId(body.regionId) ? body.regionId : regionForCountry(countryFromHeaders(request.headers));
+  // Region is always detected from the request. Client-supplied regionId is ignored.
+  const regionId = checkoutRegionId(request.headers);
   const region = REGIONS[regionId];
   const email = ((await signedInEmail()) || body.email || "").trim().toLowerCase();
   if (!emailLooksValid(email)) return badRequest("A valid email is required for the receipt");
@@ -54,6 +56,15 @@ export async function POST(request: Request) {
     });
   }
 
+  logBillingEvent({
+    type: "checkout_started",
+    processor: region.processor,
+    planId,
+    regionId,
+    source: "checkout",
+    hasUserId: Boolean(userId),
+  });
+
   const origin = appUrl(request);
   try {
     if (region.processor === "paystack") {
@@ -62,7 +73,7 @@ export async function POST(request: Request) {
         planId,
         email,
         userId: userId || undefined,
-        callbackUrl: `${origin}/pricing/success`,
+        callbackUrl: `${origin}/api/billing/return`,
       });
       return json({ url: checkout.url, reference: checkout.reference, processor: "paystack" });
     }
@@ -71,7 +82,7 @@ export async function POST(request: Request) {
       planId,
       email,
       userId: userId || undefined,
-      successUrl: `${origin}/pricing/success?session_id={CHECKOUT_SESSION_ID}`,
+      successUrl: `${origin}/api/billing/return?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${origin}/pricing?canceled=1`,
     });
     return json({ url: checkout.url, sessionId: checkout.id, processor: "stripe" });

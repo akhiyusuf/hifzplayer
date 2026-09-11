@@ -83,16 +83,24 @@ export async function readEntitlement(): Promise<Entitlement | null> {
   return openEntitlement(jar.get(PLUS_COOKIE)?.value);
 }
 
+export function entitlementCookieOptions(ent: Entitlement) {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: cookieMaxAge(ent),
+  };
+}
+
 export async function writeEntitlement(ent: Entitlement) {
   const { cookies } = await import("next/headers");
   const jar = await cookies();
-  jar.set(PLUS_COOKIE, sealEntitlement(ent), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: cookieMaxAge(ent),
-  });
+  jar.set(PLUS_COOKIE, sealEntitlement(ent), entitlementCookieOptions(ent));
+}
+
+export function attachEntitlementCookie(res: { cookies: { set: (name: string, value: string, opts: ReturnType<typeof entitlementCookieOptions>) => unknown } }, ent: Entitlement) {
+  res.cookies.set(PLUS_COOKIE, sealEntitlement(ent), entitlementCookieOptions(ent));
 }
 
 export function grantFromPayment(opts: {
