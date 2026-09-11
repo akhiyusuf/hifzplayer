@@ -4,10 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AccountEntry } from "./account-entry";
 import { Icon } from "./icon";
+import { APP_NAME, PLUS_NAME } from "@/lib/brand";
 
 const ITEMS = [
   { href: "/", label: "Read", icon: "book-open", match: (p: string) => p === "/" || p.startsWith("/read") },
-  { href: "/pricing", label: "Hifz Plus", icon: "sparkles", match: (p: string) => p.startsWith("/pricing") },
+  { href: "/pricing", label: PLUS_NAME, icon: "sparkles", match: (p: string) => p.startsWith("/pricing") },
   { href: "/account", label: "Account", icon: "user", match: (p: string) => p.startsWith("/account") || p.startsWith("/sign-in") || p.startsWith("/sign-up") },
   { href: "/settings", label: "Settings", icon: "settings-2", match: (p: string) => p === "/settings" },
   { href: "/credits", label: "Data & attributions", icon: "shield-check", match: (p: string) => p === "/credits" },
@@ -23,7 +24,7 @@ export function AppSidebar() {
           <Icon name="book-open" size={19} />
         </span>
         <span className="as-name">
-          <b>Hifz</b>
+          <b>{APP_NAME}</b>
           <span>Quran study</span>
         </span>
       </div>

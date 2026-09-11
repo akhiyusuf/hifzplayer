@@ -5,15 +5,15 @@ export type PlusFeature = "repeats" | "focus" | "relay-qaris";
 export const PLUS_COPY: Record<PlusFeature, { title: string; body: string }> = {
   repeats: {
     title: "3× and unlimited repeats",
-    body: "Playing a word or verse once or twice stays free. Three or more passes, and looping until you stop — including the verse repeat button — are Hifz Plus.",
+    body: "Playing a word or verse once or twice stays free. Three or more passes, and looping until you stop — including the verse repeat button — are Diras Plus.",
   },
   focus: {
     title: "Focus mode",
-    body: "Mushaf view stays free. Focus — one phrase at a time — is Hifz Plus.",
+    body: "Mushaf view stays free. Focus — one phrase at a time — is Diras Plus.",
   },
   "relay-qaris": {
     title: "More than one qari",
-    body: "Relay with you and one qari stays free. Adding a second reciter is Hifz Plus.",
+    body: "Relay with you and one qari stays free. Adding a second reciter is Diras Plus.",
   },
 };
 

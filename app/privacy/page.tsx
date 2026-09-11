@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
+import { APP_NAME, PLUS_NAME } from "@/lib/brand";
 
-export const metadata: Metadata = { title: "Privacy — Hifz" };
+export const metadata: Metadata = { title: `Privacy — ${APP_NAME}` };
 
 export default function PrivacyPage() {
   return (
@@ -24,8 +25,8 @@ export default function PrivacyPage() {
         }}
       >
         <p style={{ fontSize: 14.5, lineHeight: 1.55, color: "var(--text-primary)" }}>
-          Quran reading in Hifz stays free. Reading position, recents, streak, reciter, theme, and settings
-          stay on your device. If you sign in, Clerk holds your account (name and email). If you buy Hifz Plus
+          Quran reading in {APP_NAME} stays free. Reading position, recents, streak, reciter, theme, and settings
+          stay on your device. If you sign in, Clerk holds your account (name and email). If you buy {PLUS_NAME}{" "}
           while signed in, Plus is stored on that account so it follows you to another browser. Without an
           account, Plus stays in a cookie on this browser only.
         </p>
@@ -61,20 +62,23 @@ export default function PrivacyPage() {
             Cookies and tracking
           </h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
-            No analytics, advertising, or fingerprinting. After a Hifz Plus payment, this site sets one
-            httpOnly cookie so we can remember that the plan is active. If you are signed in, Plus is also
-            stored on your Clerk account. The cookie is not used to track you across other sites. Sign-in
-            pages and account details are not indexed.
+            No advertising or fingerprinting. After a {PLUS_NAME} payment, this site sets one httpOnly cookie so we
+            can remember that the plan is active. If you are signed in, Plus is also stored on your Clerk account.
+            The cookie is not used to track you across other sites. Sign-in pages and account details are not
+            indexed.
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Payments</h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
-            Optional Hifz Plus checkout is handled by Paystack (Nigeria and West Africa) or Stripe (other
-            regions). Card numbers go to those providers, not to Hifz. We receive the email on the receipt,
-            the plan you chose, and a payment reference so we can confirm the charge. Those fields stay on
-            the server; the app never shows payment refs or account ids in the page. Their privacy policies
-            apply to the checkout pages. Sign-in is handled by Clerk.
+            Optional {PLUS_NAME} checkout is handled by Paystack (Nigeria and West Africa) or Stripe (other
+            regions), chosen from your location — not a picker. Card numbers go to those providers, not to{" "}
+            {APP_NAME}. We receive the email on the receipt, the plan you chose, and a payment reference so we can
+            confirm the charge. Those fields stay on the server; the app never shows payment refs or account ids
+            in the page. We log payment confirmation events (plan, processor, success or failure) so a paid
+            subscription can be fulfilled even if the checkout page does not load. Paystack and Stripe dashboards
+            are the payment ledger. Their privacy policies apply to the checkout pages. Sign-in is handled by
+            Clerk.
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>

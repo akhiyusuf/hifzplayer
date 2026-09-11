@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { SignUp } from "@clerk/nextjs";
+import { APP_NAME } from "@/lib/brand";
 import { clerkAppearance } from "@/lib/auth/appearance";
 import { clerkBrowserReady } from "@/lib/auth/config";
 import { AccountsNotConfigured, AuthShell } from "@/components/auth-shell";
 
 export const metadata: Metadata = {
-  title: "Create account — Hifz",
+  title: `Create account — ${APP_NAME}`,
   robots: { index: false, follow: false },
 };
 

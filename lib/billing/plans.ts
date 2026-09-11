@@ -63,7 +63,7 @@ export const REGIONS: Record<RegionId, Region> = {
 export const PLANS: { id: PlanId; name: string; blurb: string; interval: "month" | "year" | null }[] = [
   { id: "monthly", name: "Monthly", blurb: "Billed every month. Cancel any time.", interval: "month" },
   { id: "annual", name: "Annual", blurb: "Two months free versus paying monthly.", interval: "year" },
-  { id: "lifetime", name: "Lifetime", blurb: "One payment. Yours to keep on this browser.", interval: null },
+  { id: "lifetime", name: "Lifetime", blurb: "One payment. Yours to keep.", interval: null },
 ];
 
 const WEST_AFRICA = new Set([

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
+import { APP_NAME } from "@/lib/brand";
 
-export const metadata: Metadata = { title: "Data & attributions — Hifz" };
+export const metadata: Metadata = { title: `Data & attributions — ${APP_NAME}` };
 
 const SOURCES: {
   href: string;

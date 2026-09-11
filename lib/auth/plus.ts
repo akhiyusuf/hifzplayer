@@ -18,9 +18,39 @@ type StoredPlus = {
   grantedAt?: string;
 };
 
+type StoredBillingEvent = {
+  at: string;
+  type: "granted";
+  planId: PlanId;
+  regionId: RegionId;
+  processor: Processor;
+};
+
+const EVENT_CAP = 20;
+
 export async function savePlusToClerk(userId: string, ent: Entitlement) {
   if (!clerkConfigured()) return;
   const client = await clerkClient();
+  let events: StoredBillingEvent[] = [];
+  try {
+    const user = await client.users.getUser(userId);
+    const prev = (user.privateMetadata as { hifzPlusEvents?: StoredBillingEvent[] } | undefined)
+      ?.hifzPlusEvents;
+    if (Array.isArray(prev)) events = prev;
+  } catch {
+    events = [];
+  }
+  events = [
+    ...events,
+    {
+      at: ent.grantedAt,
+      type: "granted" as const,
+      planId: ent.planId,
+      regionId: ent.regionId,
+      processor: ent.processor,
+    },
+  ].slice(-EVENT_CAP);
+
   await client.users.updateUserMetadata(userId, {
     privateMetadata: {
       hifzPlus: {
@@ -32,6 +62,7 @@ export async function savePlusToClerk(userId: string, ent: Entitlement) {
         ref: ent.ref,
         grantedAt: ent.grantedAt,
       } satisfies StoredPlus,
+      hifzPlusEvents: events,
     },
   });
 }

@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { CONTENT_SECURITY_POLICY, SECURITY_HEADERS } from "./headers.ts";
+import {
+  CONTENT_SECURITY_POLICY,
+  SECURITY_HEADERS,
+  contentSecurityPolicy,
+  isPaymentReturnPath,
+} from "./headers.ts";
 
 describe("security headers", () => {
   it("blocks framing and MIME sniffing", () => {
@@ -19,5 +24,13 @@ describe("security headers", () => {
     assert.match(CONTENT_SECURITY_POLICY, /api\.quran\.com/);
     assert.match(CONTENT_SECURITY_POLICY, /verses\.quran\.com/);
     assert.doesNotMatch(CONTENT_SECURITY_POLICY, /\*/);
+  });
+
+  it("lets Paystack load the payment return pages", () => {
+    assert.equal(isPaymentReturnPath("/pricing/success"), true);
+    assert.equal(isPaymentReturnPath("/api/billing/return"), true);
+    assert.equal(isPaymentReturnPath("/pricing"), false);
+    assert.match(contentSecurityPolicy(true), /checkout\.paystack\.com/);
+    assert.doesNotMatch(contentSecurityPolicy(true), /frame-ancestors 'none'/);
   });
 });

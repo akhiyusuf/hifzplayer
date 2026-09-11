@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/icon";
+import { PLUS_NAME } from "@/lib/brand";
 import { KEYS } from "@/lib/constants";
 import { getStore, setStore } from "@/lib/storage";
 import { useTheme } from "@/lib/theme";
@@ -71,7 +72,7 @@ function PlusStatus() {
       }}
     >
       <span className="st">
-        <b>{active ? "Hifz Plus is on" : "Hifz Plus"}</b>
+        <b>{active ? `${PLUS_NAME} is on` : PLUS_NAME}</b>
         <span>{label}</span>
       </span>
       <Icon name="sparkles" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
@@ -231,12 +232,12 @@ export default function SettingsPage() {
         >
           <span className="st">
             <b>Account</b>
-            <span>Sign in so Hifz Plus follows you, not just this browser</span>
+            <span>Sign in so {PLUS_NAME} follows you, not just this browser</span>
           </span>
           <Icon name="user" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
         </Link>
         <span className="label-eyebrow" style={gap}>
-          Hifz Plus
+          {PLUS_NAME}
         </span>
         <PlusStatus />
         <span className="label-eyebrow" style={gap}>

@@ -13,6 +13,7 @@ import { KEYS } from "@/lib/constants";
 import { greeting, listSessions, streakCount, timeAgo } from "@/lib/sessions";
 import { getStore, setStore } from "@/lib/storage";
 import { useTheme } from "@/lib/theme";
+import { PLUS_NAME } from "@/lib/brand";
 import type { Session } from "@/lib/types";
 
 function ThemeToggle() {
@@ -300,7 +301,7 @@ export default function HomePage() {
               )}
             </section>
             <div className="link-row">
-              <Link href="/pricing">Hifz Plus</Link>
+              <Link href="/pricing">{PLUS_NAME}</Link>
               <span aria-hidden="true">·</span>
               <Link href="/credits">Data & attributions</Link>
               <span aria-hidden="true">·</span>

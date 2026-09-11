@@ -9,6 +9,7 @@ export type PlusFields = {
   planId?: string;
   regionId?: string;
   processor?: string;
+  grantedAt?: string;
 };
 
 export function isPlusActive(ent: PlusFields | null | undefined): boolean {
@@ -19,7 +20,14 @@ export function isPlusActive(ent: PlusFields | null | undefined): boolean {
 
 export function publicEntitlement(ent: PlusFields | null) {
   if (!ent || !isPlusActive(ent)) {
-    return { plus: false as const, planId: null, regionId: null, processor: null, until: null };
+    return {
+      plus: false as const,
+      planId: null,
+      regionId: null,
+      processor: null,
+      until: null,
+      grantedAt: null,
+    };
   }
   return {
     plus: true as const,
@@ -27,6 +35,7 @@ export function publicEntitlement(ent: PlusFields | null) {
     regionId: ent.regionId ?? null,
     processor: ent.processor ?? null,
     until: ent.until,
+    grantedAt: ent.grantedAt ?? null,
   };
 }
 

@@ -1,20 +1,29 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type NextFetchEvent, type NextMiddleware, type NextRequest } from "next/server";
+import { PLUS_NAME } from "@/lib/brand";
 import { clerkConfigured } from "@/lib/auth/config";
-import { applyContentSecurityPolicy, applySecurityHeaders, CLERK_CSP_EXTRAS } from "@/lib/security/headers";
+import {
+  applyContentSecurityPolicy,
+  applySecurityHeaders,
+  CLERK_CSP_EXTRAS,
+  isPaymentReturnPath,
+} from "@/lib/security/headers";
 
 const isAccountRoute = createRouteMatcher(["/account(.*)"]);
 const isCheckout = createRouteMatcher(["/api/billing/checkout"]);
 
-function secure(res: NextResponse) {
-  applySecurityHeaders(res.headers);
+function secure(res: NextResponse, req: NextRequest) {
+  const embeddable = isPaymentReturnPath(req.nextUrl.pathname);
+  applySecurityHeaders(res.headers, { embeddable });
+  if (embeddable) applyContentSecurityPolicy(res.headers, { embeddable: true });
   return res;
 }
 
-function publicSecurity() {
+function publicSecurity(req: NextRequest) {
   const res = NextResponse.next();
-  applySecurityHeaders(res.headers);
-  applyContentSecurityPolicy(res.headers);
+  const embeddable = isPaymentReturnPath(req.nextUrl.pathname);
+  applySecurityHeaders(res.headers, { embeddable });
+  applyContentSecurityPolicy(res.headers, { embeddable });
   return res;
 }
 
@@ -27,7 +36,8 @@ function getClerkHandler() {
         const { userId } = await auth();
         if (!userId) {
           return secure(
-            NextResponse.json({ error: "Sign in to buy Hifz Plus", code: "SIGN_IN_REQUIRED" }, { status: 401 }),
+            NextResponse.json({ error: `Sign in to buy ${PLUS_NAME}`, code: "SIGN_IN_REQUIRED" }, { status: 401 }),
+            req,
           );
         }
       }
@@ -36,10 +46,10 @@ function getClerkHandler() {
         if (!userId) {
           const url = new URL("/sign-in", req.url);
           url.searchParams.set("redirect_url", req.nextUrl.pathname);
-          return secure(NextResponse.redirect(url));
+          return secure(NextResponse.redirect(url), req);
         }
       }
-      return secure(NextResponse.next());
+      return secure(NextResponse.next(), req);
     },
     {
       contentSecurityPolicy: { directives: CLERK_CSP_EXTRAS },
@@ -52,7 +62,7 @@ export default function middleware(req: NextRequest, event: NextFetchEvent) {
   if (clerkConfigured()) {
     return getClerkHandler()(req, event);
   }
-  return publicSecurity();
+  return publicSecurity(req);
 }
 
 export const config = {

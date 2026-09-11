@@ -17,8 +17,9 @@ function sample(over: Partial<PlusFields> = {}): PlusFields {
 
 describe("public entitlement", () => {
   it("never includes email or payment refs", () => {
-    const pub = publicEntitlement(sample());
+    const pub = publicEntitlement(sample({ grantedAt: "2026-01-01T00:00:00.000Z" }));
     assert.equal(pub.plus, true);
+    assert.equal(pub.grantedAt, "2026-01-01T00:00:00.000Z");
     assert.equal("email" in pub, false);
     assert.equal("ref" in pub, false);
     assert.equal("userId" in pub, false);

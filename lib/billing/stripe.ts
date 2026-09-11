@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { PLUS_NAME } from "@/lib/brand";
 import { stripeSecretKey } from "./env";
 import type { PlanId, Region } from "./plans";
 import { PLANS } from "./plans";
@@ -20,7 +21,7 @@ export async function createStripeCheckout(opts: {
   const stripe = stripeClient();
   const plan = PLANS.find((p) => p.id === opts.planId)!;
   const amount = opts.region.amounts[opts.planId];
-  const productName = `Hifz Plus — ${plan.name}`;
+  const productName = `${PLUS_NAME} — ${plan.name}`;
   const session = await stripe.checkout.sessions.create({
     mode: plan.interval ? "subscription" : "payment",
     customer_email: opts.email || undefined,

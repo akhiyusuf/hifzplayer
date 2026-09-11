@@ -1,4 +1,6 @@
+import { logBillingEvent } from "@/lib/billing/analytics";
 import { stripeWebhookSecret } from "@/lib/billing/env";
+import { fulfillStripeSession } from "@/lib/billing/fulfill";
 import Stripe from "stripe";
 
 export const runtime = "nodejs";
@@ -20,8 +22,20 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid Stripe signature" }, { status: 400 });
   }
 
-  // Payment is confirmed on the success redirect via `/api/billing/confirm`.
-  // This route verifies Stripe signatures so dashboard webhooks can be pointed
-  // here before a durable customer store is added.
+  logBillingEvent({ type: "webhook_received", processor: "stripe", source: "webhook", reason: event.type });
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+    const result = await fulfillStripeSession(session.id, {
+      source: "webhook",
+      setCookie: false,
+      signedInUserId: null,
+    });
+    if (!result.ok) {
+      return Response.json({ received: true, type: event.type, fulfilled: false }, { status: result.status >= 500 ? 500 : 200 });
+    }
+    return Response.json({ received: true, type: event.type, fulfilled: true });
+  }
+
   return Response.json({ received: true, type: event.type });
 }
