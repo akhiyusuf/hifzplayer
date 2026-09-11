@@ -5,15 +5,17 @@ import { PLUS_NAME } from "@/lib/brand";
 
 export function AuthShell({
   title,
+  backHref = "/",
   children,
 }: {
   title: string;
+  backHref?: string;
   children: ReactNode;
 }) {
   return (
     <main className="shell" id="main">
       <nav className="page-nav">
-        <Link className="icon-btn sm tap" href="/" aria-label="Back">
+        <Link className="icon-btn sm tap" href={backHref} aria-label="Back">
           <Icon name="chevron-left" size={19} />
         </Link>
         <h1>{title}</h1>

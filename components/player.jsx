@@ -1394,7 +1394,7 @@ function k(e) {
               !plusOn && !s.verseLoop ? ask("repeats") : t.toggleVerseLoop(),
             "aria-label": plusOn
               ? "Repeat this verse"
-              : "Repeat this verse until you stop — Hifz Plus",
+              : "Repeat this verse until you stop — Diras Plus",
             "aria-pressed": s.verseLoop,
             disabled: c,
             children: _jsx(Icon, { name: "repeat", size: 20 }),
@@ -4276,6 +4276,7 @@ function U(e) {
           initialTo: D,
           initialMode: ez.mode,
           taj: ez.taj,
+          variant: "mode",
           onTaj: (e) => eu.setTajweed(e),
           onStart: (e, t, s) => {
             ey(!1);
