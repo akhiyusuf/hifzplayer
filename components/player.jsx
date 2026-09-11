@@ -19,21 +19,15 @@ import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
 import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration } from "@/lib/api";
 import { fmtTime, segsForVerse, segForWord, toArabicDigits, wordAt } from "@/lib/audio";
-import {
-  ANNOTATION_VERSION,
-  KEYS,
-  LOOP_COUNTS,
-  MODES,
-  RATES,
-} from "@/lib/constants";
+import { isPaidRelay, isPaidRepeat } from "@/lib/billing/gates";
+import { KEYS, LOOP_COUNTS, MODES, RATES } from "@/lib/constants";
+import { usePlus } from "@/lib/plus";
 import { markToday, upsertSession } from "@/lib/sessions";
 import { getStore, setStore } from "@/lib/storage";
 import { tajToSpans } from "@/lib/tajweed";
 import { useToast } from "@/lib/toast";
 
-let u = new Map(),
-  p = new Map(),
-  m = /[ۖ-ۜ]/;
+let m = /[ۖ-ۜ]/;
 function v(e) {
   if (e._phrases) return e._phrases;
   let t = [],
@@ -449,6 +443,7 @@ class g {
       this.notify());
   }
   toggleVerseLoop() {
+    if (!this.st.verseLoop && !this.requirePlus("repeats")) return;
     ((this.st.verseLoop = !this.st.verseLoop),
       this.toast(
         this.st.verseLoop
@@ -486,6 +481,7 @@ class g {
       "relay" !== e && this.loadVerseAudio(this.st.vIdx, !1));
   }
   setStyle(e) {
+    if ("focus" === e && !this.requirePlus("focus")) return;
     ((this.st.style = e),
       setStore(KEYS.style, e),
       (this.st.focusPhrase = 0),
@@ -494,21 +490,45 @@ class g {
   setTajweed(e) {
     ((this.st.taj = e), setStore(KEYS.taj, e), this.notify());
   }
-  setLayer(e, t) {
-    ((this.st.layers = { ...this.st.layers, [e]: t }),
-      setStore(
-        "phrases" === e ? KEYS.layerPhrases : KEYS.layerConfusables,
-        t,
-      ),
-      this.notify());
+  setLayer() {
+    /* Recurring phrases and near-twins are coming soon. */
   }
   setWordRepeat(e) {
+    if (isPaidRepeat(e) && !this.requirePlus("repeats")) return;
     ((this.st.wordRepeat = e),
       setStore(KEYS.wordRepeat, e),
       this.notify());
   }
   setLoopCount(e) {
+    if (isPaidRepeat(e) && !this.requirePlus("repeats")) return;
     ((this.st.loopCount = e), setStore(KEYS.loopCount, e), this.notify());
+  }
+  requirePlus(e) {
+    if (this.plus) return !0;
+    "function" == typeof this.onPlusRequired && this.onPlusRequired(e);
+    return !1;
+  }
+  setPlus(e) {
+    this.plus = !!e;
+    if (e) {
+      let t = getStore(KEYS.loopCount),
+        s = getStore(KEYS.wordRepeat);
+      (null != t && (this.st.loopCount = t),
+        null != s && (this.st.wordRepeat = s),
+        "focus" === getStore(KEYS.style) && (this.st.style = "focus"));
+    } else this.clampFree();
+    this.notify();
+  }
+  clampFree() {
+    (isPaidRepeat(this.st.loopCount) && (this.st.loopCount = 2),
+      isPaidRepeat(this.st.wordRepeat) && (this.st.wordRepeat = 2),
+      (this.st.verseLoop = !1),
+      "focus" === this.st.style && (this.st.style = "mushaf"),
+      (this.st.layers = { phrases: !1, confusables: !1 }),
+      this.st.relay &&
+        isPaidRelay(this.st.relay.order) &&
+        ((this.st.relay = null),
+        "relay" === this.st.mode && (this.st.mode = "verse")));
   }
   wordModePlayCurrent() {
     let e = this.currentVerse();
@@ -762,6 +782,7 @@ class g {
     this.armSeek(r ? r.start - 0.02 : 0, !0);
   }
   setLoop(e, t, s, r, a) {
+    if (isPaidRepeat(r) && !this.requirePlus("repeats")) return;
     ((this.st.oneshot = null),
       (this.st.loop = {
         vIdx: e,
@@ -878,6 +899,8 @@ class g {
     }
   }
   async beginRelay(e, t, s, r) {
+    if (isPaidRelay(e) && !this.requirePlus("relay-qaris")) return !1;
+    if (isPaidRepeat(r) && !this.requirePlus("repeats")) return !1;
     let a = Array.from(
       new Set(
         e
@@ -1076,6 +1099,8 @@ class g {
         () => this.toastListeners.delete(e)
       )),
       (this.audio = "undefined" != typeof Audio ? new Audio() : {}),
+      (this.plus = !1),
+      (this.onPlusRequired = null),
       (this.st = {
         verses: [],
         passage: null,
@@ -1084,7 +1109,10 @@ class g {
         loading: !1,
         error: null,
         mode: "verse",
-        style: getStore(KEYS.style) || "mushaf",
+        style:
+          "focus" === getStore(KEYS.style)
+            ? "mushaf"
+            : getStore(KEYS.style) || "mushaf",
         rate: 1,
         vIdx: 0,
         curWord: 0,
@@ -1094,22 +1122,15 @@ class g {
         wordStep: { active: !1, w: 1, playedTimes: 0, range: null },
         oneshot: null,
         wordRepeat:
-          null !== (e = getStore(KEYS.wordRepeat)) && void 0 !== e
+          null !== (e = getStore(KEYS.wordRepeat)) && void 0 !== e && !isPaidRepeat(e)
             ? e
             : 2,
         loopCount:
-          null !== (t = getStore(KEYS.loopCount)) && void 0 !== t ? t : 5,
+          null !== (t = getStore(KEYS.loopCount)) && void 0 !== t && !isPaidRepeat(t)
+            ? t
+            : 2,
         taj: !!getStore(KEYS.taj),
-        layers: {
-          phrases:
-            null === (s = getStore(KEYS.layerPhrases)) ||
-            void 0 === s ||
-            s,
-          confusables:
-            null === (r = getStore(KEYS.layerConfusables)) ||
-            void 0 === r ||
-            r,
-        },
+        layers: { phrases: !1, confusables: !1 },
         focusPhrase: 0,
         masked: {},
         relay: null,
@@ -1255,6 +1276,7 @@ function b(e) {
 }
 function k(e) {
   let { engine: t, state: s, onOpenModeSheet: n } = e,
+    { plus: plusOn, askPlus: ask } = usePlus(),
     i = MODES.find((e) => e.id === s.mode) || MODES[1],
     [l] = useState(() => {
       var e;
@@ -1367,9 +1389,12 @@ function k(e) {
           _jsx("button", {
             className: "tr-btn tap".concat(
               s.verseLoop ? " on" : " muted",
-            ),
-            onClick: () => t.toggleVerseLoop(),
-            "aria-label": "Repeat this verse",
+            ).concat(!plusOn ? " locked" : ""),
+            onClick: () =>
+              !plusOn && !s.verseLoop ? ask("repeats") : t.toggleVerseLoop(),
+            "aria-label": plusOn
+              ? "Repeat this verse"
+              : "Repeat this verse until you stop — Hifz Plus",
             "aria-pressed": s.verseLoop,
             disabled: c,
             children: _jsx(Icon, { name: "repeat", size: 20 }),
@@ -1432,6 +1457,7 @@ function N(e) {
       backLabel: p = null,
     } = e,
     m = useRouter(),
+    { plus: plusOn, askPlus: ask } = usePlus(),
     v = "verse" === i || "word" === i,
     x = "relay" === i;
   return _jsxs("header", {
@@ -1486,10 +1512,28 @@ function N(e) {
             _jsx(
               "button",
               {
-                className: l === e ? "on" : "",
-                onClick: () => d(e),
+                className: ""
+                  .concat(l === e ? "on" : "")
+                  .concat("focus" === e && !plusOn ? " locked" : ""),
+                onClick: () =>
+                  "focus" === e && !plusOn ? ask("focus") : d(e),
                 "aria-pressed": l === e,
-                children: "mushaf" === e ? "Mushaf" : "Focus",
+                children:
+                  "mushaf" === e
+                    ? "Mushaf"
+                    : plusOn
+                      ? "Focus"
+                      : _jsxs("span", {
+                          style: {
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 4,
+                          },
+                          children: [
+                            "Focus",
+                            _jsx(Icon, { name: "sparkles", size: 12 }),
+                          ],
+                        }),
               },
               e,
             ),
@@ -1549,7 +1593,8 @@ function S(e) {
       onOpenConfusable: w,
     } = e,
     b = useRef(null),
-    [k, N] = useState(null);
+    [k, N] = useState(null),
+    { plus: plusOn, askPlus: ask } = usePlus();
   (useLayoutEffect(() => {
     var e, t;
     let s =
@@ -1645,22 +1690,37 @@ function S(e) {
               className: "seg",
               role: "group",
               "aria-labelledby": "rep-lbl",
-              children: LOOP_COUNTS.map((e) =>
-                _jsx(
+              children: LOOP_COUNTS.map((e) => {
+                let locked = isPaidRepeat(e) && !plusOn;
+                return _jsx(
                   "button",
                   {
-                    className: u === e ? "on" : "",
-                    onClick: () => m(e),
+                    className: ""
+                      .concat(u === e ? "on" : "")
+                      .concat(locked ? " locked" : ""),
+                    onClick: () => (locked ? ask("repeats") : m(e)),
                     "aria-pressed": u === e,
                     style:
                       0 === e
                         ? { fontFamily: "var(--font-body)", fontSize: 14 }
                         : void 0,
-                    children: I(e),
+                    children: locked
+                      ? _jsxs("span", {
+                          style: {
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 3,
+                          },
+                          children: [
+                            I(e),
+                            _jsx(Icon, { name: "sparkles", size: 11 }),
+                          ],
+                        })
+                      : I(e),
                   },
                   e,
-                ),
-              ),
+                );
+              }),
             }),
           ],
         }),
@@ -1701,58 +1761,7 @@ function S(e) {
             " range here",
           ],
         }),
-        ((null == g ? void 0 : g.phrase) ||
-          (null == g ? void 0 : g.confusable)) &&
-          _jsxs("div", {
-            className: "p-layers",
-            children: [
-              g.phrase &&
-                _jsxs("button", {
-                  className: "p-layer-row recurring-row",
-                  onClick: j,
-                  children: [
-                    _jsx(Icon, { name: "git-compare", size: 14 }),
-                    _jsxs("span", {
-                      children: [
-                        "Recurs in ",
-                        g.phrase.n,
-                        " places",
-                        g.phrase.v ? " \xb7 variant here" : "",
-                      ],
-                    }),
-                    _jsx(Icon, {
-                      name: "chevron-left",
-                      size: 14,
-                    }),
-                  ],
-                }),
-              g.confusable &&
-                _jsxs("button", {
-                  className: "p-layer-row confusable-row",
-                  onClick: w,
-                  children: [
-                    _jsx(Icon, { name: "git-compare", size: 14 }),
-                    _jsxs("span", {
-                      children: [
-                        "Looks like ",
-                        null !==
-                          (l =
-                            null === (t = g.confusable.with[0]) ||
-                            void 0 === t
-                              ? void 0
-                              : t.w) && void 0 !== l
-                          ? l
-                          : "another word",
-                      ],
-                    }),
-                    _jsx(Icon, {
-                      name: "chevron-left",
-                      size: 14,
-                    }),
-                  ],
-                }),
-            ],
-          }),
+        /* Recurring phrases and near-twins are coming soon. */
       ],
     }),
   });
@@ -2357,6 +2366,7 @@ function M(e) {
         : 2,
     ),
     [W, A] = useState(!1),
+    { plus: plusOn, askPlus: ask } = usePlus(),
     L = (e, t) => {
       let s = e + t;
       if (s < 0 || s >= b.length) return;
@@ -2416,7 +2426,9 @@ function M(e) {
                                 kind: "qari",
                                 reciterId: Number(s.slice(1)),
                               }),
-                          k(r));
+                          isPaidRelay(r) && !plusOn
+                            ? ask("relay-qaris")
+                            : k(r));
                       },
                       children: [
                         _jsx("option", {
@@ -2488,11 +2500,18 @@ function M(e) {
         }),
       }),
       _jsxs("button", {
-        className: "btn-dashed",
-        onClick: () => k([...b, { kind: "qari", reciterId: m }]),
+        className: "btn-dashed".concat(!plusOn ? " locked" : ""),
+        onClick: () => {
+          let next = [...b, { kind: "qari", reciterId: m }];
+          if (isPaidRelay(next) && !plusOn) {
+            ask("relay-qaris");
+            return;
+          }
+          k(next);
+        },
         children: [
-          _jsx(Icon, { name: "plus", size: 16 }),
-          "Add participant",
+          _jsx(Icon, { name: plusOn ? "plus" : "sparkles", size: 16 }),
+          plusOn ? "Add participant" : "Add another qari",
         ],
       }),
       _jsx("div", {
@@ -2560,19 +2579,34 @@ function M(e) {
             style: { marginTop: 6 },
             role: "group",
             "aria-label": "Rounds",
-            children: z.map((e) =>
-              _jsx(
+            children: z.map((e) => {
+              let locked = isPaidRepeat(e.value) && !plusOn;
+              return _jsx(
                 "button",
                 {
-                  className: R === e.value ? "on" : "",
-                  onClick: () => P(e.value),
+                  className: ""
+                    .concat(R === e.value ? "on" : "")
+                    .concat(locked ? " locked" : ""),
+                  onClick: () => (locked ? ask("repeats") : P(e.value)),
                   "aria-pressed": R === e.value,
                   style: 0 === e.value ? { fontSize: 12 } : void 0,
-                  children: e.label,
+                  children: locked
+                    ? _jsxs("span", {
+                        style: {
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                        },
+                        children: [
+                          e.label,
+                          _jsx(Icon, { name: "sparkles", size: 11 }),
+                        ],
+                      })
+                    : e.label,
                 },
                 e.value,
-              ),
-            ),
+              );
+            }),
           }),
         ],
       }),
@@ -3245,6 +3279,7 @@ let B = [1, 2, 3, 0];
 function G(e) {
   var t, s, a;
   let { engine: n, state: i, onWordTap: l, selection: d, annFor: c } = e,
+    { plus: plusOn, askPlus: ask } = usePlus(),
     h = i.verses[i.vIdx];
   if (!h) return null;
   let u = q(i.vIdx, i, d),
@@ -3302,20 +3337,37 @@ function G(e) {
             className: "rep-seg",
             role: "group",
             "aria-label": "Repeats per word",
-            children: B.map((e) =>
-              _jsx(
+            children: B.map((e) => {
+              let locked = isPaidRepeat(e) && !plusOn;
+              return _jsx(
                 "button",
                 {
                   className: ""
                     .concat(i.wordRepeat === e ? "on" : "")
-                    .concat(0 === e ? " inf" : ""),
-                  onClick: () => n.setWordRepeat(0 === e ? 1 : e),
+                    .concat(0 === e ? " inf" : "")
+                    .concat(locked ? " locked" : ""),
+                  onClick: () =>
+                    locked ? ask("repeats") : n.setWordRepeat(e),
                   "aria-pressed": i.wordRepeat === e,
-                  children: 0 === e ? "∞" : "\xd7".concat(e),
+                  children: locked
+                    ? _jsxs("span", {
+                        style: {
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 3,
+                        },
+                        children: [
+                          0 === e ? "∞" : "\xd7".concat(e),
+                          _jsx(Icon, { name: "sparkles", size: 11 }),
+                        ],
+                      })
+                    : 0 === e
+                      ? "∞"
+                      : "\xd7".concat(e),
                 },
                 e,
-              ),
-            ),
+              );
+            }),
           }),
         ],
       }),
@@ -3415,6 +3467,7 @@ function U(e) {
       pushRecent: ec,
     } = useAppData(),
     { showToast: eh } = useToast(),
+    { plus: plusOn, askPlus: ask } = usePlus(),
     [eu] = useState(() => new g()),
     [ep, em] = useState("loading"),
     [ev, ex] = useState(!1),
@@ -3451,27 +3504,8 @@ function U(e) {
   (useEffect(() => () => eu.destroy(), [eu]),
     useEffect(() => eu.subscribeToast(eh), [eu, eh]),
     useEffect(() => {
-      let e = !1;
-      return (
-        (function (e) {
-          if (u.has(e)) return Promise.resolve(u.get(e));
-          let t = p.get(e);
-          if (t) return t;
-          let s = fetch(
-            "/data/annotations/".concat(e, ".json?v=").concat(ANNOTATION_VERSION),
-          )
-            .then((e) => (e.ok ? e.json() : null))
-            .catch(() => null)
-            .then((t) => (u.set(e, t), p.delete(e), t));
-          return (p.set(e, s), s);
-        })(z).then((t) => {
-          e || eT(t);
-        }),
-        () => {
-          e = !0;
-        }
-      );
-    }, [z]),
+      ((eu.onPlusRequired = ask), eu.setPlus(plusOn));
+    }, [eu, plusOn, ask]),
     useEffect(() => {
       null != O && O !== el && eo(O);
     }, [O, el, eo]),
@@ -3935,12 +3969,6 @@ function U(e) {
         },
       }),
       _jsx(OfflineBanner, {}),
-      "relay" !== ez.mode &&
-        _jsx(T, {
-          layers: ez.layers,
-          counts: eU,
-          onToggle: (e, t) => eu.setLayer(e, t),
-        }),
       eR &&
         $ &&
         _jsxs("div", {

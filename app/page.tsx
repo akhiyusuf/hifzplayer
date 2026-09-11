@@ -298,6 +298,8 @@ export default function HomePage() {
               )}
             </section>
             <div className="link-row">
+              <Link href="/pricing">Hifz Plus</Link>
+              <span aria-hidden="true">·</span>
               <Link href="/credits">Data & attributions</Link>
               <span aria-hidden="true">·</span>
               <Link href="/privacy">Privacy</Link>

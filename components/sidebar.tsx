@@ -6,6 +6,7 @@ import { Icon } from "./icon";
 
 const ITEMS = [
   { href: "/", label: "Read", icon: "book-open", match: (p: string) => p === "/" || p.startsWith("/read") },
+  { href: "/pricing", label: "Hifz Plus", icon: "sparkles", match: (p: string) => p.startsWith("/pricing") },
   { href: "/settings", label: "Settings", icon: "settings-2", match: (p: string) => p === "/settings" },
   { href: "/credits", label: "Data & attributions", icon: "shield-check", match: (p: string) => p === "/credits" },
   { href: "/privacy", label: "Privacy", icon: "info", match: (p: string) => p === "/privacy" },

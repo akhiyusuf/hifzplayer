@@ -24,7 +24,9 @@ export default function PrivacyPage() {
         }}
       >
         <p style={{ fontSize: 14.5, lineHeight: 1.55, color: "var(--text-primary)" }}>
-          Hifz has no accounts, no analytics, no advertising, and no server that stores anything about you.
+          Quran reading in Hifz stays free. Reading position, recents, streak, reciter, theme, and settings
+          stay on your device. If you buy Hifz Plus, we keep a small record of that purchase so the plan can
+          stay active on this browser.
         </p>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>
@@ -50,14 +52,26 @@ export default function PrivacyPage() {
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Study annotations</h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
-            The recurring-phrase and near-twin markings ship with the app as static files. Looking them up involves
-            no third party.
+            Recurring-phrase and near-twin markings are coming soon. They are not shown in the player yet.
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Cookies and tracking</h2>
+          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>
+            Cookies and tracking
+          </h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
-            None. No cookies, no fingerprinting, no third-party scripts.
+            No analytics, advertising, or fingerprinting. After a Hifz Plus payment, this site sets one
+            httpOnly cookie so we can remember that the plan is active on this browser. It is not used to
+            track you across other sites.
+          </p>
+        </section>
+        <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Payments</h2>
+          <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
+            Optional Hifz Plus checkout is handled by Paystack (Nigeria and West Africa) or Stripe (other
+            regions). Card numbers go to those providers, not to Hifz. We receive the email you enter for the
+            receipt, the plan you chose, and a payment reference so we can confirm the charge. Their privacy
+            policies apply to the checkout pages.
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>

@@ -4,7 +4,7 @@ export const TRANSLATION_ID = 20; // Saheeh International
 export const CACHE_MS = 7 * 24 * 60 * 60 * 1000;
 export const RATES = [0.75, 1, 1.25, 1.5] as const;
 export const ANNOTATION_VERSION = 3;
-export const LOOP_COUNTS = [3, 5, 10, 0] as const;
+export const LOOP_COUNTS = [1, 2, 3, 5, 10, 0] as const;
 
 export const MODES = [
   {

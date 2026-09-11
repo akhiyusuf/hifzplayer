@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Amiri_Quran, Bricolage_Grotesque, Inter, Space_Grotesk } from "next/font/google";
 import { AppDataProvider } from "@/lib/app-data";
+import { PlusProvider } from "@/lib/plus";
 import { ThemeProvider, themeInitScript } from "@/lib/theme";
 import { ToastProvider } from "@/lib/toast";
 import { AppSidebar } from "@/components/sidebar";
@@ -64,10 +65,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <ThemeProvider>
           <ToastProvider>
-            <AppDataProvider>
-              <AppSidebar />
-              {children}
-            </AppDataProvider>
+            <PlusProvider>
+              <AppDataProvider>
+                <AppSidebar />
+                {children}
+              </AppDataProvider>
+            </PlusProvider>
           </ToastProvider>
         </ThemeProvider>
       </body>

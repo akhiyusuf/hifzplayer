@@ -4,7 +4,13 @@ import { Icon } from "@/components/icon";
 
 export const metadata: Metadata = { title: "Data & attributions — Hifz" };
 
-const SOURCES = [
+const SOURCES: {
+  href: string;
+  icon: "book" | "languages" | "palette" | "git-compare" | "layers";
+  title: string;
+  body: string;
+  soon?: boolean;
+}[] = [
   {
     href: "https://api-docs.quran.foundation/",
     icon: "book",
@@ -27,15 +33,15 @@ const SOURCES = [
     href: "https://creativecommons.org/licenses/by/4.0/",
     icon: "git-compare",
     title: "Confusable words",
-    beta: true,
-    body: "QuranMorph — SinaLab, Birzeit University. Akra, Hammouda & Jarrar (2025), “QuranMorph: Morphologically Annotated Quranic Corpus”. Licensed CC-BY-4.0.",
+    soon: true,
+    body: "Coming soon. QuranMorph — SinaLab, Birzeit University. Akra, Hammouda & Jarrar (2025), “QuranMorph: Morphologically Annotated Quranic Corpus”. Licensed CC-BY-4.0.",
   },
   {
     href: "https://qul.tarteel.ai/",
     icon: "layers",
     title: "Recurring phrases",
-    beta: true,
-    body: "Mutashabihat dataset — Quranic Universal Library (QUL).",
+    soon: true,
+    body: "Coming soon. Mutashabihat dataset — Quranic Universal Library (QUL).",
   },
 ];
 
@@ -67,7 +73,7 @@ export default function CreditsPage() {
             <span className="credit-text">
               <b style={{ display: "flex", alignItems: "center", gap: 7 }}>
                 {s.title}
-                {s.beta && <span className="badge-beta">Beta</span>}
+                {s.soon && <span className="badge-beta">Coming soon</span>}
               </b>
               <span>{s.body}</span>
             </span>

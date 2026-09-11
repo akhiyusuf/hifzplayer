@@ -47,6 +47,8 @@ import {
   Volume2,
   VolumeX,
   X,
+  CreditCard,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
@@ -96,6 +98,8 @@ const ICONS: Record<string, LucideIcon> = {
   "volume-2": Volume2,
   "volume-x": VolumeX,
   x: X,
+  "credit-card": CreditCard,
+  sparkles: Sparkles,
 };
 
 export function Icon({
