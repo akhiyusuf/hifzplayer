@@ -43,7 +43,6 @@ function getClerkHandler() {
     },
     {
       contentSecurityPolicy: { directives: CLERK_CSP_EXTRAS },
-      frontendApiProxy: { enabled: true },
     },
   );
   return clerkHandler;
