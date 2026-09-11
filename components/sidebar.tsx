@@ -8,11 +8,7 @@ import { APP_NAME, PLUS_NAME } from "@/lib/brand";
 
 const ITEMS = [
   { href: "/", label: "Read", icon: "book-open", match: (p: string) => p === "/" || p.startsWith("/read") },
-  { href: "/pricing", label: PLUS_NAME, icon: "sparkles", match: (p: string) => p.startsWith("/pricing") },
-  { href: "/account", label: "Account", icon: "user", match: (p: string) => p.startsWith("/account") || p.startsWith("/sign-in") || p.startsWith("/sign-up") },
-  { href: "/settings", label: "Settings", icon: "settings-2", match: (p: string) => p === "/settings" },
-  { href: "/credits", label: "Data & attributions", icon: "shield-check", match: (p: string) => p === "/credits" },
-  { href: "/privacy", label: "Privacy", icon: "info", match: (p: string) => p === "/privacy" },
+  { href: "/settings", label: "Settings", icon: "settings", match: (p: string) => p === "/settings" },
 ];
 
 export function AppSidebar() {
@@ -39,7 +35,12 @@ export function AppSidebar() {
       <div className="as-account">
         <AccountEntry />
       </div>
-      <span className="as-foot">Quran content is always free to access</span>
+      <div className="as-foot">
+        <Link href="/pricing">{PLUS_NAME}</Link>
+        <span aria-hidden="true"> · </span>
+        <Link href="/privacy">Privacy</Link>
+        <p>Quran content is always free to access</p>
+      </div>
     </nav>
   );
 }

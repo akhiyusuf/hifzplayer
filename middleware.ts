@@ -9,7 +9,6 @@ import {
   isPaymentReturnPath,
 } from "@/lib/security/headers";
 
-const isAccountRoute = createRouteMatcher(["/account(.*)"]);
 const isCheckout = createRouteMatcher(["/api/billing/checkout"]);
 
 function secure(res: NextResponse, req: NextRequest) {
@@ -39,14 +38,6 @@ function getClerkHandler() {
             NextResponse.json({ error: `Sign in to buy ${PLUS_NAME}`, code: "SIGN_IN_REQUIRED" }, { status: 401 }),
             req,
           );
-        }
-      }
-      if (isAccountRoute(req)) {
-        const { userId } = await auth();
-        if (!userId) {
-          const url = new URL("/sign-in", req.url);
-          url.searchParams.set("redirect_url", req.nextUrl.pathname);
-          return secure(NextResponse.redirect(url), req);
         }
       }
       return secure(NextResponse.next(), req);

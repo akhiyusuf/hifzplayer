@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { APP_NAME } from "@/lib/brand";
+import { backHref } from "@/lib/nav";
 
 export const metadata: Metadata = { title: `Data & attributions — ${APP_NAME}` };
 
@@ -46,11 +47,16 @@ const SOURCES: {
   },
 ];
 
-export default function CreditsPage() {
+export default async function CreditsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string }>;
+}) {
+  const { from } = await searchParams;
   return (
     <main className="shell" id="main">
       <nav className="page-nav">
-        <Link className="icon-btn sm tap" href="/" aria-label="Back">
+        <Link className="icon-btn sm tap" href={backHref(from)} aria-label="Back">
           <Icon name="chevron-left" size={19} />
         </Link>
         <h1>Data & attributions</h1>

@@ -37,3 +37,12 @@
 .pricing-detected span{font-size:12px;line-height:1.45;color:var(--text-muted)}
 .recover-form{display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px;text-align:left;margin-top:8px}
 .recover-form p{font-size:12.5px;line-height:1.5;color:var(--text-secondary);max-width:none}
+.index-head{align-items:center}
+.index-row{padding:0;align-items:stretch;gap:0}
+.index-row .index-play{display:flex;align-items:center;gap:13px;flex:1;min-width:0;padding:12px 10px 12px 14px;text-align:left}
+.index-row .index-setup{width:46px;flex:none;display:flex;align-items:center;justify-content:center;color:var(--text-muted);border-left:1px solid var(--border-default)}
+.index-row .index-setup:hover{color:var(--action-primary);background:var(--tint-primary-06)}
+.qari-inline{display:inline-flex;align-items:center;gap:5px;max-width:46%;padding:5px 8px;border-radius:var(--radius-pill);font-size:12px;font-weight:600;color:var(--text-secondary);background:var(--bg-surface-alt)}
+.qari-inline>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-sidebar .as-foot a{color:inherit;text-decoration:none}
+.app-sidebar .as-foot p{margin:8px 0 0}

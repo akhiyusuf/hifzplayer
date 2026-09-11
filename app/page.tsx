@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AccountEntry } from "@/components/account-entry";
 import { Icon } from "@/components/icon";
 import { OfflineBanner } from "@/components/offline-banner";
 import { PracticeSheet } from "@/components/practice-sheet";
@@ -12,23 +11,7 @@ import { useAppData } from "@/lib/app-data";
 import { KEYS } from "@/lib/constants";
 import { greeting, listSessions, streakCount, timeAgo } from "@/lib/sessions";
 import { getStore, setStore } from "@/lib/storage";
-import { useTheme } from "@/lib/theme";
-import { PLUS_NAME } from "@/lib/brand";
 import type { Session } from "@/lib/types";
-
-function ThemeToggle() {
-  const { dark, toggle } = useTheme();
-  return (
-    <button
-      className="icon-btn tap"
-      onClick={toggle}
-      aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
-      style={dark ? { color: "var(--action-primary)" } : undefined}
-    >
-      <Icon name={dark ? "sun" : "moon"} size={19} />
-    </button>
-  );
-}
 
 export default function HomePage() {
   const router = useRouter();
@@ -81,6 +64,22 @@ export default function HomePage() {
     return `/read/${chapter}?${n.toString()}`;
   };
 
+  const spanFor = (chapter: number, versesCount: number) => {
+    const last = [continueSession, ...pickups].find((s) => s?.chapter === chapter);
+    if (last) {
+      return { from: last.from, to: last.to, at: String(last.verse) };
+    }
+    const to = versesCount <= 12 ? versesCount : Math.min(10, versesCount);
+    return { from: 1, to };
+  };
+
+  const startChapter = (chapter: number, versesCount: number) => {
+    const span = spanFor(chapter, versesCount);
+    router.push(
+      hrefFor(chapter, span.from, span.to, span.at ? { at: span.at } : undefined),
+    );
+  };
+
   const span = continueSession ? continueSession.to - continueSession.from + 1 : 0;
   const at = continueSession ? continueSession.verse - continueSession.from + 1 : 0;
 
@@ -102,11 +101,9 @@ export default function HomePage() {
           >
             <Icon name="search" size={18} />
           </button>
-          <AccountEntry compact />
           <Link className="icon-btn tap" href="/settings" aria-label="Settings">
-            <Icon name="settings-2" size={18} />
+            <Icon name="settings" size={18} />
           </Link>
-          <ThemeToggle />
         </div>
       </div>
       <OfflineBanner />
@@ -243,9 +240,11 @@ export default function HomePage() {
             <section className="picker-section">
               <div className="index-head">
                 <span className="label-eyebrow">Surahs</span>
-                <span className="num" style={{ fontSize: 11.5, color: "var(--text-muted)" }}>
-                  {filtered.length}
-                </span>
+                <button className="qari-inline tap" onClick={() => setQariOpen(true)} aria-label="Change reciter">
+                  <Icon name="mic" size={14} style={{ color: "var(--text-muted)", flex: "none" }} />
+                  <span>{reciterName(reciterId).split(" ").slice(-1)[0]}</span>
+                  <Icon name="chevron-down" size={13} style={{ color: "var(--text-muted)", flex: "none" }} />
+                </button>
               </div>
               {filtered.length === 0 ? (
                 <div className="status-block" style={{ padding: "32px 8px" }}>
@@ -269,40 +268,51 @@ export default function HomePage() {
                   {filtered.map((c) => {
                     const on = selectedId === c.id;
                     return (
-                      <button
-                        key={c.id}
-                        className={`index-row${on ? " sel" : ""}`}
-                        onClick={() => {
-                          setSelectedId(c.id);
-                          setPracticeOpen(true);
-                        }}
-                        aria-pressed={on}
-                      >
-                        <span className="in">{c.id}</span>
-                        <span className="itext">
-                          <b>{c.name_simple}</b>
-                          <span>
-                            {c.translated_name?.name} · {c.verses_count} verses
-                          </span>
-                        </span>
-                        <span className="iar">{c.name_arabic}</span>
-                        <Icon
-                          name="chevron-left"
-                          size={16}
-                          style={{
-                            color: on ? "var(--action-primary)" : "var(--text-muted)",
-                            flex: "none",
+                      <div key={c.id} className={`index-row${on ? " sel" : ""}`}>
+                        <button
+                          type="button"
+                          className="index-play tap"
+                          aria-label={`Play ${c.name_simple}`}
+                          onClick={() => {
+                            setSelectedId(c.id);
+                            startChapter(c.id, c.verses_count);
                           }}
-                        />
-                      </button>
+                        >
+                          <span className="in">{c.id}</span>
+                          <span className="itext">
+                            <b>{c.name_simple}</b>
+                            <span>
+                              {c.translated_name?.name} · {c.verses_count} verses
+                            </span>
+                          </span>
+                          <span className="iar">{c.name_arabic}</span>
+                          <Icon
+                            name="play"
+                            size={16}
+                            style={{
+                              color: on ? "var(--action-primary)" : "var(--text-muted)",
+                              flex: "none",
+                            }}
+                          />
+                        </button>
+                        <button
+                          type="button"
+                          className="index-setup tap"
+                          aria-label={`Set up ${c.name_simple}`}
+                          onClick={() => {
+                            setSelectedId(c.id);
+                            setPracticeOpen(true);
+                          }}
+                        >
+                          <Icon name="sliders-horizontal" size={16} />
+                        </button>
+                      </div>
                     );
                   })}
                 </div>
               )}
             </section>
             <div className="link-row">
-              <Link href="/pricing">{PLUS_NAME}</Link>
-              <span aria-hidden="true">·</span>
               <Link href="/credits">Data & attributions</Link>
               <span aria-hidden="true">·</span>
               <Link href="/privacy">Privacy</Link>
@@ -310,30 +320,12 @@ export default function HomePage() {
           </>
         )}
       </div>
-      {status === "ready" && (
-        <div className="picker-foot" style={{ flexDirection: "row", gap: 10 }}>
-          <button className="qari-compact tap" onClick={() => setQariOpen(true)} aria-label="Change reciter">
-            <Icon name="mic" size={15} style={{ color: "var(--text-muted)", flex: "none" }} />
-            <span>{reciterName(reciterId).split(" ").slice(-1)[0]}</span>
-            <Icon name="chevron-down" size={14} style={{ color: "var(--text-muted)", flex: "none" }} />
-          </button>
-          <button
-            className="btn-primary"
-            style={{ flex: 1, width: "auto" }}
-            disabled={!selected}
-            onClick={() => selected && setPracticeOpen(true)}
-          >
-            <Icon name="sliders-horizontal" size={18} />
-            {selected ? `Set up ${selected.name_simple}` : "Choose a surah"}
-          </button>
-        </div>
-      )}
       {practiceOpen && selected && (
         <PracticeSheet
           surahName={selected.name_simple}
           versesCount={selected.verses_count}
-          initialFrom={1}
-          initialTo={Math.min(12, selected.verses_count)}
+          initialFrom={spanFor(selected.id, selected.verses_count).from}
+          initialTo={spanFor(selected.id, selected.verses_count).to}
           initialMode="verse"
           taj={taj}
           onTaj={(v) => {

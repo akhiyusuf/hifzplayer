@@ -62,7 +62,7 @@ function PlusStatus() {
 
   return (
     <Link
-      href="/pricing"
+      href="/pricing?from=settings"
       className="settings-row"
       style={{
         background: "var(--bg-surface)",
@@ -80,18 +80,14 @@ function PlusStatus() {
   );
 }
 
-function ComingSoon({ title, sub }: { title: string; sub: string }) {
+function ComingSoonNote() {
   return (
-    <div
-      className="settings-row"
-      style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}
-    >
-      <span className="st">
-        <b>{title}</b>
-        <span>{sub}</span>
-      </span>
-      <span className="badge-beta">Coming soon</span>
-    </div>
+    <p style={{ fontSize: 12, lineHeight: 1.45, color: "var(--text-muted)", margin: "2px 4px 0" }}>
+      Recurring phrases and near-twin words are coming later.{" "}
+      <Link href="/credits?from=settings" style={{ color: "inherit" }}>
+        Sources
+      </Link>
+    </p>
   );
 }
 
@@ -153,7 +149,27 @@ export default function SettingsPage() {
           maxWidth: 640,
         }}
       >
-        <span className="label-eyebrow">Appearance</span>
+        <span className="label-eyebrow">You</span>
+        <Link
+          href="/account?from=settings"
+          className="settings-row"
+          style={{
+            background: "var(--bg-surface)",
+            border: "1px solid var(--border-default)",
+            textDecoration: "none",
+            color: "inherit",
+          }}
+        >
+          <span className="st">
+            <b>Account</b>
+            <span>Sign in so {PLUS_NAME} follows you, not just this browser</span>
+          </span>
+          <Icon name="user" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
+        </Link>
+        <PlusStatus />
+        <span className="label-eyebrow" style={gap}>
+          Reading
+        </span>
         <Row title="Dark theme" sub="Easier on the eyes at night" checked={dark} onChange={toggle} />
         <Row title="Tajweed colours" sub="Colour letters by recitation rule" checked={taj} onChange={setTaj} />
         <Row
@@ -162,20 +178,7 @@ export default function SettingsPage() {
           checked={translation}
           onChange={setTranslation}
         />
-        <span className="label-eyebrow" style={gap}>
-          Study layers
-        </span>
-        <ComingSoon
-          title="Recurring phrases"
-          sub="Marks passages that recur elsewhere in the Quran"
-        />
-        <ComingSoon
-          title="Near-twin words"
-          sub="Marks words that look like a different word elsewhere"
-        />
-        <p style={{ fontSize: 11.5, color: "var(--text-muted)", margin: "2px 4px 0" }}>
-          These study layers are coming soon. Everything else in the player stays available.
-        </p>
+        <ComingSoonNote />
         <span className="label-eyebrow" style={gap}>
           Data
         </span>
@@ -218,37 +221,12 @@ export default function SettingsPage() {
           <Icon name="cloud-off" size={17} style={{ color: "var(--text-muted)", flex: "none" }} />
         </button>
         <span className="label-eyebrow" style={gap}>
-          Account
-        </span>
-        <Link
-          href="/account"
-          className="settings-row"
-          style={{
-            background: "var(--bg-surface)",
-            border: "1px solid var(--border-default)",
-            textDecoration: "none",
-            color: "inherit",
-          }}
-        >
-          <span className="st">
-            <b>Account</b>
-            <span>Sign in so {PLUS_NAME} follows you, not just this browser</span>
-          </span>
-          <Icon name="user" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
-        </Link>
-        <span className="label-eyebrow" style={gap}>
-          {PLUS_NAME}
-        </span>
-        <PlusStatus />
-        <span className="label-eyebrow" style={gap}>
           About
         </span>
         <div className="link-row" style={{ justifyContent: "flex-start", padding: "0 4px" }}>
-          <Link href="/pricing">Pricing</Link>
+          <Link href="/credits?from=settings">Data & attributions</Link>
           <span aria-hidden="true">·</span>
-          <Link href="/credits">Data & attributions</Link>
-          <span aria-hidden="true">·</span>
-          <Link href="/privacy">Privacy</Link>
+          <Link href="/privacy?from=settings">Privacy</Link>
           <span aria-hidden="true">·</span>
           <span>v0.1.0</span>
         </div>

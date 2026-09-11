@@ -2,14 +2,20 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { APP_NAME, CONTACT_EMAIL, PLUS_NAME } from "@/lib/brand";
+import { backHref } from "@/lib/nav";
 
 export const metadata: Metadata = { title: `Privacy — ${APP_NAME}` };
 
-export default function PrivacyPage() {
+export default async function PrivacyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string }>;
+}) {
+  const { from } = await searchParams;
   return (
     <main className="shell" id="main">
       <nav className="page-nav">
-        <Link className="icon-btn sm tap" href="/" aria-label="Back">
+        <Link className="icon-btn sm tap" href={backHref(from)} aria-label="Back">
           <Icon name="chevron-left" size={19} />
         </Link>
         <h1>Privacy</h1>

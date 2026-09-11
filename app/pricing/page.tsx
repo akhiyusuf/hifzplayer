@@ -7,6 +7,7 @@ import { PLUS_NAME } from "@/lib/brand";
 import { countryFromHeaders } from "@/lib/billing/country";
 import { processorsReady } from "@/lib/billing/env";
 import { catalog, regionForCountry } from "@/lib/billing/plans";
+import { backHref } from "@/lib/nav";
 
 export const metadata: Metadata = { title: `${PLUS_NAME} — pricing` };
 export const dynamic = "force-dynamic";
@@ -14,7 +15,7 @@ export const dynamic = "force-dynamic";
 export default async function PricingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ canceled?: string }>;
+  searchParams: Promise<{ canceled?: string; from?: string }>;
 }) {
   const headerList = await headers();
   const params = await searchParams;
@@ -24,7 +25,7 @@ export default async function PricingPage({
   return (
     <main className="shell" id="main">
       <nav className="page-nav">
-        <Link className="icon-btn sm tap" href="/" aria-label="Back">
+        <Link className="icon-btn sm tap" href={backHref(params.from)} aria-label="Back">
           <Icon name="chevron-left" size={19} />
         </Link>
         <h1>{PLUS_NAME}</h1>
