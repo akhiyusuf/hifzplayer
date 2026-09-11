@@ -1,5 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
+import { NextResponse, type NextFetchEvent, type NextMiddleware, type NextRequest } from "next/server";
 import { clerkConfigured } from "@/lib/auth/config";
 import { applyContentSecurityPolicy, applySecurityHeaders, CLERK_CSP_EXTRAS } from "@/lib/security/headers";
 
@@ -18,7 +18,7 @@ function publicSecurity() {
   return res;
 }
 
-let clerkHandler: ReturnType<typeof clerkMiddleware> | undefined;
+let clerkHandler: NextMiddleware | undefined;
 
 function getClerkHandler() {
   clerkHandler ??= clerkMiddleware(

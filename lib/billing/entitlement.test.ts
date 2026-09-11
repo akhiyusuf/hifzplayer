@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { entitlementForUser, isPlusActive, publicEntitlement, type Entitlement } from "./entitlement.ts";
+import { entitlementForUser, isPlusActive, publicEntitlement, type PlusFields } from "./entitlement-bind.ts";
 
-function sample(over: Partial<Entitlement> = {}): Entitlement {
+function sample(over: Partial<PlusFields> = {}): PlusFields {
   return {
-    v: 1,
     plus: true,
     planId: "annual",
     regionId: "us",
@@ -12,7 +11,6 @@ function sample(over: Partial<Entitlement> = {}): Entitlement {
     until: new Date(Date.now() + 86400000).toISOString(),
     email: "secret@example.com",
     ref: "cs_test",
-    grantedAt: new Date().toISOString(),
     ...over,
   };
 }

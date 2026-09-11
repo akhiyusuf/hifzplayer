@@ -1,9 +1,10 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { cookies } from "next/headers";
 import { billingSigningSecret } from "./env";
 import type { PlanId, Processor, RegionId } from "./plans";
 import { isPlanId, isRegionId } from "./plans";
+import { entitlementForUser, isPlusActive, publicEntitlement } from "./entitlement-bind";
 
+export { entitlementForUser, isPlusActive, publicEntitlement };
 export const PLUS_COOKIE = "hifz_plus";
 
 export type Entitlement = {
@@ -27,38 +28,6 @@ export function periodEnd(planId: PlanId, from = new Date()): string | null {
   if (planId === "monthly") d.setUTCDate(d.getUTCDate() + 31);
   else d.setUTCFullYear(d.getUTCFullYear() + 1);
   return d.toISOString();
-}
-
-export function isPlusActive(ent: Entitlement | null | undefined): boolean {
-  if (!ent?.plus) return false;
-  if (!ent.until) return true;
-  return Date.parse(ent.until) > Date.now();
-}
-
-export function publicEntitlement(ent: Entitlement | null) {
-  if (!ent || !isPlusActive(ent)) {
-    return { plus: false as const, planId: null, regionId: null, processor: null, until: null };
-  }
-  return {
-    plus: true as const,
-    planId: ent.planId,
-    regionId: ent.regionId,
-    processor: ent.processor,
-    until: ent.until,
-  };
-}
-
-/** When accounts are on, Plus only applies to the signed-in owner. Email never leaves this helper. */
-export function entitlementForUser(
-  ent: Entitlement | null,
-  userId: string | null,
-  accountsOn: boolean,
-): Entitlement | null {
-  if (!ent || !isPlusActive(ent)) return null;
-  if (!accountsOn) return ent;
-  if (!userId) return null;
-  if (ent.userId && ent.userId !== userId) return null;
-  return { ...ent, userId };
 }
 
 function encode(value: string) {
@@ -109,11 +78,13 @@ export function cookieMaxAge(ent: Entitlement) {
 }
 
 export async function readEntitlement(): Promise<Entitlement | null> {
+  const { cookies } = await import("next/headers");
   const jar = await cookies();
   return openEntitlement(jar.get(PLUS_COOKIE)?.value);
 }
 
 export async function writeEntitlement(ent: Entitlement) {
+  const { cookies } = await import("next/headers");
   const jar = await cookies();
   jar.set(PLUS_COOKIE, sealEntitlement(ent), {
     httpOnly: true,
