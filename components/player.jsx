@@ -1301,6 +1301,7 @@ function k(e) {
     u = "word" === s.mode,
     focus = "focus" === s.style && "verse" === s.mode,
     [transOpen, setTransOpen] = useState(!1),
+    [toolsOpen, setToolsOpen] = useState(!1),
     p = s.wordStep.range,
     m = s.loop
       ? {
@@ -1330,6 +1331,16 @@ function k(e) {
             clear: () => t.clearDrill(),
           }
         : null;
+  useEffect(() => {
+    if (!toolsOpen) return;
+    let e = (e) => {
+      "Escape" === e.key && setToolsOpen(!1);
+    };
+    return (
+      window.addEventListener("keydown", e),
+      () => window.removeEventListener("keydown", e)
+    );
+  }, [toolsOpen]);
   return _jsxs("footer", {
     className: "player-foot",
     children: [
@@ -1381,101 +1392,125 @@ function k(e) {
             }),
           ],
         }),
-      !u &&
-        _jsxs("div", {
-          className: "player-tools",
-          children: [
-            _jsx(b, { engine: t, disabled: c }),
-            _jsxs("button", {
-              className: "speed-btn tap",
-              onClick: () => t.cycleRate(),
-              "aria-label": "Playback speed ".concat(
-                s.rate,
-                "\xd7. Tap to change",
-              ),
-              children: [0.75 === s.rate ? "\xbe" : s.rate, "\xd7"],
-            }),
-            _jsx("button", {
-              className: "tr-btn tap".concat(
-                s.verseLoop || (focus && s.loop) ? " on" : " muted",
-              ).concat(!plusOn ? " locked" : ""),
-              onClick: () => {
-                if (focus) {
-                  if (s.loop) {
-                    t.clearLoop();
-                    return;
-                  }
-                  let count = s.loopCount;
-                  if (isPaidRepeat(count) && !plusOn) {
-                    ask("repeats");
-                    return;
-                  }
-                  t.loopPhrase(count);
-                  return;
-                }
-                !plusOn && !s.verseLoop ? ask("repeats") : t.toggleVerseLoop();
-              },
-              "aria-label": focus
-                ? plusOn
-                  ? "Loop this phrase"
-                  : "Loop this phrase — Diras Plus"
-                : plusOn
-                  ? "Repeat this verse"
-                  : "Repeat this verse until you stop — Diras Plus",
-              "aria-pressed": !!(s.verseLoop || (focus && s.loop)),
-              disabled: c,
-              children: _jsx(Icon, { name: "repeat", size: 20 }),
-            }),
-            _jsxs("button", {
-              className: "mode-chip tap",
-              onClick: n,
-              "aria-label": "Listening mode: ".concat(
-                i.name,
-                ". Change mode",
-              ),
+      !u && _jsx(b, { engine: t, disabled: c }),
+      _jsxs("div", {
+        className: "listen-pill".concat(toolsOpen ? " open" : ""),
+        children: [
+          _jsx("div", {
+            className: "listen-pill-clip",
+            children: _jsxs("div", {
+              id: "listen-tools",
+              className: "listen-pill-panel",
+              inert: toolsOpen ? undefined : true,
               children: [
-                _jsx(Icon, {
-                  name: i.icon,
-                  size: 14,
-                  style: { color: "var(--action-primary)" },
-                }),
-                i.name,
-                _jsx(Icon, {
-                  name: "chevron-up",
-                  size: 13,
-                  style: { color: "var(--text-muted)" },
+                !u &&
+                  _jsxs("button", {
+                    className: "speed-btn tap",
+                    onClick: () => t.cycleRate(),
+                    "aria-label": "Playback speed ".concat(
+                      s.rate,
+                      "\xd7. Tap to change",
+                    ),
+                    children: [0.75 === s.rate ? "\xbe" : s.rate, "\xd7"],
+                  }),
+                !u &&
+                  _jsx("button", {
+                    className: "tr-btn tap".concat(
+                      s.verseLoop || (focus && s.loop) ? " on" : " muted",
+                    ).concat(!plusOn ? " locked" : ""),
+                    onClick: () => {
+                      if (focus) {
+                        if (s.loop) {
+                          t.clearLoop();
+                          return;
+                        }
+                        let count = s.loopCount;
+                        if (isPaidRepeat(count) && !plusOn) {
+                          ask("repeats");
+                          return;
+                        }
+                        t.loopPhrase(count);
+                        return;
+                      }
+                      !plusOn && !s.verseLoop
+                        ? ask("repeats")
+                        : t.toggleVerseLoop();
+                    },
+                    "aria-label": focus
+                      ? plusOn
+                        ? "Loop this phrase"
+                        : "Loop this phrase — Diras Plus"
+                      : plusOn
+                        ? "Repeat this verse"
+                        : "Repeat this verse until you stop — Diras Plus",
+                    "aria-pressed": !!(s.verseLoop || (focus && s.loop)),
+                    disabled: c,
+                    children: _jsx(Icon, { name: "repeat", size: 20 }),
+                  }),
+                _jsxs("button", {
+                  className: "mode-chip tap",
+                  onClick: n,
+                  "aria-label": "Listening mode: ".concat(
+                    i.name,
+                    ". Change mode",
+                  ),
+                  children: [
+                    _jsx(Icon, {
+                      name: i.icon,
+                      size: 14,
+                      style: { color: "var(--action-primary)" },
+                    }),
+                    i.name,
+                    _jsx(Icon, {
+                      name: "chevron-up",
+                      size: 13,
+                      style: { color: "var(--text-muted)" },
+                    }),
+                  ],
                 }),
               ],
             }),
-          ],
-        }),
-      u &&
-        _jsxs("div", {
-          className: "player-tools",
-          children: [
-            _jsxs("button", {
-              className: "mode-chip tap",
-              onClick: n,
-              "aria-label": "Listening mode: ".concat(
-                i.name,
-                ". Change mode",
-              ),
-              children: [
+          }),
+          _jsxs("button", {
+            type: "button",
+            className: "listen-pill-toggle tap",
+            "aria-expanded": toolsOpen,
+            "aria-controls": "listen-tools",
+            "aria-label": toolsOpen
+              ? "Hide listening controls"
+              : "Show listening controls: ".concat(i.name),
+            onClick: () => setToolsOpen((e) => !e),
+            children: [
+              _jsx(Icon, {
+                name: i.icon,
+                size: 15,
+                style: { color: "var(--action-primary)", flex: "none" },
+              }),
+              _jsx("span", { children: i.name }),
+              !u &&
+                _jsxs("span", {
+                  className: "listen-pill-meta",
+                  children: [
+                    "\xb7 ",
+                    0.75 === s.rate ? "\xbe" : s.rate,
+                    "\xd7",
+                  ],
+                }),
+              (s.verseLoop || (focus && s.loop)) &&
                 _jsx(Icon, {
-                  name: i.icon,
+                  name: "repeat",
                   size: 14,
-                  style: { color: "var(--action-primary)" },
+                  style: { color: "var(--action-primary)", flex: "none" },
                 }),
-                i.name,
-                _jsx(Icon, {
-                  name: "chevron-up",
-                  size: 13,
-                  style: { color: "var(--text-muted)" },
-                }),
-              ],
-            }),
-          ],
-        }),
+              _jsx(Icon, {
+                name: toolsOpen ? "chevron-down" : "chevron-up",
+                size: 14,
+                style: { color: "var(--text-muted)", flex: "none" },
+              }),
+            ],
+          }),
+        ],
+      }),
       _jsxs("div", {
         className: "transport",
         children: [
