@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { Show, UserButton } from "@clerk/nextjs";
 import { Icon } from "@/components/icon";
 import { clerkBrowserReady } from "@/lib/auth/config";
 
@@ -15,12 +15,12 @@ export function AccountEntry({ compact = false }: { compact?: boolean }) {
   }
   return (
     <>
-      <SignedOut>
+      <Show when="signed-out">
         <Link className="icon-btn tap" href="/sign-in" aria-label="Sign in">
           <Icon name="user" size={18} />
         </Link>
-      </SignedOut>
-      <SignedIn>
+      </Show>
+      <Show when="signed-in">
         <span className={compact ? "account-btn" : undefined}>
           <UserButton
             appearance={{
@@ -30,7 +30,7 @@ export function AccountEntry({ compact = false }: { compact?: boolean }) {
             }}
           />
         </span>
-      </SignedIn>
+      </Show>
     </>
   );
 }
