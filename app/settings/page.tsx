@@ -23,6 +23,62 @@ function usePref<T>(key: string, fallback: T): [T, (v: T) => void] {
   ];
 }
 
+function PlusStatus() {
+  const [label, setLabel] = useState("Optional support. Quran reading stays free.");
+  const [active, setActive] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/billing/status");
+        const data = (await res.json()) as {
+          plus?: boolean;
+          planId?: string | null;
+          until?: string | null;
+        };
+        if (cancelled) return;
+        if (data.plus) {
+          setActive(true);
+          const names: Record<string, string> = { monthly: "Monthly", annual: "Annual", lifetime: "Lifetime" };
+          const plan = names[data.planId || ""] || "Plus";
+          setLabel(
+            data.planId === "lifetime"
+              ? "Lifetime · active on this device"
+              : data.until
+                ? `${plan} · until ${new Date(data.until).toLocaleDateString()}`
+                : `${plan} · active on this device`,
+          );
+        }
+      } catch {
+        /* keep the default copy */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <Link
+      href="/pricing"
+      className="settings-row"
+      style={{
+        background: "var(--bg-surface)",
+        border: "1px solid var(--border-default)",
+        textDecoration: "none",
+        color: "inherit",
+      }}
+    >
+      <span className="st">
+        <b>{active ? "Hifz Plus is on" : "Hifz Plus"}</b>
+        <span>{label}</span>
+      </span>
+      <Icon name="sparkles" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
+    </Link>
+  );
+}
+
 function Row({
   title,
   sub,
@@ -152,9 +208,15 @@ export default function SettingsPage() {
           <Icon name="cloud-off" size={17} style={{ color: "var(--text-muted)", flex: "none" }} />
         </button>
         <span className="label-eyebrow" style={gap}>
+          Hifz Plus
+        </span>
+        <PlusStatus />
+        <span className="label-eyebrow" style={gap}>
           About
         </span>
         <div className="link-row" style={{ justifyContent: "flex-start", padding: "0 4px" }}>
+          <Link href="/pricing">Pricing</Link>
+          <span aria-hidden="true">·</span>
           <Link href="/credits">Data & attributions</Link>
           <span aria-hidden="true">·</span>
           <Link href="/privacy">Privacy</Link>
