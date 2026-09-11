@@ -418,6 +418,10 @@ class g {
       : this.loadVerseAudio(this.st.vIdx, !0);
   }
   prev() {
+    if ("focus" === this.st.style && "verse" === this.st.mode) {
+      this.stepPhrase(-1);
+      return;
+    }
     if ("word" === this.st.mode) {
       this.stepWordManual(-1);
       return;
@@ -428,6 +432,10 @@ class g {
       : this.armSeek(0, this.st.playing);
   }
   next() {
+    if ("focus" === this.st.style && "verse" === this.st.mode) {
+      this.stepPhrase(1);
+      return;
+    }
     if ("word" === this.st.mode) {
       this.stepWordManual(1);
       return;
@@ -712,6 +720,7 @@ class g {
     s >= 0 && s !== this.st.focusPhrase && (this.st.focusPhrase = s);
   }
   stepPhrase(e) {
+    this.st.loop = null;
     let t = this.currentVerse();
     if (!t) return;
     let s = v(t),
@@ -1290,6 +1299,8 @@ function k(e) {
         : void 0,
     c = "relay" === s.mode,
     u = "word" === s.mode,
+    focus = "focus" === s.style && "verse" === s.mode,
+    [transOpen, setTransOpen] = useState(!1),
     p = s.wordStep.range,
     m = s.loop
       ? {
@@ -1323,17 +1334,29 @@ function k(e) {
     className: "player-foot",
     children: [
       (null == d ? void 0 : d.translation) &&
-        _jsxs("div", {
-          className: "trans-dock",
-          children: [
+        _jsxs("button", {
+          type: "button",
+          className: "trans-dock tap".concat(transOpen ? "" : " compact"),
+          onClick: () => setTransOpen((e) => !e),
+          "aria-expanded": transOpen,
+        children: [
             _jsxs("div", {
               className: "trans-meta",
               children: [
                 _jsx("b", { children: d.key.replace(":", " : ") }),
-                _jsx("span", { children: s.translationName }),
+                _jsxs("span", {
+                  children: [
+                    s.translationName,
+                    " · ",
+                    transOpen ? "Hide" : "Show",
+                  ],
+                }),
               ],
             }),
-            _jsx("p", { children: d.translation }),
+            _jsx("p", {
+              className: transOpen ? "" : "trans-clamp",
+              children: d.translation,
+            }),
           ],
         }),
       m &&
@@ -1360,7 +1383,7 @@ function k(e) {
         }),
       !u &&
         _jsxs("div", {
-          style: { display: "flex", alignItems: "center", gap: 10 },
+          className: "player-tools",
           children: [
             _jsx(b, { engine: t, disabled: c }),
             _jsxs("button", {
@@ -1372,6 +1395,85 @@ function k(e) {
               ),
               children: [0.75 === s.rate ? "\xbe" : s.rate, "\xd7"],
             }),
+            _jsx("button", {
+              className: "tr-btn tap".concat(
+                s.verseLoop || (focus && s.loop) ? " on" : " muted",
+              ).concat(!plusOn ? " locked" : ""),
+              onClick: () => {
+                if (focus) {
+                  if (s.loop) {
+                    t.clearLoop();
+                    return;
+                  }
+                  let count = s.loopCount;
+                  if (isPaidRepeat(count) && !plusOn) {
+                    ask("repeats");
+                    return;
+                  }
+                  t.loopPhrase(count);
+                  return;
+                }
+                !plusOn && !s.verseLoop ? ask("repeats") : t.toggleVerseLoop();
+              },
+              "aria-label": focus
+                ? plusOn
+                  ? "Loop this phrase"
+                  : "Loop this phrase — Diras Plus"
+                : plusOn
+                  ? "Repeat this verse"
+                  : "Repeat this verse until you stop — Diras Plus",
+              "aria-pressed": !!(s.verseLoop || (focus && s.loop)),
+              disabled: c,
+              children: _jsx(Icon, { name: "repeat", size: 20 }),
+            }),
+            _jsxs("button", {
+              className: "mode-chip tap",
+              onClick: n,
+              "aria-label": "Listening mode: ".concat(
+                i.name,
+                ". Change mode",
+              ),
+              children: [
+                _jsx(Icon, {
+                  name: i.icon,
+                  size: 14,
+                  style: { color: "var(--action-primary)" },
+                }),
+                i.name,
+                _jsx(Icon, {
+                  name: "chevron-up",
+                  size: 13,
+                  style: { color: "var(--text-muted)" },
+                }),
+              ],
+            }),
+          ],
+        }),
+      u &&
+        _jsxs("div", {
+          className: "player-tools",
+          children: [
+            _jsxs("button", {
+              className: "mode-chip tap",
+              onClick: n,
+              "aria-label": "Listening mode: ".concat(
+                i.name,
+                ". Change mode",
+              ),
+              children: [
+                _jsx(Icon, {
+                  name: i.icon,
+                  size: 14,
+                  style: { color: "var(--action-primary)" },
+                }),
+                i.name,
+                _jsx(Icon, {
+                  name: "chevron-up",
+                  size: 13,
+                  style: { color: "var(--text-muted)" },
+                }),
+              ],
+            }),
           ],
         }),
       _jsxs("div", {
@@ -1380,24 +1482,15 @@ function k(e) {
           _jsx("button", {
             className: "tr-btn tap",
             onClick: () => t.prev(),
-            "aria-label": u ? "Previous word" : "Previous verse",
+            "aria-label": focus
+              ? "Previous phrase"
+              : u
+                ? "Previous word"
+                : "Previous verse",
             children: _jsx(Icon, {
-              name: u ? "chevron-right" : "skip-back",
-              size: u ? 24 : 22,
+              name: u || focus ? "chevron-right" : "skip-back",
+              size: u || focus ? 24 : 22,
             }),
-          }),
-          _jsx("button", {
-            className: "tr-btn tap".concat(
-              s.verseLoop ? " on" : " muted",
-            ).concat(!plusOn ? " locked" : ""),
-            onClick: () =>
-              !plusOn && !s.verseLoop ? ask("repeats") : t.toggleVerseLoop(),
-            "aria-label": plusOn
-              ? "Repeat this verse"
-              : "Repeat this verse until you stop — Diras Plus",
-            "aria-pressed": s.verseLoop,
-            disabled: c,
-            children: _jsx(Icon, { name: "repeat", size: 20 }),
           }),
           _jsx("button", {
             className: "play-btn",
@@ -1408,34 +1501,17 @@ function k(e) {
               size: 26,
             }),
           }),
-          _jsxs("button", {
-            className: "mode-chip tap",
-            onClick: n,
-            "aria-label": "Playback mode: ".concat(
-              i.name,
-              ". Change mode",
-            ),
-            children: [
-              _jsx(Icon, {
-                name: i.icon,
-                size: 14,
-                style: { color: "var(--action-primary)" },
-              }),
-              i.name,
-              _jsx(Icon, {
-                name: "chevron-up",
-                size: 13,
-                style: { color: "var(--text-muted)" },
-              }),
-            ],
-          }),
           _jsx("button", {
             className: "tr-btn tap",
             onClick: () => t.next(),
-            "aria-label": u ? "Next word" : "Next verse",
+            "aria-label": focus
+              ? "Next phrase"
+              : u
+                ? "Next word"
+                : "Next verse",
             children: _jsx(Icon, {
-              name: u ? "chevron-left" : "skip-forward",
-              size: u ? 24 : 22,
+              name: u || focus ? "chevron-left" : "skip-forward",
+              size: u || focus ? 24 : 22,
             }),
           }),
         ],
@@ -1457,8 +1533,6 @@ function N(e) {
       backLabel: p = null,
     } = e,
     m = useRouter(),
-    { plus: plusOn, askPlus: ask } = usePlus(),
-    v = "verse" === i || "word" === i,
     x = "relay" === i;
   return _jsxs("header", {
     className: "player-head",
@@ -1503,42 +1577,6 @@ function N(e) {
               }),
         ],
       }),
-      v &&
-        _jsx("div", {
-          className: "style-toggle",
-          role: "group",
-          "aria-label": "Display style",
-          children: ["mushaf", "focus"].map((e) =>
-            _jsx(
-              "button",
-              {
-                className: ""
-                  .concat(l === e ? "on" : "")
-                  .concat("focus" === e && !plusOn ? " locked" : ""),
-                onClick: () =>
-                  "focus" === e && !plusOn ? ask("focus") : d(e),
-                "aria-pressed": l === e,
-                children:
-                  "mushaf" === e
-                    ? "Mushaf"
-                    : plusOn
-                      ? "Focus"
-                      : _jsxs("span", {
-                          style: {
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 4,
-                          },
-                          children: [
-                            "Focus",
-                            _jsx(Icon, { name: "sparkles", size: 12 }),
-                          ],
-                        }),
-              },
-              e,
-            ),
-          ),
-        }),
       x &&
         h &&
         _jsxs("button", {
@@ -1560,16 +1598,51 @@ function N(e) {
             "Edit",
           ],
         }),
-      !v &&
-        !x &&
-        _jsx("span", {
-          className: "icon-btn sm",
-          style: {
-            borderColor: "transparent",
-            color: "var(--text-muted)",
-          },
-          children: _jsx(Icon, { name: "eye-off", size: 19 }),
-        }),
+    ],
+  });
+}
+function PlayerViewBar(e) {
+  let { style: t, onStyle: s } = e,
+    { plus: plusOn, askPlus: ask } = usePlus();
+  return _jsxs("div", {
+    className: "player-view",
+    children: [
+      _jsx("span", { className: "player-view-label", children: "View" }),
+      _jsx("div", {
+        className: "style-toggle",
+        role: "group",
+        "aria-label": "Reading view",
+        children: ["mushaf", "focus"].map((e) =>
+          _jsx(
+            "button",
+            {
+              className: ""
+                .concat(t === e ? "on" : "")
+                .concat("focus" === e && !plusOn ? " locked" : ""),
+              onClick: () =>
+                "focus" === e && !plusOn ? ask("focus") : s(e),
+              "aria-pressed": t === e,
+              children:
+                "mushaf" === e
+                  ? "Mushaf"
+                  : plusOn
+                    ? "Focus"
+                    : _jsxs("span", {
+                        style: {
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                        },
+                        children: [
+                          "Focus",
+                          _jsx(Icon, { name: "sparkles", size: 12 }),
+                        ],
+                      }),
+            },
+            e,
+          ),
+        ),
+      }),
     ],
   });
 }
@@ -2651,8 +2724,22 @@ let D = memo(function (e) {
       isArrived: u,
       annotation: p,
       onTap: m,
+      onHold: y,
     } = e,
+    holdTimer = useRef(null),
+    held = useRef(!1),
+    holdStart = useRef({ x: 0, y: 0 }),
+    clearHold = () => {
+      holdTimer.current &&
+        (clearTimeout(holdTimer.current), (holdTimer.current = null));
+    },
     v = ["w"];
+  useEffect(
+    () => () => {
+      holdTimer.current && clearTimeout(holdTimer.current);
+    },
+    [],
+  );
   (n && v.push("cur"),
     i && v.push("inrange"),
     l && v.push("range-start"),
@@ -2700,9 +2787,40 @@ let D = memo(function (e) {
         "aria-label": ""
           .concat(t.ar)
           .concat(t.gloss ? " — ".concat(t.gloss) : ""),
+        onPointerDown: (e) => {
+          if (!y || ("mouse" === e.pointerType && 0 !== e.button)) return;
+          ((held.current = !1),
+            (holdStart.current = { x: e.clientX, y: e.clientY }));
+          let n = e.currentTarget;
+          holdTimer.current = setTimeout(() => {
+            ((holdTimer.current = null),
+              (held.current = !0),
+              y(s, t.pos, n));
+          }, 480);
+        },
+        onPointerMove: (e) => {
+          holdTimer.current &&
+            (Math.abs(e.clientX - holdStart.current.x) > 10 ||
+              Math.abs(e.clientY - holdStart.current.y) > 10) &&
+            clearHold();
+        },
+        onPointerUp: clearHold,
+        onPointerCancel: clearHold,
+        onPointerLeave: clearHold,
+        onContextMenu: (e) => {
+          y &&
+            (e.preventDefault(),
+            e.stopPropagation(),
+            (held.current = !0),
+            clearHold(),
+            y(s, t.pos, e.currentTarget));
+        },
         onClick: (e) => {
-          (e.stopPropagation(),
-            null == m || m(s, t.pos, e.currentTarget));
+          if ((e.stopPropagation(), held.current)) {
+            held.current = !1;
+            return;
+          }
+          null == m || m(s, t.pos, e.currentTarget);
         },
         onKeyDown: (e) => {
           ("Enter" === e.key || " " === e.key) &&
@@ -2721,7 +2839,7 @@ let D = memo(function (e) {
       : _jsx("span", { ...f, children: t.ar });
 });
 function F(e) {
-  let { engine: t, state: s, onWordTap: a, selection: n } = e,
+  let { state: s, onWordTap: a, onWordHold: n } = e,
     i = s.verses[s.vIdx];
   if (!i) return null;
   let l = v(i),
@@ -2764,6 +2882,7 @@ function F(e) {
                   mask: null,
                   interactive: !0,
                   onTap: a,
+                  onHold: n,
                 },
                 e.pos,
               );
@@ -2783,41 +2902,6 @@ function F(e) {
             }),
           ],
         }),
-      _jsxs("div", {
-        className: "focus-nav",
-        children: [
-          _jsx("button", {
-            className: "nav-btn tap",
-            onClick: () => t.stepPhrase(-1),
-            "aria-label": "Previous phrase",
-            children: _jsx(Icon, {
-              name: "chevron-right",
-              size: 22,
-            }),
-          }),
-          _jsxs("button", {
-            className: "loop-btn",
-            onClick: () => t.loopPhrase(5),
-            children: [
-              _jsx(Icon, {
-                name: "repeat",
-                size: 16,
-                style: { color: "var(--action-primary)" },
-              }),
-              "Loop \xd75",
-            ],
-          }),
-          _jsx("button", {
-            className: "nav-btn tap",
-            onClick: () => t.stepPhrase(1),
-            "aria-label": "Next phrase",
-            children: _jsx(Icon, {
-              name: "chevron-left",
-              size: 22,
-            }),
-          }),
-        ],
-      }),
     ],
   });
 }
@@ -2838,6 +2922,7 @@ let O = memo(function (e) {
       arrivedFrom: v = 0,
       arrivedTo: x = 0,
       onWordTap: y,
+      onWordHold: b,
       onMarkTap: g,
     } = e,
     j = new Map();
@@ -2877,6 +2962,7 @@ let O = memo(function (e) {
                 isArrived: v > 0 && e.pos >= v && e.pos <= x,
                 annotation: null == m ? void 0 : m.get(e.pos),
                 onTap: y,
+                onHold: b,
               }),
               null === (t = j.get(e.pos)) || void 0 === t
                 ? void 0
@@ -3032,6 +3118,7 @@ function H(e) {
       engine: t,
       state: s,
       onWordTap: n,
+      onWordHold: r,
       selection: i,
       annFor: l,
       arrived: o,
@@ -3107,6 +3194,7 @@ function H(e) {
                 arrivedTo:
                   (null == o ? void 0 : o.verse) === e.number ? o.to : 0,
                 onWordTap: n,
+                onWordHold: r,
                 onMarkTap: (e) => t.jumpToVerse(e),
               },
               e.key,
@@ -3278,7 +3366,7 @@ function K(e) {
 let B = [1, 2, 3, 0];
 function G(e) {
   var t, s, a;
-  let { engine: n, state: i, onWordTap: l, selection: d, annFor: c } = e,
+  let { engine: n, state: i, onWordTap: l, onWordHold: o, selection: d, annFor: c } = e,
     { plus: plusOn, askPlus: ask } = usePlus(),
     h = i.verses[i.vIdx];
   if (!h) return null;
@@ -3416,6 +3504,7 @@ function G(e) {
               interactive: !0,
               annotations: c(h.number),
               onWordTap: l,
+              onWordHold: o,
             }),
           }),
           _jsxs("span", {
@@ -3571,12 +3660,22 @@ function U(e) {
               ),
             );
           }
+          return;
         }
-        (eS(null),
-          eN({ vIdx: e, pos: t, rect: s.getBoundingClientRect() }));
+        if ("word" === r.mode) {
+          (eS(null),
+            eN({ vIdx: e, pos: t, rect: s.getBoundingClientRect() }));
+          return;
+        }
+        eu.playWordOneshot(e, t);
       },
       [eu, eh],
     ),
+    eHold = useCallback((e, t, s) => {
+      if (eu.getSnapshot().pendingLoopStart) return;
+      (eS(null),
+        eN({ vIdx: e, pos: t, rect: s.getBoundingClientRect() }));
+    }, [eu]),
     eK = useMemo(() => {
       var e, t;
       return ek &&
@@ -3913,6 +4012,7 @@ function U(e) {
       engine: eu,
       state: ez,
       onWordTap: eH,
+      onWordHold: eHold,
       selection: eI,
       annFor: eG,
       arrived: eR,
@@ -3935,38 +4035,48 @@ function U(e) {
     className: "shell player",
     id: "main",
     children: [
-      _jsx(N, {
-        title: eq,
-        subtitle: e$,
-        qariName: ed(
-          null !== (b = ez.reciterId) && void 0 !== b ? b : eM,
-        ),
-        mode: ez.mode,
-        style: ez.style,
-        onStyle: (e) => eu.setStyle(e),
-        onQari: () => ej(!0),
-        matchLabel:
-          eR && es && (null == eC ? void 0 : eC.groups[es])
-            ? (() => {
-                let e = eC.groups[es].occ,
-                  t = e.findIndex(
-                    (e) =>
-                      e.k === "".concat(z, ":").concat(eR.verse) &&
-                      e.f === eR.from,
-                  );
-                return t >= 0
-                  ? "Match ".concat(t + 1, " of ").concat(e.length)
-                  : null;
-              })()
-            : et
-              ? "Match "
-                  .concat(et.split("-")[0], " of ")
-                  .concat(et.split("-")[1])
-              : null,
-        backLabel: $ ? $.split(" ")[0] : null,
-        onEditRelay: () => {
-          (eu.pauseRelayForEdit(), eb(!0));
-        },
+      _jsxs("div", {
+        className: "player-chrome",
+        children: [
+          _jsx(N, {
+            title: eq,
+            subtitle: e$,
+            qariName: ed(
+              null !== (b = ez.reciterId) && void 0 !== b ? b : eM,
+            ),
+            mode: ez.mode,
+            style: ez.style,
+            onStyle: (e) => eu.setStyle(e),
+            onQari: () => ej(!0),
+            matchLabel:
+              eR && es && (null == eC ? void 0 : eC.groups[es])
+                ? (() => {
+                    let e = eC.groups[es].occ,
+                      t = e.findIndex(
+                        (e) =>
+                          e.k === "".concat(z, ":").concat(eR.verse) &&
+                          e.f === eR.from,
+                      );
+                    return t >= 0
+                      ? "Match ".concat(t + 1, " of ").concat(e.length)
+                      : null;
+                  })()
+                : et
+                  ? "Match "
+                      .concat(et.split("-")[0], " of ")
+                      .concat(et.split("-")[1])
+                  : null,
+            backLabel: $ ? $.split(" ")[0] : null,
+            onEditRelay: () => {
+              (eu.pauseRelayForEdit(), eb(!0));
+            },
+          }),
+          "verse" === ez.mode &&
+            _jsx(PlayerViewBar, {
+              style: ez.style,
+              onStyle: (e) => eu.setStyle(e),
+            }),
+        ],
       }),
       _jsx(OfflineBanner, {}),
       eR &&
@@ -4279,15 +4389,7 @@ function U(e) {
           variant: "mode",
           onTaj: (e) => eu.setTajweed(e),
           onStart: (e, t, s) => {
-            ey(!1);
-            let r = new URLSearchParams({
-              from: String(e),
-              to: String(t),
-            });
-            (ez.reciterId && r.set("reciter", String(ez.reciterId)),
-              "verse" !== s && r.set("mode", s),
-              (eF.current = !0),
-              Y.replace("/read/".concat(z, "?").concat(r.toString())));
+            (ey(!1), eu.setMode(s), "relay" === s && eb(!0));
           },
           onClose: () => ey(!1),
         }),
