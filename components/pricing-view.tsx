@@ -2,7 +2,6 @@
 
 import { useUser } from "@clerk/nextjs";
 import { useMemo, useState } from "react";
-import { Icon } from "@/components/icon";
 import { APP_NAME, PLUS_NAME } from "@/lib/brand";
 import { clerkBrowserReady } from "@/lib/auth/config";
 import type { Catalog, PlanId } from "@/lib/billing/plans";
@@ -118,11 +117,6 @@ function PricingForm({
           location — not a choice at checkout.
         </span>
       </div>
-
-      <p className="pricing-processor">
-        <Icon name="credit-card" size={14} />
-        {region.processor === "paystack" ? "Paystack" : "Stripe"} · {region.currency}
-      </p>
 
       <div className="pricing-plans" role="radiogroup" aria-label="Plan">
         {region.plans.map((plan) => {
