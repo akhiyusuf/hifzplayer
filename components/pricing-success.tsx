@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { Icon } from "@/components/icon";
-import { PLUS_NAME } from "@/lib/brand";
+import { APP_NAME, PLUS_NAME } from "@/lib/brand";
 import { PLUS_STORAGE_KEY } from "@/lib/billing/keys";
 import { setStore } from "@/lib/storage";
 
@@ -118,7 +118,8 @@ export function PricingSuccess({
             ? "Lifetime access is saved on your account."
             : state.until
               ? `Your ${state.planId} plan is active until ${new Date(state.until).toLocaleDateString()}.`
-              : `Your ${state.planId} plan is active.`}
+              : `Your ${state.planId} plan is active.`}{" "}
+          A {APP_NAME} confirmation email follows this — separate from the Paystack or Stripe receipt.
         </p>
         <div className="status-actions">
           <Link className="btn-primary" href="/">

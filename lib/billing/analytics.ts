@@ -6,7 +6,10 @@ export type BillingEventType =
   | "confirm_failed"
   | "webhook_received"
   | "clerk_save_failed"
-  | "recover_attempt";
+  | "recover_attempt"
+  | "welcome_sent"
+  | "welcome_skipped"
+  | "welcome_failed";
 
 export type BillingEvent = {
   type: BillingEventType;

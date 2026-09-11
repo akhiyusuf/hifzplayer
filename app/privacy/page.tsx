@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
-import { APP_NAME, PLUS_NAME } from "@/lib/brand";
+import { APP_NAME, CONTACT_EMAIL, PLUS_NAME } from "@/lib/brand";
 
 export const metadata: Metadata = { title: `Privacy — ${APP_NAME}` };
 
@@ -74,11 +74,12 @@ export default function PrivacyPage() {
             Optional {PLUS_NAME} checkout is handled by Paystack (Nigeria and West Africa) or Stripe (other
             regions), chosen from your location — not a picker. Card numbers go to those providers, not to{" "}
             {APP_NAME}. We receive the email on the receipt, the plan you chose, and a payment reference so we can
-            confirm the charge. Those fields stay on the server; the app never shows payment refs or account ids
-            in the page. We log payment confirmation events (plan, processor, success or failure) so a paid
-            subscription can be fulfilled even if the checkout page does not load. Paystack and Stripe dashboards
-            are the payment ledger. Their privacy policies apply to the checkout pages. Sign-in is handled by
-            Clerk.
+            confirm the charge. After Plus is granted we send one confirmation email to that address (via Resend)
+            so you know the subscription actually turned on. Paystack and Stripe still send their own receipts.
+            Those payment fields stay on the server; the app never shows payment refs or account ids in the page.
+            We log payment confirmation events (plan, processor, success or failure) so a paid subscription can be
+            fulfilled even if the checkout page does not load. Paystack and Stripe dashboards are the payment
+            ledger. Their privacy policies apply to the checkout pages. Sign-in is handled by Clerk.
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -86,8 +87,8 @@ export default function PrivacyPage() {
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
             If this policy ever changes — for example, if error reporting is added — this page will say so plainly,
             including what is collected and why. Questions:{" "}
-            <a href="mailto:contact@brotheryusuf.com" style={{ color: "var(--action-primary)" }}>
-              contact@brotheryusuf.com
+            <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "var(--action-primary)" }}>
+              {CONTACT_EMAIL}
             </a>
             .
           </p>

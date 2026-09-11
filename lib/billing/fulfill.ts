@@ -81,6 +81,18 @@ async function persist(ent: Entitlement, userId: string | null, setCookie: boole
     source,
     hasUserId: Boolean(next.userId),
   });
+  try {
+    const { sendPlusWelcome } = await import("@/lib/email/send");
+    await sendPlusWelcome(next);
+  } catch {
+    logBillingEvent({
+      type: "welcome_failed",
+      processor: next.processor,
+      planId: next.planId,
+      regionId: next.regionId,
+      hasUserId: Boolean(next.userId),
+    });
+  }
   return next;
 }
 

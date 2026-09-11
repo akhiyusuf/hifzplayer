@@ -55,6 +55,7 @@ Copy `.env.example` and add keys in the Vercel project (or a local `.env.local`)
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
 - `PAYSTACK_SECRET_KEY`, optional `PAYSTACK_PLAN_MONTHLY` / `PAYSTACK_PLAN_ANNUAL` plan codes
 - `BILLING_SIGNING_SECRET` (recommended)
+- `RESEND_API_KEY` and `EMAIL_FROM` (Diras Plus confirmation email after a grant)
 - Clerk keys above, so Plus is bound to the signed-in user
 
 `NEXT_PUBLIC_APP_URL` is optional. Checkout return URLs use the request host so Paystack cannot bounce to a stale origin.
@@ -64,7 +65,9 @@ Webhook endpoints (set these in the Paystack and Stripe dashboards, or a paid ch
 - Stripe: `/api/billing/webhook/stripe`
 - Paystack: `/api/billing/webhook/paystack`
 
-After payment, Paystack/Stripe send the customer to `/api/billing/return`, which verifies the charge, stores Plus on the Clerk account, sets the Plus cookie, then redirects to `/pricing/success`. If that page never loads, paste the Paystack reference from the receipt on the success page.
+After payment, Paystack/Stripe send the customer to `/api/billing/return`, which verifies the charge, stores Plus on the Clerk account, sets the Plus cookie, then redirects to `/pricing/success`. If that page never loads, paste the Paystack reference from the receipt on the success page. The same grant sends a **Diras Plus is active** email (Resend) once per payment, separate from the processor receipt.
+
+In Clerk, turn on the **Welcome** email template if you also want a signup note. That is not the payment confirmation — Diras sends that itself after Plus is granted.
 
 Rename the Paystack page/product and the Stripe product to **Diras Plus** in those dashboards. New checkouts already send that name.
 
