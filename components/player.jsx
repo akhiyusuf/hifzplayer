@@ -1,6 +1,6 @@
 "use client";
 
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
   memo,
   useCallback,
@@ -2583,7 +2583,7 @@ function M(e) {
           (A(!0), await x(b, N, S, R), A(!1));
         },
         children: W
-          ? _jsxs(r.Fragment, {
+          ? _jsxs(_Fragment, {
               children: [
                 _jsx("span", {
                   className: "spinner",
@@ -2592,7 +2592,7 @@ function M(e) {
                 "Preparing qaris…",
               ],
             })
-          : _jsxs(r.Fragment, {
+          : _jsxs(_Fragment, {
               children: [
                 _jsx(Icon, { name: "play", size: 18 }),
                 "Start relay",
@@ -2826,7 +2826,7 @@ let O = memo(function (e) {
               ? null
               : g.phrase;
         return _jsxs(
-          a.Fragment,
+          _Fragment,
           {
             children: [
               _jsx(D, {
