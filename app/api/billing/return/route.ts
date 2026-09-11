@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server";
-import { attachEntitlementCookie } from "@/lib/billing/entitlement";
+import { attachEntitlementCookie, type Entitlement } from "@/lib/billing/entitlement";
 import { appUrl } from "@/lib/billing/env";
 import { fulfillPaystackReference, fulfillStripeSession } from "@/lib/billing/fulfill";
+import { applyContentSecurityPolicy, applySecurityHeaders } from "@/lib/security/headers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function paymentRedirect(dest: URL, ent?: Entitlement) {
+  const res = NextResponse.redirect(dest);
+  applySecurityHeaders(res.headers, { embeddable: true });
+  applyContentSecurityPolicy(res.headers, { embeddable: true });
+  if (ent) attachEntitlementCookie(res, ent);
+  return res;
+}
 
 /**
  * Paystack/Stripe send the customer here as a top-level GET after payment.
@@ -27,13 +36,11 @@ export async function GET(request: Request) {
   if (result?.ok) {
     dest.searchParams.set("granted", "1");
     dest.searchParams.set("plan", result.entitlement.planId);
-    const res = NextResponse.redirect(dest);
-    attachEntitlementCookie(res, result.entitlement);
-    return res;
+    return paymentRedirect(dest, result.entitlement);
   }
 
   if (sessionId) dest.searchParams.set("session_id", sessionId);
   if (reference) dest.searchParams.set("reference", reference);
   dest.searchParams.set("error", "1");
-  return NextResponse.redirect(dest);
+  return paymentRedirect(dest);
 }

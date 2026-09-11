@@ -2,7 +2,6 @@
 
 export const SECURITY_HEADERS: { key: string; value: string }[] = [
   { key: "X-Content-Type-Options", value: "nosniff" },
-  { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "X-DNS-Prefetch-Control", value: "off" },
   { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
@@ -56,6 +55,8 @@ export function applySecurityHeaders(headers: Headers, opts?: { embeddable?: boo
   if (opts?.embeddable) {
     headers.delete("X-Frame-Options");
     headers.set("Cross-Origin-Resource-Policy", "cross-origin");
+  } else {
+    headers.set("X-Frame-Options", "DENY");
   }
 }
 

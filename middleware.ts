@@ -58,11 +58,15 @@ function getClerkHandler() {
   return clerkHandler;
 }
 
-export default function middleware(req: NextRequest, event: NextFetchEvent) {
-  if (clerkConfigured()) {
-    return getClerkHandler()(req, event);
+export default async function middleware(req: NextRequest, event: NextFetchEvent) {
+  const embeddable = isPaymentReturnPath(req.nextUrl.pathname);
+  const raw = clerkConfigured() ? getClerkHandler()(req, event) : publicSecurity(req);
+  const res = await raw;
+  if (embeddable && res) {
+    res.headers.delete("X-Frame-Options");
+    res.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
   }
-  return publicSecurity(req);
+  return res;
 }
 
 export const config = {
