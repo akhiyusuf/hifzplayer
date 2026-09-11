@@ -26,6 +26,7 @@ export async function createPaystackCheckout(opts: {
   region: Region;
   planId: PlanId;
   email: string;
+  userId?: string;
   callbackUrl: string;
 }) {
   const amount = opts.region.amounts[opts.planId];
@@ -38,6 +39,7 @@ export async function createPaystackCheckout(opts: {
       planId: opts.planId,
       regionId: opts.region.id,
       processor: "paystack",
+      ...(opts.userId ? { userId: opts.userId } : {}),
     },
   };
   if (opts.planId === "monthly" || opts.planId === "annual") {
@@ -59,7 +61,7 @@ export async function verifyPaystackReference(reference: string) {
       amount: number;
       currency: string;
       customer?: { email?: string };
-      metadata?: { planId?: string; regionId?: string };
+      metadata?: { planId?: string; regionId?: string; userId?: string };
     };
   }>(`/transaction/verify/${encodeURIComponent(reference)}`);
 }

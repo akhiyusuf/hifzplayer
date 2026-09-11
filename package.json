@@ -6,9 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --experimental-strip-types --test lib/billing/*.test.ts"
+    "test": "node --experimental-strip-types --test lib/billing/*.test.ts lib/auth/*.test.ts lib/security/*.test.ts"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.9.2",
     "lucide-react": "^0.469.0",
     "next": "^15.3.1",
     "react": "^19.0.0",

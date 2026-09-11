@@ -217,6 +217,25 @@ export default function SettingsPage() {
           <Icon name="cloud-off" size={17} style={{ color: "var(--text-muted)", flex: "none" }} />
         </button>
         <span className="label-eyebrow" style={gap}>
+          Account
+        </span>
+        <Link
+          href="/account"
+          className="settings-row"
+          style={{
+            background: "var(--bg-surface)",
+            border: "1px solid var(--border-default)",
+            textDecoration: "none",
+            color: "inherit",
+          }}
+        >
+          <span className="st">
+            <b>Account</b>
+            <span>Sign in so Hifz Plus follows you, not just this browser</span>
+          </span>
+          <Icon name="user" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
+        </Link>
+        <span className="label-eyebrow" style={gap}>
           Hifz Plus
         </span>
         <PlusStatus />
