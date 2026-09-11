@@ -55,8 +55,16 @@ export function PricingView({
   return (
     <div className="pricing">
       <p className="pricing-lead">
-        Hifz Plus is optional. Quran text, audio, and study tools stay free. Plus is a way to support the
-        project on a plan that matches where you pay from.
+        Quran reading, audio, translation, tajweed, masked recall, and relay with one qari stay free. Hifz Plus
+        unlocks Focus mode, three or more repeats of any loop, and more than one qari in relay.
+      </p>
+      <ul className="pricing-includes">
+        <li>Focus mode — one phrase at a time</li>
+        <li>3×, 5×, 10× and unlimited repeats</li>
+        <li>Relay with more than one qari</li>
+      </ul>
+      <p className="pricing-note">
+        Recurring phrases and near-twin words are coming soon, and stay off the paywall.
       </p>
 
       <label className="pricing-region">

@@ -52,8 +52,7 @@ export default function PrivacyPage() {
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Study annotations</h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
-            The recurring-phrase and near-twin markings ship with the app as static files. Looking them up involves
-            no third party.
+            Recurring-phrase and near-twin markings are coming soon. They are not shown in the player yet.
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>

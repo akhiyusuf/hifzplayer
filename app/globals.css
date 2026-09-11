@@ -18,3 +18,9 @@
 .pricing-error{color:var(--state-error)}
 .pricing-foot{color:var(--text-muted)}
 @media (min-width:834px){.pricing{padding-inline:max(24px,calc((100% - 760px) / 2))}}
+.pricing-includes{margin:0;padding:0 2px;display:flex;flex-direction:column;gap:6px}
+.pricing-includes li{font-size:13px;color:var(--text-secondary);padding-left:16px;position:relative}
+.pricing-includes li:before{content:"";position:absolute;left:0;top:8px;width:7px;height:7px;border-radius:50%;background:var(--action-primary)}
+.seg{flex-wrap:wrap}
+.seg button.locked,.rep-seg button.locked,.rounds-row button.locked,.style-toggle button.locked,.tr-btn.locked{opacity:.7}
+.btn-dashed.locked{color:var(--action-primary);border-color:var(--tint-primary-border)}

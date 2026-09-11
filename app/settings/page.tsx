@@ -24,7 +24,7 @@ function usePref<T>(key: string, fallback: T): [T, (v: T) => void] {
 }
 
 function PlusStatus() {
-  const [label, setLabel] = useState("Optional support. Quran reading stays free.");
+  const [label, setLabel] = useState("Focus, 3× repeats, and extra relay qaris.");
   const [active, setActive] = useState(false);
 
   useEffect(() => {
@@ -44,10 +44,10 @@ function PlusStatus() {
           const plan = names[data.planId || ""] || "Plus";
           setLabel(
             data.planId === "lifetime"
-              ? "Lifetime · active on this device"
+              ? "Lifetime · Focus, 3× repeats, extra qaris"
               : data.until
                 ? `${plan} · until ${new Date(data.until).toLocaleDateString()}`
-                : `${plan} · active on this device`,
+                : `${plan} · Focus, 3× repeats, extra qaris`,
           );
         }
       } catch {
@@ -76,6 +76,21 @@ function PlusStatus() {
       </span>
       <Icon name="sparkles" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
     </Link>
+  );
+}
+
+function ComingSoon({ title, sub }: { title: string; sub: string }) {
+  return (
+    <div
+      className="settings-row"
+      style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}
+    >
+      <span className="st">
+        <b>{title}</b>
+        <span>{sub}</span>
+      </span>
+      <span className="badge-beta">Coming soon</span>
+    </div>
   );
 }
 
@@ -116,8 +131,6 @@ export default function SettingsPage() {
   const { dark, toggle } = useTheme();
   const { showToast } = useToast();
   const [taj, setTaj] = usePref(KEYS.taj, false);
-  const [phrases, setPhrases] = usePref(KEYS.layerPhrases, true);
-  const [confusables, setConfusables] = usePref(KEYS.layerConfusables, true);
   const [translation, setTranslation] = usePref(KEYS.showTranslation, true);
   const gap = { marginTop: 6 };
 
@@ -151,20 +164,16 @@ export default function SettingsPage() {
         <span className="label-eyebrow" style={gap}>
           Study layers
         </span>
-        <Row
+        <ComingSoon
           title="Recurring phrases"
           sub="Marks passages that recur elsewhere in the Quran"
-          checked={phrases}
-          onChange={setPhrases}
         />
-        <Row
+        <ComingSoon
           title="Near-twin words"
           sub="Marks words that look like a different word elsewhere"
-          checked={confusables}
-          onChange={setConfusables}
         />
         <p style={{ fontSize: 11.5, color: "var(--text-muted)", margin: "2px 4px 0" }}>
-          Changes apply when you next open a passage. Inside the player, the Layers chips switch them instantly.
+          These study layers are coming soon. Everything else in the player stays available.
         </p>
         <span className="label-eyebrow" style={gap}>
           Data
