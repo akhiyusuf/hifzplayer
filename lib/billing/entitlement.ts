@@ -14,6 +14,7 @@ export type Entitlement = {
   processor: Processor;
   until: string | null;
   email?: string;
+  userId?: string;
   ref: string;
   grantedAt: string;
 };
@@ -45,6 +46,19 @@ export function publicEntitlement(ent: Entitlement | null) {
     processor: ent.processor,
     until: ent.until,
   };
+}
+
+/** When accounts are on, Plus only applies to the signed-in owner. Email never leaves this helper. */
+export function entitlementForUser(
+  ent: Entitlement | null,
+  userId: string | null,
+  accountsOn: boolean,
+): Entitlement | null {
+  if (!ent || !isPlusActive(ent)) return null;
+  if (!accountsOn) return ent;
+  if (!userId) return null;
+  if (ent.userId && ent.userId !== userId) return null;
+  return { ...ent, userId };
 }
 
 function encode(value: string) {
@@ -115,6 +129,7 @@ export function grantFromPayment(opts: {
   regionId: RegionId;
   processor: Processor;
   email?: string;
+  userId?: string;
   ref: string;
   until?: string | null;
 }): Entitlement {
@@ -126,6 +141,7 @@ export function grantFromPayment(opts: {
     processor: opts.processor,
     until: opts.until === undefined ? periodEnd(opts.planId) : opts.until,
     email: opts.email,
+    userId: opts.userId,
     ref: opts.ref,
     grantedAt: new Date().toISOString(),
   };

@@ -13,6 +13,7 @@ export async function createStripeCheckout(opts: {
   region: Region;
   planId: PlanId;
   email?: string;
+  userId?: string;
   successUrl: string;
   cancelUrl: string;
 }) {
@@ -23,6 +24,7 @@ export async function createStripeCheckout(opts: {
   const session = await stripe.checkout.sessions.create({
     mode: plan.interval ? "subscription" : "payment",
     customer_email: opts.email || undefined,
+    client_reference_id: opts.userId || undefined,
     success_url: opts.successUrl,
     cancel_url: opts.cancelUrl,
     allow_promotion_codes: true,
@@ -30,6 +32,7 @@ export async function createStripeCheckout(opts: {
       planId: opts.planId,
       regionId: opts.region.id,
       processor: "stripe",
+      ...(opts.userId ? { userId: opts.userId } : {}),
     },
     line_items: [
       {
@@ -48,12 +51,20 @@ export async function createStripeCheckout(opts: {
     ...(plan.interval
       ? {
           subscription_data: {
-            metadata: { planId: opts.planId, regionId: opts.region.id },
+            metadata: {
+              planId: opts.planId,
+              regionId: opts.region.id,
+              ...(opts.userId ? { userId: opts.userId } : {}),
+            },
           },
         }
       : {
           payment_intent_data: {
-            metadata: { planId: opts.planId, regionId: opts.region.id },
+            metadata: {
+              planId: opts.planId,
+              regionId: opts.region.id,
+              ...(opts.userId ? { userId: opts.userId } : {}),
+            },
           },
         }),
   });

@@ -1,21 +1,56 @@
 "use client";
 
+import { useUser } from "@clerk/nextjs";
 import { useMemo, useState } from "react";
 import { Icon } from "@/components/icon";
+import { clerkBrowserReady } from "@/lib/auth/config";
 import type { Catalog, PlanId, RegionId } from "@/lib/billing/plans";
 
 type Processors = { stripe: boolean; paystack: boolean };
 
-export function PricingView({
+export function PricingView(props: {
+  initialRegion: RegionId;
+  catalog: Catalog;
+  processors: Processors;
+  canceled?: boolean;
+}) {
+  if (clerkBrowserReady()) return <PricingViewSigned {...props} />;
+  return <PricingForm {...props} accountsOn={false} signedIn={false} accountEmail="" />;
+}
+
+function PricingViewSigned(props: {
+  initialRegion: RegionId;
+  catalog: Catalog;
+  processors: Processors;
+  canceled?: boolean;
+}) {
+  const { isLoaded, isSignedIn, user } = useUser();
+  return (
+    <PricingForm
+      {...props}
+      accountsOn
+      signedIn={Boolean(isLoaded && isSignedIn)}
+      accountEmail={user?.primaryEmailAddress?.emailAddress || ""}
+    />
+  );
+}
+
+function PricingForm({
   initialRegion,
   catalog: regions,
   processors,
   canceled,
+  accountsOn,
+  signedIn,
+  accountEmail,
 }: {
   initialRegion: RegionId;
   catalog: Catalog;
   processors: Processors;
   canceled?: boolean;
+  accountsOn: boolean;
+  signedIn: boolean;
+  accountEmail: string;
 }) {
   const [regionId, setRegionId] = useState<RegionId>(initialRegion);
   const [planId, setPlanId] = useState<PlanId>("annual");
@@ -26,17 +61,26 @@ export function PricingView({
   const region = useMemo(() => regions.find((r) => r.id === regionId) ?? regions[0], [regions, regionId]);
   const selected = region.plans.find((p) => p.planId === planId) ?? region.plans[1];
   const ready = region.processor === "paystack" ? processors.paystack : processors.stripe;
+  const receiptEmail = accountEmail || email;
 
   async function checkout() {
     setError("");
+    if (accountsOn && !signedIn) {
+      window.location.assign("/sign-in?redirect_url=/pricing");
+      return;
+    }
     setBusy(true);
     try {
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId, regionId, email }),
+        body: JSON.stringify({ planId, regionId, email: receiptEmail }),
       });
       const data = (await res.json()) as { url?: string; error?: string; code?: string };
+      if (data.code === "SIGN_IN_REQUIRED" || res.status === 401) {
+        window.location.assign("/sign-in?redirect_url=/pricing");
+        return;
+      }
       if (!res.ok || !data.url) {
         throw new Error(
           data.error ||
@@ -114,20 +158,26 @@ export function PricingView({
         })}
       </div>
 
-      <label className="pricing-email">
-        <span className="label-eyebrow">Email for receipt</span>
-        <span className="field">
-          <input
-            type="email"
-            name="email"
-            autoComplete="email"
-            required
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </span>
-      </label>
+      {accountsOn && signedIn && accountEmail ? (
+        <p className="pricing-note">Receipt goes to {accountEmail}.</p>
+      ) : accountsOn && !signedIn ? (
+        <p className="pricing-note">Sign in first so Plus is stored on your account, not only this browser.</p>
+      ) : (
+        <label className="pricing-email">
+          <span className="label-eyebrow">Email for receipt</span>
+          <span className="field">
+            <input
+              type="email"
+              name="email"
+              autoComplete="email"
+              required
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </span>
+        </label>
+      )}
 
       {!ready ? (
         <p className="pricing-note" role="status">
@@ -143,7 +193,11 @@ export function PricingView({
       ) : null}
 
       <button className="btn-primary" type="button" disabled={busy || !ready} onClick={() => void checkout()}>
-        {busy ? "Opening checkout…" : `Continue · ${selected.label}`}
+        {busy
+          ? "Opening checkout…"
+          : accountsOn && !signedIn
+            ? `Sign in to continue · ${selected.label}`
+            : `Continue · ${selected.label}`}
       </button>
 
       <p className="pricing-foot">

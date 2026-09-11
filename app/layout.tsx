@@ -4,6 +4,7 @@ import { AppDataProvider } from "@/lib/app-data";
 import { PlusProvider } from "@/lib/plus";
 import { ThemeProvider, themeInitScript } from "@/lib/theme";
 import { ToastProvider } from "@/lib/toast";
+import { AuthRoot } from "@/components/auth-root";
 import { AppSidebar } from "@/components/sidebar";
 import "./globals.css";
 
@@ -65,12 +66,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <ThemeProvider>
           <ToastProvider>
-            <PlusProvider>
-              <AppDataProvider>
-                <AppSidebar />
-                {children}
-              </AppDataProvider>
-            </PlusProvider>
+            <AuthRoot>
+              <PlusProvider>
+                <AppDataProvider>
+                  <AppSidebar />
+                  {children}
+                </AppDataProvider>
+              </PlusProvider>
+            </AuthRoot>
           </ToastProvider>
         </ThemeProvider>
       </body>

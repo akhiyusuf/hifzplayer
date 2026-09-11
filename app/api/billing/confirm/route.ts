@@ -1,5 +1,6 @@
-import { grantFromPayment, periodEnd, publicEntitlement, writeEntitlement } from "@/lib/billing/entitlement";
-import { badRequest, json } from "@/lib/billing/http";
+import { grantPlusToAccount, signedInUserId } from "@/lib/auth/session";
+import { grantFromPayment, periodEnd, publicEntitlement } from "@/lib/billing/entitlement";
+import { badRequest, json, processorFailed } from "@/lib/billing/http";
 import { verifyPaystackReference } from "@/lib/billing/paystack";
 import { isPlanId, isRegionId, quote } from "@/lib/billing/plans";
 import { retrieveStripeSession } from "@/lib/billing/stripe";
@@ -25,7 +26,8 @@ export async function POST(request: Request) {
   const url = new URL(request.url);
   return confirm({
     sessionId: body.sessionId || body.session_id || url.searchParams.get("session_id") || "",
-    reference: body.reference || body.trxref || url.searchParams.get("reference") || url.searchParams.get("trxref") || "",
+    reference:
+      body.reference || body.trxref || url.searchParams.get("reference") || url.searchParams.get("trxref") || "",
   });
 }
 
@@ -39,9 +41,8 @@ async function confirmStripe(sessionId: string) {
   let session;
   try {
     session = await retrieveStripeSession(sessionId);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Could not load Stripe session";
-    return json({ error: message }, 502);
+  } catch {
+    return processorFailed();
   }
   const paid = session.payment_status === "paid" || session.status === "complete";
   if (!paid) return json({ error: "Payment is not complete yet", plus: false }, 402);
@@ -65,15 +66,17 @@ async function confirmStripe(sessionId: string) {
     const end = sub.items?.data?.[0]?.current_period_end;
     if (typeof end === "number" && end > 0) until = new Date(end * 1000).toISOString();
   }
+  const userId = session.metadata?.userId || (await signedInUserId());
   const ent = grantFromPayment({
     planId,
     regionId,
     processor: "stripe",
     email: session.customer_details?.email || session.customer_email || undefined,
+    userId: userId || undefined,
     ref: session.id,
     until,
   });
-  await writeEntitlement(ent);
+  await grantPlusToAccount(ent, userId);
   return json({ ok: true, ...publicEntitlement(ent) });
 }
 
@@ -81,9 +84,8 @@ async function confirmPaystack(reference: string) {
   let verified;
   try {
     verified = await verifyPaystackReference(reference);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Could not verify Paystack payment";
-    return json({ error: message }, 502);
+  } catch {
+    return processorFailed();
   }
   const data = verified.data;
   if (data.status !== "success") return json({ error: "Payment is not complete yet", plus: false }, 402);
@@ -98,13 +100,15 @@ async function confirmPaystack(reference: string) {
     return json({ error: "Paid amount does not match the catalog" }, 409);
   }
 
+  const userId = data.metadata?.userId || (await signedInUserId());
   const ent = grantFromPayment({
     planId,
     regionId,
     processor: "paystack",
     email: data.customer?.email,
+    userId: userId || undefined,
     ref: data.reference,
   });
-  await writeEntitlement(ent);
+  await grantPlusToAccount(ent, userId);
   return json({ ok: true, ...publicEntitlement(ent) });
 }
