@@ -133,10 +133,23 @@ export type Catalog = ReturnType<typeof catalog>;
 
 export function formatMoney(amountMinor: number, currency: string) {
   const major = amountMinor / 100;
+  const locale =
+    currency === "NGN"
+      ? "en-NG"
+      : currency === "MYR"
+        ? "en-MY"
+        : currency === "AED"
+          ? "en-AE"
+          : currency === "SAR"
+            ? "en-SA"
+            : currency === "GBP"
+              ? "en-GB"
+              : "en-US";
   try {
-    return new Intl.NumberFormat("en", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
+      currencyDisplay: "narrowSymbol",
       maximumFractionDigits: major % 1 === 0 ? 0 : 2,
     }).format(major);
   } catch {
