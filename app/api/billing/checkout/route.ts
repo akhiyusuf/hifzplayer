@@ -1,6 +1,15 @@
+import { signedInEmail, signedInUserId } from "@/lib/auth/session";
+import { clerkConfigured } from "@/lib/auth/config";
 import { countryFromHeaders } from "@/lib/billing/country";
 import { appUrl, processorsReady } from "@/lib/billing/env";
-import { badRequest, emailLooksValid, json, serviceUnavailable } from "@/lib/billing/http";
+import {
+  badRequest,
+  emailLooksValid,
+  json,
+  processorFailed,
+  serviceUnavailable,
+  unauthorized,
+} from "@/lib/billing/http";
 import { createPaystackCheckout } from "@/lib/billing/paystack";
 import { isPlanId, isRegionId, REGIONS, regionForCountry } from "@/lib/billing/plans";
 import { createStripeCheckout } from "@/lib/billing/stripe";
@@ -16,12 +25,19 @@ export async function POST(request: Request) {
     return badRequest("Checkout body must be JSON");
   }
 
+  const accountsOn = clerkConfigured();
+  const userId = accountsOn ? await signedInUserId() : null;
+  if (accountsOn && !userId) {
+    return unauthorized("Sign in to buy Hifz Plus", { code: "SIGN_IN_REQUIRED" });
+  }
+
   const planId = body.planId || "";
   if (!isPlanId(planId)) return badRequest("Choose monthly, annual, or lifetime");
 
-  const regionId = body.regionId && isRegionId(body.regionId) ? body.regionId : regionForCountry(countryFromHeaders(request.headers));
+  const regionId =
+    body.regionId && isRegionId(body.regionId) ? body.regionId : regionForCountry(countryFromHeaders(request.headers));
   const region = REGIONS[regionId];
-  const email = (body.email || "").trim().toLowerCase();
+  const email = ((await signedInEmail()) || body.email || "").trim().toLowerCase();
   if (!emailLooksValid(email)) return badRequest("A valid email is required for the receipt");
 
   const ready = processorsReady();
@@ -45,6 +61,7 @@ export async function POST(request: Request) {
         region,
         planId,
         email,
+        userId: userId || undefined,
         callbackUrl: `${origin}/pricing/success`,
       });
       return json({ url: checkout.url, reference: checkout.reference, processor: "paystack" });
@@ -53,12 +70,12 @@ export async function POST(request: Request) {
       region,
       planId,
       email,
+      userId: userId || undefined,
       successUrl: `${origin}/pricing/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${origin}/pricing?canceled=1`,
     });
     return json({ url: checkout.url, sessionId: checkout.id, processor: "stripe" });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Checkout failed";
-    return json({ error: message, processor: region.processor }, 502);
+  } catch {
+    return processorFailed();
   }
 }

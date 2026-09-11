@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AccountEntry } from "@/components/account-entry";
 import { Icon } from "@/components/icon";
 import { OfflineBanner } from "@/components/offline-banner";
 import { PracticeSheet } from "@/components/practice-sheet";
@@ -100,6 +101,7 @@ export default function HomePage() {
           >
             <Icon name="search" size={18} />
           </button>
+          <AccountEntry compact />
           <Link className="icon-btn tap" href="/settings" aria-label="Settings">
             <Icon name="settings-2" size={18} />
           </Link>

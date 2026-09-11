@@ -24,3 +24,11 @@
 .seg{flex-wrap:wrap}
 .seg button.locked,.rep-seg button.locked,.rounds-row button.locked,.style-toggle button.locked,.tr-btn.locked{opacity:.7}
 .btn-dashed.locked{color:var(--action-primary);border-color:var(--tint-primary-border)}
+.auth-shell{flex:1;padding:28px 20px 40px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.auth-shell .cl-rootBox,.auth-shell .cl-cardBox{width:100%;max-width:400px}
+.account-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:4px;padding:18px 16px;border-radius:var(--radius-card);background:var(--bg-surface);border:1px solid var(--border-default);text-align:center}
+.account-card b{font-family:var(--font-display);font-weight:700;font-size:18px}
+.account-card>span{font-size:13.5px;color:var(--text-secondary)}
+.account-plus{margin-top:8px;font-size:12.5px;font-weight:600;color:var(--action-primary)!important}
+.account-btn{display:inline-flex;align-items:center;justify-content:center}
+.app-sidebar .as-account{display:flex;align-items:center;padding:4px 6px}

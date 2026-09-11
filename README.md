@@ -22,6 +22,17 @@ Open http://localhost:3000.
 
 Nothing is stored on a server for reading. Position, recents, streak, reciter, and settings stay in the browser. Quran content stays free.
 
+## Accounts
+
+Sign-in is two Clerk keys. Add Clerk on the Vercel project (Marketplace), or paste:
+
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- `CLERK_SECRET_KEY`
+
+Optional: `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in` and `NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up`.
+
+Reading stays public. When Clerk is on, buying Hifz Plus requires sign-in, and Plus is stored on that account (not only a browser cookie). Without the keys, `/sign-in` and `/account` show setup copy instead of a fake signed-in state.
+
 ## Billing (Hifz Plus)
 
 Optional Plus checkout uses **Paystack** in Nigeria and West Africa, and **Stripe** everywhere else.
@@ -43,9 +54,16 @@ Copy `.env.example` and add keys in the Vercel project (or a local `.env.local`)
 - `PAYSTACK_SECRET_KEY`, optional `PAYSTACK_PLAN_MONTHLY` / `PAYSTACK_PLAN_ANNUAL` plan codes
 - `BILLING_SIGNING_SECRET` (recommended)
 - `NEXT_PUBLIC_APP_URL` (canonical origin for checkout return URLs)
+- Clerk keys above, so Plus is bound to the signed-in user
 
 Webhook endpoints:
 
 - Stripe: `/api/billing/webhook/stripe`
 - Paystack: `/api/billing/webhook/paystack`
+
+## Security
+
+Production builds omit browser source maps and the `X-Powered-By` header. Middleware adds framing, MIME, referrer, and CSP headers. `/api`, `/account`, and sign-in routes are `noindex`. Payment errors return a generic 502 — processor messages never go to the client. Status APIs return Plus on/off, never email, payment refs, or user ids.
+
+A JavaScript app can still be inspected in the browser. These controls stop casual cloning and stop leaking user or payment details; they do not make the client bundle a secret. Turn on Vercel Deployment Protection for preview URLs.
 
