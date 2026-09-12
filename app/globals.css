@@ -157,6 +157,14 @@ a.listen-sheet-row{text-decoration:none;color:inherit}
 .practise-job.on .practise-job-ic{background:var(--action-primary);color:var(--text-on-primary)}
 .practise-job.on .st b{color:var(--action-primary)}
 .practise-job.on .st span{color:var(--text-secondary)}
+.focus-stage{align-items:stretch;min-width:0;width:100%}
+.focus-stage .focus-phrase{width:100%;min-width:0;align-items:stretch}
+.focus-stage .focus-ar{width:100%;max-width:100%;text-align:center;overflow-wrap:break-word}
+.focus-stage .focus-line{display:block;width:100%}
+.focus-stage .focus-line .w{white-space:nowrap}
+.focus-stage .focus-waqf{color:var(--text-muted);font-size:.72em;padding-inline:3px;white-space:nowrap}
+.focus-stage .focus-gloss{max-width:100%}
+.focus-stage .v{display:block;width:100%;text-align:center}
 button.listen-sheet-row{cursor:pointer}
 .plus-explain{display:flex;flex-direction:column;gap:14px;padding:2px 0 8px}
 .plus-explain-lead{margin:0;font-size:14px;line-height:1.5;color:var(--text-secondary)}
