@@ -1,9 +1,13 @@
+import { giftFlag, GIFT_SEATS } from "./gift.ts";
 import { isPlanId, isRegionId, PLAN_IDS, quote, REGIONS, type PlanId, type RegionId } from "./plans.ts";
 
 export type PaidPlan = {
   planId: PlanId;
   regionId: RegionId;
   userId?: string;
+  buyerId?: string;
+  gift?: boolean;
+  seats?: number;
 };
 
 function asRecord(raw: unknown): Record<string, unknown> | null {
@@ -29,13 +33,26 @@ function fromCustomFields(raw: unknown): Record<string, string> {
   return out;
 }
 
-export function parseCheckoutMetadata(raw: unknown): { planId: string; regionId: string; userId: string } {
+export function parseCheckoutMetadata(raw: unknown): {
+  planId: string;
+  regionId: string;
+  userId: string;
+  buyerId: string;
+  gift: boolean;
+  seats: number;
+} {
   const rec = asRecord(raw) || {};
   const fields = fromCustomFields(rec.custom_fields);
+  const gift = giftFlag(asString(rec.gift) || asString(fields.gift));
+  const buyerId = asString(rec.buyerId) || asString(fields.buyerId);
+  const seatsRaw = Number.parseInt(asString(rec.seats) || asString(fields.seats) || "", 10);
   return {
     planId: asString(rec.planId) || asString(fields.planId),
     regionId: asString(rec.regionId) || asString(fields.regionId),
     userId: asString(rec.userId) || asString(fields.userId),
+    buyerId,
+    gift,
+    seats: gift ? (seatsRaw === GIFT_SEATS ? GIFT_SEATS : GIFT_SEATS) : 1,
   };
 }
 
@@ -65,7 +82,8 @@ export function resolvePaidPlan(opts: {
     const expected = quote(meta.regionId, meta.planId);
     const amountKnown = Number.isFinite(opts.amount) && opts.amount >= 0;
     const drift = Boolean(opts.allowAmountDrift);
-    if (amountKnown && !drift && (opts.amount !== expected.amount || currency !== expected.currency)) {
+    const expectedAmount = expected.amount * (meta.gift ? meta.seats : 1);
+    if (amountKnown && !drift && (opts.amount !== expectedAmount || currency !== expected.currency)) {
       return { error: "Paid amount does not match the catalog" };
     }
     if (!amountKnown && currency && currency !== expected.currency) {
@@ -78,6 +96,8 @@ export function resolvePaidPlan(opts: {
       planId: meta.planId,
       regionId: meta.regionId,
       ...(meta.userId ? { userId: meta.userId } : {}),
+      ...(meta.buyerId ? { buyerId: meta.buyerId } : {}),
+      ...(meta.gift ? { gift: true, seats: meta.seats } : {}),
     };
   }
 

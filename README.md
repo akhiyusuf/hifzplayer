@@ -75,6 +75,8 @@ Monthly and annual checkouts create a real subscription on both processors. Life
 
 After payment, Paystack/Stripe send the customer to `/api/billing/return`, which verifies the charge, stores Plus on the Clerk account, sets the Plus cookie, then redirects to `/pricing/success`. If that page never loads, paste the Paystack reference from the receipt on the success page. The same grant sends a **Diras Plus is active** email (Resend) once per account, separate from the processor receipt. Renewals do not send another welcome.
 
+To gift Plus, choose **Gift someone** on `/pricing`, pay first, then add their email on `/pricing/gift`. They receive a note and only need to sign up (or sign in) with that same email — Google is fine if the Google account uses it.
+
 In Clerk, turn on the **Welcome** email template if you also want a signup note. That is not the payment confirmation — Diras sends that itself after Plus is granted.
 
 Rename the Paystack page/product and the Stripe product to **Diras Plus** in those dashboards. New checkouts already send that name.

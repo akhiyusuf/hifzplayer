@@ -1,5 +1,6 @@
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import type { NextRequest } from "next/server";
+import { claimGiftForUser } from "@/lib/auth/gifts";
 import { logOpsEvent } from "@/lib/ops/events";
 
 export const runtime = "nodejs";
@@ -19,6 +20,18 @@ export async function POST(request: NextRequest) {
       accountId: event.data.id,
       ok: true,
     });
+    const emails = (event.data.email_addresses || [])
+      .map((row) => (row.email_address || "").trim().toLowerCase())
+      .filter(Boolean);
+    try {
+      await claimGiftForUser({
+        userId: event.data.id,
+        emails,
+        publicMetadata: event.data.public_metadata,
+      });
+    } catch {
+      logOpsEvent({ type: "user_created", accountId: event.data.id, ok: false });
+    }
     return Response.json({ received: true, type: event.type });
   }
 
@@ -30,6 +43,11 @@ export async function POST(request: NextRequest) {
         accountId: userId,
         ok: true,
       });
+      try {
+        await claimGiftForUser({ userId });
+      } catch {
+        /* sign-in still succeeds */
+      }
     }
     return Response.json({ received: true, type: event.type });
   }

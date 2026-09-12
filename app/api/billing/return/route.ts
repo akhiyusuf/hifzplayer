@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { attachEntitlementCookie, type Entitlement } from "@/lib/billing/entitlement";
 import { appUrl } from "@/lib/billing/env";
-import { fulfillPaystackReference, fulfillStripeSession, isFulfillGranted } from "@/lib/billing/fulfill";
+import { fulfillPaystackReference, fulfillStripeSession, isFulfillGift, isFulfillGranted } from "@/lib/billing/fulfill";
 import { applyContentSecurityPolicy, applySecurityHeaders } from "@/lib/security/headers";
 
 export const runtime = "nodejs";
@@ -32,6 +32,14 @@ export async function GET(request: Request) {
     : reference
       ? await fulfillPaystackReference(reference, { source: "return", setCookie: false })
       : null;
+
+  if (result && isFulfillGift(result)) {
+    const gift = new URL("/pricing/gift", origin);
+    if (sessionId) gift.searchParams.set("session_id", sessionId);
+    if (reference) gift.searchParams.set("reference", reference);
+    gift.searchParams.set("paid", "1");
+    return paymentRedirect(gift);
+  }
 
   if (result && isFulfillGranted(result)) {
     dest.searchParams.set("granted", "1");

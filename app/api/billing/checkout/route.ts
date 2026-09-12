@@ -20,9 +20,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  let body: { planId?: string; regionId?: string; email?: string };
+  let body: { planId?: string; regionId?: string; email?: string; gift?: boolean };
   try {
-    body = (await request.json()) as { planId?: string; regionId?: string; email?: string };
+    body = (await request.json()) as { planId?: string; regionId?: string; email?: string; gift?: boolean };
   } catch {
     return badRequest("Checkout body must be JSON");
   }
@@ -35,6 +35,10 @@ export async function POST(request: Request) {
 
   const planId = body.planId || "";
   if (!isPlanId(planId)) return badRequest("Choose monthly, annual, or lifetime");
+  const gift = body.gift === true;
+  if (gift && !userId) {
+    return unauthorized(`Sign in to gift ${PLUS_NAME}`, { code: "SIGN_IN_REQUIRED" });
+  }
 
   // Region is always detected from the request. Client-supplied regionId is ignored.
   const regionId = checkoutRegionId(request.headers);
@@ -64,6 +68,7 @@ export async function POST(request: Request) {
     source: "checkout",
     hasUserId: Boolean(userId),
     accountId: userId || undefined,
+    reason: gift ? "gift" : undefined,
   });
 
   const origin = appUrl(request);
@@ -73,20 +78,24 @@ export async function POST(request: Request) {
         region,
         planId,
         email,
-        userId: userId || undefined,
+        userId: gift ? undefined : userId || undefined,
+        gift,
+        buyerId: gift ? userId || undefined : undefined,
         callbackUrl: `${origin}/api/billing/return`,
       });
-      return json({ url: checkout.url, reference: checkout.reference, processor: "paystack" });
+      return json({ url: checkout.url, reference: checkout.reference, processor: "paystack", gift });
     }
     const checkout = await createStripeCheckout({
       region,
       planId,
       email,
-      userId: userId || undefined,
+      userId: gift ? undefined : userId || undefined,
+      gift,
+      buyerId: gift ? userId || undefined : undefined,
       successUrl: `${origin}/api/billing/return?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${origin}/pricing?canceled=1`,
     });
-    return json({ url: checkout.url, sessionId: checkout.id, processor: "stripe" });
+    return json({ url: checkout.url, sessionId: checkout.id, processor: "stripe", gift });
   } catch {
     return processorFailed();
   }

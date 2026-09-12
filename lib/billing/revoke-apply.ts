@@ -1,3 +1,4 @@
+import { revokeGiftsForBuyer } from "@/lib/auth/gifts";
 import { clerkPlusRevoked, revokePlusOnClerk } from "@/lib/auth/plus";
 import { logBillingEvent } from "./analytics";
 import { parseCheckoutMetadata } from "./match";
@@ -66,7 +67,7 @@ async function plusSubscriptionsForCustomer(stripe: Stripe, customerId: string, 
   const list = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 20 });
   return list.data.filter((sub) => {
     if (!isPlanId(sub.metadata?.planId || "")) return false;
-    const owner = sub.metadata?.userId?.trim();
+    const owner = sub.metadata?.userId?.trim() || sub.metadata?.buyerId?.trim();
     if (!userId) return true;
     return !owner || owner === userId;
   });
@@ -89,16 +90,23 @@ async function cancelStripeSubscription(stripe: Stripe, subId: string) {
 
 export async function revokePlusFromPaystackDispute(data: unknown) {
   const reference = paystackDisputeReference(data);
+  let meta = parseCheckoutMetadata(null);
   let userId = userIdFromPaystackDispute(data);
-  if (!userId && reference) {
+  if (reference) {
     try {
       const verified = await verifyPaystackReference(reference);
-      userId = parseCheckoutMetadata(verified.data.metadata).userId;
+      meta = parseCheckoutMetadata(verified.data.metadata);
+      userId = userId || meta.userId || meta.buyerId;
     } catch {
       /* fall through */
     }
   }
+  userId = userId || meta.userId || meta.buyerId;
   if (!userId) return unmatched("paystack");
+  if (meta.gift) {
+    await revokeGiftsForBuyer(meta.buyerId || userId);
+    return { revoked: true, hasUserId: true };
+  }
   if (await clerkPlusRevoked(userId)) return { revoked: true, hasUserId: true };
   return stripAccount(userId, "paystack");
 }
@@ -161,6 +169,11 @@ export async function revokePlusFromStripeDispute(dispute: Stripe.Dispute) {
 
   if (!userId) return unmatched("stripe");
   if (subId) await cancelStripeSubscription(stripe, subId);
+  const giftMeta = [charge.metadata, pi?.metadata, sub?.metadata].some((row) => row?.gift === "1");
+  if (giftMeta) {
+    await revokeGiftsForBuyer(userId);
+    return { revoked: true, hasUserId: true };
+  }
   if (await clerkPlusRevoked(userId)) return { revoked: true, hasUserId: true };
   return stripAccount(userId, "stripe");
 }

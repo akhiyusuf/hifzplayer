@@ -40,7 +40,7 @@ export function userIdFromStripeMetas(
   sources: Array<Record<string, string | undefined> | null | undefined>,
 ): string {
   for (const source of sources) {
-    const id = source?.userId?.trim();
+    const id = source?.userId?.trim() || source?.buyerId?.trim();
     if (id) return id;
   }
   return "";

@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { PLUS_NAME } from "@/lib/brand";
+import { recordGiftHold, renewGiftRecipients, type GiftHold } from "@/lib/auth/gifts";
 import { clerkConfigured } from "@/lib/auth/config";
 import { clerkUserIdByEmail, plusFromClerk } from "@/lib/auth/plus";
 import { grantPlusToAccount, signedInUserId } from "@/lib/auth/session";
 import { logBillingEvent, type BillingEvent } from "./analytics";
 import { grantFromPayment, periodEnd, publicEntitlement, type Entitlement } from "./entitlement";
-import { resolvePaidPlan } from "./match";
+import { parseCheckoutMetadata, resolvePaidPlan, type PaidPlan } from "./match";
 import {
   paystackChargeUntil,
   paystackHasPlan,
@@ -28,7 +29,8 @@ export type FulfillKind = "granted" | "renewed" | "revoked";
 export type FulfillOk = { ok: true; entitlement: Entitlement; kind: FulfillKind };
 export type FulfillErr = { ok: false; status: number; error: string };
 export type FulfillSkip = { ok: true; skipped: true };
-export type FulfillResult = FulfillOk | FulfillErr | FulfillSkip;
+export type FulfillGift = { ok: true; gift: true; hold: GiftHold };
+export type FulfillResult = FulfillOk | FulfillErr | FulfillSkip | FulfillGift;
 
 function fail(status: number, error: string, extra?: Omit<Partial<BillingEvent>, "type">): FulfillErr {
   logBillingEvent({
@@ -130,6 +132,45 @@ async function kindForUser(userId: string | null, plus: boolean): Promise<Fulfil
   return existing ? "renewed" : "granted";
 }
 
+async function holdPaidGift(opts: {
+  paid: PaidPlan;
+  ref: string;
+  until: string | null;
+  sub?: string;
+  processor: "stripe" | "paystack";
+  signedIn: string | null;
+  source: FulfillSource;
+}): Promise<FulfillGift | FulfillErr> {
+  const buyerId = opts.paid.buyerId || opts.signedIn || "";
+  if (!buyerId) {
+    return fail(401, `Sign in to attach this ${PLUS_NAME} gift`, {
+      processor: opts.processor,
+      source: opts.source,
+      hasUserId: false,
+    });
+  }
+  const hold = await recordGiftHold({
+    ref: opts.ref,
+    planId: opts.paid.planId,
+    regionId: opts.paid.regionId,
+    processor: opts.processor,
+    until: opts.until,
+    sub: opts.sub,
+    buyerId,
+  });
+  return { ok: true, gift: true, hold };
+}
+
+async function renewPaidGift(metadata: unknown, until: string | null, plus: boolean): Promise<FulfillSkip | FulfillErr> {
+  const meta = parseCheckoutMetadata(metadata);
+  const buyerId = meta.buyerId || meta.userId;
+  if (!buyerId) {
+    return fail(400, "Gift renewal is missing the buyer account", { hasUserId: false });
+  }
+  await renewGiftRecipients(buyerId, until, plus);
+  return { ok: true, skipped: true };
+}
+
 export async function fulfillPaystackReference(
   reference: string,
   opts: { source: FulfillSource; setCookie: boolean; signedInUserId?: string | null },
@@ -173,6 +214,17 @@ export async function fulfillPaystackReference(
   if (isFulfillErr(owner)) return owner;
 
   const until = paystackChargeUntil(data, paid.planId, periodEnd);
+  if (paid.gift) {
+    return holdPaidGift({
+      paid,
+      ref: data.reference,
+      until,
+      sub: data.subscription?.subscription_code || undefined,
+      processor: "paystack",
+      signedIn,
+      source: opts.source,
+    });
+  }
   const kind = await kindForUser(owner.userId, true);
   const ent = grantFromPayment({
     planId: paid.planId,
@@ -250,6 +302,18 @@ export async function fulfillStripeSession(
   });
   if (isFulfillErr(owner)) return owner;
 
+  if (resolved.gift) {
+    return holdPaidGift({
+      paid: resolved,
+      ref: session.id,
+      until,
+      sub: subId || undefined,
+      processor: "stripe",
+      signedIn,
+      source: opts.source,
+    });
+  }
+
   const kind = await kindForUser(owner.userId, true);
   const ent = grantFromPayment({
     planId: resolved.planId,
@@ -300,12 +364,16 @@ export async function fulfillStripeInvoice(
   }
   if (resolved.planId === "lifetime") return { ok: true, skipped: true };
 
+  const until = (sub && stripeSubscriptionUntil(sub)) || periodEnd(resolved.planId);
+  if (resolved.gift || parseCheckoutMetadata(metadata).gift) {
+    return renewPaidGift({ ...metadata, buyerId: resolved.buyerId || metadata.buyerId }, until, true);
+  }
+
   let userId = resolved.userId || metadata.userId || "";
   if (!userId && invoice.customer_email) {
     userId = (await clerkUserIdByEmail(invoice.customer_email)) || "";
   }
 
-  const until = (sub && stripeSubscriptionUntil(sub)) || periodEnd(resolved.planId);
   const owner = { userId: userId || null };
   const kind = await kindForUser(owner.userId, true);
   const ent = grantFromPayment({
@@ -342,6 +410,13 @@ export async function fulfillStripeSubscription(
   if (resolved.planId === "lifetime") return { ok: true, skipped: true };
 
   const until = opts.plus ? stripeSubscriptionUntil(sub) || periodEnd(resolved.planId) : new Date().toISOString();
+  if (resolved.gift || parseCheckoutMetadata(metadata).gift) {
+    return renewPaidGift(
+      { ...metadata, buyerId: (!("error" in resolved) && resolved.buyerId) || metadata.buyerId },
+      until,
+      opts.plus,
+    );
+  }
   const kind = opts.plus ? await kindForUser(userId || null, true) : "revoked";
   const ent = grantFromPayment({
     planId: resolved.planId,
@@ -394,6 +469,11 @@ export async function fulfillPaystackSubscriptionEvent(
       : periodEnd(planId)
     : new Date().toISOString();
 
+  if (resolved.gift || parseCheckoutMetadata(metadata).gift) {
+    const rec = metadata && typeof metadata === "object" ? (metadata as Record<string, unknown>) : {};
+    return renewPaidGift({ ...rec, buyerId: resolved.buyerId || userId }, until, plus);
+  }
+
   const kind = plus ? await kindForUser(userId || null, true) : "revoked";
   const ent = grantFromPayment({
     planId,
@@ -414,7 +494,19 @@ export function isFulfillGranted(result: FulfillResult): result is FulfillOk {
   return Boolean(result.ok && "entitlement" in result);
 }
 
+export function isFulfillGift(result: FulfillResult): result is FulfillGift {
+  return Boolean(result.ok && "gift" in result && result.gift);
+}
+
 export function fulfillJson(result: FulfillResult) {
+  if (isFulfillGift(result)) {
+    return NextResponse.json({
+      ok: true,
+      gift: true,
+      plus: false,
+      planId: result.hold.planId,
+    });
+  }
   if (isFulfillGranted(result)) {
     return NextResponse.json({ ok: true, ...publicEntitlement(result.entitlement) });
   }

@@ -30,28 +30,40 @@ export async function createPaystackCheckout(opts: {
   planId: PlanId;
   email: string;
   userId?: string;
+  gift?: boolean;
+  buyerId?: string;
   callbackUrl: string;
 }) {
   const amount = opts.region.amounts[opts.planId];
+  const meta: Record<string, unknown> = {
+    planId: opts.planId,
+    regionId: opts.region.id,
+    processor: "paystack",
+  };
+  const fields: Array<{ display_name: string; variable_name: string; value: string }> = [
+    { display_name: "Product", variable_name: "product", value: opts.gift ? `${PLUS_NAME} gift` : PLUS_NAME },
+    { display_name: "Plan", variable_name: "planId", value: opts.planId },
+    { display_name: "Region", variable_name: "regionId", value: opts.region.id },
+  ];
+  if (opts.gift) {
+    meta.gift = "1";
+    meta.seats = "1";
+    fields.push({ display_name: "Gift", variable_name: "gift", value: "1" });
+    if (opts.buyerId) {
+      meta.buyerId = opts.buyerId;
+      fields.push({ display_name: "Buyer", variable_name: "buyerId", value: opts.buyerId });
+    }
+  } else if (opts.userId) {
+    meta.userId = opts.userId;
+    fields.push({ display_name: "Account", variable_name: "userId", value: opts.userId });
+  }
+  meta.custom_fields = fields;
   const body: Record<string, unknown> = {
     email: opts.email,
     amount,
     currency: opts.region.currency,
     callback_url: opts.callbackUrl,
-    metadata: {
-      planId: opts.planId,
-      regionId: opts.region.id,
-      processor: "paystack",
-      ...(opts.userId ? { userId: opts.userId } : {}),
-      custom_fields: [
-        { display_name: "Product", variable_name: "product", value: PLUS_NAME },
-        { display_name: "Plan", variable_name: "planId", value: opts.planId },
-        { display_name: "Region", variable_name: "regionId", value: opts.region.id },
-        ...(opts.userId
-          ? [{ display_name: "Account", variable_name: "userId", value: opts.userId }]
-          : []),
-      ],
-    },
+    metadata: meta,
   };
   if (opts.planId === "monthly" || opts.planId === "annual") {
     body.plan = await ensurePaystackPlan({

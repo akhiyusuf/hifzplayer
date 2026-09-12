@@ -15,26 +15,35 @@ export async function createStripeCheckout(opts: {
   planId: PlanId;
   email?: string;
   userId?: string;
+  gift?: boolean;
+  buyerId?: string;
   successUrl: string;
   cancelUrl: string;
 }) {
   const stripe = stripeClient();
   const plan = PLANS.find((p) => p.id === opts.planId)!;
   const amount = opts.region.amounts[opts.planId];
-  const productName = `${PLUS_NAME} — ${plan.name}`;
+  const productName = opts.gift ? `${PLUS_NAME} gift — ${plan.name}` : `${PLUS_NAME} — ${plan.name}`;
+  const meta: Record<string, string> = {
+    planId: opts.planId,
+    regionId: opts.region.id,
+    processor: "stripe",
+  };
+  if (opts.gift) {
+    meta.gift = "1";
+    meta.seats = "1";
+    if (opts.buyerId) meta.buyerId = opts.buyerId;
+  } else if (opts.userId) {
+    meta.userId = opts.userId;
+  }
   const session = await stripe.checkout.sessions.create({
     mode: plan.interval ? "subscription" : "payment",
     customer_email: opts.email || undefined,
-    client_reference_id: opts.userId || undefined,
+    client_reference_id: opts.buyerId || opts.userId || undefined,
     success_url: opts.successUrl,
     cancel_url: opts.cancelUrl,
     allow_promotion_codes: true,
-    metadata: {
-      planId: opts.planId,
-      regionId: opts.region.id,
-      processor: "stripe",
-      ...(opts.userId ? { userId: opts.userId } : {}),
-    },
+    metadata: meta,
     line_items: [
       {
         quantity: 1,
@@ -43,7 +52,9 @@ export async function createStripeCheckout(opts: {
           unit_amount: amount,
           product_data: {
             name: productName,
-            description: plan.blurb,
+            description: opts.gift
+              ? "Gifted after you pay. Add their email on the next screen."
+              : plan.blurb,
           },
           ...(plan.interval ? { recurring: { interval: plan.interval } } : {}),
         },
@@ -52,20 +63,12 @@ export async function createStripeCheckout(opts: {
     ...(plan.interval
       ? {
           subscription_data: {
-            metadata: {
-              planId: opts.planId,
-              regionId: opts.region.id,
-              ...(opts.userId ? { userId: opts.userId } : {}),
-            },
+            metadata: meta,
           },
         }
       : {
           payment_intent_data: {
-            metadata: {
-              planId: opts.planId,
-              regionId: opts.region.id,
-              ...(opts.userId ? { userId: opts.userId } : {}),
-            },
+            metadata: meta,
           },
         }),
   });
