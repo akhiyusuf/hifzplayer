@@ -5,9 +5,16 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import { OfflineBanner } from "@/components/offline-banner";
+import { Onboarding } from "@/components/onboarding";
 import { PracticeSheet } from "@/components/practice-sheet";
 import { ReciterSheet } from "@/components/reciter-sheet";
 import { useAppData } from "@/lib/app-data";
+import {
+  markOnboardingDone,
+  shouldShowOnboarding,
+  shouldStampExistingUser,
+  snapshotOnboarding,
+} from "@/lib/onboarding";
 import { greeting, listSessions, streakCount, timeAgo } from "@/lib/sessions";
 import type { Session } from "@/lib/types";
 
@@ -23,7 +30,18 @@ export default function HomePage() {
   const [pickups, setPickups] = useState<Session[]>([]);
   const [streak, setStreak] = useState(0);
   const [greet, setGreet] = useState("");
+  const [gate, setGate] = useState<"pending" | "show" | "ready">("pending");
   const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const snap = snapshotOnboarding();
+    if (shouldShowOnboarding(snap)) {
+      setGate("show");
+      return;
+    }
+    if (shouldStampExistingUser(snap)) markOnboardingDone();
+    setGate("ready");
+  }, []);
 
   useEffect(() => {
     const sessions = listSessions();
@@ -78,6 +96,21 @@ export default function HomePage() {
 
   const span = continueSession ? continueSession.to - continueSession.from + 1 : 0;
   const at = continueSession ? continueSession.verse - continueSession.from + 1 : 0;
+
+  if (gate === "pending") {
+    return <main className="shell" id="main" aria-busy="true" />;
+  }
+
+  if (gate === "show") {
+    return (
+      <Onboarding
+        onDone={() => {
+          markOnboardingDone();
+          setGate("ready");
+        }}
+      />
+    );
+  }
 
   return (
     <main className="shell" id="main">

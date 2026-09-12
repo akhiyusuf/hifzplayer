@@ -32,8 +32,8 @@ export default async function PrivacyPage({
       >
         <p style={{ fontSize: 14.5, lineHeight: 1.55, color: "var(--text-primary)" }}>
           Quran reading in {APP_NAME} stays free. Reading position, recents, streak, reciter, colour theme, night
-          theme, and settings stay on your device. If you sign in, Clerk holds your account (name and email). If you
-          buy {PLUS_NAME}{" "}
+          theme, settings, and whether you have seen the welcome stay on your device. If you sign in, Clerk holds
+          your account (name and email). If you buy {PLUS_NAME}{" "}
           while signed in, Plus is stored on that account so it follows you to another browser. Without an
           account, Plus stays in a cookie on this browser only.
         </p>
@@ -42,10 +42,11 @@ export default async function PrivacyPage({
             What stays on your device
           </h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
-            Your reading position, recent passages, day streak, chosen reciter, colour theme, night theme, and
-            settings are saved in your browser’s local storage. They never leave your device, and we cannot see
-            them. Clearing your browser data removes them. Colour and night stay on this browser; they are not
-            gated by {PLUS_NAME}.
+            Your reading position, recent passages, day streak, chosen reciter, colour theme, night theme, settings,
+            and a note that you have seen the welcome screen are saved in your browser’s local storage. They never
+            leave your device, and we cannot see them. Clearing your browser data removes them. Colour and night stay
+            on this browser; they are not gated by {PLUS_NAME}. Clearing reading history does not show the welcome
+            again.
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
