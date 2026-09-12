@@ -11,7 +11,7 @@ export const MODES = [
     id: "verse",
     name: "Verse",
     icon: "book-open",
-    desc: "Play the ayah through, or loop it from Playback",
+    desc: "Play the ayah through, or loop it with Repeat",
   },
   {
     id: "word",
