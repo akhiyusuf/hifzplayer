@@ -146,3 +146,14 @@ a.listen-sheet-row{text-decoration:none;color:inherit}
 .listen-sheet-row .val{display:inline-flex;align-items:center;gap:5px}
 .listen-menu-btn[aria-pressed="true"],.listen-menu-btn.on{border-color:var(--action-primary);background:var(--tint-primary-08);color:var(--action-primary)}
 .listen-menu-btn:disabled{opacity:.45}
+.practise-jobs{display:flex;flex-direction:column;gap:8px}
+.practise-jobs-lead{margin:0 2px 2px;font-size:12.5px;line-height:1.4;color:var(--text-muted)}
+.practise-job{display:flex;align-items:flex-start;gap:12px;width:100%;padding:12px 14px;border-radius:var(--radius-card);border:1px solid var(--border-default);background:var(--bg-surface);text-align:left;color:inherit}
+.practise-job-ic{width:36px;height:36px;border-radius:10px;background:var(--bg-surface-alt);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;flex:none}
+.practise-job .st{display:flex;flex-direction:column;gap:2px;min-width:0}
+.practise-job .st b{font-family:var(--font-display);font-weight:600;font-size:15px}
+.practise-job .st span{font-size:12.5px;line-height:1.4;color:var(--text-muted)}
+.practise-job.on{border-color:var(--action-primary);background:var(--tint-primary-08)}
+.practise-job.on .practise-job-ic{background:var(--action-primary);color:var(--text-on-primary)}
+.practise-job.on .st b{color:var(--action-primary)}
+.practise-job.on .st span{color:var(--text-secondary)}

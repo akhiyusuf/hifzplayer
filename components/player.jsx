@@ -2690,7 +2690,7 @@ function F(e) {
       s.verses.length > 1
         ? "".concat(s.vIdx + 1, " of ", s.verses.length)
         : undefined,
-    hint: "Practise this verse",
+    hint: "Play this verse, or pick a job in Settings",
     progress:
       s.verses.length > 1
         ? {

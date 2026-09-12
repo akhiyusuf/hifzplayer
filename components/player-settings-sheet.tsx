@@ -7,7 +7,7 @@ import { PassageRange } from "./passage-range";
 import { Sheet } from "./sheet";
 import { useAppData } from "@/lib/app-data";
 import { PLUS_NAME } from "@/lib/brand";
-import { MODES, RATES, type ModeId } from "@/lib/constants";
+import { FOCUS_JOBS, RATES, type ModeId } from "@/lib/constants";
 import { usePlus } from "@/lib/plus";
 import type { Chapter } from "@/lib/types";
 
@@ -141,30 +141,37 @@ function PractisePicker({
   mode: string;
   onPick: (id: ModeId) => void;
 }) {
-  const current = MODES.find((m) => m.id === mode) ?? MODES[0];
+  const current = FOCUS_JOBS.find((m) => m.id === mode);
   return (
-    <section className="listen-section" aria-label="Practise as">
-      <span className="label-eyebrow">Practise as</span>
-      <div className="practise-grid" role="group" aria-label="Practise as">
-        {MODES.map((m) => {
+    <section className="listen-section" aria-label="Practise">
+      <span className="label-eyebrow">Practise</span>
+      <p className="practise-jobs-lead">
+        {current
+          ? current.desc
+          : "Play this verse as usual. Pick a job when you want to work it."}
+      </p>
+      <div className="practise-jobs" role="group" aria-label="Practise">
+        {FOCUS_JOBS.map((m) => {
           const on = mode === m.id;
           return (
             <button
               key={m.id}
               type="button"
-              className={`practise-tile tap${on ? " on" : ""}`}
+              className={`practise-job tap${on ? " on" : ""}`}
               aria-pressed={on}
-              onClick={() => onPick(m.id)}
+              onClick={() => onPick(on ? "verse" : m.id)}
             >
-              <span className="practise-tile-ic">
+              <span className="practise-job-ic">
                 <Icon name={m.icon} size={18} />
               </span>
-              <b>{m.name}</b>
+              <span className="st">
+                <b>{m.name}</b>
+                <span>{on ? "On · tap to go back to the verse" : m.desc}</span>
+              </span>
             </button>
           );
         })}
       </div>
-      <p className="practise-grid-hint">{current.desc}</p>
     </section>
   );
 }
@@ -235,8 +242,8 @@ export function PlayerSettingsSheet({
       <div className="listen-sheet">
         <p className="listen-sheet-lead">
           {mushaf
-            ? "Reading stays free. Repeat the verse from the button under play."
-            : `Drill, Masked, and Relay live here. Repeat the verse from the button. ${PLUS_NAME} is extra word repeats and extra qaris.`}
+            ? "Reading stays free. Repeat on the player loops this verse."
+            : `Drill, Masked, or Relay — or just play the verse. ${PLUS_NAME} is extra word repeats and extra qaris.`}
         </p>
         {mushaf ? (
           <>
