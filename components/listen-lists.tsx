@@ -76,9 +76,9 @@ export function ListenLists({ teaser = false }: { teaser?: boolean }) {
   const { recitations, reciterId, reciterName, status } = useAppData();
   const { plus } = usePlus();
   const start = useStartList();
-  const occasions = teaser ? OCCASION_PLAYLISTS.slice(0, 4) : OCCASION_PLAYLISTS;
+  const occasions = teaser ? OCCASION_PLAYLISTS.slice(0, 3) : OCCASION_PLAYLISTS;
   const voices = teaser
-    ? sortRecitersForBestOf(recitations).slice(0, 4)
+    ? sortRecitersForBestOf(recitations).slice(0, 3)
     : sortRecitersForBestOf(recitations);
   const qari = reciterName(reciterId);
   const locked = !plus;

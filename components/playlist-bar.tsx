@@ -14,7 +14,7 @@ export function PlaylistBar({
   const last = index >= total - 1;
   return (
     <div className="list-bar" aria-live="polite">
-      <span className="label-eyebrow">{title}</span>
+      <b className="list-bar-title">{title}</b>
       <span>
         {index + 1} of {total}
         {last ? " · last stop" : nextLabel ? ` · next ${nextLabel}` : ""}
