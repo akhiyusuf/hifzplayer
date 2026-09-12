@@ -15,7 +15,9 @@ Focus behaves like Masked and Drill (one chunk, a counter, footer steps that chu
 
 Child / elder friction: unlabeled icons; home sliders and player sliders mean different things; Speed/Repeat/Mode are three different gestures; tap-vs-hold on words is undiscoverable; words like Mushaf, Tajweed, qari, Murattal.
 
-## Pass 1 — One labeled player *(this pass)*
+## Pass 1 — One labeled player *(done)*
+
+## Pass 2 — Shared practice chrome *(this pass)*
 
 **Goal:** The audio controls look like one player a child can name. Home “set up practise” is a different, labeled action.
 
@@ -49,9 +51,7 @@ Child / elder friction: unlabeled icons; home sliders and player sliders mean di
 - Peek, Replay qari, and Skip my turn stay as extra actions in the shared strip / canvas, not a second toolbar.
 - View bar can stay Mushaf/Focus for this pass.
 
-**Do not:** move Focus into the mode list yet; do not unify Repeat counts yet.
-
-**Verify:** Open Verse (Mushaf), Focus (or Plus gate), Drill, Masked, Relay. Counters and extra actions sit in the same band. Footer player from Pass 1 is unchanged.
+**Files:** `components/practice-strip.tsx`, `components/player.jsx` (Focus, Masked, Drill, Relay bodies), `app/globals.css` (append only).
 
 ## Pass 3 — One Repeat, Focus with its cousins
 

@@ -15,6 +15,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { OfflineBanner } from "@/components/offline-banner";
 import { PracticeSheet } from "@/components/practice-sheet";
+import { PracticeStrip } from "@/components/practice-strip";
 import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
 import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration } from "@/lib/api";
@@ -2918,12 +2919,15 @@ function F(e) {
     .filter(Boolean)
     .join(" \xb7 ");
   return _jsxs("div", {
-    className: "player-body focus-body",
+    className: "player-body",
     children: [
-      _jsxs("span", {
-        className: "focus-counter",
-        children: ["Phrase ", d + 1, " of ", l.length],
+      _jsx(PracticeStrip, {
+        title: "Phrase ".concat(d + 1, " of ", l.length),
+        meta: i.key,
       }),
+      _jsxs("div", {
+        className: "practice-canvas focus-body",
+        children: [
       _jsxs("div", {
         className: "focus-phrase",
         children: [
@@ -2968,6 +2972,8 @@ function F(e) {
             }),
           ],
         }),
+        ],
+      }),
     ],
   });
 }
@@ -3079,36 +3085,31 @@ function _(e) {
   if (!n) return null;
   let i = t.maskStateFor(n),
     l = n.words.length,
-    d = l ? Math.round((i.maxRev / l) * 100) : 0,
     c = i.maxRev >= l;
   return _jsxs("div", {
     className: "player-body",
     children: [
-      _jsxs("div", {
-        className: "mask-meter-row",
-        children: [
-          _jsxs("div", {
-            className: "mask-meter-head",
-            children: [
-              _jsxs("b", {
-                children: ["Revealed ", i.maxRev, " of ", l],
-              }),
-              _jsxs("span", { children: ["Verse ", n.key] }),
-            ],
-          }),
-          _jsx("div", {
-            className: "mask-track",
-            role: "progressbar",
-            "aria-valuemin": 0,
-            "aria-valuemax": l,
-            "aria-valuenow": i.maxRev,
-            "aria-label": "Words revealed",
-            children: _jsx("i", {
-              style: { width: "".concat(d, "%") },
-            }),
-          }),
-        ],
+      _jsx(PracticeStrip, {
+        title: "Revealed ".concat(i.maxRev, " of ", l),
+        meta: "Verse ".concat(n.key),
+        progress: {
+          now: i.maxRev,
+          max: l,
+          label: "Words revealed",
+        },
+        actions: _jsxs("button", {
+          className: "peek-btn",
+          onClick: () => t.peek(),
+          disabled: i.peeks <= 0 || c,
+          children: [
+            _jsx(Icon, { name: "eye", size: 17 }),
+            c ? "Verse revealed" : "Peek \xb7 ".concat(i.peeks, " left"),
+          ],
+        }),
       }),
+      _jsxs("div", {
+        className: "practice-canvas",
+        children: [
       _jsx("div", {
         className: "masked-verse",
         children: _jsx(O, {
@@ -3126,18 +3127,6 @@ function _(e) {
           annotations: a(n.number),
         }),
       }),
-      _jsx("div", {
-        className: "peek-row",
-        children: _jsxs("button", {
-          className: "peek-btn",
-          onClick: () => t.peek(),
-          disabled: i.peeks <= 0 || c,
-          children: [
-            _jsx(Icon, { name: "eye", size: 17 }),
-            c ? "Verse revealed" : "Peek \xb7 ".concat(i.peeks, " left"),
-          ],
-        }),
-      }),
       n.translation &&
         _jsxs("div", {
           className: "trans-card",
@@ -3153,6 +3142,8 @@ function _(e) {
             _jsx("p", { children: n.translation }),
           ],
         }),
+        ],
+      }),
     ],
   });
 }
@@ -3280,72 +3271,97 @@ function K(e) {
     c = s.verses[s.vIdx];
   if (!d || !c) return null;
   let h = "you" === d.kind,
-    u = l.turns.length - l.idx;
+    u = l.turns.length - l.idx,
+    p =
+      0 === l.rounds
+        ? "Round ".concat(l.round)
+        : "Round ".concat(l.round, " of ").concat(l.rounds);
   return _jsxs("div", {
     className: "player-body",
     children: [
-      _jsxs("div", {
-        className: "relay-round",
-        children: [
-          _jsx("b", {
-            children:
-              0 === l.rounds
-                ? "Round ".concat(l.round)
-                : "Round ".concat(l.round, " of ").concat(l.rounds),
-          }),
-          _jsxs("span", {
-            children: [u, " ", 1 === u ? "turn" : "turns", " left"],
-          }),
-        ],
-      }),
-      _jsx("ol", {
-        className: "relay-queue",
-        "aria-label": "Turn order",
-        children: l.turns.map((e, t) => {
-          let s = t < l.idx,
-            a = t === l.idx,
-            i = "you" === e.kind ? "You" : n(e.reciterId).split(" ")[0];
-          return _jsxs(
-            "li",
-            {
-              className: "turn-chip"
-                .concat(s ? " done" : "")
-                .concat(a ? " now" : ""),
-              "aria-current": a ? "step" : void 0,
-              children: [
-                _jsxs("span", {
-                  className: "turn-avatar",
-                  children: [
-                    _jsx(Icon, {
-                      name: "you" === e.kind ? "user" : "mic",
-                      size: 14,
-                    }),
-                    s &&
-                      _jsx("span", {
-                        className: "turn-check",
-                        children: _jsx(Icon, {
-                          name: "check",
-                          size: 9,
-                        }),
-                      }),
-                  ],
-                }),
-                !s &&
+      _jsx(PracticeStrip, {
+        title: p,
+        meta: h
+          ? "Your turn \xb7 ".concat(u, " left")
+          : "".concat(u, " ", 1 === u ? "turn" : "turns", " left"),
+        extra: _jsx("ol", {
+          className: "relay-queue",
+          "aria-label": "Turn order",
+          children: l.turns.map((e, t) => {
+            let s = t < l.idx,
+              a = t === l.idx,
+              i = "you" === e.kind ? "You" : n(e.reciterId).split(" ")[0];
+            return _jsxs(
+              "li",
+              {
+                className: "turn-chip"
+                  .concat(s ? " done" : "")
+                  .concat(a ? " now" : ""),
+                "aria-current": a ? "step" : void 0,
+                children: [
                   _jsxs("span", {
-                    className: "turn-text",
+                    className: "turn-avatar",
                     children: [
-                      _jsx("b", { children: i }),
-                      _jsx("span", {
-                        children: e.verseKey.split(":")[1],
+                      _jsx(Icon, {
+                        name: "you" === e.kind ? "user" : "mic",
+                        size: 14,
                       }),
+                      s &&
+                        _jsx("span", {
+                          className: "turn-check",
+                          children: _jsx(Icon, {
+                            name: "check",
+                            size: 9,
+                          }),
+                        }),
                     ],
                   }),
-              ],
-            },
-            "".concat(e.verseKey, "-").concat(t),
-          );
+                  !s &&
+                    _jsxs("span", {
+                      className: "turn-text",
+                      children: [
+                        _jsx("b", { children: i }),
+                        _jsx("span", {
+                          children: e.verseKey.split(":")[1],
+                        }),
+                      ],
+                    }),
+                ],
+              },
+              "".concat(e.verseKey, "-").concat(t),
+            );
+          }),
         }),
+        actions: h
+          ? _jsxs(_Fragment, {
+              children: [
+                _jsxs("button", {
+                  className: "replay",
+                  onClick: () => t.startRelayTurn(!0),
+                  children: [
+                    _jsx(Icon, {
+                      name: "volume-2",
+                      size: 16,
+                      style: { color: "var(--action-primary)" },
+                    }),
+                    "Replay qari",
+                  ],
+                }),
+                _jsxs("button", {
+                  className: "skip",
+                  onClick: () => t.advanceRelay(),
+                  children: [
+                    _jsx(Icon, { name: "skip-forward", size: 16 }),
+                    "Skip my turn",
+                  ],
+                }),
+              ],
+            })
+          : null,
       }),
+      _jsxs("div", {
+        className: "practice-canvas",
+        children: [
       h &&
         _jsxs("div", {
           className: "your-turn",
@@ -3400,32 +3416,8 @@ function K(e) {
             }),
         ],
       }),
-      h &&
-        _jsxs("div", {
-          className: "relay-actions",
-          children: [
-            _jsxs("button", {
-              className: "replay",
-              onClick: () => t.startRelayTurn(!0),
-              children: [
-                _jsx(Icon, {
-                  name: "volume-2",
-                  size: 16,
-                  style: { color: "var(--action-primary)" },
-                }),
-                "Replay qari",
-              ],
-            }),
-            _jsxs("button", {
-              className: "skip",
-              onClick: () => t.advanceRelay(),
-              children: [
-                _jsx(Icon, { name: "skip-forward", size: 16 }),
-                "Skip my turn",
-              ],
-            }),
-          ],
-        }),
+        ],
+      }),
     ],
   });
 }
@@ -3460,71 +3452,57 @@ function G(e) {
   return _jsxs("div", {
     className: "player-body",
     children: [
-      _jsxs("div", {
-        className: "range-bar",
-        children: [
-          _jsxs("span", {
-            className: "rb-t",
-            children: [
-              _jsxs("b", {
-                children: [
-                  p
-                    ? "Words ".concat(p.startW, "–").concat(p.endW)
-                    : "Word ".concat(m, " of ").concat(h.words.length),
-                  " \xb7",
-                  " ",
-                  null === (t = i.passage) || void 0 === t
-                    ? void 0
-                    : t.name,
-                  " ",
-                  h.key,
-                ],
-              }),
-              _jsx("span", {
-                children: p
-                  ? "Looping selected span"
-                  : "Tap a word to set a span",
-              }),
-            ],
+      _jsx(PracticeStrip, {
+        title: p
+          ? "Words ".concat(p.startW, "–").concat(p.endW)
+          : "Word ".concat(m, " of ").concat(h.words.length),
+        meta: ""
+          .concat(
+            null === (t = i.passage) || void 0 === t ? void 0 : t.name,
+            " ",
+          )
+          .concat(h.key),
+        hint: p ? "Looping selected span" : "Tap a word to set a span",
+        extra: _jsx("div", {
+          className: "rep-seg",
+          role: "group",
+          "aria-label": "Repeats per word",
+          children: B.map((e) => {
+            let locked = isPaidRepeat(e) && !plusOn;
+            return _jsx(
+              "button",
+              {
+                className: ""
+                  .concat(i.wordRepeat === e ? "on" : "")
+                  .concat(0 === e ? " inf" : "")
+                  .concat(locked ? " locked" : ""),
+                onClick: () =>
+                  locked ? ask("repeats") : n.setWordRepeat(e),
+                "aria-pressed": i.wordRepeat === e,
+                children: locked
+                  ? _jsxs("span", {
+                      style: {
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 3,
+                      },
+                      children: [
+                        0 === e ? "∞" : "\xd7".concat(e),
+                        _jsx(Icon, { name: "sparkles", size: 11 }),
+                      ],
+                    })
+                  : 0 === e
+                    ? "∞"
+                    : "\xd7".concat(e),
+              },
+              e,
+            );
           }),
-          _jsx("div", {
-            className: "rep-seg",
-            role: "group",
-            "aria-label": "Repeats per word",
-            children: B.map((e) => {
-              let locked = isPaidRepeat(e) && !plusOn;
-              return _jsx(
-                "button",
-                {
-                  className: ""
-                    .concat(i.wordRepeat === e ? "on" : "")
-                    .concat(0 === e ? " inf" : "")
-                    .concat(locked ? " locked" : ""),
-                  onClick: () =>
-                    locked ? ask("repeats") : n.setWordRepeat(e),
-                  "aria-pressed": i.wordRepeat === e,
-                  children: locked
-                    ? _jsxs("span", {
-                        style: {
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 3,
-                        },
-                        children: [
-                          0 === e ? "∞" : "\xd7".concat(e),
-                          _jsx(Icon, { name: "sparkles", size: 11 }),
-                        ],
-                      })
-                    : 0 === e
-                      ? "∞"
-                      : "\xd7".concat(e),
-                },
-                e,
-              );
-            }),
-          }),
-        ],
+        }),
       }),
+      _jsxs("div", {
+        className: "practice-canvas",
+        children: [
       _jsxs("div", {
         className: "wr-hero",
         children: [
@@ -3580,6 +3558,8 @@ function G(e) {
               "Tap words to change the range",
             ],
           }),
+        ],
+      }),
         ],
       }),
     ],
