@@ -31,6 +31,7 @@ export function plusWelcomeText(input: PlusWelcomeInput) {
     "",
     "Unlocked now:",
     "• Focus — Drill, Masked, and Relay",
+    "• Occasion lists and Best of a reciter",
     "• 3×, 5×, 10× and unlimited word repeats",
     "• Relay with more than one qari",
     "",

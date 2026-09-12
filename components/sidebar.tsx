@@ -8,7 +8,8 @@ import { APP_NAME, PLUS_NAME } from "@/lib/brand";
 
 const ITEMS = [
   { href: "/", label: "Read", icon: "book-open", match: (p: string) => p === "/" || p.startsWith("/read") },
-  { href: "/settings", label: "Settings", icon: "settings", match: (p: string) => p === "/settings" },
+  { href: "/listen", label: "Listen", icon: "headphones", match: (p: string) => p === "/listen" },
+  { href: "/settings", label: "Settings", icon: "settings", match: (p: string) => p.startsWith("/settings") },
 ];
 
 export function AppSidebar() {

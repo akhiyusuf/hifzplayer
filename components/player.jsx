@@ -18,8 +18,10 @@ import { FocusStage } from "@/components/focus-stage";
 import { PracticeSheet } from "@/components/practice-sheet";
 import { PlayerSettingsSheet } from "@/components/player-settings-sheet";
 import { ReciterSheet } from "@/components/reciter-sheet";
+import { PlaylistBar } from "@/components/playlist-bar";
 import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
+import { clampStopIndex, playlistHref, resolvePlaylist, stopLabel } from "@/lib/playlists";
 import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration } from "@/lib/api";
 import { fmtTime, segsForVerse, segForWord, toArabicDigits, wordAt } from "@/lib/audio";
 import { APP_NAME } from "@/lib/brand";
@@ -310,9 +312,13 @@ class g {
     (this.markVerseDone(this.st.vIdx),
       this.st.vIdx < this.st.verses.length - 1
         ? this.loadVerseAudio(this.st.vIdx + 1, !0)
-        : ((this.st.playing = !1),
-          this.notify(),
-          this.toast("End of passage")));
+        : this.finishPassage());
+  }
+  finishPassage() {
+    if ("function" == typeof this.onPassageEnd && this.onPassageEnd()) return;
+    ((this.st.playing = !1),
+      this.notify(),
+      this.toast("function" == typeof this.onPassageEnd ? "End of list" : "End of passage"));
   }
   markVerseDone(e) {
     this.doneVerses.add(e);
@@ -410,7 +416,9 @@ class g {
                 this.st.playing &&
                 this.loadVerseAudio(e + 1, !0);
             }, 600)
-          : ((this.st.playing = !1), this.notify()));
+          : t
+            ? this.finishPassage()
+            : ((this.st.playing = !1), this.notify()));
       return;
     }
     (this.setSrc(n),
@@ -448,19 +456,25 @@ class g {
       this.stepWordManual(-1);
       return;
     }
-    this.st.vIdx > 0
-      ? ((this.st.loop = null),
-        this.loadVerseAudio(this.st.vIdx - 1, this.st.playing))
-      : this.armSeek(0, this.st.playing);
+    if (this.st.vIdx > 0) {
+      ((this.st.loop = null),
+        this.loadVerseAudio(this.st.vIdx - 1, this.st.playing));
+      return;
+    }
+    if ("function" == typeof this.onNeedPrevStop && this.onNeedPrevStop()) return;
+    this.armSeek(0, this.st.playing);
   }
   next() {
     if ("word" === this.st.mode) {
       this.stepWordManual(1);
       return;
     }
-    this.st.vIdx < this.st.verses.length - 1 &&
+    if (this.st.vIdx < this.st.verses.length - 1) {
       ((this.st.loop = null),
-      this.loadVerseAudio(this.st.vIdx + 1, this.st.playing));
+        this.loadVerseAudio(this.st.vIdx + 1, this.st.playing));
+      return;
+    }
+    "function" == typeof this.onNeedNextStop && this.onNeedNextStop();
   }
   setRate(e) {
     if (this.st.rate === e || !RATES.includes(e)) return;
@@ -1173,6 +1187,9 @@ class g {
       (this.audio = "undefined" != typeof Audio ? new Audio() : {}),
       (this.plus = !1),
       (this.onPlusRequired = null),
+      (this.onPassageEnd = null),
+      (this.onNeedNextStop = null),
+      (this.onNeedPrevStop = null),
       (this.st = {
         verses: [],
         passage: null,
@@ -1536,6 +1553,7 @@ function N(e) {
       onEditRelay: h,
       matchLabel: u = null,
       backLabel: p = null,
+      onBack: onBack = null,
     } = e,
     m = useRouter(),
     x = "relay" === i;
@@ -1544,7 +1562,8 @@ function N(e) {
     children: [
       _jsxs("button", {
         className: "icon-btn sm tap".concat(p ? " labelled" : ""),
-        onClick: () => (p ? m.back() : m.push("/")),
+        onClick: () =>
+          onBack ? onBack() : p ? m.back() : m.push("/"),
         "aria-label": p ? "Back to ".concat(p) : "Back to passage list",
         children: [
           _jsx(Icon, { name: "chevron-left", size: 19 }),
@@ -3349,8 +3368,12 @@ function U(e) {
     es = J.get("g"),
     er = J.get("mode"),
     ea = J.get("at"),
+    eListId = J.get("list"),
+    eStopRaw = Number(J.get("stop")),
+    eWantPlay = "1" === J.get("play"),
     {
       chapters: en,
+      recitations: eRecs,
       status: ei,
       reciterId: el,
       setReciterId: eo,
@@ -3377,6 +3400,17 @@ function U(e) {
       eu.getSnapshot,
     ),
     eM = null != O ? O : el,
+    eVoice = eRecs.find((e) => e.id === eM),
+    eList = useMemo(
+      () =>
+        resolvePlaylist(
+          eListId,
+          ed(eM),
+          null == eVoice ? void 0 : eVoice.style,
+        ),
+      [eListId, eM, ed, eVoice],
+    ),
+    eStopN = eList ? clampStopIndex(eList, eStopRaw) : 0,
     eV = !!(ek || ef || eg || ew || eW || eL),
     eD = useCallback(() => {
       (eN(null), ey(!1), ej(!1), eb(!1), eA(null), eE(null));
@@ -3397,6 +3431,33 @@ function U(e) {
     useEffect(() => {
       ((eu.onPlusRequired = ask), eu.setPlus(plusOn));
     }, [eu, plusOn, ask]),
+    useEffect(() => {
+      if (!eList || !eListId) {
+        ((eu.onPassageEnd = null),
+          (eu.onNeedNextStop = null),
+          (eu.onNeedPrevStop = null));
+        return;
+      }
+      let go = (next, play) => {
+        if (next < 0 || next >= eList.stops.length) return !1;
+        if (!plusOn) return (ask("playlists"), !0);
+        let href = playlistHref({
+          listId: eListId,
+          reciterId: eM,
+          stop: next,
+          play: play,
+        });
+        return href ? (Y.replace(href), !0) : !1;
+      };
+      ((eu.onPassageEnd = () => go(eStopN + 1, !0)),
+        (eu.onNeedNextStop = () => go(eStopN + 1, eu.getSnapshot().playing)),
+        (eu.onNeedPrevStop = () => go(eStopN - 1, eu.getSnapshot().playing)));
+      return () => {
+        ((eu.onPassageEnd = null),
+          (eu.onNeedNextStop = null),
+          (eu.onNeedPrevStop = null));
+      };
+    }, [eu, eList, eListId, eStopN, plusOn, ask, eM, Y]),
     useEffect(() => {
       null != O && O !== el && eo(O);
     }, [O, el, eo]),
@@ -3425,7 +3486,8 @@ function U(e) {
                     to: D,
                     name: e_,
                     reciter: ed(eM),
-                  })));
+                  }),
+                  eWantPlay && plusOn && eu.playAudio()));
             }
           })
           .catch(() => {
@@ -3436,7 +3498,7 @@ function U(e) {
           ((e = !0), clearTimeout(t), eu.stopAudio());
         }
       );
-    }, [z, V, D, eM, ei, eu]));
+    }, [z, V, D, eM, ei, eu, eWantPlay, plusOn]));
   let eH = useCallback(
       (e, t, s) => {
         let r = eu.getSnapshot(),
@@ -3879,11 +3941,23 @@ function U(e) {
                       .concat(et.split("-")[0], " of ")
                       .concat(et.split("-")[1])
                   : null,
-            backLabel: $ ? $.split(" ")[0] : null,
+            backLabel: eList ? "Listen" : $ ? $.split(" ")[0] : null,
+            onBack: eList ? () => Y.push("/listen") : undefined,
             onEditRelay: () => {
               (eu.pauseRelayForEdit(), eb(!0));
             },
           }),
+          eList
+            ? _jsx(PlaylistBar, {
+                title: eList.title,
+                index: eStopN,
+                total: eList.stops.length,
+                nextLabel:
+                  eStopN < eList.stops.length - 1
+                    ? stopLabel(eList.stops[eStopN + 1], en)
+                    : null,
+              })
+            : null,
           _jsx(PlayerViewBar, {
             style: ez.style,
             onStyle: (e) => eu.setStyle(e),
