@@ -135,17 +135,16 @@ function PricingForm({
                 className={`pricing-card${on ? " on" : ""}`}
                 onClick={() => setPlanId(plan.planId)}
               >
-                <strong className="pricing-price">{plan.label}</strong>
                 <span className="pricing-card-top">
                   <b>{plan.name}</b>
                   {plan.planId === "annual" ? <span className="badge-beta">Best value</span> : null}
                 </span>
+                <strong className="pricing-price">{plan.label}</strong>
                 <span className="pricing-blurb">{plan.blurb}</span>
               </button>
             );
           })}
         </div>
-        <p className="pricing-plan-hint">{selected.blurb}</p>
 
         {accountsOn && signedIn && accountEmail ? (
           <p className="pricing-note">Receipt goes to {accountEmail}.</p>
@@ -194,7 +193,7 @@ function PricingForm({
       </div>
 
       <p className="pricing-soon">
-        Recurring phrases and near-twin words are coming soon, and stay free.{" "}
+        Recurring phrases and near-twin words are coming soon, and stay free. Ask the Quran will be {PLUS_EXPLAIN.plusTitle}.{" "}
         <Link href="/roadmap">See what&apos;s coming</Link>
       </p>
     </div>

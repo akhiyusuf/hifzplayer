@@ -267,7 +267,7 @@ export default function HomePage() {
                 </div>
               </section>
             )}
-            {!query && <ListenLists teaser />}
+            {!query && <ListenLists />}
             <section className="picker-section">
               <div className="index-head">
                 <span className="label-eyebrow">Surahs</span>

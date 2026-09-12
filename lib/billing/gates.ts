@@ -19,7 +19,7 @@ export const PLUS_COPY: Record<PlusFeature, { title: string; body: string }> = {
   },
   playlists: {
     title: "Listen lists are Diras Plus",
-    body: "You can open Listen and look around for free. Playing an occasion list, or Best of a reciter, is Diras Plus. Mushaf reading stays free.",
+    body: "You can open Listen and look around for free. Playing an occasion list is Diras Plus. Mushaf reading stays free.",
   },
 };
 
@@ -40,7 +40,7 @@ export const PLUS_EXPLAIN = {
   plusTitle: PLUS_NAME,
   plus: [
     "Play, Drill, Masked, and Relay in Focus",
-    "Occasion lists and Best of a reciter",
+    "Occasion lists — Friday, night, morning, and the rest",
     "A word played 3×, 5×, 10×, or until you stop",
     "Relay with more than one qari",
   ],

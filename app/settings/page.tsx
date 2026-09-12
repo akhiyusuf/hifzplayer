@@ -96,7 +96,7 @@ function ComingRow() {
     >
       <span className="st">
         <b>What&apos;s coming</b>
-        <span>Ask the Quran, recurring phrases, and near-twin words</span>
+        <span>Ask the Quran (Plus), Best of a reciter, recurring phrases, and near-twin words</span>
       </span>
       <Icon name="sparkles" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
     </Link>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
-import { APP_NAME } from "@/lib/brand";
+import { APP_NAME, PLUS_NAME } from "@/lib/brand";
 import { backHref } from "@/lib/nav";
 import {
   ASK_PROMPTS,
@@ -17,7 +17,7 @@ function Status({ item }: { item: RoadmapItem }) {
   return (
     <span className={`road-status${item.featured ? " hot" : ""}`}>
       {ROADMAP_STATUS_LABEL[item.status]}
-      {item.plus ? "" : " · stays free"}
+      {item.plus ? ` · ${PLUS_NAME}` : " · stays free"}
     </span>
   );
 }

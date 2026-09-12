@@ -27,9 +27,9 @@ export const ROADMAP: RoadmapItem[] = [
     arabic: "اسأل",
     blurb: "Sit with a verse, a surah, or the whole mushaf, and ask.",
     detail:
-      "A question box beside the page — not a chatbot that replaces reading. It will answer from the text you have open: what an ayah is saying, where a wording returns, how to hold a passage. It will not give rulings, and it will not speak over the Arabic.",
+      "A question box beside the page — not a chatbot that replaces reading. It will answer from the text you have open: what an ayah is saying, where a wording returns, how to hold a passage. It will not give rulings, and it will not speak over the Arabic. Ask is Diras Plus when it lands.",
     status: "cooking",
-    plus: false,
+    plus: true,
     icon: "sparkles",
     featured: true,
   },
@@ -54,6 +54,17 @@ export const ROADMAP: RoadmapItem[] = [
     status: "next",
     plus: false,
     icon: "git-compare",
+  },
+  {
+    id: "best-of",
+    title: "Best of a reciter",
+    arabic: "صوت",
+    blurb: "Loved passages in one voice — a short reel for each reciter.",
+    detail:
+      "Open a reciter and hear the ayahs people keep coming back to, in that recitation. Parked so Listen could stay a simple row of occasion lists. Diras Plus when it lands.",
+    status: "next",
+    plus: true,
+    icon: "mic",
   },
 ];
 
