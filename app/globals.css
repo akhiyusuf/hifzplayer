@@ -183,10 +183,10 @@ button.listen-sheet-row{cursor:pointer}
 .theme-swatches{display:flex;gap:10px;flex-wrap:wrap}
 .theme-swatch{width:44px;height:44px;border-radius:50%;border:2px solid var(--border-default);flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4),var(--shadow-sm)}
 .theme-swatch.on{border-color:var(--bg-surface);box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);outline:2px solid var(--text-primary);outline-offset:3px}
-.onboard{flex:1;padding:28px 20px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:flex-start;gap:12px;max-width:420px}
+.onboard{flex:1;padding:28px 20px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:flex-start;gap:12px}
 .onboard h1{font-family:var(--font-display);font-weight:700;font-size:32px;letter-spacing:-.02em;line-height:1.1}
 .onboard-mark{width:52px;height:52px;border-radius:14px;background:var(--action-primary);color:var(--text-on-primary);display:flex;align-items:center;justify-content:center;flex:none}
-.onboard-lead{font-size:15px;line-height:1.5;color:var(--text-secondary)}
-.onboard-points{display:flex;flex-direction:column;gap:9px;width:100%;margin:4px 0 8px}
+.onboard-lead{font-size:15px;line-height:1.5;color:var(--text-secondary);max-width:420px}
+.onboard-points{display:flex;flex-direction:column;gap:9px;width:100%;max-width:420px;margin:4px 0 8px}
 .onboard-points .credit-card{width:100%}
-.onboard .btn-primary{margin-top:8px}
+.onboard .btn-primary{margin-top:8px;max-width:420px}
