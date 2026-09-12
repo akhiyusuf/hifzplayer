@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/icon";
 import { PLUS_NAME } from "@/lib/brand";
-import { KEYS } from "@/lib/constants";
+import { KEYS, TAJWEED_LEGEND } from "@/lib/constants";
 import { getStore, setStore } from "@/lib/storage";
 import { useTheme } from "@/lib/theme";
 import { useToast } from "@/lib/toast";
@@ -25,7 +25,7 @@ function usePref<T>(key: string, fallback: T): [T, (v: T) => void] {
 }
 
 function PlusStatus() {
-  const [label, setLabel] = useState("Focus, 3× repeats, and extra relay qaris.");
+  const [label, setLabel] = useState("3× repeats and extra relay qaris.");
   const [active, setActive] = useState(false);
 
   useEffect(() => {
@@ -45,10 +45,10 @@ function PlusStatus() {
           const plan = names[data.planId || ""] || "Plus";
           setLabel(
             data.planId === "lifetime"
-              ? "Lifetime · Focus, 3× repeats, extra qaris"
+              ? "Lifetime · 3× repeats, extra qaris"
               : data.until
                 ? `${plan} · until ${new Date(data.until).toLocaleDateString()}`
-                : `${plan} · Focus, 3× repeats, extra qaris`,
+                : `${plan} · 3× repeats, extra qaris`,
           );
         }
       } catch {
@@ -129,6 +129,7 @@ export default function SettingsPage() {
   const { showToast } = useToast();
   const [taj, setTaj] = usePref(KEYS.taj, false);
   const [translation, setTranslation] = usePref(KEYS.showTranslation, true);
+  const [legend, setLegend] = useState(false);
   const gap = { marginTop: 6 };
 
   return (
@@ -172,9 +173,31 @@ export default function SettingsPage() {
         </span>
         <Row title="Dark theme" sub="Easier on the eyes at night" checked={dark} onChange={toggle} />
         <Row title="Tajweed colours" sub="Colour letters by recitation rule" checked={taj} onChange={setTaj} />
+        <button
+          type="button"
+          className="legend-toggle"
+          onClick={() => setLegend((v) => !v)}
+          aria-expanded={legend}
+        >
+          {TAJWEED_LEGEND.slice(0, 3).map((l) => (
+            <span key={l.label} className="legend-swatch" style={{ background: l.color }} />
+          ))}
+          Colour legend
+          <Icon name={legend ? "chevron-up" : "chevron-down"} size={16} style={{ color: "var(--text-muted)" }} />
+        </button>
+        {legend ? (
+          <div className="legend-grid">
+            {TAJWEED_LEGEND.map((l) => (
+              <span key={l.label} className="lg">
+                <span className="legend-swatch" style={{ background: l.color }} />
+                {l.label}
+              </span>
+            ))}
+          </div>
+        ) : null}
         <Row
           title="Show translation while playing"
-          sub="Keeps the current verse's meaning above the player"
+          sub="Current verse meaning sits above play, in every listen mode"
           checked={translation}
           onChange={setTranslation}
         />

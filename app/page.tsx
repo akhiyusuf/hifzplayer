@@ -6,22 +6,19 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
 import { OfflineBanner } from "@/components/offline-banner";
 import { PracticeSheet } from "@/components/practice-sheet";
-import { Sheet } from "@/components/sheet";
+import { ReciterSheet } from "@/components/reciter-sheet";
 import { useAppData } from "@/lib/app-data";
-import { KEYS } from "@/lib/constants";
 import { greeting, listSessions, streakCount, timeAgo } from "@/lib/sessions";
-import { getStore, setStore } from "@/lib/storage";
 import type { Session } from "@/lib/types";
 
 export default function HomePage() {
   const router = useRouter();
-  const { chapters, recitations, status, reload, reciterId, setReciterId, reciterName } = useAppData();
+  const { chapters, status, reload, reciterId, setReciterId, reciterName } = useAppData();
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [practiceOpen, setPracticeOpen] = useState(false);
   const [qariOpen, setQariOpen] = useState(false);
-  const [taj, setTaj] = useState(false);
   const [continueSession, setContinueSession] = useState<Session | null>(null);
   const [pickups, setPickups] = useState<Session[]>([]);
   const [streak, setStreak] = useState(0);
@@ -34,7 +31,6 @@ export default function HomePage() {
     setPickups(sessions.slice(1, 3));
     setStreak(streakCount());
     setGreet(greeting());
-    setTaj(!!getStore(KEYS.taj));
   }, []);
 
   useEffect(() => {
@@ -242,7 +238,7 @@ export default function HomePage() {
                 <span className="label-eyebrow">Surahs</span>
                 <button className="qari-inline tap" onClick={() => setQariOpen(true)} aria-label="Change reciter">
                   <Icon name="mic" size={14} style={{ color: "var(--text-muted)", flex: "none" }} />
-                  <span>{reciterName(reciterId).split(" ").slice(-1)[0]}</span>
+                  <span>{reciterName(reciterId)}</span>
                   <Icon name="chevron-down" size={13} style={{ color: "var(--text-muted)", flex: "none" }} />
                 </button>
               </div>
@@ -304,7 +300,8 @@ export default function HomePage() {
                             setPracticeOpen(true);
                           }}
                         >
-                          <Icon name="sliders-horizontal" size={16} />
+                          <Icon name="settings-2" size={15} />
+                          <span>Set up</span>
                         </button>
                       </div>
                     );
@@ -327,11 +324,6 @@ export default function HomePage() {
           initialFrom={spanFor(selected.id, selected.verses_count).from}
           initialTo={spanFor(selected.id, selected.verses_count).to}
           initialMode="verse"
-          taj={taj}
-          onTaj={(v) => {
-            setTaj(v);
-            setStore(KEYS.taj, v);
-          }}
           onStart={(from, to, mode) => {
             setPracticeOpen(false);
             router.push(hrefFor(selected.id, from, to, mode !== "verse" ? { mode } : {}));
@@ -339,36 +331,14 @@ export default function HomePage() {
           onClose={() => setPracticeOpen(false)}
         />
       )}
-      {qariOpen && (
-        <Sheet title="Reciter" onClose={() => setQariOpen(false)} maxHeight="80dvh">
-          <div className="info-line">
-            <Icon name="info" size={13} />
-            Applies to every passage you open
-          </div>
-          <div className="sheet-list" style={{ gap: 2 }}>
-            {recitations.map((r) => (
-              <button
-                key={r.id}
-                className={`qari-row${r.id === reciterId ? " on" : ""}`}
-                onClick={() => {
-                  setReciterId(r.id);
-                  setQariOpen(false);
-                }}
-                aria-current={r.id === reciterId}
-              >
-                <span className="qari-avatar">
-                  <Icon name="mic" size={17} />
-                </span>
-                <span className="qari-text">
-                  <b>{r.name}</b>
-                  {r.style && <span>{r.style}</span>}
-                </span>
-                {r.id === reciterId && <Icon name="check" size={19} style={{ color: "var(--action-primary)" }} />}
-              </button>
-            ))}
-          </div>
-        </Sheet>
-      )}
+      {qariOpen ? (
+        <ReciterSheet
+          currentId={reciterId}
+          hint="Applies to every passage you open"
+          onPick={(id) => setReciterId(id)}
+          onClose={() => setQariOpen(false)}
+        />
+      ) : null}
     </main>
   );
 }

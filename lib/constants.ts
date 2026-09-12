@@ -29,7 +29,7 @@ export const MODES = [
     id: "relay",
     name: "Relay",
     icon: "users",
-    desc: "You recite a verse, then the qari recites the next",
+    desc: "You recite a verse, then the reciter recites the next",
   },
 ] as const;
 
