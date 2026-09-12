@@ -3,6 +3,7 @@ import type { PlanId, Processor, RegionId } from "./plans";
 export type BillingEventType =
   | "checkout_started"
   | "granted"
+  | "revoked"
   | "confirm_failed"
   | "webhook_received"
   | "clerk_save_failed"

@@ -1,8 +1,9 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { clerkConfigured } from "@/lib/auth/config";
-import { plusFromClerk, savePlusToClerk } from "@/lib/auth/plus";
+import { clerkPlusRevoked, plusFromClerk, savePlusToClerk } from "@/lib/auth/plus";
 import {
   type Entitlement,
+  clearEntitlementCookie,
   entitlementForUser,
   readEntitlement,
   writeEntitlement,
@@ -31,6 +32,10 @@ export async function signedInEmail(): Promise<string | null> {
 export async function resolveEntitlement(): Promise<Entitlement | null> {
   const accountsOn = clerkConfigured();
   const userId = await signedInUserId();
+  if (userId && (await clerkPlusRevoked(userId))) {
+    await clearEntitlementCookie();
+    return null;
+  }
   const fromCookie = entitlementForUser(await readEntitlement(), userId, accountsOn);
   if (fromCookie) {
     if (accountsOn && userId && !fromCookie.userId) {

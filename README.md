@@ -62,8 +62,10 @@ Copy `.env.example` and add keys in the Vercel project (or a local `.env.local`)
 
 Webhook endpoints (set these in the Paystack and Stripe dashboards, or a paid charge can succeed without Plus):
 
-- Stripe: `/api/billing/webhook/stripe`
-- Paystack: `/api/billing/webhook/paystack`
+- Stripe: `/api/billing/webhook/stripe` — subscribe to `checkout.session.completed` and `charge.dispute.created`
+- Paystack: `/api/billing/webhook/paystack` — subscribe to `charge.success` and `charge.dispute.create`
+
+A chargeback or dispute request turns Plus off on the signed-in Clerk account. Recurring Stripe subscriptions are cancelled at the same time. Plus is not restored if the dispute later resolves; the customer can buy Plus again.
 
 After payment, Paystack/Stripe send the customer to `/api/billing/return`, which verifies the charge, stores Plus on the Clerk account, sets the Plus cookie, then redirects to `/pricing/success`. If that page never loads, paste the Paystack reference from the receipt on the success page. The same grant sends a **Diras Plus is active** email (Resend) once per payment, separate from the processor receipt.
 
