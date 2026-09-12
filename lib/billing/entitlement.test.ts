@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { entitlementForUser, isPlusActive, publicEntitlement, type PlusFields } from "./entitlement-bind.ts";
+import {
+  entitlementForUser,
+  isPlusActive,
+  publicEntitlement,
+  applyChargebackRevoke,
+  plusRevokedByChargeback,
+  type PlusFields,
+} from "./entitlement-bind.ts";
 
 function sample(over: Partial<PlusFields> = {}): PlusFields {
   return {
@@ -47,5 +54,22 @@ describe("account-bound plus", () => {
   it("binds a legacy cookie to the signed-in user", () => {
     const ent = entitlementForUser(sample(), "user_9", true);
     assert.equal(ent?.userId, "user_9");
+  });
+});
+
+describe("chargeback revoke", () => {
+  it("turns Plus off and remembers the reason", () => {
+    const next = applyChargebackRevoke({ plus: true, planId: "monthly", ref: "ref_1" }, "2026-09-12T00:00:00.000Z");
+    assert.equal(next.plus, false);
+    assert.equal(next.revokedReason, "chargeback");
+    assert.equal(next.planId, "monthly");
+    assert.equal(plusRevokedByChargeback(next), true);
+    assert.equal(isPlusActive({ plus: false, until: null }), false);
+  });
+
+  it("does not treat an expired plan as a chargeback", () => {
+    assert.equal(plusRevokedByChargeback({ plus: true, revokedReason: "chargeback" }), false);
+    assert.equal(plusRevokedByChargeback({ plus: false }), false);
+    assert.equal(plusRevokedByChargeback(null), false);
   });
 });

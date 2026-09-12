@@ -25,9 +25,9 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid Paystack signature" }, { status: 400 });
   }
 
-  let event: { event?: string; data?: { reference?: string } };
+  let event: { event?: string; data?: unknown };
   try {
-    event = JSON.parse(raw) as { event?: string; data?: { reference?: string } };
+    event = JSON.parse(raw) as { event?: string; data?: unknown };
   } catch {
     return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
@@ -35,8 +35,21 @@ export async function POST(request: Request) {
   const type = event.event || "unknown";
   logBillingEvent({ type: "webhook_received", processor: "paystack", source: "webhook", reason: type });
 
+  if (type === "charge.dispute.create") {
+    try {
+      const { revokePlusFromPaystackDispute } = await import("@/lib/billing/revoke-apply");
+      const result = await revokePlusFromPaystackDispute(event.data);
+      return Response.json({ received: true, type, revoked: result.revoked });
+    } catch {
+      return Response.json({ received: true, type, revoked: false }, { status: 500 });
+    }
+  }
+
   if (type === "charge.success") {
-    const reference = event.data?.reference || "";
+    const reference =
+      event.data && typeof event.data === "object" && "reference" in event.data
+        ? String((event.data as { reference?: string }).reference || "")
+        : "";
     const result = await fulfillPaystackReference(reference, {
       source: "webhook",
       setCookie: false,

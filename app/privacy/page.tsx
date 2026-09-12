@@ -84,7 +84,8 @@ export default async function PrivacyPage({
             so you know the subscription actually turned on. Paystack and Stripe still send their own receipts.
             Those payment fields stay on the server; the app never shows payment refs or account ids in the page.
             We log payment confirmation events (plan, processor, success or failure) so a paid subscription can be
-            fulfilled even if the checkout page does not load. Paystack and Stripe dashboards are the payment
+            fulfilled even if the checkout page does not load. If you dispute or charge back a Plus payment, we turn
+            Plus off on the signed-in account. Paystack and Stripe dashboards are the payment
             ledger. Their privacy policies apply to the checkout pages. Sign-in is handled by Clerk.
           </p>
         </section>

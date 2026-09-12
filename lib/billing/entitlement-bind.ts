@@ -12,6 +12,24 @@ export type PlusFields = {
   grantedAt?: string;
 };
 
+export function plusRevokedByChargeback(
+  raw: { plus?: boolean; revokedReason?: string } | null | undefined,
+): boolean {
+  return raw?.plus === false && raw?.revokedReason === "chargeback";
+}
+
+export function applyChargebackRevoke<T extends object>(
+  current: T | undefined,
+  at: string,
+): T & { plus: false; revokedReason: "chargeback"; revokedAt: string } {
+  return {
+    ...(current as T),
+    plus: false,
+    revokedReason: "chargeback" as const,
+    revokedAt: at,
+  };
+}
+
 export function isPlusActive(ent: PlusFields | null | undefined): boolean {
   if (!ent?.plus) return false;
   if (!ent.until) return true;

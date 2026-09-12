@@ -15,7 +15,7 @@ import { Sheet } from "@/components/sheet";
 import { PLUS_NAME } from "@/lib/brand";
 import { PLUS_COPY, type PlusFeature } from "@/lib/billing/gates";
 import { PLUS_STORAGE_KEY } from "@/lib/billing/keys";
-import { getStore } from "@/lib/storage";
+import { getStore, setStore } from "@/lib/storage";
 
 type PlusCtx = {
   plus: boolean;
@@ -44,7 +44,10 @@ export function PlusProvider({ children }: { children: ReactNode }) {
       try {
         const res = await fetch("/api/billing/status");
         const data = (await res.json()) as { plus?: boolean };
-        if (!cancelled) setPlus(Boolean(data.plus));
+        if (cancelled) return;
+        const on = Boolean(data.plus);
+        setPlus(on);
+        if (!on) setStore(PLUS_STORAGE_KEY, { plus: false });
       } catch {
         /* keep cache */
       } finally {

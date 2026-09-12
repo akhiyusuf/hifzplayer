@@ -24,6 +24,16 @@ export async function POST(request: Request) {
 
   logBillingEvent({ type: "webhook_received", processor: "stripe", source: "webhook", reason: event.type });
 
+  if (event.type === "charge.dispute.created") {
+    try {
+      const { revokePlusFromStripeDispute } = await import("@/lib/billing/revoke-apply");
+      const result = await revokePlusFromStripeDispute(event.data.object);
+      return Response.json({ received: true, type: event.type, revoked: result.revoked });
+    } catch {
+      return Response.json({ received: true, type: event.type, revoked: false }, { status: 500 });
+    }
+  }
+
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
     const result = await fulfillStripeSession(session.id, {

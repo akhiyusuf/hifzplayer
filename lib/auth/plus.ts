@@ -5,6 +5,7 @@ import {
   grantFromPayment,
   isPlusActive,
 } from "@/lib/billing/entitlement";
+import { applyChargebackRevoke, plusRevokedByChargeback } from "@/lib/billing/entitlement-bind";
 import type { PlanId, Processor, RegionId } from "@/lib/billing/plans";
 import { isPlanId, isRegionId } from "@/lib/billing/plans";
 
@@ -17,14 +18,17 @@ type StoredPlus = {
   ref?: string;
   grantedAt?: string;
   welcomeSentFor?: string;
+  revokedAt?: string;
+  revokedReason?: "chargeback";
 };
 
 type StoredBillingEvent = {
   at: string;
-  type: "granted";
-  planId: PlanId;
-  regionId: RegionId;
-  processor: Processor;
+  type: "granted" | "revoked";
+  planId?: PlanId;
+  regionId?: RegionId;
+  processor?: Processor;
+  reason?: "chargeback";
 };
 
 const EVENT_CAP = 20;
@@ -137,6 +141,48 @@ export async function markPlusWelcomeSent(userId: string, ref: string) {
   await client.users.updateUserMetadata(userId, {
     privateMetadata: {
       hifzPlus: { ...stored, welcomeSentFor: ref } satisfies StoredPlus,
+    },
+  });
+}
+
+export async function clerkPlusRevoked(userId: string): Promise<boolean> {
+  if (!clerkConfigured()) return false;
+  try {
+    const user = await clerkUser(userId);
+    return plusRevokedByChargeback((user.privateMetadata as ClerkPrivate | undefined)?.hifzPlus);
+  } catch {
+    return false;
+  }
+}
+
+export async function revokePlusOnClerk(userId: string) {
+  if (!clerkConfigured()) return;
+  const client = await clerkClient();
+  let stored: StoredPlus | undefined;
+  let events: StoredBillingEvent[] = [];
+  try {
+    const user = await clerkUser(userId);
+    const meta = user.privateMetadata as ClerkPrivate | undefined;
+    stored = meta?.hifzPlus;
+    if (Array.isArray(meta?.hifzPlusEvents)) events = meta.hifzPlusEvents;
+  } catch {
+    stored = undefined;
+  }
+  const at = new Date().toISOString();
+  const next = applyChargebackRevoke(stored, at);
+  const revokedEvent: StoredBillingEvent = {
+    at,
+    type: "revoked",
+    planId: stored?.planId,
+    regionId: stored?.regionId,
+    processor: stored?.processor,
+    reason: "chargeback",
+  };
+  events = [...events, revokedEvent].slice(-EVENT_CAP);
+  await client.users.updateUserMetadata(userId, {
+    privateMetadata: {
+      hifzPlus: next satisfies StoredPlus,
+      hifzPlusEvents: events,
     },
   });
 }
