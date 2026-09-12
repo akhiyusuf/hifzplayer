@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MODES, TAJWEED_LEGEND } from "@/lib/constants";
+import { MODES } from "@/lib/constants";
 import { Icon } from "./icon";
 import { Sheet } from "./sheet";
 
@@ -11,8 +11,6 @@ export function PracticeSheet({
   initialFrom,
   initialTo,
   initialMode,
-  taj,
-  onTaj,
   onStart,
   onClose,
   variant = "setup",
@@ -22,8 +20,6 @@ export function PracticeSheet({
   initialFrom: number;
   initialTo: number;
   initialMode: string;
-  taj: boolean;
-  onTaj: (v: boolean) => void;
   onStart: (from: number, to: number, mode: string) => void;
   onClose: () => void;
   variant?: "setup" | "mode";
@@ -31,7 +27,6 @@ export function PracticeSheet({
   const [from, setFrom] = useState(Math.min(initialFrom, versesCount));
   const [to, setTo] = useState(Math.min(initialTo, versesCount));
   const [mode, setMode] = useState(initialMode);
-  const [legend, setLegend] = useState(false);
   const modeOnly = variant === "mode";
   const presets: { label: string; from: number; to: number }[] = [];
   const first = Math.min(12, versesCount);
@@ -125,42 +120,6 @@ export function PracticeSheet({
           </button>
         ))}
       </div>
-      {!modeOnly && (
-        <>
-          <div className="settings-row">
-            <span className="st">
-              <b>Tajweed colours</b>
-              <span>Colour letters by recitation rule</span>
-            </span>
-            <button
-              className={`switch${taj ? " on" : ""}`}
-              role="switch"
-              aria-checked={taj}
-              aria-label="Tajweed colours"
-              onClick={() => onTaj(!taj)}
-            >
-              <i />
-            </button>
-          </div>
-          <button className="legend-toggle" onClick={() => setLegend((v) => !v)} aria-expanded={legend}>
-            {TAJWEED_LEGEND.slice(0, 3).map((l) => (
-              <span key={l.label} className="legend-swatch" style={{ background: l.color }} />
-            ))}
-            Colour legend
-            <Icon name={legend ? "chevron-up" : "chevron-down"} size={16} style={{ color: "var(--text-muted)" }} />
-          </button>
-          {legend && (
-            <div className="legend-grid">
-              {TAJWEED_LEGEND.map((l) => (
-                <span key={l.label} className="lg">
-                  <span className="legend-swatch" style={{ background: l.color }} />
-                  {l.label}
-                </span>
-              ))}
-            </div>
-          )}
-        </>
-      )}
       {!modeOnly && (
         <button className="btn-primary" onClick={() => onStart(from, to, mode)}>
           <Icon name="play" size={18} />

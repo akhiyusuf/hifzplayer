@@ -16,10 +16,12 @@ import { Icon } from "@/components/icon";
 import { OfflineBanner } from "@/components/offline-banner";
 import { FocusStage } from "@/components/focus-stage";
 import { PracticeSheet } from "@/components/practice-sheet";
+import { ReciterSheet } from "@/components/reciter-sheet";
 import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
 import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration } from "@/lib/api";
 import { fmtTime, segsForVerse, segForWord, toArabicDigits, wordAt } from "@/lib/audio";
+import { APP_NAME } from "@/lib/brand";
 import { isPaidRelay, isPaidRepeat } from "@/lib/billing/gates";
 import { KEYS, LOOP_COUNTS, MODES, RATES } from "@/lib/constants";
 import { usePlus } from "@/lib/plus";
@@ -376,7 +378,7 @@ class g {
     let n = null === (r = a.audio) || void 0 === r ? void 0 : r.url;
     if (!n) {
       (this.toast(
-        "No audio for verse ".concat(a.key, " from this qari."),
+        "No audio for verse ".concat(a.key, " from this reciter."),
       ),
         this.notify(),
         t && e < this.st.verses.length - 1
@@ -714,14 +716,33 @@ class g {
       this.toast("Everything is revealed");
       return;
     }
+    this.peekTimer && clearTimeout(this.peekTimer);
+    let s = e.key,
+      n = t.maxRev + 1;
     ((this.st.masked = {
       ...this.st.masked,
-      [e.key]: { maxRev: t.maxRev + 1, peeks: t.peeks - 1 },
+      [s]: { maxRev: t.maxRev, peeks: t.peeks - 1, peekRev: n },
     }),
       this.notify());
+    this.peekTimer = setTimeout(() => {
+      let r = this.st.masked[s];
+      r &&
+        ((this.st.masked = {
+          ...this.st.masked,
+          [s]: { ...r, peekRev: 0 },
+        }),
+          this.notify());
+    }, 1600);
   }
   maskStateFor(e) {
-    return this.st.masked[e.key] || { maxRev: 0, peeks: 3 };
+    let t = this.st.masked[e.key] || { maxRev: 0, peeks: 3, peekRev: 0 },
+      s = t.peekRev || 0;
+    return {
+      maxRev: t.maxRev,
+      peeks: t.peeks,
+      reveal: Math.max(t.maxRev, s),
+      peeking: s > t.maxRev,
+    };
   }
   syncFocusPhrase(e, t) {
     let s = v(e).findIndex(
@@ -914,7 +935,7 @@ class g {
           );
       this.notify();
     } catch (e) {
-      this.toast("Could not switch qari — check connection");
+      this.toast("Could not switch reciter — check connection");
     }
   }
   async beginRelay(e, t, s, r) {
@@ -931,7 +952,7 @@ class g {
     try {
       await Promise.all(a.map((e) => this.ensureAudio(e)));
     } catch (e) {
-      this.toast("Could not load a qari — using main qari");
+      this.toast("Could not load a reciter — using the main reciter");
     }
     let n = x(this.st.verses, t, s, e, 1, this.st.reciterId || 0);
     if (!n.length) return (this.toast("No verses in that range"), !1);
@@ -1078,7 +1099,8 @@ class g {
       this.notify());
   }
   destroy() {
-    (null !== this.rafId && cancelAnimationFrame(this.rafId),
+    (this.peekTimer && clearTimeout(this.peekTimer),
+      null !== this.rafId && cancelAnimationFrame(this.rafId),
       this.clearGap());
     try {
       (this.audio.pause(), (this.audio.src = ""));
@@ -1102,6 +1124,7 @@ class g {
       (this.loopEdgeAt = 0),
       (this.passageToken = 0),
       (this.oneshotRate = null),
+      (this.peekTimer = null),
       (this.audioByReciter = {}),
       (this.doneVerses = new Set()),
       (this.subscribe = (e) => (
@@ -1428,10 +1451,7 @@ function k(e) {
         null === (e = getStore(KEYS.showTranslation)) || void 0 === e || e
       );
     }),
-    d =
-      l && "verse" === s.mode && "mushaf" === s.style
-        ? s.verses[s.vIdx]
-        : void 0,
+    d = l ? s.verses[s.vIdx] : void 0,
     c = "relay" === s.mode,
     u = "word" === s.mode,
     focus = "focus" === s.style && "verse" === s.mode,
@@ -1477,17 +1497,14 @@ function k(e) {
           className: "trans-dock tap".concat(transOpen ? "" : " compact"),
           onClick: () => setTransOpen((e) => !e),
           "aria-expanded": transOpen,
+          "aria-label": "Translation",
         children: [
             _jsxs("div", {
               className: "trans-meta",
               children: [
                 _jsx("b", { children: d.key.replace(":", " : ") }),
-                _jsxs("span", {
-                  children: [
-                    s.translationName,
-                    " · ",
-                    transOpen ? "Hide" : "Show",
-                  ],
+                _jsx("span", {
+                  children: s.translationName,
                 }),
               ],
             }),
@@ -2356,97 +2373,6 @@ function A(e) {
       })
     : null;
 }
-function E(e) {
-  let { currentId: t, onPick: s, onClose: n } = e,
-    { recitations: l } = useAppData(),
-    [d, c] = useState(""),
-    h = d.trim()
-      ? l.filter((e) =>
-          e.name.toLowerCase().includes(d.trim().toLowerCase()),
-        )
-      : l;
-  return _jsxs(Sheet, {
-    title: "Reciter",
-    onClose: n,
-    maxHeight: "80dvh",
-    children: [
-      _jsxs("div", {
-        className: "field",
-        children: [
-          _jsx(Icon, {
-            name: "search",
-            size: 16,
-            style: { color: "var(--text-muted)", flex: "none" },
-          }),
-          _jsx("input", {
-            value: d,
-            onChange: (e) => c(e.target.value),
-            placeholder: "Search reciters",
-            "aria-label": "Search reciters",
-          }),
-        ],
-      }),
-      _jsxs("div", {
-        className: "info-line",
-        children: [
-          _jsx(Icon, { name: "info", size: 13 }),
-          "Switching mid-playback keeps your place",
-        ],
-      }),
-      _jsxs("div", {
-        className: "sheet-list",
-        style: { gap: 2 },
-        children: [
-          0 === h.length &&
-            _jsxs("p", {
-              style: {
-                fontSize: 13,
-                color: "var(--text-muted)",
-                padding: "12px 4px",
-              },
-              children: ["No reciter matches “", d, "”."],
-            }),
-          h.map((e) =>
-            _jsxs(
-              "button",
-              {
-                className: "qari-row".concat(e.id === t ? " on" : ""),
-                onClick: () => {
-                  (s(e.id, e.name), n());
-                },
-                "aria-current": e.id === t,
-                children: [
-                  _jsx("span", {
-                    className: "qari-avatar",
-                    children: _jsx(Icon, {
-                      name: "mic",
-                      size: 17,
-                    }),
-                  }),
-                  _jsxs("span", {
-                    className: "qari-text",
-                    children: [
-                      _jsx("b", { children: e.name }),
-                      e.style &&
-                        _jsx("span", { children: e.style }),
-                    ],
-                  }),
-                  e.id === t &&
-                    _jsx(Icon, {
-                      name: "check",
-                      size: 19,
-                      style: { color: "var(--action-primary)" },
-                    }),
-                ],
-              },
-              e.id,
-            ),
-          ),
-        ],
-      }),
-    ],
-  });
-}
 let z = [
   { value: 1, label: "Once" },
   { value: 2, label: "\xd72", numeral: !0 },
@@ -2639,7 +2565,7 @@ function M(e) {
         },
         children: [
           _jsx(Icon, { name: plusOn ? "plus" : "sparkles", size: 16 }),
-          plusOn ? "Add participant" : "Add another qari",
+          plusOn ? "Add participant" : "Add another reciter",
         ],
       }),
       _jsx("div", {
@@ -2751,7 +2677,7 @@ function M(e) {
                   className: "spinner",
                   style: { width: 18, height: 18, borderWidth: 2 },
                 }),
-                "Preparing qaris…",
+                "Preparing reciters…",
               ],
             })
           : _jsxs(_Fragment, {
@@ -3068,10 +2994,9 @@ function _(e) {
       disabled: i.peeks <= 0 || c,
       children: [
         _jsx(Icon, { name: "eye", size: 16 }),
-        c ? "Verse revealed" : "Peek \xb7 ".concat(i.peeks, " left"),
+        c ? "Verse revealed" : i.peeking ? "Peeking" : "Peek \xb7 ".concat(i.peeks, " left"),
       ],
     }),
-    gloss: n.translation || null,
     children: _jsx(O, {
       verse: n,
       vIdx: s.vIdx,
@@ -3081,7 +3006,7 @@ function _(e) {
       rangeStart: 0,
       rangeEnd: 0,
       pendingPos: 0,
-      revealUpTo: i.maxRev,
+      revealUpTo: i.reveal,
       masked: !0,
       interactive: !1,
       annotations: a(n.number),
@@ -3222,7 +3147,7 @@ function K(e) {
     meta: h
       ? "Your turn \xb7 ".concat(u, " left")
       : "".concat(u, " ", 1 === u ? "turn" : "turns", " left"),
-    hint: h ? "Recite aloud — the qari plays muted to pace you" : undefined,
+    hint: h ? "Recite aloud — the reciter plays muted to pace you" : undefined,
     extra: _jsx("ol", {
       className: "relay-queue",
       "aria-label": "Turn order",
@@ -3279,7 +3204,7 @@ function K(e) {
               onClick: () => t.startRelayTurn(!0),
               children: [
                 _jsx(Icon, { name: "volume-2", size: 16 }),
-                "Replay qari",
+                "Replay reciter",
               ],
             }),
             _jsxs("button", {
@@ -3293,7 +3218,6 @@ function K(e) {
           ],
         })
       : null,
-    gloss: c.translation || null,
     context: h
       ? undefined
       : ""
@@ -3658,7 +3582,7 @@ function U(e) {
           ((navigator.mediaSession.metadata = new MediaMetadata({
             title: "".concat(ez.passage.name, " ").concat(e.key),
             artist: ed(ez.reciterId),
-            album: "Hifz",
+            album: APP_NAME,
             artwork: [
               {
                 src: "/icon-512.png",
@@ -4284,16 +4208,14 @@ function U(e) {
           initialFrom: V,
           initialTo: D,
           initialMode: ez.mode,
-          taj: ez.taj,
           variant: "mode",
-          onTaj: (e) => eu.setTajweed(e),
           onStart: (e, t, s) => {
             (ey(!1), eu.setMode(s), "relay" === s && eb(!0));
           },
           onClose: () => ey(!1),
         }),
       eg &&
-        _jsx(E, {
+        _jsx(ReciterSheet, {
           currentId: ez.reciterId,
           onPick: (e, t) => eu.switchReciter(e, t),
           onClose: () => ej(!1),
