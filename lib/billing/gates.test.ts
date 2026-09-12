@@ -37,7 +37,7 @@ describe("Plus explanation copy", () => {
     assert.doesNotMatch(PLUS_EXPLAIN.lead, /Focus stays free/);
     assert.match(PLUS_EXPLAIN.lead, /Repeat/);
     assert.equal(
-      PLUS_EXPLAIN.free.some((line) => /Opening Focus and leaving it/.test(line)),
+      PLUS_EXPLAIN.free.some((line) => /Opening Focus or Listen/.test(line)),
       true,
     );
     assert.equal(
@@ -45,9 +45,14 @@ describe("Plus explanation copy", () => {
       true,
     );
     assert.equal(
+      PLUS_EXPLAIN.plus.some((line) => /Occasion lists and Best of/.test(line)),
+      true,
+    );
+    assert.equal(
       PLUS_EXPLAIN.plus.some((line) => /3×, 5×, 10×/.test(line)),
       true,
     );
+    assert.match(PLUS_EXPLAIN.rowSub, /listen lists/);
     assert.doesNotMatch(PLUS_EXPLAIN.rowSub, /Practise stays free/);
   });
 });

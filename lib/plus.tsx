@@ -93,7 +93,7 @@ function PlusGate({ feature, onClose }: { feature: PlusFeature; onClose: () => v
           See plans
         </Link>
         <button className="btn-secondary" type="button" onClick={onClose}>
-          {feature === "focus" ? "Keep looking around" : "Keep using free"}
+          {feature === "focus" || feature === "playlists" ? "Keep looking around" : "Keep using free"}
         </button>
       </div>
     </Sheet>

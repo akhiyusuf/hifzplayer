@@ -98,8 +98,8 @@ function PricingForm({
   return (
     <div className="pricing">
       <p className="pricing-lead">
-        {PLUS_EXPLAIN.lead} {PLUS_NAME} unlocks play, Drill, Masked, and Relay in Focus, word repeats past ×2, and extra
-        relay qaris.
+        {PLUS_EXPLAIN.lead} {PLUS_NAME} unlocks play, Drill, Masked, and Relay in Focus, listen lists, word repeats past
+        ×2, and extra relay qaris.
       </p>
       <ul className="pricing-includes">
         {PLUS_EXPLAIN.plus.map((line) => (
