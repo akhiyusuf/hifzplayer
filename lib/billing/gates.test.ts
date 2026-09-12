@@ -47,6 +47,14 @@ describe("Plus explanation copy", () => {
       true,
     );
     assert.doesNotMatch(PLUS_EXPLAIN.rowSub, /Practise stays free/);
+    assert.equal(
+      PLUS_EXPLAIN.free.some((line) => /Colour themes/.test(line)),
+      true,
+    );
+    assert.equal(
+      PLUS_EXPLAIN.plus.some((line) => /theme|palette|colour/i.test(line)),
+      false,
+    );
   });
 });
 
