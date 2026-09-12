@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { clampRepeat, isPaidRelay, isPaidRepeat, qariCount } from "./gates.ts";
+import {
+  PLUS_EXPLAIN,
+  clampRepeat,
+  isPaidRelay,
+  isPaidRepeat,
+  qariCount,
+} from "./gates.ts";
 
 describe("repeat gating", () => {
   it("keeps one and two passes free", () => {
@@ -20,6 +26,27 @@ describe("repeat gating", () => {
     assert.equal(clampRepeat(0, false), 2);
     assert.equal(clampRepeat(5, true), 5);
     assert.equal(clampRepeat(1, false), 1);
+  });
+});
+
+describe("Plus explanation copy", () => {
+  it("keeps reading, Focus, and verse Repeat free in the sheet", () => {
+    assert.match(PLUS_EXPLAIN.lead, /Reading stays free/);
+    assert.match(PLUS_EXPLAIN.lead, /Focus stays free/);
+    assert.match(PLUS_EXPLAIN.lead, /Repeat/);
+    assert.equal(
+      PLUS_EXPLAIN.free.some((line) => /Drill, Masked, and Relay with one qari/.test(line)),
+      true,
+    );
+    assert.equal(
+      PLUS_EXPLAIN.plus.some((line) => /3×, 5×, 10×/.test(line)),
+      true,
+    );
+    assert.equal(
+      PLUS_EXPLAIN.plus.some((line) => /more than one qari/.test(line)),
+      true,
+    );
+    assert.doesNotMatch(PLUS_EXPLAIN.rowSub, /Practise stays free/);
   });
 });
 

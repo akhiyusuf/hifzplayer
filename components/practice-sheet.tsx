@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MODES } from "@/lib/constants";
+import { FOCUS_JOBS } from "@/lib/constants";
 import { Icon } from "./icon";
 import { PassageRange } from "./passage-range";
 import { Sheet } from "./sheet";
@@ -31,13 +31,13 @@ export function PracticeSheet({
   const modeOnly = variant === "mode";
 
   return (
-    <Sheet title={modeOnly ? "Listening mode" : `Set up ${surahName}`} onClose={onClose}>
+    <Sheet title={modeOnly ? "Practise" : `Set up ${surahName}`} onClose={onClose}>
       {!modeOnly && (
         <PassageRange versesCount={versesCount} from={from} to={to} onFrom={setFrom} onTo={setTo} />
       )}
       {modeOnly ? (
         <div className="sheet-list">
-          {MODES.map((m) => (
+          {FOCUS_JOBS.map((m) => (
             <button
               key={m.id}
               className={`mode-opt${mode === m.id ? " on" : ""}`}

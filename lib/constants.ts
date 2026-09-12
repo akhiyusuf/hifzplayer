@@ -6,31 +6,35 @@ export const RATES = [0.75, 1, 1.25, 1.5] as const;
 export const ANNOTATION_VERSION = 3;
 export const LOOP_COUNTS = [1, 2, 3, 5, 10, 0] as const;
 
-export const MODES = [
+export const FOCUS_JOBS = [
   {
     id: "word",
-    name: "Drill words",
+    name: "Drill",
     icon: "brackets",
-    desc: "Tap a word and replay it until it sticks",
-  },
-  {
-    id: "verse",
-    name: "Verse",
-    icon: "book-open",
-    desc: "Play through, or repeat the ayah from the player",
+    desc: "Tap one word and choose how many times it plays",
   },
   {
     id: "masked",
     name: "Masked",
     icon: "eye-off",
-    desc: "Words stay covered until the reciter reaches them",
+    desc: "Cover the words. Peek if you need a look",
   },
   {
     id: "relay",
     name: "Relay",
     icon: "users",
-    desc: "You recite a verse, then the reciter recites the next",
+    desc: "You recite, then the reciter takes the next ayah",
   },
+] as const;
+
+export const MODES = [
+  {
+    id: "verse",
+    name: "Verse",
+    icon: "book-open",
+    desc: "Listen to this ayah",
+  },
+  ...FOCUS_JOBS,
 ] as const;
 
 export type ModeId = (typeof MODES)[number]["id"];

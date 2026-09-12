@@ -30,7 +30,7 @@ export function plusWelcomeText(input: PlusWelcomeInput) {
     until,
     "",
     "Unlocked now:",
-    "• 3×, 5×, 10× and unlimited repeats",
+    "• 3×, 5×, 10× and unlimited word repeats",
     "• Relay with more than one qari",
     "",
     "Quran reading, audio, translation, tajweed, Focus practice, masked recall, and relay with one qari stay free either way.",
