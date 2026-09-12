@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Amiri_Quran, Bricolage_Grotesque, Inter, Space_Grotesk } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { AppDataProvider } from "@/lib/app-data";
 import { PlusProvider } from "@/lib/plus";
 import { ThemeProvider, themeInitScript } from "@/lib/theme";
@@ -73,6 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <AppDataProvider>
                   <AppSidebar />
                   {children}
+                  <Analytics />
                 </AppDataProvider>
               </PlusProvider>
             </AuthRoot>

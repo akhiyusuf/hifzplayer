@@ -55,6 +55,16 @@ describe("amount matching", () => {
     assert.equal("error" in paid, true);
   });
 
+  it("lets a renewal keep the original price after the catalog changes", () => {
+    const paid = resolvePaidPlan({
+      amount: 99,
+      currency: "NGN",
+      metadata: { planId: "monthly", regionId: "ng", userId: "user_1" },
+      allowAmountDrift: true,
+    });
+    assert.deepEqual(paid, { planId: "monthly", regionId: "ng", userId: "user_1" });
+  });
+
   it("infers the plan when Paystack dropped metadata on a unique amount", () => {
     const paid = resolvePaidPlan({ amount: 150_000, currency: "NGN", metadata: {} });
     assert.deepEqual(paid, { planId: "monthly", regionId: "ng" });

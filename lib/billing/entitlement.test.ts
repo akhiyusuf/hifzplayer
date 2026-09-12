@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   entitlementForUser,
   isPlusActive,
+  pickBestEntitlement,
   publicEntitlement,
   applyChargebackRevoke,
   plusRevokedByChargeback,
@@ -71,5 +72,27 @@ describe("chargeback revoke", () => {
     assert.equal(plusRevokedByChargeback({ plus: true, revokedReason: "chargeback" }), false);
     assert.equal(plusRevokedByChargeback({ plus: false }), false);
     assert.equal(plusRevokedByChargeback(null), false);
+  });
+});
+
+describe("pick best entitlement", () => {
+  it("prefers the later until when both are active", () => {
+    const cookie = sample({ until: new Date(Date.now() + 86400000).toISOString() });
+    const account = sample({ until: new Date(Date.now() + 86400000 * 40).toISOString() });
+    const best = pickBestEntitlement(account, cookie);
+    assert.equal(best?.until, account.until);
+  });
+
+  it("keeps lifetime over a dated plan", () => {
+    const lifetime = sample({ until: null, planId: "lifetime" });
+    const monthly = sample({ until: new Date(Date.now() + 86400000 * 400).toISOString(), planId: "monthly" });
+    assert.equal(pickBestEntitlement(lifetime, monthly)?.planId, "lifetime");
+  });
+
+  it("ignores a revoked or expired account record", () => {
+    const expired = sample({ until: "2000-01-01T00:00:00.000Z" });
+    const cookie = sample();
+    assert.equal(pickBestEntitlement(expired, cookie)?.ref, cookie.ref);
+    assert.equal(pickBestEntitlement(sample({ plus: false }), cookie)?.ref, cookie.ref);
   });
 });

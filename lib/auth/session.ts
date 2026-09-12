@@ -1,10 +1,11 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { clerkConfigured } from "@/lib/auth/config";
-import { clerkPlusRevoked, plusFromClerk, savePlusToClerk } from "@/lib/auth/plus";
+import { clerkPlusState, savePlusToClerk } from "@/lib/auth/plus";
 import {
   type Entitlement,
   clearEntitlementCookie,
   entitlementForUser,
+  pickBestEntitlement,
   readEntitlement,
   writeEntitlement,
 } from "@/lib/billing/entitlement";
@@ -32,34 +33,40 @@ export async function signedInEmail(): Promise<string | null> {
 export async function resolveEntitlement(): Promise<Entitlement | null> {
   const accountsOn = clerkConfigured();
   const userId = await signedInUserId();
-  if (userId && (await clerkPlusRevoked(userId))) {
-    await clearEntitlementCookie();
-    return null;
-  }
-  const fromCookie = entitlementForUser(await readEntitlement(), userId, accountsOn);
-  if (fromCookie) {
-    if (accountsOn && userId && !fromCookie.userId) {
-      const bound = { ...fromCookie, userId };
-      await writeEntitlement(bound);
-      await savePlusToClerk(userId, bound);
+  const cookie = entitlementForUser(await readEntitlement(), userId, accountsOn);
+
+  if (userId) {
+    const state = await clerkPlusState(userId);
+    if (state.status === "revoked") {
+      await clearEntitlementCookie();
+      return null;
+    }
+    if (state.status === "ok") {
+      const best = pickBestEntitlement(state.ent, cookie);
+      if (best) {
+        const bound = { ...best, userId };
+        await writeEntitlement(bound);
+        return bound;
+      }
+    }
+    if (cookie) {
+      const bound = { ...cookie, userId };
+      if (!cookie.userId) {
+        await writeEntitlement(bound);
+        await savePlusToClerk(userId, bound, "granted");
+      }
       return bound;
     }
-    return fromCookie;
+    return null;
   }
-  if (userId) {
-    const stored = await plusFromClerk(userId);
-    if (stored) {
-      await writeEntitlement(stored);
-      return stored;
-    }
-  }
-  return null;
+
+  return cookie;
 }
 
 export async function grantPlusToAccount(
   ent: Entitlement,
   userId: string | null,
-  opts: { setCookie?: boolean } = {},
+  opts: { setCookie?: boolean; kind?: "granted" | "renewed" | "revoked" } = {},
 ) {
   const next = userId ? { ...ent, userId } : ent;
   if (opts.setCookie !== false) {
@@ -67,7 +74,7 @@ export async function grantPlusToAccount(
   }
   if (userId) {
     try {
-      await savePlusToClerk(userId, next);
+      await savePlusToClerk(userId, next, opts.kind || (next.plus ? "granted" : "revoked"));
     } catch {
       const { logBillingEvent } = await import("@/lib/billing/analytics");
       logBillingEvent({
@@ -76,6 +83,7 @@ export async function grantPlusToAccount(
         planId: next.planId,
         regionId: next.regionId,
         hasUserId: true,
+        accountId: userId,
       });
     }
   }

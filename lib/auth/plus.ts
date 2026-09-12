@@ -16,6 +16,7 @@ type StoredPlus = {
   processor?: Processor;
   until?: string | null;
   ref?: string;
+  sub?: string;
   grantedAt?: string;
   welcomeSentFor?: string;
   revokedAt?: string;
@@ -24,7 +25,7 @@ type StoredPlus = {
 
 type StoredBillingEvent = {
   at: string;
-  type: "granted" | "revoked";
+  type: "granted" | "renewed" | "revoked";
   planId?: PlanId;
   regionId?: RegionId;
   processor?: Processor;
@@ -38,29 +39,73 @@ type ClerkPrivate = {
   hifzPlusEvents?: StoredBillingEvent[];
 };
 
+export type ClerkPlusState =
+  | { status: "none" }
+  | { status: "revoked" }
+  | { status: "ok"; ent: Entitlement };
+
+export type PlusSaveKind = "granted" | "renewed" | "revoked";
+
 async function clerkUser(userId: string) {
   const client = await clerkClient();
   return client.users.getUser(userId);
 }
 
-export async function savePlusToClerk(userId: string, ent: Entitlement) {
+function storedToEntitlement(userId: string, raw: StoredPlus): Entitlement | null {
+  if (!raw.planId || !raw.regionId || !raw.processor || !raw.ref) return null;
+  if (!isPlanId(raw.planId) || !isRegionId(raw.regionId)) return null;
+  if (raw.processor !== "stripe" && raw.processor !== "paystack") return null;
+  const ent = grantFromPayment({
+    planId: raw.planId,
+    regionId: raw.regionId,
+    processor: raw.processor,
+    ref: raw.ref,
+    until: raw.until,
+    plus: raw.plus !== false,
+    sub: raw.sub,
+  });
+  ent.userId = userId;
+  if (raw.grantedAt) ent.grantedAt = raw.grantedAt;
+  return ent;
+}
+
+export async function clerkPlusState(userId: string): Promise<ClerkPlusState> {
+  if (!clerkConfigured()) return { status: "none" };
+  try {
+    const user = await clerkUser(userId);
+    const raw = (user.privateMetadata as ClerkPrivate | undefined)?.hifzPlus;
+    if (!raw) return { status: "none" };
+    if (raw.plus === false) return { status: "revoked" };
+    const ent = storedToEntitlement(userId, raw);
+    if (!ent) return { status: "none" };
+    if (!isPlusActive(ent)) return { status: "none" };
+    return { status: "ok", ent };
+  } catch {
+    return { status: "none" };
+  }
+}
+
+export async function savePlusToClerk(userId: string, ent: Entitlement, kind: PlusSaveKind = "granted") {
   if (!clerkConfigured()) return;
   const client = await clerkClient();
   let events: StoredBillingEvent[] = [];
   let welcomeSentFor: string | undefined;
+  let previousSub: string | undefined;
   try {
     const user = await clerkUser(userId);
     const meta = user.privateMetadata as ClerkPrivate | undefined;
     if (Array.isArray(meta?.hifzPlusEvents)) events = meta.hifzPlusEvents;
     welcomeSentFor = meta?.hifzPlus?.welcomeSentFor;
+    previousSub = meta?.hifzPlus?.sub;
   } catch {
     events = [];
   }
+  const eventKind: StoredBillingEvent["type"] = ent.plus === false ? "revoked" : kind;
   events = [
     ...events,
     {
       at: ent.grantedAt,
-      type: "granted" as const,
+      type: eventKind,
       planId: ent.planId,
       regionId: ent.regionId,
       processor: ent.processor,
@@ -70,12 +115,13 @@ export async function savePlusToClerk(userId: string, ent: Entitlement) {
   await client.users.updateUserMetadata(userId, {
     privateMetadata: {
       hifzPlus: {
-        plus: true,
+        plus: ent.plus,
         planId: ent.planId,
         regionId: ent.regionId,
         processor: ent.processor,
         until: ent.until,
         ref: ent.ref,
+        sub: ent.sub || previousSub,
         grantedAt: ent.grantedAt,
         ...(welcomeSentFor ? { welcomeSentFor } : {}),
       } satisfies StoredPlus,
@@ -85,26 +131,8 @@ export async function savePlusToClerk(userId: string, ent: Entitlement) {
 }
 
 export async function plusFromClerk(userId: string): Promise<Entitlement | null> {
-  if (!clerkConfigured()) return null;
-  try {
-    const user = await clerkUser(userId);
-    const raw = (user.privateMetadata as ClerkPrivate | undefined)?.hifzPlus;
-    if (!raw?.plus || !raw.planId || !raw.regionId || !raw.processor || !raw.ref) return null;
-    if (!isPlanId(raw.planId) || !isRegionId(raw.regionId)) return null;
-    if (raw.processor !== "stripe" && raw.processor !== "paystack") return null;
-    const ent = grantFromPayment({
-      planId: raw.planId,
-      regionId: raw.regionId,
-      processor: raw.processor,
-      ref: raw.ref,
-      until: raw.until,
-    });
-    ent.userId = userId;
-    if (raw.grantedAt) ent.grantedAt = raw.grantedAt;
-    return isPlusActive(ent) ? ent : null;
-  } catch {
-    return null;
-  }
+  const state = await clerkPlusState(userId);
+  return state.status === "ok" ? state.ent : null;
 }
 
 export async function clerkEmailForUser(userId: string): Promise<string | null> {
@@ -117,12 +145,26 @@ export async function clerkEmailForUser(userId: string): Promise<string | null> 
   }
 }
 
-export async function plusWelcomeAlreadySent(userId: string, ref: string): Promise<boolean> {
-  if (!clerkConfigured() || !ref) return false;
+/** Resolve a Clerk user id from a receipt email. Never log the email. */
+export async function clerkUserIdByEmail(email: string): Promise<string | null> {
+  if (!clerkConfigured()) return null;
+  const address = email.trim().toLowerCase();
+  if (!address) return null;
+  try {
+    const client = await clerkClient();
+    const { data } = await client.users.getUserList({ emailAddress: [address], limit: 2 });
+    if (data.length === 1) return data[0]?.id || null;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function plusWelcomeAlreadySent(userId: string, _ref?: string): Promise<boolean> {
+  if (!clerkConfigured()) return false;
   try {
     const user = await clerkUser(userId);
-    const sent = (user.privateMetadata as ClerkPrivate | undefined)?.hifzPlus?.welcomeSentFor;
-    return sent === ref;
+    return Boolean((user.privateMetadata as ClerkPrivate | undefined)?.hifzPlus?.welcomeSentFor);
   } catch {
     return false;
   }

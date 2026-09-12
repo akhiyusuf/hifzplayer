@@ -6,10 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --experimental-strip-types --test lib/billing/*.test.ts lib/auth/*.test.ts lib/security/*.test.ts lib/email/*.test.ts lib/nav.test.ts lib/mushaf-window.test.ts lib/palettes.test.ts lib/onboarding.test.ts lib/playlists.test.ts lib/waqf.test.ts lib/roadmap.test.ts"
+    "test": "node --experimental-strip-types --test lib/billing/*.test.ts lib/auth/*.test.ts lib/security/*.test.ts lib/email/*.test.ts lib/ops/*.test.ts lib/nav.test.ts lib/mushaf-window.test.ts lib/palettes.test.ts lib/onboarding.test.ts lib/playlists.test.ts lib/waqf.test.ts lib/roadmap.test.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.2",
+    "@vercel/analytics": "^2.0.1",
     "lucide-react": "^0.469.0",
     "next": "^15.3.1",
     "react": "^19.0.0",

@@ -1,18 +1,34 @@
 import { NextResponse } from "next/server";
 import { PLUS_NAME } from "@/lib/brand";
 import { clerkConfigured } from "@/lib/auth/config";
+import { clerkUserIdByEmail, plusFromClerk } from "@/lib/auth/plus";
 import { grantPlusToAccount, signedInUserId } from "@/lib/auth/session";
 import { logBillingEvent, type BillingEvent } from "./analytics";
 import { grantFromPayment, periodEnd, publicEntitlement, type Entitlement } from "./entitlement";
 import { resolvePaidPlan } from "./match";
-import { verifyPaystackReference } from "./paystack";
-import { retrieveStripeSession } from "./stripe";
+import {
+  paystackChargeUntil,
+  paystackHasPlan,
+  type PaystackSubscriptionEvent,
+  verifyPaystackReference,
+} from "./paystack";
+import { retrieveStripeSession, retrieveStripeSubscription } from "./stripe";
+import {
+  stripeInvoiceAmount,
+  stripeInvoiceMetadata,
+  stripeInvoiceSubscriptionId,
+  stripeSubscriptionUntil,
+  type StripeInvoiceLike,
+  type StripeSubscriptionLike,
+} from "./stripe-parse";
 
 export type FulfillSource = "confirm" | "return" | "webhook";
+export type FulfillKind = "granted" | "renewed" | "revoked";
 
-export type FulfillOk = { ok: true; entitlement: Entitlement };
+export type FulfillOk = { ok: true; entitlement: Entitlement; kind: FulfillKind };
 export type FulfillErr = { ok: false; status: number; error: string };
-export type FulfillResult = FulfillOk | FulfillErr;
+export type FulfillSkip = { ok: true; skipped: true };
+export type FulfillResult = FulfillOk | FulfillErr | FulfillSkip;
 
 function fail(status: number, error: string, extra?: Omit<Partial<BillingEvent>, "type">): FulfillErr {
   logBillingEvent({
@@ -45,6 +61,7 @@ function ownerForGrant(opts: {
     return fail(403, `This payment is for another account. Sign in with the account you used at checkout.`, {
       source: opts.source,
       hasUserId: true,
+      accountId: signedIn,
     });
   }
 
@@ -58,7 +75,13 @@ function ownerForGrant(opts: {
   return { userId: meta || signedIn || null };
 }
 
-async function persist(ent: Entitlement, userId: string | null, setCookie: boolean, source: FulfillSource) {
+async function persist(
+  ent: Entitlement,
+  userId: string | null,
+  setCookie: boolean,
+  source: FulfillSource,
+  kind: FulfillKind,
+): Promise<Entitlement> {
   if (!setCookie && !userId) {
     logBillingEvent({
       type: "webhook_received",
@@ -71,29 +94,40 @@ async function persist(ent: Entitlement, userId: string | null, setCookie: boole
     });
     return ent;
   }
-  const next = await grantPlusToAccount(ent, userId, { setCookie });
+  const next = await grantPlusToAccount(ent, userId, { setCookie, kind });
   logBillingEvent({
-    type: "granted",
+    type: kind,
     ok: true,
     processor: next.processor,
     planId: next.planId,
     regionId: next.regionId,
     source,
     hasUserId: Boolean(next.userId),
+    accountId: next.userId,
   });
-  try {
-    const { sendPlusWelcome } = await import("@/lib/email/send");
-    await sendPlusWelcome(next);
-  } catch {
-    logBillingEvent({
-      type: "welcome_failed",
-      processor: next.processor,
-      planId: next.planId,
-      regionId: next.regionId,
-      hasUserId: Boolean(next.userId),
-    });
+  if (kind === "granted") {
+    try {
+      const { sendPlusWelcome } = await import("@/lib/email/send");
+      await sendPlusWelcome(next);
+    } catch {
+      logBillingEvent({
+        type: "welcome_failed",
+        processor: next.processor,
+        planId: next.planId,
+        regionId: next.regionId,
+        hasUserId: Boolean(next.userId),
+        accountId: next.userId,
+      });
+    }
   }
   return next;
+}
+
+async function kindForUser(userId: string | null, plus: boolean): Promise<FulfillKind> {
+  if (!plus) return "revoked";
+  if (!userId) return "granted";
+  const existing = await plusFromClerk(userId);
+  return existing ? "renewed" : "granted";
 }
 
 export async function fulfillPaystackReference(
@@ -119,6 +153,7 @@ export async function fulfillPaystackReference(
     amount: data.amount,
     currency: data.currency,
     metadata: data.metadata,
+    allowAmountDrift: paystackHasPlan(data),
   });
   if ("error" in paid) {
     return fail(paid.error.includes("amount") ? 409 : 400, paid.error, {
@@ -137,6 +172,8 @@ export async function fulfillPaystackReference(
   });
   if (isFulfillErr(owner)) return owner;
 
+  const until = paystackChargeUntil(data, paid.planId, periodEnd);
+  const kind = await kindForUser(owner.userId, true);
   const ent = grantFromPayment({
     planId: paid.planId,
     regionId: paid.regionId,
@@ -144,9 +181,11 @@ export async function fulfillPaystackReference(
     email: data.customer?.email,
     userId: owner.userId || undefined,
     ref: data.reference,
+    until,
+    sub: data.subscription?.subscription_code,
   });
-  const next = await persist(ent, owner.userId, opts.setCookie, opts.source);
-  return { ok: true, entitlement: next };
+  const next = await persist(ent, owner.userId, opts.setCookie, opts.source, kind);
+  return { ok: true, entitlement: next, kind };
 }
 
 export async function fulfillStripeSession(
@@ -181,10 +220,23 @@ export async function fulfillStripeSession(
   }
 
   let until = periodEnd(resolved.planId);
+  let subId = "";
   const sub = session.subscription;
-  if (resolved.planId !== "lifetime" && sub && typeof sub !== "string") {
-    const end = sub.items?.data?.[0]?.current_period_end;
-    if (typeof end === "number" && end > 0) until = new Date(end * 1000).toISOString();
+  if (resolved.planId !== "lifetime" && sub) {
+    const expanded = typeof sub === "string" ? null : (sub as StripeSubscriptionLike);
+    subId = typeof sub === "string" ? sub : expanded?.id || "";
+    if (expanded) {
+      const end = stripeSubscriptionUntil(expanded);
+      if (end) until = end;
+    } else if (subId) {
+      try {
+        const fetched = await retrieveStripeSubscription(subId);
+        const end = stripeSubscriptionUntil(fetched);
+        if (end) until = end;
+      } catch {
+        /* keep catalog period */
+      }
+    }
   }
 
   const accountsOn = clerkConfigured();
@@ -198,6 +250,7 @@ export async function fulfillStripeSession(
   });
   if (isFulfillErr(owner)) return owner;
 
+  const kind = await kindForUser(owner.userId, true);
   const ent = grantFromPayment({
     planId: resolved.planId,
     regionId: resolved.regionId,
@@ -206,17 +259,183 @@ export async function fulfillStripeSession(
     userId: owner.userId || undefined,
     ref: session.id,
     until,
+    sub: subId || undefined,
   });
-  const next = await persist(ent, owner.userId, opts.setCookie, opts.source);
-  return { ok: true, entitlement: next };
+  const next = await persist(ent, owner.userId, opts.setCookie, opts.source, kind);
+  return { ok: true, entitlement: next, kind };
+}
+
+export async function fulfillStripeInvoice(
+  invoice: StripeInvoiceLike,
+  opts: { source: FulfillSource; setCookie: boolean },
+): Promise<FulfillResult> {
+  const amount = stripeInvoiceAmount(invoice);
+  if (amount <= 0) return { ok: true, skipped: true };
+
+  const subId = stripeInvoiceSubscriptionId(invoice);
+  let sub: StripeSubscriptionLike | null = null;
+  if (subId) {
+    try {
+      sub = await retrieveStripeSubscription(subId);
+    } catch {
+      return fail(502, "Could not reach the payment provider", { processor: "stripe", source: opts.source });
+    }
+  }
+
+  const metadata = {
+    ...stripeInvoiceMetadata(invoice),
+    ...(sub?.metadata || {}),
+  };
+  const resolved = resolvePaidPlan({
+    amount,
+    currency: invoice.currency || "",
+    metadata,
+    allowAmountDrift: true,
+  });
+  if ("error" in resolved) {
+    return fail(resolved.error.includes("amount") ? 409 : 400, resolved.error, {
+      processor: "stripe",
+      source: opts.source,
+    });
+  }
+  if (resolved.planId === "lifetime") return { ok: true, skipped: true };
+
+  let userId = resolved.userId || metadata.userId || "";
+  if (!userId && invoice.customer_email) {
+    userId = (await clerkUserIdByEmail(invoice.customer_email)) || "";
+  }
+
+  const until = (sub && stripeSubscriptionUntil(sub)) || periodEnd(resolved.planId);
+  const owner = { userId: userId || null };
+  const kind = await kindForUser(owner.userId, true);
+  const ent = grantFromPayment({
+    planId: resolved.planId,
+    regionId: resolved.regionId,
+    processor: "stripe",
+    email: invoice.customer_email || undefined,
+    userId: owner.userId || undefined,
+    ref: invoice.id || subId || "stripe-invoice",
+    until,
+    sub: subId || undefined,
+  });
+  const next = await persist(ent, owner.userId, opts.setCookie, opts.source, kind);
+  return { ok: true, entitlement: next, kind };
+}
+
+export async function fulfillStripeSubscription(
+  sub: StripeSubscriptionLike & { id?: string },
+  opts: { source: FulfillSource; setCookie: boolean; plus: boolean },
+): Promise<FulfillResult> {
+  const metadata = sub.metadata || {};
+  let resolved = resolvePaidPlan({
+    amount: -1,
+    currency: "",
+    metadata,
+    allowAmountDrift: true,
+  });
+  let userId = (!("error" in resolved) && resolved.userId) || metadata.userId || "";
+  if ("error" in resolved) {
+    const existing = userId ? await plusFromClerk(userId) : null;
+    if (!existing) return fail(400, resolved.error, { processor: "stripe", source: opts.source });
+    resolved = { planId: existing.planId, regionId: existing.regionId, userId };
+  }
+  if (resolved.planId === "lifetime") return { ok: true, skipped: true };
+
+  const until = opts.plus ? stripeSubscriptionUntil(sub) || periodEnd(resolved.planId) : new Date().toISOString();
+  const kind = opts.plus ? await kindForUser(userId || null, true) : "revoked";
+  const ent = grantFromPayment({
+    planId: resolved.planId,
+    regionId: resolved.regionId,
+    processor: "stripe",
+    userId: userId || undefined,
+    ref: sub.id || "stripe-sub",
+    until,
+    plus: opts.plus,
+    sub: sub.id,
+  });
+  const next = await persist(ent, userId || null, opts.setCookie, opts.source, kind);
+  return { ok: true, entitlement: next, kind };
+}
+
+export async function fulfillPaystackSubscriptionEvent(
+  data: PaystackSubscriptionEvent,
+  opts: { source: FulfillSource; setCookie: boolean; plus: boolean },
+): Promise<FulfillResult> {
+  const metadata = data.metadata;
+  let resolved = resolvePaidPlan({
+    amount: -1,
+    currency: "",
+    metadata,
+    allowAmountDrift: true,
+  });
+
+  let userId = "";
+  if (!("error" in resolved) && resolved.userId) userId = resolved.userId;
+  if (!userId && data.customer?.email) {
+    userId = (await clerkUserIdByEmail(data.customer.email)) || "";
+  }
+  if ("error" in resolved) {
+    const existing = userId ? await plusFromClerk(userId) : null;
+    if (!existing) {
+      return fail(400, resolved.error, { processor: "paystack", source: opts.source });
+    }
+    resolved = { planId: existing.planId, regionId: existing.regionId, userId };
+  }
+  const planId = resolved.planId;
+  const regionId = resolved.regionId;
+  if (planId === "lifetime") return { ok: true, skipped: true };
+
+  const nextDate = data.next_payment_date ? Date.parse(data.next_payment_date) : 0;
+  const keepUntilPeriod = opts.plus === false && nextDate > Date.now();
+  const plus = opts.plus || keepUntilPeriod;
+  const until = plus
+    ? keepUntilPeriod
+      ? new Date(nextDate).toISOString()
+      : periodEnd(planId)
+    : new Date().toISOString();
+
+  const kind = plus ? await kindForUser(userId || null, true) : "revoked";
+  const ent = grantFromPayment({
+    planId,
+    regionId,
+    processor: "paystack",
+    email: data.customer?.email,
+    userId: userId || undefined,
+    ref: data.subscription_code || "paystack-sub",
+    until,
+    plus,
+    sub: data.subscription_code,
+  });
+  const next = await persist(ent, userId || null, opts.setCookie, opts.source, kind);
+  return { ok: true, entitlement: next, kind };
+}
+
+export function isFulfillGranted(result: FulfillResult): result is FulfillOk {
+  return Boolean(result.ok && "entitlement" in result);
 }
 
 export function fulfillJson(result: FulfillResult) {
+  if (isFulfillGranted(result)) {
+    return NextResponse.json({ ok: true, ...publicEntitlement(result.entitlement) });
+  }
   if (!result.ok) {
     return NextResponse.json(
       { error: result.error, plus: false },
       { status: result.status },
     );
   }
-  return NextResponse.json({ ok: true, ...publicEntitlement(result.entitlement) });
+  return NextResponse.json({ ok: true, skipped: true });
+}
+
+export function webhookJson(result: FulfillResult, type: string) {
+  if (isFulfillGranted(result)) {
+    return Response.json({ received: true, type, fulfilled: true, kind: result.kind });
+  }
+  if (!result.ok) {
+    return Response.json(
+      { received: true, type, fulfilled: false },
+      { status: result.status >= 500 ? 500 : 200 },
+    );
+  }
+  return Response.json({ received: true, type, skipped: true });
 }

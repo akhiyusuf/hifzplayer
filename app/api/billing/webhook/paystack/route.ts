@@ -1,7 +1,12 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { logBillingEvent } from "@/lib/billing/analytics";
 import { paystackSecretKey } from "@/lib/billing/env";
-import { fulfillPaystackReference } from "@/lib/billing/fulfill";
+import {
+  fulfillPaystackReference,
+  fulfillPaystackSubscriptionEvent,
+  webhookJson,
+} from "@/lib/billing/fulfill";
+import { paystackWebhookAction } from "@/lib/billing/webhook-kind";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,15 +30,33 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid Paystack signature" }, { status: 400 });
   }
 
-  let event: { event?: string; data?: unknown };
+  let event: {
+    event?: string;
+    data?: {
+      reference?: string;
+      status?: string;
+      subscription_code?: string;
+      next_payment_date?: string;
+      customer?: { email?: string };
+      metadata?: unknown;
+      plan?: unknown;
+    };
+  };
   try {
-    event = JSON.parse(raw) as { event?: string; data?: unknown };
+    event = JSON.parse(raw) as typeof event;
   } catch {
     return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
   const type = event.event || "unknown";
-  logBillingEvent({ type: "webhook_received", processor: "paystack", source: "webhook", reason: type });
+  const action = paystackWebhookAction(type);
+  logBillingEvent({
+    type: action === "fail" ? "payment_failed" : "webhook_received",
+    processor: "paystack",
+    source: "webhook",
+    reason: type,
+    ok: action !== "fail",
+  });
 
   if (type === "charge.dispute.create") {
     try {
@@ -45,20 +68,27 @@ export async function POST(request: Request) {
     }
   }
 
-  if (type === "charge.success") {
-    const reference =
-      event.data && typeof event.data === "object" && "reference" in event.data
-        ? String((event.data as { reference?: string }).reference || "")
-        : "";
+  if (action === "checkout") {
+    const reference = event.data?.reference || "";
     const result = await fulfillPaystackReference(reference, {
       source: "webhook",
       setCookie: false,
       signedInUserId: null,
     });
-    if (!result.ok) {
-      return Response.json({ received: true, type, fulfilled: false }, { status: result.status >= 500 ? 500 : 200 });
-    }
-    return Response.json({ received: true, type, fulfilled: true });
+    return webhookJson(result, type);
+  }
+
+  if (action === "revoke") {
+    const result = await fulfillPaystackSubscriptionEvent(event.data || {}, {
+      source: "webhook",
+      setCookie: false,
+      plus: false,
+    });
+    return webhookJson(result, type);
+  }
+
+  if (action === "fail") {
+    return Response.json({ received: true, type, noted: true });
   }
 
   return Response.json({ received: true, type });
