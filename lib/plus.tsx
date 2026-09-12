@@ -32,20 +32,30 @@ function cachedPlus() {
   return true;
 }
 
+/** Dev-only: sessionStorage hifz.plus.preview=1. Compiled out of production. */
+function previewPlus() {
+  if (process.env.NODE_ENV !== "development") return false;
+  try {
+    return sessionStorage.getItem("hifz.plus.preview") === "1";
+  } catch {
+    return false;
+  }
+}
+
 export function PlusProvider({ children }: { children: ReactNode }) {
   const [plus, setPlus] = useState(false);
   const [ready, setReady] = useState(false);
   const [feature, setFeature] = useState<PlusFeature | null>(null);
 
   useEffect(() => {
-    setPlus(cachedPlus());
+    setPlus(cachedPlus() || previewPlus());
     let cancelled = false;
     (async () => {
       try {
         const res = await fetch("/api/billing/status");
         const data = (await res.json()) as { plus?: boolean };
         if (cancelled) return;
-        const on = Boolean(data.plus);
+        const on = previewPlus() || Boolean(data.plus);
         setPlus(on);
         if (!on) setStore(PLUS_STORAGE_KEY, { plus: false });
       } catch {
@@ -96,7 +106,7 @@ function PlusGate({ feature, onClose }: { feature: PlusFeature; onClose: () => v
           See plans
         </Link>
         <button className="btn-secondary" type="button" onClick={onClose}>
-          {feature === "focus" ? "Keep looking around" : "Keep using free"}
+          {feature === "focus" || feature === "playlists" ? "Keep looking around" : "Keep using free"}
         </button>
       </div>
     </Sheet>

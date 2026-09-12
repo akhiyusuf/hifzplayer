@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
+import { ListenLists } from "@/components/listen-lists";
 import { OfflineBanner } from "@/components/offline-banner";
 import { Onboarding } from "@/components/onboarding";
 import { PracticeSheet } from "@/components/practice-sheet";
@@ -266,6 +267,7 @@ export default function HomePage() {
                 </div>
               </section>
             )}
+            {!query && <ListenLists teaser />}
             <section className="picker-section">
               <div className="index-head">
                 <span className="label-eyebrow">Surahs</span>

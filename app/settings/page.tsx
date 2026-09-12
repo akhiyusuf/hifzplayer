@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/icon";
 import { ThemePicker } from "@/components/theme-picker";
+import { PLUS_EXPLAIN } from "@/lib/billing/gates";
 import { PLUS_NAME } from "@/lib/brand";
 import { KEYS, TAJWEED_LEGEND } from "@/lib/constants";
 import { getStore, setStore } from "@/lib/storage";
@@ -26,7 +27,7 @@ function usePref<T>(key: string, fallback: T): [T, (v: T) => void] {
 }
 
 function PlusStatus() {
-  const [label, setLabel] = useState("3× repeats and extra relay qaris.");
+  const [label, setLabel] = useState(PLUS_EXPLAIN.rowSub);
   const [active, setActive] = useState(false);
 
   useEffect(() => {
@@ -46,10 +47,10 @@ function PlusStatus() {
           const plan = names[data.planId || ""] || "Plus";
           setLabel(
             data.planId === "lifetime"
-              ? "Lifetime · 3× repeats, extra qaris"
+              ? `Lifetime · ${PLUS_EXPLAIN.rowOn}`
               : data.until
                 ? `${plan} · until ${new Date(data.until).toLocaleDateString()}`
-                : `${plan} · 3× repeats, extra qaris`,
+                : `${plan} · ${PLUS_EXPLAIN.rowOn}`,
           );
         }
       } catch {
