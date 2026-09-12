@@ -304,7 +304,8 @@ export default function HomePage() {
                             setPracticeOpen(true);
                           }}
                         >
-                          <Icon name="sliders-horizontal" size={16} />
+                          <Icon name="settings-2" size={15} />
+                          <span>Set up</span>
                         </button>
                       </div>
                     );

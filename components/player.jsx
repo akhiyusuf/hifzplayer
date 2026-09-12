@@ -444,11 +444,9 @@ class g {
       ((this.st.loop = null),
       this.loadVerseAudio(this.st.vIdx + 1, this.st.playing));
   }
-  cycleRate() {
-    let e = RATES.indexOf(this.st.rate);
-    ((this.st.rate = RATES[(e + 1) % RATES.length]),
-      (this.audio.playbackRate = this.st.rate),
-      this.notify());
+  setRate(e) {
+    if (this.st.rate === e || !RATES.includes(e)) return;
+    ((this.st.rate = e), (this.audio.playbackRate = e), this.notify());
   }
   toggleVerseLoop() {
     if (!this.st.verseLoop && !this.requirePlus("repeats")) return;
@@ -1414,19 +1412,36 @@ function k(e) {
             inert: toolsOpen ? undefined : true,
             children: [
               !u &&
-                _jsxs("button", {
-                  type: "button",
-                  role: "menuitem",
-                  className: "listen-menu-item tap",
-                  onClick: () => t.cycleRate(),
+                _jsxs("div", {
+                  className: "listen-speeds",
+                  role: "group",
+                  "aria-label": "Speed",
                   children: [
-                    _jsx("span", { children: "Speed" }),
-                    _jsxs("span", {
-                      className: "val",
-                      children: [
-                        0.75 === s.rate ? "\xbe" : s.rate,
-                        "\xd7",
-                      ],
+                    _jsx("span", {
+                      className: "listen-speeds-lbl",
+                      children: "Speed",
+                    }),
+                    _jsx("div", {
+                      className: "listen-speeds-seg",
+                      children: RATES.map((rate) =>
+                        _jsx(
+                          "button",
+                          {
+                            type: "button",
+                            role: "menuitemradio",
+                            className: "tap".concat(
+                              s.rate === rate ? " on" : "",
+                            ),
+                            "aria-checked": s.rate === rate,
+                            onClick: () => t.setRate(rate),
+                            children:
+                              0.75 === rate
+                                ? "\xbe\xd7"
+                                : "".concat(rate, "\xd7"),
+                          },
+                          rate,
+                        ),
+                      ),
                     }),
                   ],
                 }),
@@ -1482,20 +1497,20 @@ function k(e) {
               }),
             ],
           }),
-          _jsx("button", {
+          _jsxs("button", {
             type: "button",
             className: "listen-menu-btn tap",
             "aria-expanded": toolsOpen,
             "aria-haspopup": "menu",
             "aria-controls": "listen-tools",
-            "aria-label": toolsOpen
-              ? "Hide listening controls"
-              : "Listening controls",
             onClick: () => setToolsOpen((e) => !e),
-            children: _jsx(Icon, {
-              name: "sliders-horizontal",
-              size: 18,
-            }),
+            children: [
+              _jsx(Icon, {
+                name: "sliders-horizontal",
+                size: 16,
+              }),
+              "Listen",
+            ],
           }),
         ],
       }),
