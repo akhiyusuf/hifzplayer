@@ -215,7 +215,9 @@ function PricingForm({
           {busy
             ? "Opening checkout…"
             : accountsOn && !signedIn
-              ? `Sign in to continue · ${selected.label}`
+              ? gift
+                ? `Sign in to gift · ${selected.label}`
+                : `Sign in to continue · ${selected.label}`
               : gift
                 ? `Gift · ${selected.label}`
                 : `Continue · ${selected.label}`}
