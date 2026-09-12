@@ -1281,10 +1281,139 @@ function b(e) {
     ],
   });
 }
-function k(e) {
-  let { engine: t, state: s, onOpenModeSheet: n } = e,
+function ListenSheet(e) {
+  let { engine: t, state: s, onClose: n, onPickMode: r } = e,
     { plus: plusOn, askPlus: ask } = usePlus(),
-    i = MODES.find((e) => e.id === s.mode) || MODES[1],
+    u = "word" === s.mode,
+    focus = "focus" === s.style && "verse" === s.mode,
+    c = "relay" === s.mode;
+  return _jsx(Sheet, {
+    title: "Listen",
+    onClose: n,
+    children: _jsxs("div", {
+      className: "listen-sheet",
+      children: [
+        !u &&
+          _jsxs("div", {
+            className: "listen-speeds",
+            role: "group",
+            "aria-label": "Speed",
+            children: [
+              _jsx("span", {
+                className: "label-eyebrow",
+                children: "Speed",
+              }),
+              _jsx("div", {
+                className: "listen-speeds-seg",
+                children: RATES.map((rate) =>
+                  _jsx(
+                    "button",
+                    {
+                      type: "button",
+                      className: "tap".concat(s.rate === rate ? " on" : ""),
+                      "aria-pressed": s.rate === rate,
+                      onClick: () => t.setRate(rate),
+                      children:
+                        0.75 === rate ? "\xbe\xd7" : "".concat(rate, "\xd7"),
+                    },
+                    rate,
+                  ),
+                ),
+              }),
+            ],
+          }),
+        !u &&
+          _jsxs("button", {
+            type: "button",
+            className: "listen-sheet-row tap".concat(
+              s.verseLoop || (focus && s.loop) ? " on" : "",
+            ),
+            onClick: () => {
+              if (focus) {
+                if (s.loop) {
+                  t.clearLoop();
+                  return;
+                }
+                let count = s.loopCount;
+                if (isPaidRepeat(count) && !plusOn) {
+                  (n(), ask("repeats"));
+                  return;
+                }
+                t.loopPhrase(count);
+                return;
+              }
+              if (!plusOn && !s.verseLoop) {
+                (n(), ask("repeats"));
+                return;
+              }
+              t.toggleVerseLoop();
+            },
+            "aria-pressed": !!(s.verseLoop || (focus && s.loop)),
+            disabled: c,
+            children: [
+              _jsxs("span", {
+                className: "st",
+                children: [
+                  _jsx("b", { children: "Repeat" }),
+                  _jsx("span", {
+                    children: focus
+                      ? "Loop this phrase"
+                      : "Loop this verse until you turn it off",
+                  }),
+                ],
+              }),
+              _jsx("span", {
+                className: "val",
+                children: s.verseLoop || (focus && s.loop) ? "On" : "Off",
+              }),
+            ],
+          }),
+        _jsxs("div", {
+          children: [
+            _jsx("span", {
+              className: "label-eyebrow",
+              children: "How to listen",
+            }),
+            _jsx("div", {
+              className: "sheet-list",
+              children: MODES.map((m) =>
+                _jsxs(
+                  "button",
+                  {
+                    type: "button",
+                    className: "mode-opt".concat(s.mode === m.id ? " on" : ""),
+                    onClick: () => r(m.id),
+                    "aria-pressed": s.mode === m.id,
+                    children: [
+                      _jsxs("span", {
+                        className: "mo-ic",
+                        children: [_jsx(Icon, { name: m.icon, size: 19 })],
+                      }),
+                      _jsxs("span", {
+                        className: "mo-t",
+                        children: [
+                          _jsx("b", { children: m.name }),
+                          _jsx("span", { children: m.desc }),
+                        ],
+                      }),
+                      _jsxs("span", {
+                        className: "radio-dot",
+                        children: [_jsx(Icon, { name: "check", size: 13 })],
+                      }),
+                    ],
+                  },
+                  m.id,
+                ),
+              ),
+            }),
+          ],
+        }),
+      ],
+    }),
+  });
+}
+function k(e) {
+  let { engine: t, state: s, onPickMode: n } = e,
     [l] = useState(() => {
       var e;
       return (
@@ -1300,7 +1429,6 @@ function k(e) {
     focus = "focus" === s.style && "verse" === s.mode,
     [transOpen, setTransOpen] = useState(!1),
     [toolsOpen, setToolsOpen] = useState(!1),
-    listenMenu = useRef(null),
     p = s.wordStep.range,
     m = s.loop
       ? {
@@ -1330,26 +1458,9 @@ function k(e) {
             clear: () => t.clearDrill(),
           }
         : null;
-  useEffect(() => {
-    if (!toolsOpen) return;
-    let onKey = (e) => {
-      "Escape" === e.key && setToolsOpen(!1);
-    },
-      onDown = (e) => {
-        listenMenu.current &&
-          !listenMenu.current.contains(e.target) &&
-          setToolsOpen(!1);
-      };
-    return (
-      window.addEventListener("keydown", onKey),
-      document.addEventListener("pointerdown", onDown),
-      () => {
-        (window.removeEventListener("keydown", onKey),
-          document.removeEventListener("pointerdown", onDown));
-      }
-    );
-  }, [toolsOpen]);
-  return _jsxs("footer", {
+  return _jsxs(_Fragment, {
+    children: [
+  _jsxs("footer", {
     className: "player-foot",
     children: [
       (null == d ? void 0 : d.translation) &&
@@ -1401,117 +1512,18 @@ function k(e) {
           ],
         }),
       !u && _jsx(b, { engine: t, disabled: c }),
-      _jsxs("div", {
-        className: "listen-menu".concat(toolsOpen ? " open" : ""),
-        ref: listenMenu,
+      _jsxs("button", {
+        type: "button",
+        className: "listen-menu-btn tap".concat(toolsOpen ? " open" : ""),
+        "aria-expanded": toolsOpen,
+        "aria-haspopup": "dialog",
+        onClick: () => setToolsOpen(!0),
         children: [
-          _jsxs("div", {
-            id: "listen-tools",
-            className: "listen-menu-drop",
-            role: "menu",
-            inert: toolsOpen ? undefined : true,
-            children: [
-              !u &&
-                _jsxs("div", {
-                  className: "listen-speeds",
-                  role: "group",
-                  "aria-label": "Speed",
-                  children: [
-                    _jsx("span", {
-                      className: "listen-speeds-lbl",
-                      children: "Speed",
-                    }),
-                    _jsx("div", {
-                      className: "listen-speeds-seg",
-                      children: RATES.map((rate) =>
-                        _jsx(
-                          "button",
-                          {
-                            type: "button",
-                            role: "menuitemradio",
-                            className: "tap".concat(
-                              s.rate === rate ? " on" : "",
-                            ),
-                            "aria-checked": s.rate === rate,
-                            onClick: () => t.setRate(rate),
-                            children:
-                              0.75 === rate
-                                ? "\xbe\xd7"
-                                : "".concat(rate, "\xd7"),
-                          },
-                          rate,
-                        ),
-                      ),
-                    }),
-                  ],
-                }),
-              !u &&
-                _jsxs("button", {
-                  type: "button",
-                  role: "menuitem",
-                  className: "listen-menu-item tap".concat(
-                    s.verseLoop || (focus && s.loop) ? " on" : "",
-                  ),
-                  onClick: () => {
-                    if (focus) {
-                      if (s.loop) {
-                        t.clearLoop();
-                        return;
-                      }
-                      let count = s.loopCount;
-                      if (isPaidRepeat(count) && !plusOn) {
-                        (setToolsOpen(!1), ask("repeats"));
-                        return;
-                      }
-                      t.loopPhrase(count);
-                      return;
-                    }
-                    if (!plusOn && !s.verseLoop) {
-                      (setToolsOpen(!1), ask("repeats"));
-                      return;
-                    }
-                    t.toggleVerseLoop();
-                  },
-                  "aria-pressed": !!(s.verseLoop || (focus && s.loop)),
-                  disabled: c,
-                  children: [
-                    _jsx("span", { children: "Repeat" }),
-                    _jsx("span", {
-                      className: "val",
-                      children:
-                        s.verseLoop || (focus && s.loop) ? "On" : "Off",
-                    }),
-                  ],
-                }),
-              _jsxs("button", {
-                type: "button",
-                role: "menuitem",
-                className: "listen-menu-item tap",
-                onClick: () => {
-                  (setToolsOpen(!1), n());
-                },
-                children: [
-                  _jsx("span", { children: "Mode" }),
-                  _jsx("span", { className: "val", children: i.name }),
-                ],
-              }),
-            ],
+          _jsx(Icon, {
+            name: "sliders-horizontal",
+            size: 16,
           }),
-          _jsxs("button", {
-            type: "button",
-            className: "listen-menu-btn tap",
-            "aria-expanded": toolsOpen,
-            "aria-haspopup": "menu",
-            "aria-controls": "listen-tools",
-            onClick: () => setToolsOpen((e) => !e),
-            children: [
-              _jsx(Icon, {
-                name: "sliders-horizontal",
-                size: 16,
-              }),
-              "Listen",
-            ],
-          }),
+          "Listen",
         ],
       }),
       _jsxs("div", {
@@ -1554,6 +1566,17 @@ function k(e) {
           }),
         ],
       }),
+    ],
+  }),
+      toolsOpen &&
+        _jsx(ListenSheet, {
+          engine: t,
+          state: s,
+          onClose: () => setToolsOpen(!1),
+          onPickMode: (e) => {
+            (setToolsOpen(!1), n(e));
+          },
+        }),
     ],
   });
 }
@@ -4310,7 +4333,9 @@ function U(e) {
       _jsx(k, {
         engine: eu,
         state: ez,
-        onOpenModeSheet: () => ey(!0),
+        onPickMode: (e) => {
+          (eu.setMode(e), "relay" === e && eb(!0));
+        },
       }),
       ek &&
         eK &&

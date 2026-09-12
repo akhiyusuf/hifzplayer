@@ -21,10 +21,9 @@ Child / elder friction: unlabeled icons; home sliders and player sliders mean di
 
 **Do:**
 
-- Player: replace the icon-only sliders control with a labeled **Listen** pill.
-- Open Listen as an **in-flow panel** above the pill (not an overlay). Seek and translation stay visible.
-- Speed is four labeled chips (`¾× 1× 1.25× 1.5×`), not a silent cycle.
-- Repeat and Mode stay rows in that panel (Repeat still On/Off until Pass 3).
+- Player: replace the icon-only sliders control with a labeled **Listen** pill. The player itself stays seek + Listen + play.
+- Tap Listen to open a **bottom sheet popup** (same sheet pattern as Reciter / Practise). Speed, Repeat, and How to listen live in that popup, not in the footer.
+- Speed is four labeled chips (`¾× 1× 1.25× 1.5×`). Repeat is still On/Off until Pass 3. Tapping a mode applies it and closes the popup (Relay still opens relay setup).
 - Home: the row action is **Set up** with the settings icon — not the same sliders glyph as Listen.
 
 **Do not:** change Focus / Masked / Drill / Relay bodies, Repeat counts, Peek, translation dock rules, or copy like “Read”.
@@ -34,9 +33,9 @@ Child / elder friction: unlabeled icons; home sliders and player sliders mean di
 **Verify:**
 
 1. Home: each surah has Play on the row and **Set up** on the right. Set up still opens Practise.
-2. Player: a **Listen** pill sits above Play. Tap it — Speed / Repeat / Mode appear **between seek and Listen**, not on top of the verse or the seek bar.
-3. Speed chips change the rate without closing the panel. Repeat and Mode still work as before.
-4. Drill still hides seek/speed/repeat and keeps Mode. Theme (cream, orange play) unchanged.
+2. Player: a **Listen** pill sits above Play. Tap it — a **Listen** sheet pops up over the page. Seek and play stay in the footer underneath.
+3. In the sheet: Speed chips change the rate without closing. Repeat toggles. A mode card applies and closes the sheet.
+4. Drill still hides seek/speed/repeat in the sheet and keeps How to listen. Theme (cream, orange play) unchanged.
 
 ## Pass 2 — Shared practice chrome
 
