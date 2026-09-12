@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   PLUS_EXPLAIN,
   clampRepeat,
+  isPaidFocusJob,
   isPaidRelay,
   isPaidRepeat,
   qariCount,
@@ -30,23 +31,37 @@ describe("repeat gating", () => {
 });
 
 describe("Plus explanation copy", () => {
-  it("keeps reading, Focus, and verse Repeat free in the sheet", () => {
+  it("keeps reading and verse Repeat free, and lists Focus as Plus", () => {
     assert.match(PLUS_EXPLAIN.lead, /Reading stays free/);
-    assert.match(PLUS_EXPLAIN.lead, /Focus stays free/);
+    assert.match(PLUS_EXPLAIN.lead, /look around/);
+    assert.doesNotMatch(PLUS_EXPLAIN.lead, /Focus stays free/);
     assert.match(PLUS_EXPLAIN.lead, /Repeat/);
     assert.equal(
-      PLUS_EXPLAIN.free.some((line) => /Drill, Masked, and Relay with one qari/.test(line)),
+      PLUS_EXPLAIN.free.some((line) => /Opening Focus and leaving it/.test(line)),
+      true,
+    );
+    assert.equal(
+      PLUS_EXPLAIN.plus.some((line) => /Play, Drill, Masked, and Relay/.test(line)),
       true,
     );
     assert.equal(
       PLUS_EXPLAIN.plus.some((line) => /3×, 5×, 10×/.test(line)),
       true,
     );
-    assert.equal(
-      PLUS_EXPLAIN.plus.some((line) => /more than one qari/.test(line)),
-      true,
-    );
     assert.doesNotMatch(PLUS_EXPLAIN.rowSub, /Practise stays free/);
+  });
+});
+
+describe("Focus job gating", () => {
+  it("treats Drill, Masked, and Relay as Plus", () => {
+    assert.equal(isPaidFocusJob("word"), true);
+    assert.equal(isPaidFocusJob("masked"), true);
+    assert.equal(isPaidFocusJob("relay"), true);
+  });
+
+  it("leaves verse listen and the Focus view itself free to open", () => {
+    assert.equal(isPaidFocusJob("verse"), false);
+    assert.equal(isPaidFocusJob(""), false);
   });
 });
 

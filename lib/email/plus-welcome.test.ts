@@ -16,7 +16,7 @@ describe("Diras Plus welcome email", () => {
     assert.match(text, /Paystack/);
     assert.match(text, /2,000|₦/);
     assert.match(text, /3×, 5×, 10× and unlimited word repeats/);
-    assert.doesNotMatch(text, /Focus mode/);
+    assert.match(text, /Focus — Drill, Masked, and Relay/);
     assert.doesNotMatch(text, /user_/);
     assert.doesNotMatch(text, /trxref|cs_live|reference/i);
   });

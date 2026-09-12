@@ -167,3 +167,5 @@ button.listen-sheet-row{cursor:pointer}
 .plus-explain-list.plus li{border-color:var(--tint-primary-border);background:var(--tint-primary-06)}
 .plus-explain-list.plus li:before{background:var(--action-primary)}
 .plus-explain-on{margin:0;font-size:13.5px;line-height:1.45;color:var(--action-primary);font-weight:600;text-align:center}
+.practise-job.locked{opacity:.72}
+.play-btn.locked{box-shadow:none;opacity:.72}

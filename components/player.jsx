@@ -23,7 +23,7 @@ import { useAppData } from "@/lib/app-data";
 import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration } from "@/lib/api";
 import { fmtTime, segsForVerse, segForWord, toArabicDigits, wordAt } from "@/lib/audio";
 import { APP_NAME } from "@/lib/brand";
-import { isPaidRelay, isPaidRepeat } from "@/lib/billing/gates";
+import { isPaidFocusJob, isPaidRelay, isPaidRepeat } from "@/lib/billing/gates";
 import {
   MUSHAF_HOT_PAD,
   MUSHAF_VIEW_PAD,
@@ -173,6 +173,10 @@ class g {
     e.play && this.playAudio();
   }
   playAudio() {
+    if ("focus" === this.st.style && !this.plus) {
+      this.requirePlus("focus");
+      return;
+    }
     var e;
     this.audio.playbackRate =
       null !== (e = this.oneshotRate) && void 0 !== e ? e : this.st.rate;
@@ -463,6 +467,12 @@ class g {
     ((this.st.rate = e), (this.audio.playbackRate = e), this.notify());
   }
   toggleVerseLoop() {
+    if (
+      !this.st.verseLoop &&
+      "focus" === this.st.style &&
+      !this.requirePlus("focus")
+    )
+      return;
     ((this.st.verseLoop = !this.st.verseLoop),
       this.toast(
         this.st.verseLoop
@@ -482,6 +492,7 @@ class g {
     ((this.st.loop = null), this.loadVerseAudio(e, !0));
   }
   setMode(e) {
+    if (isPaidFocusJob(e) && !this.requirePlus("focus")) return;
     (e !== this.st.mode || "relay" === e) &&
       (this.stopAudio(),
       (this.st.loop = null),
@@ -516,6 +527,18 @@ class g {
             range: null,
           }),
           this.loadVerseAudio(this.st.vIdx, !1));
+      }
+    } else if ("focus" === e && !this.plus) {
+      this.pauseAudio();
+      if (isPaidFocusJob(this.st.mode)) {
+        ((this.st.mode = "verse"),
+          (this.st.relay = null),
+          (this.st.wordStep = {
+            active: !1,
+            w: 1,
+            playedTimes: 0,
+            range: null,
+          }));
       }
     }
     this.notify();
@@ -558,8 +581,16 @@ class g {
       (this.st.layers = { phrases: !1, confusables: !1 }),
       this.st.relay &&
         isPaidRelay(this.st.relay.order) &&
-        ((this.st.relay = null),
-        "relay" === this.st.mode && (this.st.mode = "verse")));
+        (this.st.relay = null),
+      isPaidFocusJob(this.st.mode) &&
+        ((this.st.mode = "verse"),
+          (this.st.relay = null),
+          (this.st.wordStep = {
+            active: !1,
+            w: 1,
+            playedTimes: 0,
+            range: null,
+          })));
   }
   wordModePlayCurrent() {
     let e = this.currentVerse();
@@ -1314,6 +1345,8 @@ function b(e) {
 }
 function k(e) {
   let { engine: t, state: s, onPickMode: n, onOpenPassage: open } = e,
+    { plus: plusOn } = usePlus(),
+    focusLocked = "focus" === s.style && !plusOn,
     [l] = useState(() => {
       var e;
       return (
@@ -1411,7 +1444,9 @@ function k(e) {
           !u &&
             _jsxs("button", {
               type: "button",
-              className: "listen-menu-btn tap".concat(s.verseLoop ? " on" : ""),
+              className: "listen-menu-btn tap"
+                .concat(s.verseLoop ? " on" : "")
+                .concat(focusLocked && !s.verseLoop ? " locked" : ""),
               "aria-pressed": !!s.verseLoop,
               "aria-label": s.verseLoop
                 ? "Stop repeating this verse"
@@ -1453,7 +1488,7 @@ function k(e) {
             }),
           }),
           _jsx("button", {
-            className: "play-btn",
+            className: "play-btn".concat(focusLocked && !s.playing ? " locked" : ""),
             onClick: () => t.togglePlay(),
             "aria-label": s.playing ? "Pause" : "Play",
             children: _jsx(Icon, {
@@ -2712,7 +2747,7 @@ function F(e) {
       s.verses.length > 1
         ? "".concat(s.vIdx + 1, " of ", s.verses.length)
         : undefined,
-    hint: "Play this verse, or pick a job in Settings",
+    hint: "Look around, or pick a job in Settings",
     progress:
       s.verses.length > 1
         ? {
@@ -3323,7 +3358,7 @@ function U(e) {
       pushRecent: ec,
     } = useAppData(),
     { showToast: eh } = useToast(),
-    { plus: plusOn, askPlus: ask } = usePlus(),
+    { plus: plusOn, askPlus: ask, ready: plusReady } = usePlus(),
     [eu] = useState(() => new g()),
     [ep, em] = useState("loading"),
     [ev, ex] = useState(!1),
@@ -3473,14 +3508,16 @@ function U(e) {
       e >= 0 && e !== ez.vIdx && eu.loadVerseAudio(e, !1);
     }, [ep, eR, ez.verses.length]),
     useEffect(() => {
-      if ("ready" !== ep) return;
+      if ("ready" !== ep || !plusReady) return;
       let e =
         er && ["word", "verse", "masked", "relay"].includes(er)
           ? er
           : "verse";
-      e !== eu.getSnapshot().mode &&
-        (eu.setMode(e), "relay" === e && eb(!0));
-    }, [ep, er]),
+      if (e !== eu.getSnapshot().mode) {
+        eu.setMode(e);
+        if ("relay" === eu.getSnapshot().mode) eb(!0);
+      }
+    }, [ep, er, plusReady, plusOn]),
     useEffect(() => {
       if ("ready" !== ep || !ea) return;
       let e = eu
@@ -4048,7 +4085,7 @@ function U(e) {
         engine: eu,
         state: ez,
         onPickMode: (e) => {
-          (eu.setMode(e), "relay" === e && eb(!0));
+          (eu.setMode(e), "relay" === eu.getSnapshot().mode && eb(!0));
         },
         onOpenPassage: (ch, from, to) => {
           let n = new URLSearchParams({
@@ -4175,7 +4212,7 @@ function U(e) {
           initialMode: ez.mode,
           variant: "mode",
           onStart: (e, t, s) => {
-            (ey(!1), eu.setMode(s), "relay" === s && eb(!0));
+            (ey(!1), eu.setMode(s), "relay" === eu.getSnapshot().mode && eb(!0));
           },
           onClose: () => ey(!1),
         }),

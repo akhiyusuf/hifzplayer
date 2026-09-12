@@ -162,9 +162,13 @@ function VersesCard({
 
 function PractisePicker({
   mode,
+  plusOn,
+  onAskPlus,
   onPick,
 }: {
   mode: string;
+  plusOn: boolean;
+  onAskPlus: () => void;
   onPick: (id: ModeId) => void;
 }) {
   const current = FOCUS_JOBS.find((m) => m.id === mode);
@@ -174,18 +178,31 @@ function PractisePicker({
       <p className="practise-jobs-lead">
         {current
           ? current.desc
-          : "Play this verse as usual. Pick a job when you want to work it."}
+          : plusOn
+            ? "Play this verse as usual. Pick a job when you want to work it."
+            : "Look around Focus. Play and these jobs are Diras Plus — tap one to see the plans."}
       </p>
       <div className="practise-jobs" role="group" aria-label="Practise">
         {FOCUS_JOBS.map((m) => {
           const on = mode === m.id;
+          const locked = !plusOn && !on;
           return (
             <button
               key={m.id}
               type="button"
-              className={`practise-job tap${on ? " on" : ""}`}
+              className={`practise-job tap${on ? " on" : ""}${locked ? " locked" : ""}`}
               aria-pressed={on}
-              onClick={() => onPick(on ? "verse" : m.id)}
+              onClick={() => {
+                if (on) {
+                  onPick("verse");
+                  return;
+                }
+                if (!plusOn) {
+                  onAskPlus();
+                  return;
+                }
+                onPick(m.id);
+              }}
             >
               <span className="practise-job-ic">
                 <Icon name={m.icon} size={18} />
@@ -215,7 +232,7 @@ export function PlayerSettingsSheet({
   onPickMode: (id: string) => void;
   onOpenPassage: (chapter: number, from: number, to: number) => void;
 }) {
-  const { plus: plusOn } = usePlus();
+  const { plus: plusOn, askPlus } = usePlus();
   const { chapters } = useAppData();
   const passage = state.passage || { chapter: 1, from: 1, to: 1, name: "" };
   const [ch, setCh] = useState(passage.chapter);
@@ -286,7 +303,9 @@ export function PlayerSettingsSheet({
         <p className="listen-sheet-lead">
           {mushaf
             ? "Reading stays free. Repeat on the player loops this verse."
-            : "Play this verse, or pick Drill, Masked, or Relay. Reading and Focus stay free."}
+            : plusOn
+              ? "Play this verse, or pick Drill, Masked, or Relay."
+              : "Look around Focus. Play, Drill, Masked, and Relay are Diras Plus. Mushaf stays free."}
         </p>
         {mushaf ? (
           <>
@@ -297,6 +316,8 @@ export function PlayerSettingsSheet({
           <>
             <PractisePicker
               mode={state.mode}
+              plusOn={plusOn}
+              onAskPlus={() => askPlus("focus")}
               onPick={(id) => onPickMode(id)}
             />
             <PlusRow plusOn={plusOn} onOpen={() => setPlusExplain(true)} />

@@ -4,6 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import { useMemo, useState } from "react";
 import { APP_NAME, PLUS_NAME } from "@/lib/brand";
 import { clerkBrowserReady } from "@/lib/auth/config";
+import { PLUS_EXPLAIN } from "@/lib/billing/gates";
 import type { Catalog, PlanId } from "@/lib/billing/plans";
 
 type Processors = { stripe: boolean; paystack: boolean };
@@ -97,12 +98,13 @@ function PricingForm({
   return (
     <div className="pricing">
       <p className="pricing-lead">
-        Reading stays free. Focus stays free. Looping a verse with Repeat stays free.{" "}
-        {PLUS_NAME} is a word played 3× or more — including until you stop — and Relay with more than one qari.
+        {PLUS_EXPLAIN.lead} {PLUS_NAME} unlocks play, Drill, Masked, and Relay in Focus, word repeats past ×2, and extra
+        relay qaris.
       </p>
       <ul className="pricing-includes">
-        <li>3×, 5×, 10× and unlimited word repeats</li>
-        <li>Relay with more than one qari</li>
+        {PLUS_EXPLAIN.plus.map((line) => (
+          <li key={line}>{line}</li>
+        ))}
       </ul>
       <p className="pricing-note">
         Recurring phrases and near-twin words are coming soon, and stay off the paywall.
