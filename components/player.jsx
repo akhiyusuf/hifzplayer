@@ -16,6 +16,7 @@ import { Icon } from "@/components/icon";
 import { OfflineBanner } from "@/components/offline-banner";
 import { FocusStage } from "@/components/focus-stage";
 import { PracticeSheet } from "@/components/practice-sheet";
+import { PassageRange } from "@/components/passage-range";
 import { ReciterSheet } from "@/components/reciter-sheet";
 import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
@@ -1290,11 +1291,24 @@ function b(e) {
   });
 }
 function ListenSheet(e) {
-  let { engine: t, state: s, onClose: n, onPickMode: r } = e,
+  let { engine: t, state: s, onClose: n, onPickMode: r, onOpenPassage: open } = e,
     { plus: plusOn, askPlus: ask } = usePlus(),
+    { chapters } = useAppData(),
+    passage = s.passage || { chapter: 1, from: 1, to: 1, name: "" },
+    [ch, setCh] = useState(passage.chapter),
+    [from, setFrom] = useState(passage.from),
+    [to, setTo] = useState(passage.to),
     u = "word" === s.mode,
     mushaf = "mushaf" === s.style,
-    c = "relay" === s.mode;
+    c = "relay" === s.mode,
+    chapter = chapters.find((e) => e.id === ch),
+    versesCount =
+      (null == chapter ? void 0 : chapter.verses_count) ||
+      Math.max(to, from, 1),
+    name =
+      (null == chapter ? void 0 : chapter.name_simple) || passage.name || "Surah",
+    dirty =
+      ch !== passage.chapter || from !== passage.from || to !== passage.to;
   return _jsx(Sheet, {
     title: "Settings",
     onClose: n,
@@ -1329,6 +1343,47 @@ function ListenSheet(e) {
               }),
             ],
           }),
+        _jsxs("div", {
+          children: [
+            _jsx(PassageRange, {
+              versesCount: versesCount,
+              chapters: chapters,
+              chapterId: ch,
+              onChapter: (id) => {
+                setCh(id);
+                let next = chapters.find((e) => e.id === id),
+                  count =
+                    (null == next ? void 0 : next.verses_count) || 1;
+                (setFrom(1),
+                  setTo(count <= 12 ? count : Math.min(10, count)));
+              },
+              from: from,
+              to: to,
+              onFrom: setFrom,
+              onTo: setTo,
+            }),
+            _jsxs("button", {
+              type: "button",
+              className: "btn-primary",
+              style: { marginTop: 10 },
+              onClick: () => {
+                if (!dirty) {
+                  n();
+                  return;
+                }
+                open(ch, from, to);
+              },
+              children: [
+                _jsx(Icon, { name: "book-open", size: 18 }),
+                "Open ",
+                name,
+                " ",
+                from,
+                to > from ? "–".concat(to) : "",
+              ],
+            }),
+          ],
+        }),
         !u &&
           _jsxs("button", {
             type: "button",
@@ -1406,7 +1461,7 @@ function ListenSheet(e) {
   });
 }
 function k(e) {
-  let { engine: t, state: s, onPickMode: n } = e,
+  let { engine: t, state: s, onPickMode: n, onOpenPassage: open } = e,
     [l] = useState(() => {
       var e;
       return (
@@ -1559,6 +1614,9 @@ function k(e) {
           onClose: () => setToolsOpen(!1),
           onPickMode: (e) => {
             (setToolsOpen(!1), n(e));
+          },
+          onOpenPassage: (ch, from, to) => {
+            (setToolsOpen(!1), open(ch, from, to));
           },
         }),
     ],
@@ -3012,7 +3070,7 @@ function H(e) {
       let r = t.getBoundingClientRect(),
         a = s.getBoundingClientRect();
       (r.top < a.top + 48 || r.bottom > a.bottom - 48) &&
-        t.scrollIntoView({ block: "center", behavior: "smooth" });
+        t.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }, [s.curWord, s.vIdx]),
     useEffect(() => {
       var e;
@@ -3031,13 +3089,7 @@ function H(e) {
     className: "player-body",
     style: { padding: "16px 20px 6px" },
     children: _jsxs("div", {
-      style: {
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        minHeight: 0,
-      },
+      className: "mushaf-wrap",
       children: [
         h &&
           _jsx("div", {
@@ -4032,6 +4084,17 @@ function U(e) {
         state: ez,
         onPickMode: (e) => {
           (eu.setMode(e), "relay" === e && eb(!0));
+        },
+        onOpenPassage: (ch, from, to) => {
+          let n = new URLSearchParams({
+            from: String(from),
+            to: String(to),
+          });
+          (null != ez.reciterId && n.set("reciter", String(ez.reciterId)),
+            "focus" === ez.style &&
+              "verse" !== ez.mode &&
+              n.set("mode", ez.mode),
+            Y.push("/read/".concat(ch, "?").concat(n.toString())));
         },
       }),
       ek &&
