@@ -157,3 +157,13 @@ a.listen-sheet-row{text-decoration:none;color:inherit}
 .practise-job.on .practise-job-ic{background:var(--action-primary);color:var(--text-on-primary)}
 .practise-job.on .st b{color:var(--action-primary)}
 .practise-job.on .st span{color:var(--text-secondary)}
+button.listen-sheet-row{cursor:pointer}
+.plus-explain{display:flex;flex-direction:column;gap:14px;padding:2px 0 8px}
+.plus-explain-lead{margin:0;font-size:14px;line-height:1.5;color:var(--text-secondary)}
+.plus-explain-block{display:flex;flex-direction:column;gap:8px}
+.plus-explain-list{display:flex;flex-direction:column;gap:8px;margin:0;padding:0}
+.plus-explain-list li{position:relative;padding:10px 12px 10px 34px;border-radius:var(--radius-card);border:1px solid var(--border-default);background:var(--bg-surface);font-size:13.5px;line-height:1.4;color:var(--text-primary)}
+.plus-explain-list li:before{content:"";position:absolute;left:12px;top:14px;width:10px;height:10px;border-radius:50%;background:var(--border-default)}
+.plus-explain-list.plus li{border-color:var(--tint-primary-border);background:var(--tint-primary-06)}
+.plus-explain-list.plus li:before{background:var(--action-primary)}
+.plus-explain-on{margin:0;font-size:13.5px;line-height:1.45;color:var(--action-primary);font-weight:600;text-align:center}

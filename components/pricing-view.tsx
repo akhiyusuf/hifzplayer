@@ -97,8 +97,8 @@ function PricingForm({
   return (
     <div className="pricing">
       <p className="pricing-lead">
-        Quran reading, audio, translation, tajweed, Focus practice, masked recall, and relay with one qari stay free.{" "}
-        {PLUS_NAME} unlocks three or more repeats of a word, and more than one qari in relay.
+        Reading stays free. Focus stays free. Looping a verse with Repeat stays free.{" "}
+        {PLUS_NAME} is a word played 3× or more — including until you stop — and Relay with more than one qari.
       </p>
       <ul className="pricing-includes">
         <li>3×, 5×, 10× and unlimited word repeats</li>

@@ -6,6 +6,7 @@ import { Icon } from "./icon";
 import { PassageRange } from "./passage-range";
 import { Sheet } from "./sheet";
 import { useAppData } from "@/lib/app-data";
+import { PLUS_EXPLAIN } from "@/lib/billing/gates";
 import { PLUS_NAME } from "@/lib/brand";
 import { FOCUS_JOBS, RATES, type ModeId } from "@/lib/constants";
 import { usePlus } from "@/lib/plus";
@@ -54,30 +55,55 @@ function SpeedControl({
   );
 }
 
-function PlusRow({ plusOn }: { plusOn: boolean }) {
-  if (plusOn) {
-    return (
-      <section className="listen-section" aria-label={PLUS_NAME}>
-        <div className="listen-sheet-row on">
-          <span className="st">
-            <b>{PLUS_NAME} is on</b>
-            <span>3× to unlimited word repeats, and extra qaris in relay</span>
-          </span>
-          <Icon name="sparkles" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
-        </div>
-      </section>
-    );
-  }
+function PlusRow({ plusOn, onOpen }: { plusOn: boolean; onOpen: () => void }) {
   return (
     <section className="listen-section" aria-label={PLUS_NAME}>
-      <Link href="/pricing?from=player" className="listen-sheet-row tap">
+      <button
+        type="button"
+        className={`listen-sheet-row tap${plusOn ? " on" : ""}`}
+        onClick={onOpen}
+      >
         <span className="st">
-          <b>What {PLUS_NAME} is</b>
-          <span>3× to unlimited word repeats, and extra qaris in relay. Practise stays free.</span>
+          <b>{plusOn ? `${PLUS_NAME} is on` : PLUS_EXPLAIN.rowTitle}</b>
+          <span>{plusOn ? PLUS_EXPLAIN.rowOn : PLUS_EXPLAIN.rowSub}</span>
         </span>
         <Icon name="sparkles" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
-      </Link>
+      </button>
     </section>
+  );
+}
+
+function PlusExplain({ plusOn, onBack }: { plusOn: boolean; onBack: () => void }) {
+  return (
+    <div className="plus-explain">
+      <p className="plus-explain-lead">{PLUS_EXPLAIN.lead}</p>
+      <section className="plus-explain-block">
+        <span className="label-eyebrow">{PLUS_EXPLAIN.freeTitle}</span>
+        <ul className="plus-explain-list">
+          {PLUS_EXPLAIN.free.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+      </section>
+      <section className="plus-explain-block">
+        <span className="label-eyebrow">{PLUS_EXPLAIN.plusTitle}</span>
+        <ul className="plus-explain-list plus">
+          {PLUS_EXPLAIN.plus.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+      </section>
+      {plusOn ? (
+        <p className="plus-explain-on">{PLUS_NAME} is on for this account.</p>
+      ) : (
+        <Link className="btn-primary" href="/pricing?from=player">
+          See plans
+        </Link>
+      )}
+      <button type="button" className="btn-secondary" onClick={onBack}>
+        Back to Settings
+      </button>
+    </div>
   );
 }
 
@@ -202,6 +228,7 @@ export function PlayerSettingsSheet({
   const name = chapter?.name_simple || passage.name || "Surah";
   const dirty = ch !== passage.chapter || from !== passage.from || to !== passage.to;
   const rangeLabel = `${name} ${from}${to > from ? `–${to}` : ""}`;
+  const [plusExplain, setPlusExplain] = useState(false);
 
   const playback = (
     <section className="listen-section" aria-label="Playback">
@@ -237,13 +264,29 @@ export function PlayerSettingsSheet({
     />
   );
 
+  if (plusExplain) {
+    return (
+      <Sheet
+        title={PLUS_NAME}
+        onClose={onClose}
+        icon={
+          <span className="sheet-tile" style={{ color: "var(--action-primary)" }}>
+            <Icon name="sparkles" size={18} />
+          </span>
+        }
+      >
+        <PlusExplain plusOn={plusOn} onBack={() => setPlusExplain(false)} />
+      </Sheet>
+    );
+  }
+
   return (
     <Sheet title="Settings" onClose={onClose}>
       <div className="listen-sheet">
         <p className="listen-sheet-lead">
           {mushaf
             ? "Reading stays free. Repeat on the player loops this verse."
-            : `Drill, Masked, or Relay — or just play the verse. ${PLUS_NAME} is extra word repeats and extra qaris.`}
+            : "Play this verse, or pick Drill, Masked, or Relay. Reading and Focus stay free."}
         </p>
         {mushaf ? (
           <>
@@ -256,7 +299,7 @@ export function PlayerSettingsSheet({
               mode={state.mode}
               onPick={(id) => onPickMode(id)}
             />
-            <PlusRow plusOn={plusOn} />
+            <PlusRow plusOn={plusOn} onOpen={() => setPlusExplain(true)} />
             {playback}
             {verses}
           </>
