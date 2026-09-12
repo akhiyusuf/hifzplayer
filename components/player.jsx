@@ -2722,6 +2722,7 @@ function FocusLines(e) {
                     s,
                   ),
                 ),
+                " ",
               ],
             },
             e.pos,

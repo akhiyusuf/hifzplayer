@@ -65,20 +65,50 @@ describe("splitByWaqf", () => {
 
   it("splits when the pause glyph sits on the word itself", () => {
     const phrases = splitByWaqf({
-      words: [word(1, "ءَامَنُوا۟"), word(2, "وَعَمِلُوا۟ۚ"), word(3, "الصَّالِحَاتِ")],
+      words: [
+        word(1, "ءَامَنُوا۟"),
+        word(2, "وَعَمِلُوا۟ۚ"),
+        word(3, "الصَّالِحَاتِ"),
+        word(4, "وَذَكَرُوا"),
+      ],
       marks: [],
     });
     assert.equal(phrases.length, 2);
     assert.equal(phrases[0][1].pos, 2);
-    assert.equal(phrases[1][0].pos, 3);
+    assert.deepEqual(
+      phrases[1].map((w) => w.pos),
+      [3, 4],
+    );
+  });
+
+  it("folds a one-word pause fragment into the previous phrase", () => {
+    const phrases = splitByWaqf({
+      words: [
+        word(1, "ذَٰلِكَ"),
+        word(2, "ٱلْكِتَٰبُ"),
+        word(3, "لَا"),
+        word(4, "رَيْبَ"),
+        word(5, "فِيهِ"),
+        word(6, "هُدًى"),
+        word(7, "لِلْمُتَّقِينَ"),
+      ],
+      marks: [mark(4, "ۛ"), mark(5, "ۛ")],
+    });
+    assert.deepEqual(
+      phrases.map((p) => p.map((w) => w.pos)),
+      [
+        [1, 2, 3, 4, 5],
+        [6, 7],
+      ],
+    );
   });
 
   it("caches on the verse object", () => {
     const verse = {
       key: "2:2",
       number: 2,
-      words: [word(1), word(2)],
-      marks: [mark(1, "ۛ")],
+      words: [word(1), word(2), word(3), word(4)],
+      marks: [mark(2, "ۚ")],
       translation: "",
       audio: null,
     };

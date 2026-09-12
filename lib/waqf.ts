@@ -48,7 +48,15 @@ export function splitByWaqf(verse: Pick<Verse, "words" | "marks">): Word[][] {
     }
   }
   if (buf.length) out.push(buf);
-  return out.length ? out : [words];
+  const merged: Word[][] = [];
+  for (const phrase of out) {
+    if (merged.length && phrase.length === 1) {
+      merged[merged.length - 1] = merged[merged.length - 1].concat(phrase);
+    } else {
+      merged.push(phrase);
+    }
+  }
+  return merged.length ? merged : [words];
 }
 
 export function phrasesOf(verse: Verse): Word[][] {

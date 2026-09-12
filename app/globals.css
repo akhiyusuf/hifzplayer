@@ -162,6 +162,7 @@ a.listen-sheet-row{text-decoration:none;color:inherit}
 .focus-stage .focus-ar{width:100%;max-width:100%;text-align:center;overflow-wrap:break-word}
 .focus-stage .focus-line{display:block;width:100%}
 .focus-stage .focus-line .w{white-space:nowrap}
+.focus-stage .focus-line .w + .w{padding-inline-start:0.22em}
 .focus-stage .focus-waqf{color:var(--text-muted);font-size:.72em;padding-inline:3px;white-space:nowrap}
 .focus-stage .focus-gloss{max-width:100%}
 .focus-stage .v{display:block;width:100%;text-align:center}
