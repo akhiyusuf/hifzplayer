@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/icon";
+import { ThemePicker } from "@/components/theme-picker";
 import { PLUS_NAME } from "@/lib/brand";
 import { KEYS, TAJWEED_LEGEND } from "@/lib/constants";
 import { getStore, setStore } from "@/lib/storage";
@@ -171,6 +172,7 @@ export default function SettingsPage() {
         <span className="label-eyebrow" style={gap}>
           Reading
         </span>
+        <ThemePicker />
         <Row title="Dark theme" sub="Easier on the eyes at night" checked={dark} onChange={toggle} />
         <Row title="Tajweed colours" sub="Colour letters by recitation rule" checked={taj} onChange={setTaj} />
         <button

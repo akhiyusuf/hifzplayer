@@ -31,6 +31,7 @@ export const PLUS_EXPLAIN = {
     "Focus — Drill, Masked, and Relay with one qari",
     "Repeat under play, looping this verse until you turn it off",
     "A word played once or twice",
+    "Colour themes — orange, green, black and white, pink, and gold",
   ],
   plusTitle: PLUS_NAME,
   plus: [

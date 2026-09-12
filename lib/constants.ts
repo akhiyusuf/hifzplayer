@@ -56,6 +56,7 @@ export const TAJWEED_LEGEND = [
 
 export const KEYS = {
   dark: "hifz.dark",
+  palette: "hifz.palette",
   style: "hifz.style",
   reciter: "hifz.reciter",
   recents: "hifz.recents",
