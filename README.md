@@ -53,19 +53,25 @@ Diras Plus unlocks 3× and unlimited repeats, and more than one qari in relay. Q
 Copy `.env.example` and add keys in the Vercel project (or a local `.env.local`):
 
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
-- `PAYSTACK_SECRET_KEY`, optional `PAYSTACK_PLAN_MONTHLY` / `PAYSTACK_PLAN_ANNUAL` plan codes
+- `PAYSTACK_SECRET_KEY`, optional `PAYSTACK_PLAN_MONTHLY` / `PAYSTACK_PLAN_ANNUAL` (created automatically if empty)
 - `BILLING_SIGNING_SECRET` (recommended)
 - `RESEND_API_KEY` and `EMAIL_FROM` (Diras Plus confirmation email after a grant)
 - Clerk keys above, so Plus is bound to the signed-in user
+- `CLERK_WEBHOOK_SIGNING_SECRET` for new-user / sign-in logs
+
+Turn on **Vercel Web Analytics** on the project so page views show up. Server logs (`diras.billing`, `diras.ops`) include Clerk account IDs (never emails) so a failed renewal can be found immediately. The same ID is on `/account`.
 
 `NEXT_PUBLIC_APP_URL` is optional. Checkout return URLs use the request host so Paystack cannot bounce to a stale origin.
 
-Webhook endpoints (set these in the Paystack and Stripe dashboards, or a paid charge can succeed without Plus):
+Webhook endpoints (set these in the Paystack, Stripe, and Clerk dashboards, or a paid charge can succeed without Plus):
 
-- Stripe: `/api/billing/webhook/stripe`
-- Paystack: `/api/billing/webhook/paystack`
+- Stripe: `/api/billing/webhook/stripe` — also subscribe `invoice.paid`, `invoice.payment_succeeded`, `invoice.payment_failed`, `customer.subscription.updated`, `customer.subscription.deleted`
+- Paystack: `/api/billing/webhook/paystack` — also `invoice.payment_failed`, `subscription.disable`, `subscription.not_renew`
+- Clerk: `/api/auth/webhook` — `user.created` and `session.created` (signing secret `CLERK_WEBHOOK_SIGNING_SECRET`)
 
-After payment, Paystack/Stripe send the customer to `/api/billing/return`, which verifies the charge, stores Plus on the Clerk account, sets the Plus cookie, then redirects to `/pricing/success`. If that page never loads, paste the Paystack reference from the receipt on the success page. The same grant sends a **Diras Plus is active** email (Resend) once per payment, separate from the processor receipt.
+Monthly and annual checkouts create a real subscription on both processors. Lifetime stays a one-time payment. Later invoices extend Plus on the Clerk account until the new period end. Failed charges are logged with the account ID; cancelled subscriptions keep Plus until the paid period ends, then drop it.
+
+After payment, Paystack/Stripe send the customer to `/api/billing/return`, which verifies the charge, stores Plus on the Clerk account, sets the Plus cookie, then redirects to `/pricing/success`. If that page never loads, paste the Paystack reference from the receipt on the success page. The same grant sends a **Diras Plus is active** email (Resend) once per account, separate from the processor receipt. Renewals do not send another welcome.
 
 In Clerk, turn on the **Welcome** email template if you also want a signup note. That is not the payment confirmation — Diras sends that itself after Plus is granted.
 
@@ -73,6 +79,6 @@ Rename the Paystack page/product and the Stripe product to **Diras Plus** in tho
 
 ## Security
 
-Production builds omit browser source maps and the `X-Powered-By` header. Middleware adds framing, MIME, referrer, and CSP headers. `/api`, `/account`, and sign-in routes are `noindex`. Payment errors return a generic 502 — processor messages never go to the client. Status APIs return Plus on/off, never email, payment refs, or user ids.
+Production builds omit browser source maps and the `X-Powered-By` header. Middleware adds framing, MIME, referrer, and CSP headers. `/api`, `/account`, and sign-in routes are `noindex`. Payment errors return a generic 502 — processor messages never go to the client. Status APIs return Plus on/off, never email, payment refs, or user ids. The signed-in account page shows that user’s Clerk id.
 
 A JavaScript app can still be inspected in the browser. These controls stop casual cloning and stop leaking user or payment details; they do not make the client bundle a secret. Turn on Vercel Deployment Protection for preview URLs.

@@ -27,6 +27,8 @@ describe("security headers", () => {
   it("allows Quran audio and the v4 API only as remote connect/media", () => {
     assert.match(CONTENT_SECURITY_POLICY, /api\.quran\.com/);
     assert.match(CONTENT_SECURITY_POLICY, /verses\.quran\.com/);
+    assert.match(CONTENT_SECURITY_POLICY, /va\.vercel-scripts\.com/);
+    assert.match(CONTENT_SECURITY_POLICY, /vitals\.vercel-insights\.com/);
     assert.doesNotMatch(CONTENT_SECURITY_POLICY, /\*/);
   });
 

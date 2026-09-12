@@ -19,11 +19,11 @@ const CSP_BASE = [
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  "connect-src 'self' https://api.quran.com https://verses.quran.com",
+  "connect-src 'self' https://api.quran.com https://verses.quran.com https://va.vercel-scripts.com https://vitals.vercel-insights.com",
   "media-src 'self' https://verses.quran.com blob:",
   "worker-src 'self' blob:",
   "upgrade-insecure-requests",
@@ -44,7 +44,13 @@ export function contentSecurityPolicy(embeddable: boolean) {
 export const CONTENT_SECURITY_POLICY = contentSecurityPolicy(false);
 
 export const CLERK_CSP_EXTRAS = {
-  "connect-src": ["https://api.quran.com", "https://verses.quran.com"],
+  "connect-src": [
+    "https://api.quran.com",
+    "https://verses.quran.com",
+    "https://va.vercel-scripts.com",
+    "https://vitals.vercel-insights.com",
+  ],
+  "script-src": ["https://va.vercel-scripts.com"],
   "media-src": ["'self'", "https://verses.quran.com", "blob:"],
   "frame-ancestors": ["'self'", "https://checkout.paystack.com", "https://standard.paystack.co", "https://paystack.com"],
   "object-src": ["'none'"],

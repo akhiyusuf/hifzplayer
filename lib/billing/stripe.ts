@@ -77,3 +77,8 @@ export async function retrieveStripeSession(id: string) {
   const stripe = stripeClient();
   return stripe.checkout.sessions.retrieve(id, { expand: ["subscription"] });
 }
+
+export async function retrieveStripeSubscription(id: string) {
+  const stripe = stripeClient();
+  return stripe.subscriptions.retrieve(id);
+}

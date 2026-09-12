@@ -63,6 +63,7 @@ export async function POST(request: Request) {
     regionId,
     source: "checkout",
     hasUserId: Boolean(userId),
+    accountId: userId || undefined,
   });
 
   const origin = appUrl(request);

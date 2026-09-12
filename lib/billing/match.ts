@@ -55,6 +55,8 @@ export function resolvePaidPlan(opts: {
   amount: number;
   currency: string;
   metadata: unknown;
+  /** Recurring invoices keep the price they started on, even after the catalog changes. */
+  allowAmountDrift?: boolean;
 }): PaidPlan | { error: string } {
   const meta = parseCheckoutMetadata(opts.metadata);
   const currency = (opts.currency || "").trim().toUpperCase();
@@ -62,10 +64,14 @@ export function resolvePaidPlan(opts: {
   if (isPlanId(meta.planId) && isRegionId(meta.regionId)) {
     const expected = quote(meta.regionId, meta.planId);
     const amountKnown = Number.isFinite(opts.amount) && opts.amount >= 0;
-    if (amountKnown && (opts.amount !== expected.amount || currency !== expected.currency)) {
+    const drift = Boolean(opts.allowAmountDrift);
+    if (amountKnown && !drift && (opts.amount !== expected.amount || currency !== expected.currency)) {
       return { error: "Paid amount does not match the catalog" };
     }
     if (!amountKnown && currency && currency !== expected.currency) {
+      return { error: "Paid currency does not match the catalog" };
+    }
+    if (amountKnown && drift && currency && currency !== expected.currency) {
       return { error: "Paid currency does not match the catalog" };
     }
     return {

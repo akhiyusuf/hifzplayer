@@ -2,9 +2,9 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { billingSigningSecret } from "./env";
 import type { PlanId, Processor, RegionId } from "./plans";
 import { isPlanId, isRegionId } from "./plans";
-import { entitlementForUser, isPlusActive, publicEntitlement } from "./entitlement-bind";
+import { entitlementForUser, isPlusActive, pickBestEntitlement, publicEntitlement } from "./entitlement-bind";
 
-export { entitlementForUser, isPlusActive, publicEntitlement };
+export { entitlementForUser, isPlusActive, pickBestEntitlement, publicEntitlement };
 export const PLUS_COOKIE = "hifz_plus";
 
 export type Entitlement = {
@@ -16,6 +16,8 @@ export type Entitlement = {
   until: string | null;
   email?: string;
   userId?: string;
+  /** Stripe subscription id or Paystack subscription_code, when this is a recurring plan. */
+  sub?: string;
   ref: string;
   grantedAt: string;
 };
@@ -109,18 +111,21 @@ export function grantFromPayment(opts: {
   processor: Processor;
   email?: string;
   userId?: string;
+  sub?: string;
   ref: string;
   until?: string | null;
+  plus?: boolean;
 }): Entitlement {
   return {
     v: 1,
-    plus: true,
+    plus: opts.plus !== false,
     planId: opts.planId,
     regionId: opts.regionId,
     processor: opts.processor,
     until: opts.until === undefined ? periodEnd(opts.planId) : opts.until,
     email: opts.email,
     userId: opts.userId,
+    ...(opts.sub ? { sub: opts.sub } : {}),
     ref: opts.ref,
     grantedAt: new Date().toISOString(),
   };

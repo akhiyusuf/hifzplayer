@@ -1,6 +1,12 @@
 import { logBillingEvent } from "@/lib/billing/analytics";
 import { stripeWebhookSecret } from "@/lib/billing/env";
-import { fulfillStripeSession } from "@/lib/billing/fulfill";
+import {
+  fulfillStripeInvoice,
+  fulfillStripeSession,
+  fulfillStripeSubscription,
+  webhookJson,
+} from "@/lib/billing/fulfill";
+import { stripeSubscriptionAction, stripeWebhookAction } from "@/lib/billing/webhook-kind";
 import Stripe from "stripe";
 
 export const runtime = "nodejs";
@@ -22,19 +28,61 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid Stripe signature" }, { status: 400 });
   }
 
-  logBillingEvent({ type: "webhook_received", processor: "stripe", source: "webhook", reason: event.type });
+  const action = stripeWebhookAction(event.type);
+  logBillingEvent({
+    type: action === "fail" ? "payment_failed" : "webhook_received",
+    processor: "stripe",
+    source: "webhook",
+    reason: event.type,
+    ok: action !== "fail",
+  });
 
-  if (event.type === "checkout.session.completed") {
+  if (action === "checkout" && event.type === "checkout.session.completed") {
     const session = event.data.object;
     const result = await fulfillStripeSession(session.id, {
       source: "webhook",
       setCookie: false,
       signedInUserId: null,
     });
-    if (!result.ok) {
-      return Response.json({ received: true, type: event.type, fulfilled: false }, { status: result.status >= 500 ? 500 : 200 });
+    return webhookJson(result, event.type);
+  }
+
+  if (action === "renew" && (event.type === "invoice.paid" || event.type === "invoice.payment_succeeded")) {
+    const invoice = event.data.object;
+    const result = await fulfillStripeInvoice(invoice, { source: "webhook", setCookie: false });
+    return webhookJson(result, event.type);
+  }
+
+  if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
+    const sub = event.data.object;
+    const subAction =
+      event.type === "customer.subscription.deleted"
+        ? "revoke"
+        : stripeSubscriptionAction(sub.status, Boolean(sub.cancel_at_period_end));
+    if (subAction === "fail") {
+      logBillingEvent({
+        type: "payment_failed",
+        processor: "stripe",
+        source: "webhook",
+        reason: sub.status,
+        accountId: sub.metadata?.userId,
+        hasUserId: Boolean(sub.metadata?.userId),
+      });
+      return Response.json({ received: true, type: event.type, noted: true });
     }
-    return Response.json({ received: true, type: event.type, fulfilled: true });
+    if (subAction === "ignore") {
+      return Response.json({ received: true, type: event.type });
+    }
+    const result = await fulfillStripeSubscription(sub, {
+      source: "webhook",
+      setCookie: false,
+      plus: subAction !== "revoke",
+    });
+    return webhookJson(result, event.type);
+  }
+
+  if (action === "fail") {
+    return Response.json({ received: true, type: event.type, noted: true });
   }
 
   return Response.json({ received: true, type: event.type });

@@ -61,6 +61,7 @@ export async function sendPlusWelcome(ent: Entitlement) {
       regionId: ent.regionId,
       reason: "no_email",
       hasUserId: Boolean(ent.userId),
+      accountId: ent.userId,
     });
     return;
   }
@@ -72,6 +73,7 @@ export async function sendPlusWelcome(ent: Entitlement) {
       regionId: ent.regionId,
       reason: "already_sent",
       hasUserId: true,
+      accountId: ent.userId,
     });
     return;
   }
@@ -83,6 +85,7 @@ export async function sendPlusWelcome(ent: Entitlement) {
       regionId: ent.regionId,
       reason: "no_provider",
       hasUserId: Boolean(ent.userId),
+      accountId: ent.userId,
     });
     return;
   }
@@ -96,6 +99,7 @@ export async function sendPlusWelcome(ent: Entitlement) {
       planId: ent.planId,
       regionId: ent.regionId,
       hasUserId: Boolean(ent.userId),
+      accountId: ent.userId,
     });
   } catch {
     logBillingEvent({
@@ -105,6 +109,7 @@ export async function sendPlusWelcome(ent: Entitlement) {
       planId: ent.planId,
       regionId: ent.regionId,
       hasUserId: Boolean(ent.userId),
+      accountId: ent.userId,
     });
   }
 }

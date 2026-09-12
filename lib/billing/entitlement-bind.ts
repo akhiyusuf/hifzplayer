@@ -51,3 +51,18 @@ export function entitlementForUser<T extends PlusFields>(
   if (ent.userId && ent.userId !== userId) return null;
   return { ...ent, userId };
 }
+
+function untilMs(ent: PlusFields) {
+  if (!ent.until) return Number.POSITIVE_INFINITY;
+  const ms = Date.parse(ent.until);
+  return Number.isFinite(ms) ? ms : 0;
+}
+
+/** Prefer the record that is still active and lasts longer. Lifetime (no until) wins. */
+export function pickBestEntitlement<T extends PlusFields>(account: T | null, cookie: T | null): T | null {
+  const a = account && isPlusActive(account) ? account : null;
+  const c = cookie && isPlusActive(cookie) ? cookie : null;
+  if (!a) return c;
+  if (!c) return a;
+  return untilMs(a) >= untilMs(c) ? a : c;
+}

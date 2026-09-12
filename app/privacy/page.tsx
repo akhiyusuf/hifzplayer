@@ -82,10 +82,21 @@ export default async function PrivacyPage({
             {APP_NAME}. We receive the email on the receipt, the plan you chose, and a payment reference so we can
             confirm the charge. After Plus is granted we send one confirmation email to that address (via Resend)
             so you know the subscription actually turned on. Paystack and Stripe still send their own receipts.
-            Those payment fields stay on the server; the app never shows payment refs or account ids in the page.
-            We log payment confirmation events (plan, processor, success or failure) so a paid subscription can be
-            fulfilled even if the checkout page does not load. Paystack and Stripe dashboards are the payment
-            ledger. Their privacy policies apply to the checkout pages. Sign-in is handled by Clerk.
+            Those payment fields stay on the server; the app never shows payment refs. Your Clerk account ID is
+            shown only to you on the account page so you can quote it if something goes wrong. We log payment
+            confirmation and renewal events (plan, processor, success or failure, and that same account ID — never
+            your email) so a paid subscription can be fulfilled and later invoices keep Plus on. Paystack and
+            Stripe dashboards are the payment ledger. Their privacy policies apply to the checkout pages. Sign-in
+            is handled by Clerk.
+          </p>
+        </section>
+        <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Analytics</h2>
+          <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
+            Vercel Web Analytics records page views so we can see how many people open {APP_NAME}. It does not
+            use advertising cookies. When you create an account or sign in, we log the Clerk account ID (not your
+            email) so a broken grant or a failed renewal can be found in the same place. Those logs are for
+            fixing problems, not for ads.
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
