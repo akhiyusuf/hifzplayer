@@ -9,10 +9,12 @@ export type RoadmapItem = {
   blurb: string;
   detail: string;
   status: RoadmapStatus;
-  /** False means it stays off the paywall when it lands. */
-  plus: boolean;
+  /** True = Diras Plus when it lands. False = stays off the paywall. Omit for listings that are not a paywall question. */
+  plus?: boolean;
   icon: string;
   featured?: boolean;
+  /** Store listings sit under their own heading, not “On the page”. */
+  store?: boolean;
 };
 
 export const ROADMAP_STATUS_LABEL: Record<RoadmapStatus, string> = {
@@ -73,8 +75,8 @@ export const ROADMAP: RoadmapItem[] = [
     detail:
       "Apple lists iPhone and iPad apps on the App Store — not the Apple Store. We're preparing the Diras listing. Until Apple accepts it and it is live, there is no Get button here and no ship date.",
     status: "next",
-    plus: false,
     icon: "smartphone",
+    store: true,
   },
   {
     id: "google-play",
@@ -83,8 +85,8 @@ export const ROADMAP: RoadmapItem[] = [
     detail:
       "Google lists Android apps on Google Play. We're preparing the Diras listing. Until an accepted Play listing is live, there is no Install button here, no pre-register, and no ship date.",
     status: "next",
-    plus: false,
     icon: "smartphone",
+    store: true,
   },
 ];
 
@@ -99,5 +101,9 @@ export function featuredRoadmap() {
 }
 
 export function listedRoadmap() {
-  return ROADMAP.filter((item) => !item.featured);
+  return ROADMAP.filter((item) => !item.featured && !item.store);
+}
+
+export function storeRoadmap() {
+  return ROADMAP.filter((item) => item.store);
 }

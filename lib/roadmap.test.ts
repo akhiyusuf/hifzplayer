@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { ASK_PROMPTS, ROADMAP, featuredRoadmap, listedRoadmap } from "./roadmap.ts";
+import { ASK_PROMPTS, ROADMAP, featuredRoadmap, listedRoadmap, storeRoadmap } from "./roadmap.ts";
 
 describe("roadmap", () => {
   it("keeps unique ids and lists Ask plus the parked study layers", () => {
@@ -31,6 +31,7 @@ describe("roadmap", () => {
     const listed = listedRoadmap();
     assert.ok(listed.some((item) => /Recurring phrases/.test(item.title)));
     assert.ok(listed.some((item) => /Near-twin/.test(item.title)));
+    assert.ok(!listed.some((item) => item.store));
   });
 
   it("parks Best of a reciter as Plus", () => {
@@ -45,8 +46,12 @@ describe("roadmap", () => {
     const play = ROADMAP.find((item) => item.id === "google-play");
     assert.equal(apple?.title, "App Store");
     assert.equal(play?.title, "Google Play");
-    assert.equal(apple?.plus, false);
-    assert.equal(play?.plus, false);
+    assert.equal(apple?.plus, undefined);
+    assert.equal(play?.plus, undefined);
+    assert.equal(apple?.store, true);
+    assert.equal(play?.store, true);
+    const stores = storeRoadmap();
+    assert.equal(stores.length, 2);
     assert.match(apple?.blurb || "", /Coming soon on the App Store/);
     assert.match(play?.blurb || "", /Coming soon on Google Play/);
     const blob = `${apple?.detail} ${play?.detail}`;
