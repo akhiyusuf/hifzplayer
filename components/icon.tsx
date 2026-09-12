@@ -50,7 +50,9 @@ import {
   VolumeX,
   X,
   CreditCard,
+  Gift,
   Sparkles,
+  Smartphone,
   type LucideIcon,
 } from "lucide-react";
 
@@ -104,6 +106,8 @@ const ICONS: Record<string, LucideIcon> = {
   x: X,
   "credit-card": CreditCard,
   sparkles: Sparkles,
+  gift: Gift,
+  smartphone: Smartphone,
 };
 
 export function Icon({

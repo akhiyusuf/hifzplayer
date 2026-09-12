@@ -60,6 +60,7 @@ function PricingForm({
 }) {
   const [planId, setPlanId] = useState<PlanId>("annual");
   const [email, setEmail] = useState("");
+  const [gift, setGift] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(canceled ? "Checkout was canceled. Nothing was charged." : "");
 
@@ -81,7 +82,7 @@ function PricingForm({
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId, email: receiptEmail }),
+        body: JSON.stringify({ planId, email: receiptEmail, gift }),
       });
       const data = (await res.json()) as { url?: string; error?: string; code?: string };
       if (data.code === "SIGN_IN_REQUIRED" || res.status === 401) {
@@ -135,22 +136,25 @@ function PricingForm({
                 className={`pricing-card${on ? " on" : ""}`}
                 onClick={() => setPlanId(plan.planId)}
               >
-                <strong className="pricing-price">{plan.label}</strong>
                 <span className="pricing-card-top">
                   <b>{plan.name}</b>
                   {plan.planId === "annual" ? <span className="badge-beta">Best value</span> : null}
                 </span>
+                <strong className="pricing-price">{plan.label}</strong>
                 <span className="pricing-blurb">{plan.blurb}</span>
               </button>
             );
           })}
         </div>
-        <p className="pricing-plan-hint">{selected.blurb}</p>
 
         {accountsOn && signedIn && accountEmail ? (
           <p className="pricing-note">Receipt goes to {accountEmail}.</p>
         ) : accountsOn && !signedIn ? (
-          <p className="pricing-note">Sign in first so Plus is stored on your account, not only this browser.</p>
+          <p className="pricing-note">
+            {gift
+              ? "Sign in first so we can attach the gift after you pay."
+              : "Sign in first so Plus is stored on your account, not only this browser."}
+          </p>
         ) : (
           <label className="pricing-email">
             <span className="label-eyebrow">Email for receipt</span>
@@ -168,6 +172,33 @@ function PricingForm({
           </label>
         )}
 
+        <div className="pricing-who" role="radiogroup" aria-label="Who is this Plus for">
+          <button
+            type="button"
+            role="radio"
+            aria-checked={!gift}
+            className={`pricing-who-btn tap${!gift ? " on" : ""}`}
+            onClick={() => setGift(false)}
+          >
+            For me
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={gift}
+            className={`pricing-who-btn tap${gift ? " on" : ""}`}
+            onClick={() => setGift(true)}
+          >
+            Gift someone
+          </button>
+        </div>
+        {gift ? (
+          <p className="pricing-note">
+            Pay first. After checkout you add their email — we never ask for it before the charge. They get a note
+            to sign up with that address (Google is fine if it is the same email).
+          </p>
+        ) : null}
+
         {!ready ? (
           <p className="pricing-note" role="status">
             Checkout isn’t ready on this deployment yet.
@@ -184,8 +215,12 @@ function PricingForm({
           {busy
             ? "Opening checkout…"
             : accountsOn && !signedIn
-              ? `Sign in to continue · ${selected.label}`
-              : `Continue · ${selected.label}`}
+              ? gift
+                ? `Sign in to gift · ${selected.label}`
+                : `Sign in to continue · ${selected.label}`
+              : gift
+                ? `Gift · ${selected.label}`
+                : `Continue · ${selected.label}`}
         </button>
 
         <p className="pricing-foot">
@@ -194,7 +229,7 @@ function PricingForm({
       </div>
 
       <p className="pricing-soon">
-        Recurring phrases and near-twin words are coming soon, and stay free.{" "}
+        Recurring phrases and near-twin words are coming soon, and stay free. Ask the Quran will be {PLUS_EXPLAIN.plusTitle}.{" "}
         <Link href="/roadmap">See what&apos;s coming</Link>
       </p>
     </div>

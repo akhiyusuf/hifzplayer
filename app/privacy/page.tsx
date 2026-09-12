@@ -85,7 +85,9 @@ export default async function PrivacyPage({
             regions), chosen from your location — not a picker. Card numbers go to those providers, not to{" "}
             {APP_NAME}. We receive the email on the receipt, the plan you chose, and a payment reference so we can
             confirm the charge. After Plus is granted we send one confirmation email to that address (via Resend)
-            so you know the subscription actually turned on. Paystack and Stripe still send their own receipts.
+            so you know the subscription actually turned on. If you gift Plus, we ask for the recipient&apos;s email
+            only after you pay, then we email that address so they can sign up (Google or email) and receive Plus.
+            Paystack and Stripe still send their own receipts.
             Those payment fields stay on the server; the app never shows payment refs. Your Clerk account ID is
             shown only to you on the account page so you can quote it if something goes wrong. We log payment
             confirmation and renewal events (plan, processor, success or failure, and that same account ID — never

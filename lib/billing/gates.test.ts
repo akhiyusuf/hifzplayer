@@ -45,8 +45,12 @@ describe("Plus explanation copy", () => {
       true,
     );
     assert.equal(
-      PLUS_EXPLAIN.plus.some((line) => /Occasion lists and Best of/.test(line)),
+      PLUS_EXPLAIN.plus.some((line) => /Occasion lists/.test(line)),
       true,
+    );
+    assert.equal(
+      PLUS_EXPLAIN.plus.some((line) => /Best of/.test(line)),
+      false,
     );
     assert.equal(
       PLUS_EXPLAIN.plus.some((line) => /3×, 5×, 10×/.test(line)),

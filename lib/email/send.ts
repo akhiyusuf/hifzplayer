@@ -2,6 +2,7 @@ import { clerkEmailForUser, markPlusWelcomeSent, plusWelcomeAlreadySent } from "
 import { logBillingEvent } from "@/lib/billing/analytics";
 import type { Entitlement } from "@/lib/billing/entitlement";
 import { APP_NAME } from "@/lib/brand";
+import { giftNoticeHtml, giftNoticeSubject, giftNoticeText } from "./gift-notice";
 import { plusWelcomeHtml, plusWelcomeSubject, plusWelcomeText } from "./plus-welcome";
 
 function resendApiKey() {
@@ -48,6 +49,39 @@ async function deliver(to: string, ent: Entitlement) {
     }),
   });
   if (!res.ok) throw new Error(`Resend HTTP ${res.status}`);
+}
+
+export async function sendGiftNotice(opts: {
+  to: string;
+  existingAccount: boolean;
+  signUpUrl: string;
+}) {
+  const to = opts.to.trim().toLowerCase();
+  if (!looksLikeEmail(to)) return;
+  const key = resendApiKey();
+  if (!key) {
+    logBillingEvent({ type: "gift_failed", reason: "no_provider" });
+    return;
+  }
+  const input = { existingAccount: opts.existingAccount, signUpUrl: opts.signUpUrl };
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${key}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "User-Agent": "DirasBilling/1.0",
+    },
+    body: JSON.stringify({
+      from: emailFrom(),
+      to: [to],
+      subject: giftNoticeSubject(),
+      text: giftNoticeText(input),
+      html: giftNoticeHtml(input),
+    }),
+  });
+  if (!res.ok) throw new Error(`Resend HTTP ${res.status}`);
+  logBillingEvent({ type: "welcome_sent", reason: "gift_notice", ok: true });
 }
 
 /** Never throws — Plus grant must not fail because mail is down. */

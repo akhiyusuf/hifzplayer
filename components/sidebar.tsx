@@ -9,6 +9,7 @@ import { APP_NAME, PLUS_NAME } from "@/lib/brand";
 const ITEMS = [
   { href: "/", label: "Read", icon: "book-open", match: (p: string) => p === "/" || p.startsWith("/read") },
   { href: "/listen", label: "Listen", icon: "headphones", match: (p: string) => p === "/listen" },
+  { href: "/roadmap", label: "What's coming", icon: "sparkles", match: (p: string) => p.startsWith("/roadmap") },
   { href: "/settings", label: "Settings", icon: "settings", match: (p: string) => p.startsWith("/settings") },
 ];
 

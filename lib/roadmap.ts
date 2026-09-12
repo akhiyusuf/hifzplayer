@@ -9,10 +9,12 @@ export type RoadmapItem = {
   blurb: string;
   detail: string;
   status: RoadmapStatus;
-  /** False means it stays off the paywall when it lands. */
-  plus: boolean;
+  /** True = Diras Plus when it lands. False = stays off the paywall. Omit for listings that are not a paywall question. */
+  plus?: boolean;
   icon: string;
   featured?: boolean;
+  /** Store listings sit under their own heading, not “On the page”. */
+  store?: boolean;
 };
 
 export const ROADMAP_STATUS_LABEL: Record<RoadmapStatus, string> = {
@@ -27,9 +29,9 @@ export const ROADMAP: RoadmapItem[] = [
     arabic: "اسأل",
     blurb: "Sit with a verse, a surah, or the whole mushaf, and ask.",
     detail:
-      "A question box beside the page — not a chatbot that replaces reading. It will answer from the text you have open: what an ayah is saying, where a wording returns, how to hold a passage. It will not give rulings, and it will not speak over the Arabic.",
+      "A question box beside the page — not a chatbot that replaces reading. It will answer from the text you have open: what an ayah is saying, where a wording returns, how to hold a passage. It will not give rulings, and it will not speak over the Arabic. Ask is Diras Plus when it lands.",
     status: "cooking",
-    plus: false,
+    plus: true,
     icon: "sparkles",
     featured: true,
   },
@@ -55,6 +57,37 @@ export const ROADMAP: RoadmapItem[] = [
     plus: false,
     icon: "git-compare",
   },
+  {
+    id: "best-of",
+    title: "Best of a reciter",
+    arabic: "صوت",
+    blurb: "Loved passages in one voice — a short reel for each reciter.",
+    detail:
+      "Open a reciter and hear the ayahs people keep coming back to, in that recitation. Parked so Listen could stay a simple row of occasion lists. Diras Plus when it lands.",
+    status: "next",
+    plus: true,
+    icon: "mic",
+  },
+  {
+    id: "app-store",
+    title: "App Store",
+    blurb: "Coming soon on the App Store.",
+    detail:
+      "Apple lists iPhone and iPad apps on the App Store — not the Apple Store. We're preparing the Diras listing. Until Apple accepts it and it is live, there is no Get button here and no ship date.",
+    status: "next",
+    icon: "smartphone",
+    store: true,
+  },
+  {
+    id: "google-play",
+    title: "Google Play",
+    blurb: "Coming soon on Google Play.",
+    detail:
+      "Google lists Android apps on Google Play. We're preparing the Diras listing. Until an accepted Play listing is live, there is no Install button here, no pre-register, and no ship date.",
+    status: "next",
+    icon: "smartphone",
+    store: true,
+  },
 ];
 
 export const ASK_PROMPTS = [
@@ -68,5 +101,9 @@ export function featuredRoadmap() {
 }
 
 export function listedRoadmap() {
-  return ROADMAP.filter((item) => !item.featured);
+  return ROADMAP.filter((item) => !item.featured && !item.store);
+}
+
+export function storeRoadmap() {
+  return ROADMAP.filter((item) => item.store);
 }

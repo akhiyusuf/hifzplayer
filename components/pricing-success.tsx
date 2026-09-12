@@ -22,10 +22,12 @@ async function confirmPayment(opts: { sessionId: string; reference: string }) {
     });
     const data = (await res.json()) as {
       plus?: boolean;
+      gift?: boolean;
       planId?: string;
       until?: string | null;
       error?: string;
     };
+    if (res.ok && data.gift) return { ...data, gift: true as const };
     if (res.ok && data.plus) return data;
     lastMessage = data.error || lastMessage;
     if (res.status !== 402 && res.status !== 502) break;
@@ -59,6 +61,11 @@ export function PricingSuccess({
       try {
         const data = await confirmPayment({ sessionId, reference });
         if (cancelled) return;
+        if (data.gift) {
+          const q = sessionId ? `session_id=${encodeURIComponent(sessionId)}` : `reference=${encodeURIComponent(reference)}`;
+          window.location.assign(`/pricing/gift?${q}&paid=1`);
+          return;
+        }
         setStore(PLUS_STORAGE_KEY, { plus: true, planId: data.planId, until: data.until });
         setState({ status: "ok", planId: data.planId || "plus", until: data.until ?? null });
       } catch (err) {
@@ -86,6 +93,13 @@ export function PricingSuccess({
         sessionId: looksStripe ? value : "",
         reference: looksStripe ? "" : value,
       });
+      if (data.gift) {
+        const q = looksStripe
+          ? `session_id=${encodeURIComponent(value)}`
+          : `reference=${encodeURIComponent(value)}`;
+        window.location.assign(`/pricing/gift?${q}&paid=1`);
+        return;
+      }
       setStore(PLUS_STORAGE_KEY, { plus: true, planId: data.planId, until: data.until });
       setState({ status: "ok", planId: data.planId || "plus", until: data.until ?? null });
     } catch (err) {

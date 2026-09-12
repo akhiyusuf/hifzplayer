@@ -12,7 +12,11 @@ export type BillingEventType =
   | "recover_attempt"
   | "welcome_sent"
   | "welcome_skipped"
-  | "welcome_failed";
+  | "welcome_failed"
+  | "gift_hold"
+  | "gift_assigned"
+  | "gift_claimed"
+  | "gift_failed";
 
 export type BillingEvent = {
   type: BillingEventType;

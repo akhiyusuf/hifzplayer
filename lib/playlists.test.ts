@@ -40,6 +40,12 @@ describe("occasion lists", () => {
     assert.doesNotMatch(blob, /cure|miracle|guaranteed/i);
     assert.match(blob, /often|widely|favourite|listening/i);
   });
+
+  it("has more than a teaser row, so home can scroll them all", () => {
+    assert.ok(OCCASION_PLAYLISTS.length >= 6);
+    assert.ok(OCCASION_PLAYLISTS.some((p) => p.id === "morning"));
+    assert.ok(OCCASION_PLAYLISTS.some((p) => p.id === "yasin"));
+  });
 });
 
 describe("best of a reciter", () => {

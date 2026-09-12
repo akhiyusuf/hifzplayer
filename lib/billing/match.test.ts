@@ -15,6 +15,19 @@ describe("checkout metadata", () => {
     assert.equal(parsed.userId, "user_abc");
   });
 
+  it("reads gift buyer without treating them as the Plus owner", () => {
+    const parsed = parseCheckoutMetadata({
+      planId: "annual",
+      regionId: "ng",
+      gift: "1",
+      buyerId: "user_buyer",
+      custom_fields: [{ display_name: "Gift", variable_name: "gift", value: "1" }],
+    });
+    assert.equal(parsed.gift, true);
+    assert.equal(parsed.buyerId, "user_buyer");
+    assert.equal(parsed.userId, "");
+  });
+
   it("falls back to custom_fields when keys are nested there", () => {
     const parsed = parseCheckoutMetadata({
       custom_fields: [
