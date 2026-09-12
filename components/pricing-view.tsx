@@ -2,8 +2,9 @@
 
 import { useUser } from "@clerk/nextjs";
 import { useMemo, useState } from "react";
-import { APP_NAME, PLUS_NAME } from "@/lib/brand";
+import { APP_NAME } from "@/lib/brand";
 import { clerkBrowserReady } from "@/lib/auth/config";
+import { PLUS_EXPLAIN } from "@/lib/billing/gates";
 import type { Catalog, PlanId } from "@/lib/billing/plans";
 
 type Processors = { stripe: boolean; paystack: boolean };
@@ -32,6 +33,13 @@ function PricingViewSigned(props: {
       accountEmail={user?.primaryEmailAddress?.emailAddress || ""}
     />
   );
+}
+
+function checkoutError(data: { error?: string; code?: string }, status: number) {
+  if (data.code === "PROCESSOR_NOT_CONFIGURED" || status === 503) {
+    return "Checkout isn’t ready on this deployment yet.";
+  }
+  return data.error || "Could not start checkout.";
 }
 
 function PricingForm({
@@ -79,14 +87,7 @@ function PricingForm({
         window.location.assign("/sign-in?redirect_url=/pricing");
         return;
       }
-      if (!res.ok || !data.url) {
-        throw new Error(
-          data.error ||
-            (res.status === 503
-              ? "This payment provider is not configured yet."
-              : "Could not start checkout."),
-        );
-      }
+      if (!res.ok || !data.url) throw new Error(checkoutError(data, res.status));
       window.location.assign(data.url);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start checkout.");
@@ -96,96 +97,102 @@ function PricingForm({
 
   return (
     <div className="pricing">
-      <p className="pricing-lead">
-        Reading stays free. Focus stays free. Looping a verse with Repeat stays free.{" "}
-        {PLUS_NAME} is a word played 3× or more — including until you stop — and Relay with more than one qari.
-      </p>
-      <ul className="pricing-includes">
-        <li>3×, 5×, 10× and unlimited word repeats</li>
-        <li>Relay with more than one qari</li>
-      </ul>
-      <p className="pricing-note">
-        Recurring phrases and near-twin words are coming soon, and stay off the paywall.
-      </p>
+      <header className="pricing-hero">
+        <p className="pricing-lead">{PLUS_EXPLAIN.lead}</p>
+      </header>
 
-      <div className="pricing-detected">
-        <span className="label-eyebrow">Priced for</span>
-        <b>{region.label}</b>
-        <span>
-          {region.processor === "paystack" ? "Paystack" : "Stripe"} · {region.currency}. Detected from your
-          location — not a choice at checkout.
-        </span>
+      <div className="pricing-split">
+        <section className="pricing-split-col">
+          <span className="label-eyebrow">{PLUS_EXPLAIN.freeTitle}</span>
+          <ul>
+            {PLUS_EXPLAIN.free.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="pricing-split-col plus">
+          <span className="label-eyebrow">{PLUS_EXPLAIN.plusTitle}</span>
+          <ul>
+            {PLUS_EXPLAIN.plus.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </section>
       </div>
 
-      <div className="pricing-plans" role="radiogroup" aria-label="Plan">
-        {region.plans.map((plan) => {
-          const on = plan.planId === planId;
-          return (
-            <button
-              key={plan.planId}
-              type="button"
-              role="radio"
-              aria-checked={on}
-              className={`pricing-card${on ? " on" : ""}`}
-              onClick={() => setPlanId(plan.planId)}
-            >
-              <span className="pricing-card-top">
-                <b>{plan.name}</b>
-                {plan.planId === "annual" ? <span className="badge-beta">Best value</span> : null}
-              </span>
-              <strong className="pricing-price">{plan.label}</strong>
-              <span className="pricing-blurb">{plan.blurb}</span>
-            </button>
-          );
-        })}
+      <div className="pricing-buy">
+        <div className="pricing-plans" role="radiogroup" aria-label="Plan">
+          {region.plans.map((plan) => {
+            const on = plan.planId === planId;
+            return (
+              <button
+                key={plan.planId}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                aria-label={`${plan.name}, ${plan.label}`}
+                className={`pricing-card${on ? " on" : ""}`}
+                onClick={() => setPlanId(plan.planId)}
+              >
+                <strong className="pricing-price">{plan.label}</strong>
+                <span className="pricing-card-top">
+                  <b>{plan.name}</b>
+                  {plan.planId === "annual" ? <span className="badge-beta">Best value</span> : null}
+                </span>
+                <span className="pricing-blurb">{plan.blurb}</span>
+              </button>
+            );
+          })}
+        </div>
+        <p className="pricing-plan-hint">{selected.blurb}</p>
+
+        {accountsOn && signedIn && accountEmail ? (
+          <p className="pricing-note">Receipt goes to {accountEmail}.</p>
+        ) : accountsOn && !signedIn ? (
+          <p className="pricing-note">Sign in first so Plus is stored on your account, not only this browser.</p>
+        ) : (
+          <label className="pricing-email">
+            <span className="label-eyebrow">Email for receipt</span>
+            <span className="field">
+              <input
+                type="email"
+                name="email"
+                autoComplete="email"
+                required
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </span>
+          </label>
+        )}
+
+        {!ready ? (
+          <p className="pricing-note" role="status">
+            Checkout isn’t ready on this deployment yet.
+          </p>
+        ) : null}
+
+        {error ? (
+          <p className="pricing-error" role="alert">
+            {error}
+          </p>
+        ) : null}
+
+        <button className="btn-primary" type="button" disabled={busy || !ready} onClick={() => void checkout()}>
+          {busy
+            ? "Opening checkout…"
+            : accountsOn && !signedIn
+              ? `Sign in to continue · ${selected.label}`
+              : `Continue · ${selected.label}`}
+        </button>
+
+        <p className="pricing-foot">
+          Card details never touch {APP_NAME}. Quran reading stays free either way.
+        </p>
       </div>
 
-      {accountsOn && signedIn && accountEmail ? (
-        <p className="pricing-note">Receipt goes to {accountEmail}.</p>
-      ) : accountsOn && !signedIn ? (
-        <p className="pricing-note">Sign in first so Plus is stored on your account, not only this browser.</p>
-      ) : (
-        <label className="pricing-email">
-          <span className="label-eyebrow">Email for receipt</span>
-          <span className="field">
-            <input
-              type="email"
-              name="email"
-              autoComplete="email"
-              required
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </span>
-        </label>
-      )}
-
-      {!ready ? (
-        <p className="pricing-note" role="status">
-          {region.processor === "paystack" ? "Paystack" : "Stripe"} keys are not on this deployment yet.
-          Checkout for this region will open once they are added.
-        </p>
-      ) : null}
-
-      {error ? (
-        <p className="pricing-error" role="alert">
-          {error}
-        </p>
-      ) : null}
-
-      <button className="btn-primary" type="button" disabled={busy || !ready} onClick={() => void checkout()}>
-        {busy
-          ? "Opening checkout…"
-          : accountsOn && !signedIn
-            ? `Sign in to continue · ${selected.label}`
-            : `Continue · ${selected.label}`}
-      </button>
-
-      <p className="pricing-foot">
-        You will finish payment on {region.processor === "paystack" ? "Paystack" : "Stripe"}. Card details never
-        touch {APP_NAME} servers. Quran reading stays free either way.
-      </p>
+      <p className="pricing-soon">Recurring phrases and near-twin words are coming soon, and stay free.</p>
     </div>
   );
 }
