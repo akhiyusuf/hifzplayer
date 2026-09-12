@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
+import { HomeHello } from "@/components/home-hello";
 import { ListenLists } from "@/components/listen-lists";
 import { OfflineBanner } from "@/components/offline-banner";
 import { Onboarding } from "@/components/onboarding";
@@ -16,7 +17,7 @@ import {
   shouldStampExistingUser,
   snapshotOnboarding,
 } from "@/lib/onboarding";
-import { greeting, listSessions, streakCount, timeAgo } from "@/lib/sessions";
+import { listSessions, streakCount, timeAgo } from "@/lib/sessions";
 import type { Session } from "@/lib/types";
 
 export default function HomePage() {
@@ -30,7 +31,6 @@ export default function HomePage() {
   const [continueSession, setContinueSession] = useState<Session | null>(null);
   const [pickups, setPickups] = useState<Session[]>([]);
   const [streak, setStreak] = useState(0);
-  const [greet, setGreet] = useState("");
   const [gate, setGate] = useState<"pending" | "show" | "ready">("pending");
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -49,7 +49,6 @@ export default function HomePage() {
     setContinueSession(sessions[0] ?? null);
     setPickups(sessions.slice(1, 3));
     setStreak(streakCount());
-    setGreet(greeting());
   }, []);
 
   useEffect(() => {
@@ -116,13 +115,11 @@ export default function HomePage() {
   return (
     <main className="shell" id="main">
       <div className="read-head">
-        <div className="rh-left">
-          <span className="label-eyebrow" style={{ letterSpacing: "0.12em" }}>
-            {greet || "\u00a0"}
-          </span>
-          <h1>Read</h1>
-        </div>
+        <HomeHello />
         <div className="rh-actions">
+          <Link className="icon-btn tap" href="/roadmap?from=home" aria-label="What's coming">
+            <Icon name="sparkles" size={18} />
+          </Link>
           <button
             className="icon-btn tap"
             onClick={() => setSearchOpen((v) => !v)}

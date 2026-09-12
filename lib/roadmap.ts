@@ -66,6 +66,26 @@ export const ROADMAP: RoadmapItem[] = [
     plus: true,
     icon: "mic",
   },
+  {
+    id: "app-store",
+    title: "App Store",
+    blurb: "Coming soon on the App Store.",
+    detail:
+      "Apple lists iPhone and iPad apps on the App Store — not the Apple Store. We're preparing the Diras listing. Until Apple accepts it and it is live, there is no Get button here and no ship date.",
+    status: "next",
+    plus: false,
+    icon: "smartphone",
+  },
+  {
+    id: "google-play",
+    title: "Google Play",
+    blurb: "Coming soon on Google Play.",
+    detail:
+      "Google lists Android apps on Google Play. We're preparing the Diras listing. Until an accepted Play listing is live, there is no Install button here, no pre-register, and no ship date.",
+    status: "next",
+    plus: false,
+    icon: "smartphone",
+  },
 ];
 
 export const ASK_PROMPTS = [

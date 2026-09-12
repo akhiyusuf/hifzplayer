@@ -34,3 +34,25 @@ export function shouldStampExistingUser(snap: OnboardingSnapshot): boolean {
 export function markOnboardingDone() {
   setStore(KEYS.onboarded, true);
 }
+
+/** First-visit pitch. Sells the free mushaf, not a feature dump or a paywall. */
+export const ONBOARDING_POINTS = [
+  {
+    icon: "play" as const,
+    title: "Play follows the words",
+    body: "Tap a surah. Each word lights as it is recited. Translation sits above play. Tajweed colours are a tap away.",
+  },
+  {
+    icon: "headphones" as const,
+    title: "Listen for the days you already keep",
+    body: "Friday Kahf, night verses, morning — occasion lists you can open and look around. Playing a list is Diras Plus. The mushaf is not.",
+  },
+  {
+    icon: "brackets" as const,
+    title: "Practise without losing the page",
+    body: "Drill, Masked, and Relay live on the player when you want them. Look around free. Play is Diras Plus. Reading never goes behind a wall.",
+  },
+] as const;
+
+export const ONBOARDING_LEAD =
+  "The mushaf that keeps up with the reciter. Quran reading stays free.";

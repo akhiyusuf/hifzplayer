@@ -40,6 +40,20 @@ describe("roadmap", () => {
     assert.match(best?.title || "", /Best of a reciter/);
   });
 
+  it("lists App Store and Google Play as coming soon, not live", () => {
+    const apple = ROADMAP.find((item) => item.id === "app-store");
+    const play = ROADMAP.find((item) => item.id === "google-play");
+    assert.equal(apple?.title, "App Store");
+    assert.equal(play?.title, "Google Play");
+    assert.equal(apple?.plus, false);
+    assert.equal(play?.plus, false);
+    assert.match(apple?.blurb || "", /Coming soon on the App Store/);
+    assert.match(play?.blurb || "", /Coming soon on Google Play/);
+    const blob = `${apple?.detail} ${play?.detail}`;
+    assert.match(blob, /not the Apple Store/);
+    assert.doesNotMatch(blob, /Get it on|Install now|pre-register on Google Play|Available on the App Store/i);
+  });
+
   it("does not invent ship dates", () => {
     const blob = ROADMAP.map((item) => `${item.title} ${item.blurb} ${item.detail}`).join(" ");
     assert.doesNotMatch(blob, /Q[1-4]\s*20\d{2}|next week|guaranteed/i);

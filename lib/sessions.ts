@@ -55,10 +55,3 @@ export function timeAgo(ts: number): string {
   const w = Math.floor(d / 7);
   return `${w} week${w === 1 ? "" : "s"} ago`;
 }
-
-export function greeting(): string {
-  const d = new Date();
-  const weekday = d.toLocaleDateString("en", { weekday: "long" });
-  const h = d.getHours();
-  return `${weekday} ${h < 12 ? "morning" : h < 17 ? "afternoon" : "evening"}`;
-}
