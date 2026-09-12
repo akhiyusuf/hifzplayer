@@ -310,6 +310,8 @@ export default function HomePage() {
               )}
             </section>
             <div className="link-row">
+              <Link href="/roadmap">What&apos;s coming</Link>
+              <span aria-hidden="true">·</span>
               <Link href="/credits">Data & attributions</Link>
               <span aria-hidden="true">·</span>
               <Link href="/privacy">Privacy</Link>

@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --experimental-strip-types --test lib/billing/*.test.ts lib/auth/*.test.ts lib/security/*.test.ts lib/email/*.test.ts lib/nav.test.ts lib/mushaf-window.test.ts"
+    "test": "node --experimental-strip-types --test lib/billing/*.test.ts lib/auth/*.test.ts lib/security/*.test.ts lib/email/*.test.ts lib/nav.test.ts lib/mushaf-window.test.ts lib/roadmap.test.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.2",

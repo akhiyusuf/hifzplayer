@@ -80,14 +80,24 @@ function PlusStatus() {
   );
 }
 
-function ComingSoonNote() {
+function ComingRow() {
   return (
-    <p style={{ fontSize: 12, lineHeight: 1.45, color: "var(--text-muted)", margin: "2px 4px 0" }}>
-      Recurring phrases and near-twin words are coming later.{" "}
-      <Link href="/credits?from=settings" style={{ color: "inherit" }}>
-        Sources
-      </Link>
-    </p>
+    <Link
+      href="/roadmap?from=settings"
+      className="settings-row"
+      style={{
+        background: "var(--bg-surface)",
+        border: "1px solid var(--border-default)",
+        textDecoration: "none",
+        color: "inherit",
+      }}
+    >
+      <span className="st">
+        <b>What&apos;s coming</b>
+        <span>Ask the Quran, recurring phrases, and near-twin words</span>
+      </span>
+      <Icon name="sparkles" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
+    </Link>
   );
 }
 
@@ -201,7 +211,6 @@ export default function SettingsPage() {
           checked={translation}
           onChange={setTranslation}
         />
-        <ComingSoonNote />
         <span className="label-eyebrow" style={gap}>
           Data
         </span>
@@ -246,7 +255,10 @@ export default function SettingsPage() {
         <span className="label-eyebrow" style={gap}>
           About
         </span>
+        <ComingRow />
         <div className="link-row" style={{ justifyContent: "flex-start", padding: "0 4px" }}>
+          <Link href="/roadmap?from=settings">What&apos;s coming</Link>
+          <span aria-hidden="true">·</span>
           <Link href="/credits?from=settings">Data & attributions</Link>
           <span aria-hidden="true">·</span>
           <Link href="/privacy?from=settings">Privacy</Link>

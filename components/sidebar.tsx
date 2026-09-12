@@ -38,6 +38,8 @@ export function AppSidebar() {
       <div className="as-foot">
         <Link href="/pricing">{PLUS_NAME}</Link>
         <span aria-hidden="true"> · </span>
+        <Link href="/roadmap">What&apos;s coming</Link>
+        <span aria-hidden="true"> · </span>
         <Link href="/privacy">Privacy</Link>
         <p>Quran content is always free to access</p>
       </div>

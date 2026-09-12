@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useMemo, useState } from "react";
 import { APP_NAME, PLUS_NAME } from "@/lib/brand";
@@ -105,7 +106,8 @@ function PricingForm({
         <li>Relay with more than one qari</li>
       </ul>
       <p className="pricing-note">
-        Recurring phrases and near-twin words are coming soon, and stay off the paywall.
+        Recurring phrases and near-twin words are coming next, and stay off the paywall.{" "}
+        <Link href="/roadmap">See what&apos;s coming</Link>
       </p>
 
       <div className="pricing-detected">
