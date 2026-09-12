@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Icon } from "./icon";
 import { PassageRange } from "./passage-range";
 import { Sheet } from "./sheet";
 import { useAppData } from "@/lib/app-data";
+import { PLUS_NAME } from "@/lib/brand";
 import { MODES, RATES, type ModeId } from "@/lib/constants";
 import { usePlus } from "@/lib/plus";
 import type { Chapter } from "@/lib/types";
@@ -58,11 +60,13 @@ function RepeatRow({
   on,
   disabled,
   hint,
+  locked,
   onToggle,
 }: {
   on: boolean;
   disabled?: boolean;
   hint: string;
+  locked?: boolean;
   onToggle: () => void;
 }) {
   return (
@@ -77,8 +81,38 @@ function RepeatRow({
         <b>Repeat this verse</b>
         <span>{hint}</span>
       </span>
-      <span className="val">{on ? "On" : "Off"}</span>
+      <span className="val">
+        {locked ? <Icon name="sparkles" size={14} /> : null}
+        {on ? "On" : "Off"}
+      </span>
     </button>
+  );
+}
+
+function PlusRow({ plusOn }: { plusOn: boolean }) {
+  if (plusOn) {
+    return (
+      <section className="listen-section" aria-label={PLUS_NAME}>
+        <div className="listen-sheet-row on">
+          <span className="st">
+            <b>{PLUS_NAME} is on</b>
+            <span>3× to unlimited repeats, and extra qaris in relay</span>
+          </span>
+          <Icon name="sparkles" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
+        </div>
+      </section>
+    );
+  }
+  return (
+    <section className="listen-section" aria-label={PLUS_NAME}>
+      <Link href="/pricing?from=player" className="listen-sheet-row tap">
+        <span className="st">
+          <b>What {PLUS_NAME} is</b>
+          <span>3× to unlimited repeats, and extra qaris in relay. Practise stays free.</span>
+        </span>
+        <Icon name="sparkles" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
+      </Link>
+    </section>
   );
 }
 
@@ -211,22 +245,26 @@ export function PlayerSettingsSheet({
     <section className="listen-section" aria-label="Playback">
       <span className="label-eyebrow">Playback</span>
       <SpeedControl rate={state.rate} onRate={(rate) => engine.setRate(rate)} />
-      {drill ? (
-        <p className="listen-repeat-note">Word repeats sit on the page. Tap a word, then pick how many times.</p>
-      ) : (
-        <RepeatRow
-          on={!!state.verseLoop}
-          disabled={relay}
-          hint={
-            relay
-              ? "Relay already takes turns, so verse loop stays off"
-              : mushaf
-                ? "Keep this ayah playing until you stop it"
-                : "Loop this ayah until you turn it off"
-          }
-          onToggle={toggleRepeat}
-        />
-      )}
+      {!mushaf &&
+        (drill ? (
+          <p className="listen-repeat-note">
+            ×1 and ×2 stay free on the page. {PLUS_NAME} is 3× and up, including until you stop.
+          </p>
+        ) : (
+          <RepeatRow
+            on={!!state.verseLoop}
+            disabled={relay}
+            locked={!plusOn && !relay}
+            hint={
+              relay
+                ? "Relay already takes turns, so verse loop stays off"
+                : plusOn
+                  ? "Loop this ayah until you turn it off"
+                  : `Loop until you stop is ${PLUS_NAME}`
+            }
+            onToggle={toggleRepeat}
+          />
+        ))}
     </section>
   );
 
@@ -256,7 +294,9 @@ export function PlayerSettingsSheet({
     <Sheet title="Settings" onClose={onClose}>
       <div className="listen-sheet">
         <p className="listen-sheet-lead">
-          {mushaf ? "Audio while you read this page." : "Choose how you practise this verse."}
+          {mushaf
+            ? "Reading stays free. Speed and verses for this page."
+            : `Practise is free. ${PLUS_NAME} is extra repeats and extra qaris in relay.`}
         </p>
         {mushaf ? (
           <>
@@ -269,6 +309,7 @@ export function PlayerSettingsSheet({
               mode={state.mode}
               onPick={(id) => onPickMode(id)}
             />
+            <PlusRow plusOn={plusOn} />
             {playback}
             {verses}
           </>

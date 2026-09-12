@@ -492,16 +492,19 @@ class g {
     ((this.st.style = e),
       setStore(KEYS.style, e),
       (this.st.focusPhrase = 0));
-    if ("mushaf" === e && "verse" !== this.st.mode) {
-      ((this.st.mode = "verse"),
-        (this.st.relay = null),
-        (this.st.wordStep = {
-          active: !1,
-          w: 1,
-          playedTimes: 0,
-          range: null,
-        }),
-        this.loadVerseAudio(this.st.vIdx, !1));
+    if ("mushaf" === e) {
+      this.st.verseLoop && (this.st.verseLoop = !1);
+      if ("verse" !== this.st.mode) {
+        ((this.st.mode = "verse"),
+          (this.st.relay = null),
+          (this.st.wordStep = {
+            active: !1,
+            w: 1,
+            playedTimes: 0,
+            range: null,
+          }),
+          this.loadVerseAudio(this.st.vIdx, !1));
+      }
     }
     this.notify();
   }
