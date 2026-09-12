@@ -43,12 +43,12 @@ Diras Plus unlocks 3× and unlimited repeats, and more than one qari in relay. Q
 
 | | Monthly | Annual | Lifetime |
 |---|---|---|---|
-| Nigeria / West Africa | ₦2,000 | ₦14,000 | ₦35,000 |
-| Malaysia | RM 9 | RM 63 | RM 159 |
-| UAE | AED 15 | AED 105 | AED 259 |
-| Saudi Arabia | SAR 15 | SAR 105 | SAR 259 |
-| UK | £3.99 | £27 | £69 |
-| US (default) | $4.99 | $34 | $89 |
+| Nigeria / West Africa | ₦1,500 | ₦10,500 | ₦26,250 |
+| Malaysia | RM 6.75 | RM 47.25 | RM 119.25 |
+| UAE | AED 11.25 | AED 78.75 | AED 194.25 |
+| Saudi Arabia | SAR 11.25 | SAR 78.75 | SAR 194.25 |
+| UK | £2.99 | £20.25 | £51.75 |
+| US (default) | $3.74 | $25.50 | $66.75 |
 
 Copy `.env.example` and add keys in the Vercel project (or a local `.env.local`):
 

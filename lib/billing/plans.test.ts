@@ -34,28 +34,28 @@ describe("region routing", () => {
 
 describe("price catalog", () => {
   it("matches the published regional amounts", () => {
-    assert.equal(quote("ng", "monthly").amount, 200_000);
-    assert.equal(quote("ng", "annual").amount, 1_400_000);
-    assert.equal(quote("ng", "lifetime").amount, 3_500_000);
-    assert.equal(quote("my", "monthly").amount, 900);
-    assert.equal(quote("my", "annual").amount, 6_300);
-    assert.equal(quote("my", "lifetime").amount, 15_900);
-    assert.equal(quote("ae", "monthly").amount, 1_500);
-    assert.equal(quote("ae", "annual").amount, 10_500);
-    assert.equal(quote("ae", "lifetime").amount, 25_900);
-    assert.equal(quote("sa", "monthly").amount, 1_500);
-    assert.equal(quote("gb", "monthly").amount, 399);
-    assert.equal(quote("gb", "annual").amount, 2_700);
-    assert.equal(quote("gb", "lifetime").amount, 6_900);
-    assert.equal(quote("us", "monthly").amount, 499);
-    assert.equal(quote("us", "annual").amount, 3_400);
-    assert.equal(quote("us", "lifetime").amount, 8_900);
+    assert.equal(quote("ng", "monthly").amount, 150_000);
+    assert.equal(quote("ng", "annual").amount, 1_050_000);
+    assert.equal(quote("ng", "lifetime").amount, 2_625_000);
+    assert.equal(quote("my", "monthly").amount, 675);
+    assert.equal(quote("my", "annual").amount, 4_725);
+    assert.equal(quote("my", "lifetime").amount, 11_925);
+    assert.equal(quote("ae", "monthly").amount, 1_125);
+    assert.equal(quote("ae", "annual").amount, 7_875);
+    assert.equal(quote("ae", "lifetime").amount, 19_425);
+    assert.equal(quote("sa", "monthly").amount, 1_125);
+    assert.equal(quote("gb", "monthly").amount, 299);
+    assert.equal(quote("gb", "annual").amount, 2_025);
+    assert.equal(quote("gb", "lifetime").amount, 5_175);
+    assert.equal(quote("us", "monthly").amount, 374);
+    assert.equal(quote("us", "annual").amount, 2_550);
+    assert.equal(quote("us", "lifetime").amount, 6_675);
   });
 
   it("formats display labels", () => {
-    assert.match(formatMoney(200_000, "NGN"), /2,000|₦/);
-    assert.match(formatMoney(499, "USD"), /4\.99|\$/);
-    assert.match(formatMoney(399, "GBP"), /3\.99|£/);
+    assert.match(formatMoney(150_000, "NGN"), /1,500|₦/);
+    assert.match(formatMoney(374, "USD"), /3\.74|\$/);
+    assert.match(formatMoney(299, "GBP"), /2\.99|£/);
   });
 
   it("exposes every region with three plans", () => {

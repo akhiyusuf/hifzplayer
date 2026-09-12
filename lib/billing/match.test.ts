@@ -28,8 +28,8 @@ describe("checkout metadata", () => {
 });
 
 describe("amount matching", () => {
-  it("maps a ₦2,000 Paystack charge to Nigeria monthly", () => {
-    const hit = inferPlanFromAmount(200_000, "NGN");
+  it("maps a ₦1,500 Paystack charge to Nigeria monthly", () => {
+    const hit = inferPlanFromAmount(150_000, "NGN");
     assert.deepEqual(hit, { planId: "monthly", regionId: "ng" });
   });
 
@@ -39,7 +39,7 @@ describe("amount matching", () => {
 
   it("uses metadata when present and amount matches", () => {
     const paid = resolvePaidPlan({
-      amount: 200_000,
+      amount: 150_000,
       currency: "ngn",
       metadata: { planId: "monthly", regionId: "ng", userId: "user_1" },
     });
@@ -56,7 +56,7 @@ describe("amount matching", () => {
   });
 
   it("infers the plan when Paystack dropped metadata on a unique amount", () => {
-    const paid = resolvePaidPlan({ amount: 200_000, currency: "NGN", metadata: {} });
+    const paid = resolvePaidPlan({ amount: 150_000, currency: "NGN", metadata: {} });
     assert.deepEqual(paid, { planId: "monthly", regionId: "ng" });
   });
 });
