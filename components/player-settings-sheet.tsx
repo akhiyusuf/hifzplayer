@@ -13,14 +13,12 @@ import type { Chapter } from "@/lib/types";
 
 type Engine = {
   setRate: (rate: number) => void;
-  toggleVerseLoop: () => void;
 };
 
 type State = {
   mode: string;
   style: string;
   rate: number;
-  verseLoop: boolean;
   passage?: { chapter: number; from: number; to: number; name: string };
 };
 
@@ -56,39 +54,6 @@ function SpeedControl({
   );
 }
 
-function RepeatRow({
-  on,
-  disabled,
-  hint,
-  locked,
-  onToggle,
-}: {
-  on: boolean;
-  disabled?: boolean;
-  hint: string;
-  locked?: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className={`listen-sheet-row tap${on ? " on" : ""}`}
-      onClick={onToggle}
-      aria-pressed={on}
-      disabled={disabled}
-    >
-      <span className="st">
-        <b>Repeat this verse</b>
-        <span>{hint}</span>
-      </span>
-      <span className="val">
-        {locked ? <Icon name="sparkles" size={14} /> : null}
-        {on ? "On" : "Off"}
-      </span>
-    </button>
-  );
-}
-
 function PlusRow({ plusOn }: { plusOn: boolean }) {
   if (plusOn) {
     return (
@@ -96,7 +61,7 @@ function PlusRow({ plusOn }: { plusOn: boolean }) {
         <div className="listen-sheet-row on">
           <span className="st">
             <b>{PLUS_NAME} is on</b>
-            <span>3× to unlimited repeats, and extra qaris in relay</span>
+            <span>3× to unlimited word repeats, and extra qaris in relay</span>
           </span>
           <Icon name="sparkles" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
         </div>
@@ -108,7 +73,7 @@ function PlusRow({ plusOn }: { plusOn: boolean }) {
       <Link href="/pricing?from=player" className="listen-sheet-row tap">
         <span className="st">
           <b>What {PLUS_NAME} is</b>
-          <span>3× to unlimited repeats, and extra qaris in relay. Practise stays free.</span>
+          <span>3× to unlimited word repeats, and extra qaris in relay. Practise stays free.</span>
         </span>
         <Icon name="sparkles" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
       </Link>
@@ -217,7 +182,7 @@ export function PlayerSettingsSheet({
   onPickMode: (id: string) => void;
   onOpenPassage: (chapter: number, from: number, to: number) => void;
 }) {
-  const { plus: plusOn, askPlus: ask } = usePlus();
+  const { plus: plusOn } = usePlus();
   const { chapters } = useAppData();
   const passage = state.passage || { chapter: 1, from: 1, to: 1, name: "" };
   const [ch, setCh] = useState(passage.chapter);
@@ -225,46 +190,21 @@ export function PlayerSettingsSheet({
   const [to, setTo] = useState(passage.to);
   const mushaf = state.style === "mushaf";
   const drill = state.mode === "word";
-  const relay = state.mode === "relay";
   const chapter = chapters.find((item) => item.id === ch);
   const versesCount = chapter?.verses_count || Math.max(to, from, 1);
   const name = chapter?.name_simple || passage.name || "Surah";
   const dirty = ch !== passage.chapter || from !== passage.from || to !== passage.to;
   const rangeLabel = `${name} ${from}${to > from ? `–${to}` : ""}`;
 
-  const toggleRepeat = () => {
-    if (!plusOn && !state.verseLoop) {
-      onClose();
-      ask("repeats");
-      return;
-    }
-    engine.toggleVerseLoop();
-  };
-
   const playback = (
     <section className="listen-section" aria-label="Playback">
       <span className="label-eyebrow">Playback</span>
       <SpeedControl rate={state.rate} onRate={(rate) => engine.setRate(rate)} />
-      {!mushaf &&
-        (drill ? (
-          <p className="listen-repeat-note">
-            ×1 and ×2 stay free on the page. {PLUS_NAME} is 3× and up, including until you stop.
-          </p>
-        ) : (
-          <RepeatRow
-            on={!!state.verseLoop}
-            disabled={relay}
-            locked={!plusOn && !relay}
-            hint={
-              relay
-                ? "Relay already takes turns, so verse loop stays off"
-                : plusOn
-                  ? "Loop this ayah until you turn it off"
-                  : `Loop until you stop is ${PLUS_NAME}`
-            }
-            onToggle={toggleRepeat}
-          />
-        ))}
+      {!mushaf && drill ? (
+        <p className="listen-repeat-note">
+          Repeat the verse from the button under play. Word chips on the page: ×1 and ×2 stay free. {PLUS_NAME} is 3× and up.
+        </p>
+      ) : null}
     </section>
   );
 
@@ -295,8 +235,8 @@ export function PlayerSettingsSheet({
       <div className="listen-sheet">
         <p className="listen-sheet-lead">
           {mushaf
-            ? "Reading stays free. Speed and verses for this page."
-            : `Practise is free. ${PLUS_NAME} is extra repeats and extra qaris in relay.`}
+            ? "Reading stays free. Repeat the verse from the button under play."
+            : `Drill, Masked, and Relay live here. Repeat the verse from the button. ${PLUS_NAME} is extra word repeats and extra qaris.`}
         </p>
         {mushaf ? (
           <>

@@ -144,3 +144,5 @@
 .verses-card-now{margin:0 2px;font-size:12.5px;line-height:1.4;color:var(--text-muted)}
 a.listen-sheet-row{text-decoration:none;color:inherit}
 .listen-sheet-row .val{display:inline-flex;align-items:center;gap:5px}
+.listen-menu-btn[aria-pressed="true"],.listen-menu-btn.on{border-color:var(--action-primary);background:var(--tint-primary-08);color:var(--action-primary)}
+.listen-menu-btn:disabled{opacity:.45}

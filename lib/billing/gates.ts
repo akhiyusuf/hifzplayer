@@ -4,12 +4,12 @@ export type PlusFeature = "repeats" | "focus" | "relay-qaris";
 
 export const PLUS_COPY: Record<PlusFeature, { title: string; body: string }> = {
   repeats: {
-    title: "3× and unlimited repeats",
-    body: "Playing a word or verse once or twice stays free. Three or more passes, and looping until you stop — including the verse repeat button — are Diras Plus.",
+    title: "3× and unlimited word repeats",
+    body: "The Repeat button loops the current verse for free, as many times as you like. Playing a word once or twice stays free. Three or more word passes, and looping a word until you stop, are Diras Plus.",
   },
   focus: {
     title: "Focus is included",
-    body: "Focus — verse, drill, masked, or relay on one stage — stays free. Diras Plus is 3× repeats and extra relay qaris.",
+    body: "Focus — verse, drill, masked, or relay on one stage — stays free. Diras Plus is 3× word repeats and extra relay qaris.",
   },
   "relay-qaris": {
     title: "More than one qari",

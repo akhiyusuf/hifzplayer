@@ -449,7 +449,6 @@ class g {
     ((this.st.rate = e), (this.audio.playbackRate = e), this.notify());
   }
   toggleVerseLoop() {
-    if (!this.st.verseLoop && !this.requirePlus("repeats")) return;
     ((this.st.verseLoop = !this.st.verseLoop),
       this.toast(
         this.st.verseLoop
@@ -493,7 +492,6 @@ class g {
       setStore(KEYS.style, e),
       (this.st.focusPhrase = 0));
     if ("mushaf" === e) {
-      this.st.verseLoop && (this.st.verseLoop = !1);
       if ("verse" !== this.st.mode) {
         ((this.st.mode = "verse"),
           (this.st.relay = null),
@@ -543,7 +541,6 @@ class g {
   clampFree() {
     (isPaidRepeat(this.st.loopCount) && (this.st.loopCount = 2),
       isPaidRepeat(this.st.wordRepeat) && (this.st.wordRepeat = 2),
-      (this.st.verseLoop = !1),
       (this.st.layers = { phrases: !1, confusables: !1 }),
       this.st.relay &&
         isPaidRelay(this.st.relay.order) &&
@@ -1389,6 +1386,21 @@ function k(e) {
         className: "player-tools",
         children: [
           !u && _jsx(b, { engine: t, disabled: c }),
+          !u &&
+            _jsxs("button", {
+              type: "button",
+              className: "listen-menu-btn tap".concat(s.verseLoop ? " on" : ""),
+              "aria-pressed": !!s.verseLoop,
+              "aria-label": s.verseLoop
+                ? "Stop repeating this verse"
+                : "Repeat this verse",
+              disabled: c,
+              onClick: () => t.toggleVerseLoop(),
+              children: [
+                _jsx(Icon, { name: "repeat", size: 16 }),
+                "Repeat",
+              ],
+            }),
           _jsxs("button", {
             type: "button",
             className: "listen-menu-btn tap".concat(toolsOpen ? " open" : ""),
