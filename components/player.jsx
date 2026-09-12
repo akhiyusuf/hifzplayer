@@ -14,8 +14,8 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { OfflineBanner } from "@/components/offline-banner";
+import { FocusStage } from "@/components/focus-stage";
 import { PracticeSheet } from "@/components/practice-sheet";
-import { PracticeStrip } from "@/components/practice-strip";
 import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
 import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration } from "@/lib/api";
@@ -484,15 +484,27 @@ class g {
       (this.st.mode = e),
       "masked" === e && (this.st.masked = {}),
       "relay" !== e && (this.st.relay = null),
+      "verse" !== e &&
+        ((this.st.style = "focus"), setStore(KEYS.style, "focus")),
       this.notify(),
       "relay" !== e && this.loadVerseAudio(this.st.vIdx, !1));
   }
   setStyle(e) {
-    if ("focus" === e && !this.requirePlus("focus")) return;
     ((this.st.style = e),
       setStore(KEYS.style, e),
-      (this.st.focusPhrase = 0),
-      this.notify());
+      (this.st.focusPhrase = 0));
+    if ("mushaf" === e && "verse" !== this.st.mode) {
+      ((this.st.mode = "verse"),
+        (this.st.relay = null),
+        (this.st.wordStep = {
+          active: !1,
+          w: 1,
+          playedTimes: 0,
+          range: null,
+        }),
+        this.loadVerseAudio(this.st.vIdx, !1));
+    }
+    this.notify();
   }
   setTajweed(e) {
     ((this.st.taj = e), setStore(KEYS.taj, e), this.notify());
@@ -530,7 +542,6 @@ class g {
     (isPaidRepeat(this.st.loopCount) && (this.st.loopCount = 2),
       isPaidRepeat(this.st.wordRepeat) && (this.st.wordRepeat = 2),
       (this.st.verseLoop = !1),
-      "focus" === this.st.style && (this.st.style = "mushaf"),
       (this.st.layers = { phrases: !1, confusables: !1 }),
       this.st.relay &&
         isPaidRelay(this.st.relay.order) &&
@@ -1117,10 +1128,7 @@ class g {
         loading: !1,
         error: null,
         mode: "verse",
-        style:
-          "focus" === getStore(KEYS.style)
-            ? "mushaf"
-            : getStore(KEYS.style) || "mushaf",
+        style: getStore(KEYS.style) || "mushaf",
         rate: 1,
         vIdx: 0,
         curWord: 0,
@@ -1294,8 +1302,7 @@ function ListenSheet(e) {
     children: _jsxs("div", {
       className: "listen-sheet",
       children: [
-        !u &&
-          _jsxs("div", {
+        _jsxs("div", {
             className: "listen-speeds",
             role: "group",
             "aria-label": "Speed",
@@ -1669,8 +1676,7 @@ function N(e) {
   });
 }
 function PlayerViewBar(e) {
-  let { style: t, onStyle: s } = e,
-    { plus: plusOn, askPlus: ask } = usePlus();
+  let { style: t, onStyle: s } = e;
   return _jsxs("div", {
     className: "player-view",
     children: [
@@ -1683,28 +1689,10 @@ function PlayerViewBar(e) {
           _jsx(
             "button",
             {
-              className: ""
-                .concat(t === e ? "on" : "")
-                .concat("focus" === e && !plusOn ? " locked" : ""),
-              onClick: () =>
-                "focus" === e && !plusOn ? ask("focus") : s(e),
+              className: t === e ? "on" : "",
+              onClick: () => s(e),
               "aria-pressed": t === e,
-              children:
-                "mushaf" === e
-                  ? "Mushaf"
-                  : plusOn
-                    ? "Focus"
-                    : _jsxs("span", {
-                        style: {
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 4,
-                        },
-                        children: [
-                          "Focus",
-                          _jsx(Icon, { name: "sparkles", size: 12 }),
-                        ],
-                      }),
+              children: "mushaf" === e ? "Mushaf" : "Focus",
             },
             e,
           ),
@@ -2918,63 +2906,42 @@ function F(e) {
     .map((e) => e.gloss)
     .filter(Boolean)
     .join(" \xb7 ");
-  return _jsxs("div", {
-    className: "player-body",
-    children: [
-      _jsx(PracticeStrip, {
-        title: "Phrase ".concat(d + 1, " of ", l.length),
-        meta: i.key,
-      }),
-      _jsxs("div", {
-        className: "practice-canvas focus-body",
-        children: [
-      _jsxs("div", {
-        className: "focus-phrase",
-        children: [
-          _jsx("div", {
-            className: "focus-ar",
-            children: c.map((e) => {
-              var t;
-              return _jsx(
-                D,
-                {
-                  word: e,
-                  vIdx: s.vIdx,
-                  taj: !1,
-                  isCur: e.pos === s.curWord,
-                  inRange: !1,
-                  isRangeStart: !1,
-                  isRangeEnd: !1,
-                  isPending:
-                    (null === (t = s.pendingLoopStart) || void 0 === t
-                      ? void 0
-                      : t.w) === e.pos,
-                  mask: null,
-                  interactive: !0,
-                  onTap: a,
-                  onHold: n,
-                },
-                e.pos,
-              );
-            }),
-          }),
-          u && _jsx("p", { className: "focus-gloss", children: u }),
-        ],
-      }),
-      h &&
-        _jsxs("div", {
-          className: "focus-next",
-          children: [
-            _jsx("span", { className: "lbl", children: "Next" }),
-            _jsx("span", {
-              className: "ar",
-              children: h.map((e) => e.ar).join(" "),
-            }),
-          ],
-        }),
-        ],
-      }),
-    ],
+  return _jsx(FocusStage, {
+    title: "Phrase ".concat(d + 1, " of ", l.length),
+    meta: i.key,
+    hint: "Play steps this phrase",
+    progress: {
+      now: d + 1,
+      max: l.length,
+      label: "Phrase",
+    },
+    gloss: u || null,
+    contextLabel: h ? "Next" : undefined,
+    context: h ? h.map((e) => e.ar).join(" ") : undefined,
+    children: c.map((e) => {
+      var t;
+      return _jsx(
+        D,
+        {
+          word: e,
+          vIdx: s.vIdx,
+          taj: !1,
+          isCur: e.pos === s.curWord,
+          inRange: !1,
+          isRangeStart: !1,
+          isRangeEnd: !1,
+          isPending:
+            (null === (t = s.pendingLoopStart) || void 0 === t
+              ? void 0
+              : t.w) === e.pos,
+          mask: null,
+          interactive: !0,
+          onTap: a,
+          onHold: n,
+        },
+        e.pos,
+      );
+    }),
   });
 }
 let O = memo(function (e) {
@@ -3086,65 +3053,39 @@ function _(e) {
   let i = t.maskStateFor(n),
     l = n.words.length,
     c = i.maxRev >= l;
-  return _jsxs("div", {
-    className: "player-body",
-    children: [
-      _jsx(PracticeStrip, {
-        title: "Revealed ".concat(i.maxRev, " of ", l),
-        meta: "Verse ".concat(n.key),
-        progress: {
-          now: i.maxRev,
-          max: l,
-          label: "Words revealed",
-        },
-        actions: _jsxs("button", {
-          className: "peek-btn",
-          onClick: () => t.peek(),
-          disabled: i.peeks <= 0 || c,
-          children: [
-            _jsx(Icon, { name: "eye", size: 17 }),
-            c ? "Verse revealed" : "Peek \xb7 ".concat(i.peeks, " left"),
-          ],
-        }),
-      }),
-      _jsxs("div", {
-        className: "practice-canvas",
-        children: [
-      _jsx("div", {
-        className: "masked-verse",
-        children: _jsx(O, {
-          verse: n,
-          vIdx: s.vIdx,
-          taj: s.taj,
-          curWord: s.curWord,
-          done: !1,
-          rangeStart: 0,
-          rangeEnd: 0,
-          pendingPos: 0,
-          revealUpTo: i.maxRev,
-          masked: !0,
-          interactive: !1,
-          annotations: a(n.number),
-        }),
-      }),
-      n.translation &&
-        _jsxs("div", {
-          className: "trans-card",
-          style: { margin: "0 20px 12px" },
-          children: [
-            _jsxs("div", {
-              className: "trans-meta",
-              children: [
-                _jsx("b", { children: n.key.replace(":", " : ") }),
-                _jsx("span", { children: s.translationName }),
-              ],
-            }),
-            _jsx("p", { children: n.translation }),
-          ],
-        }),
-        ],
-      }),
-    ],
+  return _jsx(FocusStage, {
+    title: "Revealed ".concat(i.maxRev, " of ", l),
+    meta: n.key,
+    hint: "Words stay covered until the audio reaches them",
+    progress: {
+      now: i.maxRev,
+      max: l,
+      label: "Words revealed",
+    },
+    actions: _jsxs("button", {
+      className: "focus-act primary",
+      onClick: () => t.peek(),
+      disabled: i.peeks <= 0 || c,
+      children: [
+        _jsx(Icon, { name: "eye", size: 16 }),
+        c ? "Verse revealed" : "Peek \xb7 ".concat(i.peeks, " left"),
+      ],
+    }),
+    gloss: n.translation || null,
+    children: _jsx(O, {
+      verse: n,
+      vIdx: s.vIdx,
+      taj: s.taj,
+      curWord: s.curWord,
+      done: !1,
+      rangeStart: 0,
+      rangeEnd: 0,
+      pendingPos: 0,
+      revealUpTo: i.maxRev,
+      masked: !0,
+      interactive: !1,
+      annotations: a(n.number),
+    }),
   });
 }
 function q(e, t, s) {
@@ -3276,156 +3217,108 @@ function K(e) {
       0 === l.rounds
         ? "Round ".concat(l.round)
         : "Round ".concat(l.round, " of ").concat(l.rounds);
-  return _jsxs("div", {
-    className: "player-body",
-    children: [
-      _jsx(PracticeStrip, {
-        title: p,
-        meta: h
-          ? "Your turn \xb7 ".concat(u, " left")
-          : "".concat(u, " ", 1 === u ? "turn" : "turns", " left"),
-        extra: _jsx("ol", {
-          className: "relay-queue",
-          "aria-label": "Turn order",
-          children: l.turns.map((e, t) => {
-            let s = t < l.idx,
-              a = t === l.idx,
-              i = "you" === e.kind ? "You" : n(e.reciterId).split(" ")[0];
-            return _jsxs(
-              "li",
-              {
-                className: "turn-chip"
-                  .concat(s ? " done" : "")
-                  .concat(a ? " now" : ""),
-                "aria-current": a ? "step" : void 0,
+  return _jsx(FocusStage, {
+    title: p,
+    meta: h
+      ? "Your turn \xb7 ".concat(u, " left")
+      : "".concat(u, " ", 1 === u ? "turn" : "turns", " left"),
+    hint: h ? "Recite aloud — the qari plays muted to pace you" : undefined,
+    extra: _jsx("ol", {
+      className: "relay-queue",
+      "aria-label": "Turn order",
+      children: l.turns.map((e, t) => {
+        let s = t < l.idx,
+          a = t === l.idx,
+          i = "you" === e.kind ? "You" : n(e.reciterId).split(" ")[0];
+        return _jsxs(
+          "li",
+          {
+            className: "turn-chip"
+              .concat(s ? " done" : "")
+              .concat(a ? " now" : ""),
+            "aria-current": a ? "step" : void 0,
+            children: [
+              _jsxs("span", {
+                className: "turn-avatar",
                 children: [
-                  _jsxs("span", {
-                    className: "turn-avatar",
-                    children: [
-                      _jsx(Icon, {
-                        name: "you" === e.kind ? "user" : "mic",
-                        size: 14,
-                      }),
-                      s &&
-                        _jsx("span", {
-                          className: "turn-check",
-                          children: _jsx(Icon, {
-                            name: "check",
-                            size: 9,
-                          }),
-                        }),
-                    ],
+                  _jsx(Icon, {
+                    name: "you" === e.kind ? "user" : "mic",
+                    size: 14,
                   }),
-                  !s &&
-                    _jsxs("span", {
-                      className: "turn-text",
-                      children: [
-                        _jsx("b", { children: i }),
-                        _jsx("span", {
-                          children: e.verseKey.split(":")[1],
-                        }),
-                      ],
+                  s &&
+                    _jsx("span", {
+                      className: "turn-check",
+                      children: _jsx(Icon, {
+                        name: "check",
+                        size: 9,
+                      }),
                     }),
                 ],
-              },
-              "".concat(e.verseKey, "-").concat(t),
-            );
-          }),
-        }),
-        actions: h
-          ? _jsxs(_Fragment, {
-              children: [
-                _jsxs("button", {
-                  className: "replay",
-                  onClick: () => t.startRelayTurn(!0),
+              }),
+              !s &&
+                _jsxs("span", {
+                  className: "turn-text",
                   children: [
-                    _jsx(Icon, {
-                      name: "volume-2",
-                      size: 16,
-                      style: { color: "var(--action-primary)" },
+                    _jsx("b", { children: i }),
+                    _jsx("span", {
+                      children: e.verseKey.split(":")[1],
                     }),
-                    "Replay qari",
                   ],
                 }),
-                _jsxs("button", {
-                  className: "skip",
-                  onClick: () => t.advanceRelay(),
-                  children: [
-                    _jsx(Icon, { name: "skip-forward", size: 16 }),
-                    "Skip my turn",
-                  ],
-                }),
-              ],
-            })
-          : null,
+            ],
+          },
+          "".concat(e.verseKey, "-").concat(t),
+        );
       }),
-      _jsxs("div", {
-        className: "practice-canvas",
-        children: [
-      h &&
-        _jsxs("div", {
-          className: "your-turn",
+    }),
+    actions: h
+      ? _jsxs(_Fragment, {
           children: [
-            _jsx(Icon, {
-              name: "mic",
-              size: 18,
-              style: { color: "var(--action-primary)", flex: "none" },
-            }),
-            _jsxs("span", {
-              className: "yt",
+            _jsxs("button", {
+              className: "focus-act primary",
+              onClick: () => t.startRelayTurn(!0),
               children: [
-                _jsx("b", { children: "Your turn — recite aloud" }),
-                _jsx("span", {
-                  children: "Qari plays muted to pace you",
-                }),
+                _jsx(Icon, { name: "volume-2", size: 16 }),
+                "Replay qari",
+              ],
+            }),
+            _jsxs("button", {
+              className: "focus-act",
+              onClick: () => t.advanceRelay(),
+              children: [
+                _jsx(Icon, { name: "skip-forward", size: 16 }),
+                "Skip my turn",
               ],
             }),
           ],
-        }),
-      _jsxs("div", {
-        className: "relay-verse",
-        children: [
-          _jsx("div", {
-            className: "ar",
-            children: _jsx(O, {
-              verse: c,
-              vIdx: s.vIdx,
-              taj: s.taj,
-              curWord: s.curWord,
-              done: !1,
-              rangeStart: 0,
-              rangeEnd: 0,
-              pendingPos: 0,
-              revealUpTo: 0,
-              masked: !1,
-              interactive: !1,
-              annotations: a(c.number),
-            }),
-          }),
-          c.translation &&
-            _jsx("p", { className: "gl", children: c.translation }),
-          !h &&
-            _jsxs("p", {
-              className: "gl",
-              children: [
-                n(d.reciterId),
-                " recites verse ",
-                d.verseKey.split(":")[1],
-                l.waitingTap ? " — tap play to begin" : "",
-              ],
-            }),
-        ],
-      }),
-        ],
-      }),
-    ],
+        })
+      : null,
+    gloss: c.translation || null,
+    context: h
+      ? undefined
+      : ""
+          .concat(n(d.reciterId), " recites verse ")
+          .concat(d.verseKey.split(":")[1])
+          .concat(l.waitingTap ? " — tap play to begin" : ""),
+    children: _jsx(O, {
+      verse: c,
+      vIdx: s.vIdx,
+      taj: s.taj,
+      curWord: s.curWord,
+      done: !1,
+      rangeStart: 0,
+      rangeEnd: 0,
+      pendingPos: 0,
+      revealUpTo: 0,
+      masked: !1,
+      interactive: !1,
+      annotations: a(c.number),
+    }),
   });
 }
-let B = [1, 2, 3, 0];
 function G(e) {
   var t, s, a;
-  let { engine: n, state: i, onWordTap: l, onWordHold: o, selection: d, annFor: c } = e,
-    { plus: plusOn, askPlus: ask } = usePlus(),
+  let { state: i, onWordTap: l, onWordHold: o, selection: d, annFor: c } = e,
     h = i.verses[i.vIdx];
   if (!h) return null;
   let u = q(i.vIdx, i, d),
@@ -3434,7 +3327,6 @@ function G(e) {
     v = p
       ? h.words.filter((e) => e.pos >= p.startW && e.pos <= p.endW)
       : h.words.filter((e) => e.pos === m),
-    x = v.map((e) => e.ar).join(" "),
     f = v
       .map((e) => e.tr)
       .filter(Boolean)
@@ -3449,120 +3341,80 @@ function G(e) {
         : 0,
     j =
       null !== (a = null == p ? void 0 : p.pass) && void 0 !== a ? a : 0;
-  return _jsxs("div", {
-    className: "player-body",
-    children: [
-      _jsx(PracticeStrip, {
-        title: p
-          ? "Words ".concat(p.startW, "–").concat(p.endW)
-          : "Word ".concat(m, " of ").concat(h.words.length),
-        meta: ""
-          .concat(
-            null === (t = i.passage) || void 0 === t ? void 0 : t.name,
-            " ",
-          )
-          .concat(h.key),
-        hint: p ? "Looping selected span" : "Tap a word to set a span",
-        extra: _jsx("div", {
-          className: "rep-seg",
-          role: "group",
-          "aria-label": "Repeats per word",
-          children: B.map((e) => {
-            let locked = isPaidRepeat(e) && !plusOn;
-            return _jsx(
-              "button",
-              {
-                className: ""
-                  .concat(i.wordRepeat === e ? "on" : "")
-                  .concat(0 === e ? " inf" : "")
-                  .concat(locked ? " locked" : ""),
-                onClick: () =>
-                  locked ? ask("repeats") : n.setWordRepeat(e),
-                "aria-pressed": i.wordRepeat === e,
-                children: locked
-                  ? _jsxs("span", {
-                      style: {
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 3,
-                      },
-                      children: [
-                        0 === e ? "∞" : "\xd7".concat(e),
-                        _jsx(Icon, { name: "sparkles", size: 11 }),
-                      ],
-                    })
-                  : 0 === e
-                    ? "∞"
-                    : "\xd7".concat(e),
-              },
-              e,
-            );
-          }),
-        }),
-      }),
-      _jsxs("div", {
-        className: "practice-canvas",
-        children: [
-      _jsxs("div", {
-        className: "wr-hero",
-        children: [
-          _jsx("span", { className: "ar", children: x }),
-          _jsxs("div", {
-            style: { display: "flex", flexDirection: "column", gap: 6 },
+  return _jsx(FocusStage, {
+    title: p
+      ? "Words ".concat(p.startW, "\u2013").concat(p.endW)
+      : "Word ".concat(m, " of ").concat(h.words.length),
+    meta: ""
+      .concat(
+        null === (t = i.passage) || void 0 === t ? void 0 : t.name,
+        " ",
+      )
+      .concat(h.key),
+    hint: p ? "Looping selected span" : "Tap a word in the verse to set a span",
+    progress: p
+      ? undefined
+      : {
+          now: m,
+          max: h.words.length,
+          label: "Word",
+        },
+    extra:
+      p && g > 0
+        ? _jsxs("div", {
+            className: "pass-dots",
             children: [
-              f && _jsx("span", { className: "tr", children: f }),
-              y && _jsx("span", { className: "gl", children: y }),
+              Array.from({ length: g }, (e, t) =>
+                _jsx("i", { className: t < j ? "on" : "" }, t),
+              ),
+              _jsxs("span", {
+                children: ["Pass ", Math.min(j + 1, g), " of ", g],
+              }),
             ],
-          }),
-          p &&
-            g > 0 &&
-            _jsxs("div", {
-              className: "pass-dots",
-              children: [
-                Array.from({ length: g }, (e, t) =>
-                  _jsx("i", { className: t < j ? "on" : "" }, t),
-                ),
-                _jsxs("span", {
-                  children: ["Pass ", Math.min(j + 1, g), " of ", g],
-                }),
-              ],
-            }),
-        ],
-      }),
-      _jsxs("div", {
-        className: "wr-verse",
-        children: [
-          _jsx("div", {
-            className: "ar",
-            children: _jsx(O, {
-              verse: h,
-              vIdx: i.vIdx,
-              taj: i.taj,
-              curWord: i.curWord,
-              done: !1,
-              rangeStart: u.start,
-              rangeEnd: u.end,
-              pendingPos: u.pending,
-              revealUpTo: 0,
-              masked: !1,
-              interactive: !0,
-              annotations: c(h.number),
-              onWordTap: l,
-              onWordHold: o,
-            }),
-          }),
-          _jsxs("span", {
-            className: "wr-hint",
-            children: [
-              _jsx(Icon, { name: "pointer", size: 13 }),
-              "Tap words to change the range",
-            ],
-          }),
-        ],
-      }),
-        ],
-      }),
-    ],
+          })
+        : undefined,
+    gloss: f && y ? "".concat(f, " \xb7 ").concat(y) : f || y || null,
+    contextLabel: "Verse",
+    context: _jsx(O, {
+      verse: h,
+      vIdx: i.vIdx,
+      taj: i.taj,
+      curWord: i.curWord,
+      done: !1,
+      rangeStart: u.start,
+      rangeEnd: u.end,
+      pendingPos: u.pending,
+      revealUpTo: 0,
+      masked: !1,
+      interactive: !0,
+      annotations: c(h.number),
+      onWordTap: l,
+      onWordHold: o,
+    }),
+    children: v.map((e) => {
+      var t;
+      return _jsx(
+        D,
+        {
+          word: e,
+          vIdx: i.vIdx,
+          taj: !1,
+          isCur: e.pos === i.curWord,
+          inRange: !1,
+          isRangeStart: !1,
+          isRangeEnd: !1,
+          isPending:
+            (null === (t = i.pendingLoopStart) || void 0 === t
+              ? void 0
+              : t.w) === e.pos,
+          mask: null,
+          interactive: !0,
+          onTap: l,
+          onHold: o,
+        },
+        e.pos,
+      );
+    }),
   });
 }
 function U(e) {
@@ -4117,11 +3969,10 @@ function U(e) {
               (eu.pauseRelayForEdit(), eb(!0));
             },
           }),
-          "verse" === ez.mode &&
-            _jsx(PlayerViewBar, {
-              style: ez.style,
-              onStyle: (e) => eu.setStyle(e),
-            }),
+          _jsx(PlayerViewBar, {
+            style: ez.style,
+            onStyle: (e) => eu.setStyle(e),
+          }),
         ],
       }),
       _jsx(OfflineBanner, {}),

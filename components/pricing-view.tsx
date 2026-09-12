@@ -97,11 +97,10 @@ function PricingForm({
   return (
     <div className="pricing">
       <p className="pricing-lead">
-        Quran reading, audio, translation, tajweed, masked recall, and relay with one qari stay free. {PLUS_NAME}{" "}
-        unlocks Focus mode, three or more repeats of any loop, and more than one qari in relay.
+        Quran reading, audio, translation, tajweed, Focus practice, masked recall, and relay with one qari stay free.{" "}
+        {PLUS_NAME} unlocks three or more repeats of any loop, and more than one qari in relay.
       </p>
       <ul className="pricing-includes">
-        <li>Focus mode — one phrase at a time</li>
         <li>3×, 5×, 10× and unlimited repeats</li>
         <li>Relay with more than one qari</li>
       </ul>

@@ -111,3 +111,13 @@
 .practice-canvas{flex:1 1;min-height:0;overflow-y:auto;display:flex;flex-direction:column}
 .focus-body.practice-canvas{padding:18px 26px 12px}
 .practice-canvas .your-turn{margin-top:12px}
+.focus-stage{padding:18px 26px 12px;align-items:center;text-align:center}
+.focus-stage .focus-phrase{width:100%}
+.focus-stage .focus-ar{font-size:36px;line-height:1.75}
+.focus-stage .focus-next{text-align:center}
+.focus-stage .focus-next .ar{font-size:22px;line-height:2}
+.practice-strip-actions .focus-act{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 12px;min-height:36px;border-radius:var(--radius-button);border:1px solid var(--border-default);background:var(--bg-surface);color:var(--text-primary);font-weight:600;font-size:13px}
+.practice-strip-actions .focus-act.primary{border-color:var(--action-primary);color:var(--action-primary);background:transparent}
+.practice-strip-actions .focus-act:disabled{opacity:.45}
+.practice-strip .pass-dots{align-self:center}
+@media (min-width:834px){.focus-stage .focus-ar{font-size:36px}}

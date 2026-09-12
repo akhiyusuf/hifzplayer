@@ -25,7 +25,7 @@ function usePref<T>(key: string, fallback: T): [T, (v: T) => void] {
 }
 
 function PlusStatus() {
-  const [label, setLabel] = useState("Focus, 3× repeats, and extra relay qaris.");
+  const [label, setLabel] = useState("3× repeats and extra relay qaris.");
   const [active, setActive] = useState(false);
 
   useEffect(() => {
@@ -45,10 +45,10 @@ function PlusStatus() {
           const plan = names[data.planId || ""] || "Plus";
           setLabel(
             data.planId === "lifetime"
-              ? "Lifetime · Focus, 3× repeats, extra qaris"
+              ? "Lifetime · 3× repeats, extra qaris"
               : data.until
                 ? `${plan} · until ${new Date(data.until).toLocaleDateString()}`
-                : `${plan} · Focus, 3× repeats, extra qaris`,
+                : `${plan} · 3× repeats, extra qaris`,
           );
         }
       } catch {

@@ -8,63 +8,32 @@ Work in **four passes**. Stop after each pass for a human check. Do not start th
 
 Two systems are mixed:
 
-- **View** (how the page looks): Mushaf vs Focus. The View bar only shows in Verse mode.
-- **Mode** (how you practise): Verse, Drill words, Masked, Relay.
-
-Focus behaves like Masked and Drill (one chunk, a counter, footer steps that chunk) but sits in View. Masked / Drill / Relay each invent their own body chrome. Repeat, translation, Tajweed, reciter, and mode picking are copied in several places.
+- **View** (how the page looks): Mushaf vs Focus. Pass 3 always shows this bar. Mushaf is the reading page; Focus is the practise page.
+- **Mode** (how you practise): Verse, Drill words, Masked, Relay — jobs inside Focus, not separate screens.
 
 Child / elder friction: unlabeled icons; home sliders and player sliders mean different things; Speed/Repeat/Mode are three different gestures; tap-vs-hold on words is undiscoverable; words like Mushaf, Tajweed, qari, Murattal.
 
 ## Pass 1 — One labeled player *(done)*
 
-## Pass 2 — Shared practice chrome *(this pass)*
+## Pass 2 — Shared practice chrome *(done — strip only; screens still looked like four apps)*
 
-**Goal:** The audio controls look like one player a child can name. Home “set up practise” is a different, labeled action.
+A cream status strip was glued onto Focus, Masked, Drill, and Relay. The four bodies still used different layouts (hero word, extra verse card, Peek banner, relay page). That was not enough.
 
-**Do:**
+## Pass 3 — Focus holds every replay mode *(this pass)*
 
-- Player: labeled **Listen** pill. When the sheet is closed, Listen sits on the **right of the seek bar** so the footer is two rows (seek + Listen, then play). Tap Listen for the sheet popup.
-- Tap Listen to open a **bottom sheet popup** (same sheet pattern as Reciter / Practise). Speed, Repeat, and How to listen live in that popup, not in the footer.
-- Speed is four labeled chips (`¾× 1× 1.25× 1.5×`). Repeat is still On/Off until Pass 3. Tapping a mode applies it and closes the popup (Relay still opens relay setup).
-- Home: the row action is **Set up** with the settings icon — not the same sliders glyph as Listen.
-
-**Do not:** change Focus / Masked / Drill / Relay bodies, Repeat counts, Peek, translation dock rules, or copy like “Read”.
-
-**Files:** `components/player.jsx` (footer + `setRate`), `app/page.tsx` (surah row), `app/globals.css` (append only).
-
-**Verify:**
-
-1. Home: each surah has Play on the row and **Set up** on the right. Set up still opens Practise.
-2. Player: **Listen** sits on the right of the seek bar (two rows: seek+Listen, then play). Tap Listen — a **Listen** sheet pops up. Seek and play stay in the footer.
-3. In the sheet: Speed chips change the rate without closing. Repeat toggles. A mode card applies and closes the sheet.
-4. Drill still hides seek/speed/repeat in the sheet and keeps How to listen. Theme (cream, orange play) unchanged.
-
-## Pass 2 — Shared practice chrome
-
-**Goal:** Focus, Masked, Drill, and Relay look like one family. Same header, same padding, one status strip.
+**Goal:** Mushaf is the reading page. Focus is the practise page. Drill, Masked, Relay, and verse-replay all live **inside Focus** as different jobs, not different UIs.
 
 **Do:**
 
-- One status strip in the same place: `Phrase 2 of 5` / `Revealed 1 of 4` / `Word 1 of 4` / `Round 1 · your turn`.
-- Mode canvas only below that strip (phrase, blurred line, hero word, or turn chips).
-- Strip Drill’s extra range-bar chrome into that strip (keep hero word + verse picker in the canvas).
-- Peek, Replay qari, and Skip my turn stay as extra actions in the shared strip / canvas, not a second toolbar.
-- View bar can stay Mushaf/Focus for this pass.
+- One Focus stage: status strip + one Arabic block (same size) + optional gloss + optional context line.
+- View bar always: **Mushaf** | **Focus**. Picking Drill / Masked / Relay switches into Focus. Mushaf switches back to reading the page (Verse).
+- Difference is what happens: phrase stepping, tap a span, words stay covered, your turn. Peek / Replay / Skip are the same small actions in the strip.
+- Remove Drill’s own hero size, extra verse card, and `×1 ×2 ×3` row. Remove Masked’s second translation card and giant Peek banner. Remove Relay’s separate page chrome (keep turn chips — that’s whose turn).
+- Focus layout is free. Plus stays 3× repeats and extra relay qaris.
 
-**Files:** `components/practice-strip.tsx`, `components/player.jsx` (Focus, Masked, Drill, Relay bodies), `app/globals.css` (append only).
+**Do not:** redesign the Listen sheet or home Set up.
 
-## Pass 3 — One Repeat, Focus with its cousins
-
-**Goal:** Repeat means the same thing everywhere. Focus sits with Masked / Drill / Relay, not as a “View”.
-
-**Do:**
-
-- One count list (`×1 ×2 ×3 ×5 ×10 ∞`). 1× and 2× free; 3+ and ∞ are Plus — including verse repeat (no more infinite-only Verse Repeat).
-- Remove Drill’s `×1 ×2 ×3 ∞` seg and stop teaching Repeat in the word popover as a second home.
-- Listening mode includes Focus (phrase-at-a-time). Mushaf stays the reading page. Drop the View bar or keep Mushaf-only.
-- Footer prev/next still step phrase / word / verse from one pair of buttons.
-
-**Verify:** Repeat chips in Listen match Plus rules. Drill has no second Repeat control. Focus is chosen next to Masked, not beside Mushaf. Mushaf still shows the full page.
+**Verify:** Open Mushaf (full page). Switch Focus. Flip Drill / Masked / Relay / Verse from Listen — same stage, different status and actions. A child can tell them apart from the strip text and what tapping does, not from four layouts.
 
 ## Pass 4 — One home for extras + leftover bugs
 

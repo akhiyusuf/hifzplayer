@@ -39,7 +39,7 @@ Rename the Clerk application to **Diras** in the Clerk dashboard so the sign-in 
 
 Optional Plus checkout uses **Paystack** in Nigeria and West Africa, and **Stripe** everywhere else. The processor is chosen from the request country (`x-vercel-ip-country`). There is no region picker.
 
-Diras Plus unlocks Focus mode, 3× and unlimited repeats, and more than one qari in relay. Quran reading, audio, translation, tajweed, masked recall, word/verse practice, and relay with one qari stay free. Recurring phrases and near-twins are coming soon.
+Diras Plus unlocks 3× and unlimited repeats, and more than one qari in relay. Quran reading, audio, translation, tajweed, Focus practice, masked recall, word/verse practice, and relay with one qari stay free. Recurring phrases and near-twins are coming soon.
 
 | | Monthly | Annual | Lifetime |
 |---|---|---|---|
