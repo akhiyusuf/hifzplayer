@@ -182,6 +182,4 @@ button.listen-sheet-row{cursor:pointer}
 .theme-row .st span{font-size:12px;color:var(--text-muted);line-height:1.4}
 .theme-swatches{display:flex;gap:10px;flex-wrap:wrap}
 .theme-swatch{width:44px;height:44px;border-radius:50%;border:2px solid var(--border-default);flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4),var(--shadow-sm)}
-.theme-swatch.on{border-color:var(--text-primary);box-shadow:inset 0 0 0 1px rgba(255,255,255,.4),0 0 0 2px var(--bg-app),0 0 0 4px var(--text-primary)}
-[data-theme=dark] .theme-swatch{box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
-[data-theme=dark] .theme-swatch.on{box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),0 0 0 2px var(--bg-app),0 0 0 4px var(--text-primary)}
+.theme-swatch.on{border-color:var(--bg-surface);box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);outline:2px solid var(--text-primary);outline-offset:3px}
