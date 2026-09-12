@@ -79,7 +79,8 @@
 .listen-speeds-seg{display:flex;gap:6px}
 .listen-speeds-seg button{flex:1;min-height:36px;border-radius:var(--radius-button);border:1px solid var(--border-default);background:var(--bg-surface);font-family:var(--font-numeral);font-size:13px;font-weight:600;color:var(--text-secondary)}
 .listen-speeds-seg button.on{border-color:var(--action-primary);background:var(--tint-primary-08);color:var(--action-primary)}
-.listen-menu-btn{align-self:center}
+.player-tools{justify-content:flex-end;gap:10px}
+.player-tools .listen-menu-btn{flex:none;align-self:center;margin:0;padding:7px 11px}
 .listen-menu-btn.open,.listen-menu-btn[aria-expanded="true"]{border-color:var(--action-primary);background:var(--tint-primary-08);color:var(--action-primary)}
 .listen-sheet{display:flex;flex-direction:column;gap:16px;padding:4px 0 10px}
 .listen-speeds{padding:0;gap:8px}

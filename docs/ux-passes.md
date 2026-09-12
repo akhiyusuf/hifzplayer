@@ -21,7 +21,7 @@ Child / elder friction: unlabeled icons; home sliders and player sliders mean di
 
 **Do:**
 
-- Player: replace the icon-only sliders control with a labeled **Listen** pill. The player itself stays seek + Listen + play.
+- Player: labeled **Listen** pill. When the sheet is closed, Listen sits on the **right of the seek bar** so the footer is two rows (seek + Listen, then play). Tap Listen for the sheet popup.
 - Tap Listen to open a **bottom sheet popup** (same sheet pattern as Reciter / Practise). Speed, Repeat, and How to listen live in that popup, not in the footer.
 - Speed is four labeled chips (`¾× 1× 1.25× 1.5×`). Repeat is still On/Off until Pass 3. Tapping a mode applies it and closes the popup (Relay still opens relay setup).
 - Home: the row action is **Set up** with the settings icon — not the same sliders glyph as Listen.
@@ -33,7 +33,7 @@ Child / elder friction: unlabeled icons; home sliders and player sliders mean di
 **Verify:**
 
 1. Home: each surah has Play on the row and **Set up** on the right. Set up still opens Practise.
-2. Player: a **Listen** pill sits above Play. Tap it — a **Listen** sheet pops up over the page. Seek and play stay in the footer underneath.
+2. Player: **Listen** sits on the right of the seek bar (two rows: seek+Listen, then play). Tap Listen — a **Listen** sheet pops up. Seek and play stay in the footer.
 3. In the sheet: Speed chips change the rate without closing. Repeat toggles. A mode card applies and closes the sheet.
 4. Drill still hides seek/speed/repeat in the sheet and keeps How to listen. Theme (cream, orange play) unchanged.
 

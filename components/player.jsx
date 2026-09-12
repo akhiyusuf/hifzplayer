@@ -1511,19 +1511,24 @@ function k(e) {
             }),
           ],
         }),
-      !u && _jsx(b, { engine: t, disabled: c }),
-      _jsxs("button", {
-        type: "button",
-        className: "listen-menu-btn tap".concat(toolsOpen ? " open" : ""),
-        "aria-expanded": toolsOpen,
-        "aria-haspopup": "dialog",
-        onClick: () => setToolsOpen(!0),
+      _jsxs("div", {
+        className: "player-tools",
         children: [
-          _jsx(Icon, {
-            name: "sliders-horizontal",
-            size: 16,
+          !u && _jsx(b, { engine: t, disabled: c }),
+          _jsxs("button", {
+            type: "button",
+            className: "listen-menu-btn tap".concat(toolsOpen ? " open" : ""),
+            "aria-expanded": toolsOpen,
+            "aria-haspopup": "dialog",
+            onClick: () => setToolsOpen(!0),
+            children: [
+              _jsx(Icon, {
+                name: "sliders-horizontal",
+                size: 16,
+              }),
+              "Listen",
+            ],
           }),
-          "Listen",
         ],
       }),
       _jsxs("div", {
