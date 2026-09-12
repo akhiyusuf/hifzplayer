@@ -1320,7 +1320,7 @@ function ListenSheet(e) {
     focus = "focus" === s.style && "verse" === s.mode,
     c = "relay" === s.mode;
   return _jsx(Sheet, {
-    title: "Listen",
+    title: "Settings",
     onClose: n,
     children: _jsxs("div", {
       className: "listen-sheet",
@@ -1546,12 +1546,13 @@ function k(e) {
             "aria-expanded": toolsOpen,
             "aria-haspopup": "dialog",
             onClick: () => setToolsOpen(!0),
+            "aria-label": "Settings",
             children: [
               _jsx(Icon, {
                 name: "sliders-horizontal",
                 size: 16,
               }),
-              "Listen",
+              "Settings",
             ],
           }),
         ],
