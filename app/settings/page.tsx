@@ -27,7 +27,7 @@ function usePref<T>(key: string, fallback: T): [T, (v: T) => void] {
 }
 
 function PlusStatus() {
-  const [label, setLabel] = useState(PLUS_EXPLAIN.rowSub);
+  const [label, setLabel] = useState<string>(PLUS_EXPLAIN.rowSub);
   const [active, setActive] = useState(false);
 
   useEffect(() => {
