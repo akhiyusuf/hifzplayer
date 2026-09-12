@@ -16,7 +16,7 @@ import { Icon } from "@/components/icon";
 import { OfflineBanner } from "@/components/offline-banner";
 import { FocusStage } from "@/components/focus-stage";
 import { PracticeSheet } from "@/components/practice-sheet";
-import { PassageRange } from "@/components/passage-range";
+import { PlayerSettingsSheet } from "@/components/player-settings-sheet";
 import { ReciterSheet } from "@/components/reciter-sheet";
 import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
@@ -24,7 +24,7 @@ import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration } from "@/l
 import { fmtTime, segsForVerse, segForWord, toArabicDigits, wordAt } from "@/lib/audio";
 import { APP_NAME } from "@/lib/brand";
 import { isPaidRelay, isPaidRepeat } from "@/lib/billing/gates";
-import { KEYS, LOOP_COUNTS, MODES, RATES } from "@/lib/constants";
+import { KEYS, LOOP_COUNTS, RATES } from "@/lib/constants";
 import { usePlus } from "@/lib/plus";
 import { markToday, upsertSession } from "@/lib/sessions";
 import { getStore, setStore } from "@/lib/storage";
@@ -1290,176 +1290,6 @@ function b(e) {
     ],
   });
 }
-function ListenSheet(e) {
-  let { engine: t, state: s, onClose: n, onPickMode: r, onOpenPassage: open } = e,
-    { plus: plusOn, askPlus: ask } = usePlus(),
-    { chapters } = useAppData(),
-    passage = s.passage || { chapter: 1, from: 1, to: 1, name: "" },
-    [ch, setCh] = useState(passage.chapter),
-    [from, setFrom] = useState(passage.from),
-    [to, setTo] = useState(passage.to),
-    u = "word" === s.mode,
-    mushaf = "mushaf" === s.style,
-    c = "relay" === s.mode,
-    chapter = chapters.find((e) => e.id === ch),
-    versesCount =
-      (null == chapter ? void 0 : chapter.verses_count) ||
-      Math.max(to, from, 1),
-    name =
-      (null == chapter ? void 0 : chapter.name_simple) || passage.name || "Surah",
-    dirty =
-      ch !== passage.chapter || from !== passage.from || to !== passage.to;
-  return _jsx(Sheet, {
-    title: "Settings",
-    onClose: n,
-    children: _jsxs("div", {
-      className: "listen-sheet",
-      children: [
-        _jsxs("div", {
-            className: "listen-speeds",
-            role: "group",
-            "aria-label": "Speed",
-            children: [
-              _jsx("span", {
-                className: "label-eyebrow",
-                children: "Speed",
-              }),
-              _jsx("div", {
-                className: "listen-speeds-seg",
-                children: RATES.map((rate) =>
-                  _jsx(
-                    "button",
-                    {
-                      type: "button",
-                      className: "tap".concat(s.rate === rate ? " on" : ""),
-                      "aria-pressed": s.rate === rate,
-                      onClick: () => t.setRate(rate),
-                      children:
-                        0.75 === rate ? "\xbe\xd7" : "".concat(rate, "\xd7"),
-                    },
-                    rate,
-                  ),
-                ),
-              }),
-            ],
-          }),
-        _jsxs("div", {
-          children: [
-            _jsx(PassageRange, {
-              versesCount: versesCount,
-              chapters: chapters,
-              chapterId: ch,
-              onChapter: (id) => {
-                setCh(id);
-                let next = chapters.find((e) => e.id === id),
-                  count =
-                    (null == next ? void 0 : next.verses_count) || 1;
-                (setFrom(1),
-                  setTo(count <= 12 ? count : Math.min(10, count)));
-              },
-              from: from,
-              to: to,
-              onFrom: setFrom,
-              onTo: setTo,
-            }),
-            _jsxs("button", {
-              type: "button",
-              className: "btn-primary",
-              style: { marginTop: 10 },
-              onClick: () => {
-                if (!dirty) {
-                  n();
-                  return;
-                }
-                open(ch, from, to);
-              },
-              children: [
-                _jsx(Icon, { name: "book-open", size: 18 }),
-                "Open ",
-                name,
-                " ",
-                from,
-                to > from ? "–".concat(to) : "",
-              ],
-            }),
-          ],
-        }),
-        !u &&
-          _jsxs("button", {
-            type: "button",
-            className: "listen-sheet-row tap".concat(
-              s.verseLoop ? " on" : "",
-            ),
-            onClick: () => {
-              if (!plusOn && !s.verseLoop) {
-                (n(), ask("repeats"));
-                return;
-              }
-              t.toggleVerseLoop();
-            },
-            "aria-pressed": !!s.verseLoop,
-            disabled: c,
-            children: [
-              _jsxs("span", {
-                className: "st",
-                children: [
-                  _jsx("b", { children: "Repeat" }),
-                  _jsx("span", {
-                    children: "Loop this verse until you turn it off",
-                  }),
-                ],
-              }),
-              _jsx("span", {
-                className: "val",
-                children: s.verseLoop ? "On" : "Off",
-              }),
-            ],
-          }),
-        !mushaf &&
-        _jsxs("div", {
-          children: [
-            _jsx("span", {
-              className: "label-eyebrow",
-              children: "How to listen",
-            }),
-            _jsx("div", {
-              className: "sheet-list",
-              children: MODES.map((m) =>
-                _jsxs(
-                  "button",
-                  {
-                    type: "button",
-                    className: "mode-opt".concat(s.mode === m.id ? " on" : ""),
-                    onClick: () => r(m.id),
-                    "aria-pressed": s.mode === m.id,
-                    children: [
-                      _jsxs("span", {
-                        className: "mo-ic",
-                        children: [_jsx(Icon, { name: m.icon, size: 19 })],
-                      }),
-                      _jsxs("span", {
-                        className: "mo-t",
-                        children: [
-                          _jsx("b", { children: m.name }),
-                          _jsx("span", { children: m.desc }),
-                        ],
-                      }),
-                      _jsxs("span", {
-                        className: "radio-dot",
-                        children: [_jsx(Icon, { name: "check", size: 13 })],
-                      }),
-                    ],
-                  },
-                  m.id,
-                ),
-              ),
-            }),
-          ],
-        }),
-      ],
-    }),
-  });
-}
 function k(e) {
   let { engine: t, state: s, onPickMode: n, onOpenPassage: open } = e,
     [l] = useState(() => {
@@ -1608,7 +1438,7 @@ function k(e) {
     ],
   }),
       toolsOpen &&
-        _jsx(ListenSheet, {
+        _jsx(PlayerSettingsSheet, {
           engine: t,
           state: s,
           onClose: () => setToolsOpen(!1),

@@ -31,7 +31,7 @@ export function PracticeSheet({
   const modeOnly = variant === "mode";
 
   return (
-    <Sheet title={modeOnly ? "Listening mode" : `Set up ${surahName}`} onClose={onClose}>
+    <Sheet title={modeOnly ? "Practise as" : `Set up ${surahName}`} onClose={onClose}>
       {!modeOnly && (
         <PassageRange versesCount={versesCount} from={from} to={to} onFrom={setFrom} onTo={setTo} />
       )}

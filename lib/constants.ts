@@ -8,16 +8,16 @@ export const LOOP_COUNTS = [1, 2, 3, 5, 10, 0] as const;
 
 export const MODES = [
   {
-    id: "word",
-    name: "Drill words",
-    icon: "brackets",
-    desc: "Tap a word and replay it until it sticks",
-  },
-  {
     id: "verse",
     name: "Verse",
     icon: "book-open",
-    desc: "Play through, or repeat the ayah from the player",
+    desc: "Play the ayah through, or loop it from Playback",
+  },
+  {
+    id: "word",
+    name: "Drill",
+    icon: "brackets",
+    desc: "Tap a word and replay it until it sticks",
   },
   {
     id: "masked",

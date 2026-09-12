@@ -21,6 +21,7 @@ export function PassageRange({
   to,
   onFrom,
   onTo,
+  eyebrow = "Which verses",
 }: {
   versesCount: number;
   chapters?: Chapter[];
@@ -30,6 +31,7 @@ export function PassageRange({
   to: number;
   onFrom: (n: number) => void;
   onTo: (n: number) => void;
+  eyebrow?: string | null;
 }) {
   const chapter = chapters?.find((c) => c.id === chapterId);
   const nums = Array.from({ length: versesCount }, (_, i) => i + 1);
@@ -57,7 +59,7 @@ export function PassageRange({
           </select>
         </label>
       ) : null}
-      <span className="label-eyebrow">Which verses</span>
+      {eyebrow ? <span className="label-eyebrow">{eyebrow}</span> : null}
       <div style={{ display: "flex", gap: 9 }}>
         {(
           [
