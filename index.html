@@ -1,0 +1,2354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hifz Player</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=Amiri+Quran&display=swap');
+
+/* ---- Streakforge tokens (from hi-fi) ---- */
+:root {
+  --color-cream-50:#FAF8F3; --color-white:#FFFFFF; --color-cream-100:#F1EDE4; --color-border-light:#E4DDD0;
+  --color-forge-orange:#E8590C; --color-forge-orange-hover:#C94A05; --color-charcoal:#3A3A3A; --color-streak-gold:#F0A400;
+  --color-success:#2F9E44; --color-warning:#F08C00; --color-error:#E03131;
+  --color-text-1:#242019; --color-text-2:#5C554A; --color-text-muted:#8A8175;
+
+  --bg-app:var(--color-cream-50); --bg-surface:var(--color-white); --bg-surface-alt:var(--color-cream-100);
+  --border-default:var(--color-border-light);
+  --text-primary:var(--color-text-1); --text-secondary:var(--color-text-2); --text-muted:var(--color-text-muted);
+  --text-on-primary:#FFFFFF;
+  --action-primary:var(--color-forge-orange); --action-primary-hover:var(--color-forge-orange-hover);
+  --action-secondary:var(--color-charcoal); --accent-streak:var(--color-streak-gold);
+  --state-success:var(--color-success); --state-warning:var(--color-warning); --state-error:var(--color-error);
+  --focus-ring:rgba(232,89,12,0.30);
+
+  --font-display:"Bricolage Grotesque","Inter",system-ui,sans-serif;
+  --font-body:"Inter",system-ui,-apple-system,sans-serif;
+  --font-numeral:"Space Grotesk","Inter",system-ui,sans-serif;
+  --font-arabic:"Amiri Quran",serif;
+
+  --radius-button:8px; --radius-card:12px; --radius-modal:16px; --radius-pill:999px;
+  --shadow-sm:0 1px 2px rgba(60,40,20,0.06); --shadow-md:0 4px 12px rgba(60,40,20,0.08);
+  --ease-standard:cubic-bezier(0.4,0,0.2,1); --ease-spring:cubic-bezier(0.34,1.56,0.64,1);
+  --dur:160ms; --dur-spring:220ms;
+}
+[data-theme="dark"] {
+  --bg-app:#1A1712; --bg-surface:#232019; --bg-surface-alt:#2A261D; --border-default:#332E25;
+  --text-primary:#F5F1E8; --text-secondary:#B8AF9E; --text-muted:#7A7264; --text-on-primary:#1A1712;
+  --action-primary:#FF7A33; --action-primary-hover:#FF934F; --action-secondary:#D8D0C2;
+  --focus-ring:rgba(255,122,51,0.30);
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.3); --shadow-md:0 4px 12px rgba(0,0,0,0.35);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; }
+body {
+  background:var(--bg-app); color:var(--text-primary);
+  font-family:var(--font-body); font-size:16px; line-height:1.5;
+  overscroll-behavior-y:none;
+}
+button { font-family:inherit; font-size:inherit; color:inherit; background:none; border:none; cursor:pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline:none; box-shadow:0 0 0 3px var(--focus-ring); }
+input, select { font-family:inherit; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
+
+#app { max-width:520px; margin:0 auto; min-height:100dvh; display:flex; flex-direction:column; position:relative; }
+@media (min-width:760px) { #app { border-left:1px solid var(--border-default); border-right:1px solid var(--border-default); } }
+
+.screen { display:none; flex:1; flex-direction:column; min-height:100dvh; }
+.screen.active { display:flex; }
+
+/* ---------- shared ---------- */
+.icon { width:18px; height:18px; display:inline-flex; flex:none; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.icon.sm { width:15px; height:15px; }
+.icon.lg { width:24px; height:24px; }
+
+.card { background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-card); box-shadow:var(--shadow-sm); }
+.chip { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:var(--radius-button); font-size:13px; font-weight:600; }
+.num { font-family:var(--font-numeral); font-weight:700; }
+
+.btn-primary {
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  background:var(--action-primary); color:var(--text-on-primary);
+  font-weight:600; font-size:15px; padding:14px; border-radius:var(--radius-button);
+  transition:background var(--dur) var(--ease-standard), transform var(--dur) var(--ease-standard);
+}
+.btn-primary:active { transform:scale(0.98); }
+.btn-primary:hover { background:var(--action-primary-hover); }
+.btn-primary:disabled { opacity:.45; cursor:default; }
+.btn-ghost {
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  border:1px solid var(--border-default); background:var(--bg-surface); color:var(--text-secondary);
+  font-weight:500; font-size:13px; padding:8px 14px; border-radius:var(--radius-button);
+}
+.btn-ghost:active { background:var(--bg-surface-alt); }
+
+.spinner { width:22px; height:22px; border-radius:50%; border:2.5px solid var(--border-default); border-top-color:var(--action-primary); animation:spin .7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+.status-block { display:flex; flex-direction:column; align-items:center; gap:12px; padding:48px 24px; text-align:center; color:var(--text-secondary); font-size:14px; }
+
+/* ---------- picker ---------- */
+.picker-head { padding:20px 20px 12px; background:var(--bg-surface); border-bottom:1px solid var(--border-default); position:sticky; top:0; z-index:5; }
+.picker-title { font-family:var(--font-display); font-weight:700; font-size:24px; letter-spacing:-0.01em; line-height:1.15; }
+.search-row { display:flex; align-items:center; gap:8px; margin-top:12px; background:var(--bg-app); border:1px solid var(--border-default); border-radius:var(--radius-button); padding:10px 12px; }
+.search-row input { flex:1; border:none; background:none; font-size:14px; color:var(--text-primary); outline:none; }
+.search-row input::placeholder { color:var(--text-muted); }
+.picker-body { flex:1; padding:16px 20px 120px; display:flex; flex-direction:column; gap:16px; }
+.section-label { font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px; }
+
+.recent-item { display:flex; align-items:center; gap:12px; padding:12px 14px; width:100%; text-align:left; }
+.recent-item + .recent-item { border-top:1px solid var(--border-default); }
+.recent-title { font-size:14px; font-weight:600; }
+.recent-sub { font-size:12px; color:var(--text-secondary); }
+
+.surah-row { display:flex; align-items:center; gap:12px; padding:12px 14px; width:100%; text-align:left; transition:background var(--dur) var(--ease-standard); }
+.surah-row:not(:last-child) { border-bottom:1px solid var(--border-default); }
+.surah-row .sn { width:30px; font-family:var(--font-numeral); font-weight:700; font-size:14px; color:var(--text-muted); }
+.surah-row .name { flex:1; font-size:15px; font-weight:500; }
+.surah-row .ar { font-family:var(--font-arabic); font-size:19px; color:var(--text-secondary); }
+.surah-row.sel { background:var(--bg-surface-alt); }
+.surah-row.sel .sn { color:var(--action-primary); }
+.surah-row.sel .name { font-weight:600; }
+.surah-expand { padding:0 14px 14px; background:var(--bg-surface-alt); border-bottom:1px solid var(--border-default); }
+.range-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.range-row label { font-size:12px; color:var(--text-secondary); }
+.range-row select { padding:7px 10px; border-radius:var(--radius-button); border:1px solid var(--border-default); background:var(--bg-surface); font-size:14px; font-weight:600; font-family:var(--font-numeral); color:var(--text-primary); }
+
+.picker-foot { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:520px; padding:12px 20px calc(12px + env(safe-area-inset-bottom)); background:linear-gradient(to top, var(--bg-app) 70%, transparent); z-index:6; display:flex; flex-direction:column; gap:8px; }
+.reciter-row { display:flex; align-items:center; gap:8px; }
+.reciter-row select { flex:1; padding:10px 12px; border-radius:var(--radius-button); border:1px solid var(--border-default); background:var(--bg-surface); font-size:14px; color:var(--text-primary); box-shadow:var(--shadow-sm); }
+
+/* ---------- player ---------- */
+.player-head { padding:14px 16px 10px; background:var(--bg-surface); border-bottom:1px solid var(--border-default); display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:5; }
+.player-head .ttl { flex:1; min-width:0; }
+.player-head .ttl .t1 { font-family:var(--font-display); font-weight:700; font-size:17px; letter-spacing:-0.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.player-head .ttl .t2 { font-size:12px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.icon-btn { width:38px; height:38px; border-radius:var(--radius-button); display:inline-flex; align-items:center; justify-content:center; color:var(--text-secondary); transition:background var(--dur) var(--ease-standard); flex:none; }
+.icon-btn:active { background:var(--bg-surface-alt); }
+
+.style-toggle { display:inline-flex; background:var(--bg-surface-alt); border:1px solid var(--border-default); border-radius:var(--radius-button); padding:2px; }
+.style-toggle button { padding:6px 10px; border-radius:6px; font-size:12px; font-weight:600; color:var(--text-secondary); }
+.style-toggle button.on { background:var(--bg-surface); color:var(--text-primary); box-shadow:var(--shadow-sm); }
+
+.player-body { flex:1; min-height:0; overflow-y:auto; padding:18px 18px 8px; }
+
+/* mushaf text */
+.mushaf { direction:rtl; text-align:justify; text-align-last:right; font-family:var(--font-arabic); font-size:var(--ar-size, 27px); line-height:2.15; color:var(--text-primary); user-select:none; }
+.mushaf .w { padding:2px 3px; border-radius:6px; cursor:pointer; transition:background var(--dur) var(--ease-standard), color var(--dur) var(--ease-standard); }
+.mushaf .w.cur { background:var(--action-primary); color:var(--text-on-primary); }
+.mushaf .w.inloop { box-shadow:inset 0 -3px 0 var(--accent-streak); }
+.mushaf .w.lsel { background:var(--bg-surface-alt); box-shadow:inset 0 -3px 0 var(--accent-streak); }
+.mushaf .vmark { font-size:22px; color:var(--action-primary); padding:0 4px; cursor:pointer; }
+.mushaf .v.done { color:var(--text-muted); }
+.mushaf .v.done .w:not(.cur) .tj { color:inherit; }
+.mushaf.masked .w { color:transparent; background:var(--bg-surface-alt); box-shadow:none; }
+.mushaf.masked .w.rev { color:var(--text-primary); background:transparent; animation:fadein .45s var(--ease-standard); }
+.mushaf.masked .w.rev.cur { background:var(--action-primary); color:var(--text-on-primary); }
+@keyframes fadein { from { opacity:0; } to { opacity:1; } }
+
+.vtrans { direction:ltr; text-align:left; font-size:13.5px; color:var(--text-secondary); background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-card); padding:12px 14px; margin-top:14px; }
+.vtrans b { color:var(--text-primary); font-weight:600; }
+
+/* focus flow */
+.focus-card { display:flex; flex-direction:column; align-items:center; gap:18px; padding:28px 18px; text-align:center; }
+.focus-ar { direction:rtl; font-family:var(--font-arabic); font-size:var(--ar-size, 32px); line-height:1.9; }
+.focus-ar .w { padding:2px 3px; border-radius:6px; cursor:pointer; }
+.focus-ar .w.cur { background:var(--action-primary); color:var(--text-on-primary); }
+.focus-gloss { font-size:14.5px; color:var(--text-secondary); max-width:340px; line-height:1.55; }
+.focus-next { direction:rtl; font-family:var(--font-arabic); font-size:19px; color:var(--text-muted); opacity:.7; }
+.focus-meta { font-size:12px; color:var(--text-muted); }
+.focus-nav { display:flex; align-items:center; gap:14px; }
+
+/* masked bits */
+.masked-banner { display:flex; align-items:center; gap:10px; background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-card); padding:10px 14px; margin-bottom:14px; font-size:13px; color:var(--text-secondary); }
+.masked-banner .gold { color:var(--accent-streak); }
+.masked-stats { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:16px; }
+.reveal-meter { flex:1; height:6px; border-radius:var(--radius-pill); background:var(--bg-surface-alt); overflow:hidden; }
+.reveal-meter i { display:block; height:100%; background:var(--accent-streak); border-radius:var(--radius-pill); transition:width .3s var(--ease-standard); width:0; }
+
+/* relay */
+.relay-queue { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px; scrollbar-width:none; }
+.relay-queue::-webkit-scrollbar { display:none; }
+.turn-chip { flex:none; display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:var(--radius-button); border:1px solid var(--border-default); background:var(--bg-surface); font-size:12.5px; font-weight:600; color:var(--text-secondary); }
+.turn-chip.now { border-color:var(--action-primary); color:var(--text-primary); box-shadow:0 0 0 3px var(--focus-ring); }
+.turn-chip.done { opacity:.45; }
+.turn-chip .avatar { width:24px; height:24px; border-radius:50%; background:var(--action-secondary); color:#fff; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+.turn-chip.you .avatar { background:var(--action-primary); }
+.your-turn { background:var(--action-primary); color:var(--text-on-primary); border-radius:var(--radius-card); padding:14px 16px; margin-top:16px; }
+.your-turn .yt1 { font-weight:700; font-size:15px; }
+.your-turn .yt2 { font-size:12.5px; opacity:.9; margin-top:2px; }
+.your-turn .yt-actions { display:flex; gap:8px; margin-top:12px; }
+.your-turn .yt-actions button { flex:1; padding:9px; border-radius:var(--radius-button); font-size:13px; font-weight:600; background:rgba(255,255,255,0.18); color:#fff; }
+
+/* transport + mode bar */
+.player-foot { position:sticky; bottom:0; background:var(--bg-surface); border-top:1px solid var(--border-default); padding:10px 16px calc(10px + env(safe-area-inset-bottom)); z-index:5; }
+.loop-chip { display:flex; align-items:center; gap:8px; background:var(--bg-surface-alt); border:1px solid var(--border-default); border-radius:var(--radius-pill); padding:6px 8px 6px 14px; font-size:12.5px; font-weight:600; color:var(--text-secondary); margin-bottom:10px; }
+.loop-chip .gold { color:var(--accent-streak); }
+.loop-chip .x { width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text-muted); }
+.seekwrap { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.seekwrap .tm { font-family:var(--font-numeral); font-weight:500; font-size:11.5px; color:var(--text-muted); min-width:36px; }
+.seekbar { flex:1; height:22px; display:flex; align-items:center; cursor:pointer; touch-action:none; }
+.seekbar .track { position:relative; flex:1; height:5px; border-radius:var(--radius-pill); background:var(--bg-surface-alt); }
+.seekbar .fill { position:absolute; inset:0 auto 0 0; width:0; background:var(--action-primary); border-radius:var(--radius-pill); }
+.transport { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.transport .side { display:flex; align-items:center; gap:4px; }
+.play-btn { width:56px; height:56px; border-radius:50%; background:var(--action-primary); color:var(--text-on-primary); display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-md); transition:transform var(--dur-spring) var(--ease-spring), background var(--dur) var(--ease-standard); }
+.play-btn:active { transform:scale(0.94); }
+.speed-btn { min-width:44px; padding:8px 6px; border-radius:var(--radius-button); font-family:var(--font-numeral); font-weight:700; font-size:13px; color:var(--text-secondary); }
+.speed-btn:active { background:var(--bg-surface-alt); }
+.mode-bar { display:flex; gap:6px; margin-top:10px; }
+.mode-bar button { flex:1; padding:9px 4px; border-radius:var(--radius-button); font-size:13px; font-weight:600; color:var(--text-secondary); border:1px solid transparent; }
+.mode-bar button.on { background:var(--action-secondary); color:var(--bg-surface); }
+[data-theme="dark"] .mode-bar button.on { color:#1A1712; }
+
+/* popover */
+.popover { position:absolute; z-index:40; width:230px; background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-card); box-shadow:var(--shadow-md); padding:12px 14px; animation:pop var(--dur-spring) var(--ease-spring); }
+@keyframes pop { from { opacity:0; transform:scale(.92) translateY(4px); } to { opacity:1; transform:none; } }
+.popover .p-ar { direction:rtl; font-family:var(--font-arabic); font-size:24px; text-align:right; }
+.popover .p-tr { font-size:12px; color:var(--text-muted); font-style:italic; }
+.popover .p-gl { font-size:14px; font-weight:600; margin-top:2px; }
+.popover .p-actions { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+.popover .p-actions button { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:var(--radius-button); font-size:13px; font-weight:600; background:var(--bg-surface-alt); color:var(--text-primary); text-align:left; }
+.popover .p-actions button.pri { background:var(--action-primary); color:var(--text-on-primary); }
+
+/* sheet */
+.sheet-scrim { position:fixed; inset:0; background:rgba(36,32,25,0.4); z-index:50; display:none; align-items:flex-end; justify-content:center; }
+.sheet-scrim.open { display:flex; }
+.sheet { width:100%; max-width:520px; background:var(--bg-surface); border-radius:var(--radius-modal) var(--radius-modal) 0 0; padding:18px 20px calc(20px + env(safe-area-inset-bottom)); max-height:82dvh; overflow-y:auto; animation:sheetup .26s var(--ease-spring); }
+@keyframes sheetup { from { transform:translateY(40px); opacity:0; } to { transform:none; opacity:1; } }
+.sheet h3 { font-family:var(--font-display); font-weight:700; font-size:20px; letter-spacing:-0.01em; }
+.sheet .sub { font-size:13px; color:var(--text-secondary); margin-top:2px; }
+.turn-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border-default); }
+.turn-row .avatar { width:32px; height:32px; border-radius:50%; background:var(--action-secondary); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:none; }
+.turn-row.you .avatar { background:var(--action-primary); }
+.turn-row select { padding:7px 8px; border-radius:var(--radius-button); border:1px solid var(--border-default); background:var(--bg-surface); font-size:13px; color:var(--text-primary); max-width:150px; }
+.turn-row .ord { font-family:var(--font-numeral); font-weight:700; font-size:13px; color:var(--text-muted); width:16px; text-align:center; }
+.rm-turn { width:30px; height:30px; border-radius:var(--radius-button); display:flex; align-items:center; justify-content:center; color:var(--text-muted); }
+.sheet-actions { display:flex; gap:8px; margin-top:16px; }
+.repeat-row { display:flex; align-items:center; gap:8px; margin-top:14px; flex-wrap:wrap; }
+.repeat-row .rlabel { font-size:13px; color:var(--text-secondary); }
+.seg-toggle { display:inline-flex; background:var(--bg-surface-alt); border:1px solid var(--border-default); border-radius:var(--radius-button); padding:2px; }
+.seg-toggle button { padding:6px 12px; border-radius:6px; font-size:12.5px; font-weight:600; color:var(--text-secondary); }
+.seg-toggle button.on { background:var(--bg-surface); color:var(--text-primary); box-shadow:var(--shadow-sm); }
+
+
+/* qari button in header */
+.qari-btn { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--text-secondary); padding:2px 0; max-width:100%; }
+.qari-btn #pl-sub { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* mode pill + sheet */
+.mode-pill { display:inline-flex; align-items:center; gap:6px; padding:9px 12px; border-radius:var(--radius-pill); border:1px solid var(--border-default); background:var(--bg-surface-alt); font-size:13px; font-weight:600; color:var(--text-primary); }
+.mode-opt { display:flex; align-items:center; gap:12px; width:100%; text-align:left; padding:12px 4px; border-bottom:1px solid var(--border-default); }
+.mode-opt .mo-ic { width:36px; height:36px; border-radius:var(--radius-button); background:var(--bg-surface-alt); display:flex; align-items:center; justify-content:center; color:var(--text-secondary); flex:none; }
+.mode-opt.on .mo-ic { background:var(--action-primary); color:var(--text-on-primary); }
+.mode-opt .mo-t { flex:1; }
+.mode-opt .mo-t b { font-size:15px; display:block; }
+.mode-opt .mo-t span { font-size:12.5px; color:var(--text-secondary); }
+.mode-opt .mo-check { color:var(--action-primary); visibility:hidden; }
+.mode-opt.on .mo-check { visibility:visible; }
+
+/* toggle switch */
+.taj-row { display:flex; align-items:center; gap:12px; padding:14px 4px 4px; }
+.switch { width:44px; height:26px; border-radius:var(--radius-pill); background:var(--bg-surface-alt); border:1px solid var(--border-default); position:relative; transition:background var(--dur) var(--ease-standard); flex:none; }
+.switch i { position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:var(--bg-surface); box-shadow:var(--shadow-sm); transition:transform var(--dur) var(--ease-standard); }
+.switch.on { background:var(--action-primary); border-color:var(--action-primary); }
+.switch.on i { transform:translateX(18px); }
+
+/* active state for icon buttons (repeat verse) */
+.icon-btn.on { background:var(--bg-surface-alt); color:var(--action-primary); box-shadow:inset 0 0 0 1.5px var(--action-primary); }
+
+/* word-mode control bar */
+.wordbar { display:flex; align-items:center; gap:10px; background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-card); padding:10px 14px; margin-bottom:14px; font-size:13px; color:var(--text-secondary); }
+.wordbar .num { color:var(--text-primary); }
+
+/* qari sheet rows */
+.qari-opt { display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:11px 4px; border-bottom:1px solid var(--border-default); font-size:14px; }
+.qari-opt .q-style { font-size:12px; color:var(--text-muted); }
+.qari-opt .mo-check { color:var(--action-primary); visibility:hidden; margin-left:auto; }
+.qari-opt.on .mo-check { visibility:visible; }
+.qari-opt.on { font-weight:600; }
+
+/* tajweed palette (quran.com rule classes) */
+.tj { font-style:normal; }
+.tj-ham_wasl, .tj-slnt, .tj-silent, .tj-laam_shamsiyah, .tj-idgham_mutajanisayn { color:#9A958C; }
+.tj-madda_normal { color:#537FFF; }
+/* munfasil (separated) madd is jaiz/permissible → permissible blue;
+   muttasil (connected) madd is wajib/obligatory → obligatory blue */
+.tj-madda_permissible, .tj-madda_obligatory_monfasel { color:#4050FF; }
+.tj-madda_necessary { color:#0018C9; }
+.tj-madda_obligatory, .tj-madda_pbligatory, .tj-madda_obligatory_mottasel { color:#2144C1; }
+.tj-qalaqah { color:#DD0008; }
+.tj-ikhafa { color:#9400A8; }
+.tj-ikhafa_shafawi { color:#D500B7; }
+.tj-idgham_shafawi { color:#58B800; }
+.tj-idgham_ghunnah { color:#169777; }
+.tj-idgham_wo_ghunnah { color:#169200; }
+.tj-iqlab { color:#26BFFD; }
+.tj-ghunnah { color:#FF7E1E; }
+[data-theme="dark"] .tj-madda_necessary { color:#7B8CFF; }
+[data-theme="dark"] .tj-madda_permissible, [data-theme="dark"] .tj-madda_obligatory_monfasel { color:#7B8CFF; }
+[data-theme="dark"] .tj-madda_obligatory, [data-theme="dark"] .tj-madda_pbligatory, [data-theme="dark"] .tj-madda_obligatory_mottasel { color:#8FA0FF; }
+[data-theme="dark"] .tj-ikhafa { color:#D07BFF; }
+[data-theme="dark"] .tj-idgham_wo_ghunnah { color:#7ED957; }
+.w.cur .tj { color:inherit !important; }
+.mushaf.masked .w:not(.rev) .tj { color:transparent !important; }
+.legend-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px 14px; padding:12px 4px; }
+.legend-grid .lg { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-secondary); }
+.legend-grid .dot { width:12px; height:12px; border-radius:50%; flex:none; }
+.legend-grid .lg-t { display:flex; flex-direction:column; line-height:1.25; min-width:0; }
+.legend-grid .lg-en { font-size:11px; color:var(--text-muted); }
+
+
+/* relay order rows + popover repeat count */
+.rl-label { font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--text-muted); margin:12px 0 6px; }
+.order-row { display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--border-default); }
+.order-row .avatar { width:30px; height:30px; border-radius:50%; background:var(--bg-surface-alt); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:var(--text-secondary); flex:none; }
+.order-row.you .avatar { background:var(--accent-streak, #F0A400); color:#fff; }
+.order-row select { flex:1; min-width:0; }
+.ord-move { display:flex; flex-direction:column; gap:2px; }
+.ord-move button, .order-row .rm { width:26px; height:22px; border-radius:6px; border:1px solid var(--border-default); background:var(--bg-surface); color:var(--text-secondary); display:flex; align-items:center; justify-content:center; }
+.order-row .rm { width:30px; height:30px; border-radius:8px; }
+.ord-move button:disabled { opacity:.3; }
+.p-count { display:flex; align-items:center; gap:8px; margin:10px 0 2px; }
+.p-count .plbl { font-size:11.5px; color:var(--text-muted); font-weight:600; }
+.p-count .seg-toggle button { padding:5px 9px; font-size:12px; }
+
+.toast { position:fixed; bottom:calc(150px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); background:var(--action-secondary); color:#fff; font-size:13px; font-weight:500; padding:9px 16px; border-radius:var(--radius-pill); z-index:60; box-shadow:var(--shadow-md); animation:pop var(--dur-spring) var(--ease-spring); max-width:88%; text-align:center; }
+
+/* ---------- desktop chrome: hidden on mobile ---------- */
+.side-nav, .pl-side, .mode-pills, .seek-cap { display:none; }
+.pl-main { display:flex; flex-direction:column; flex:1; min-width:0; min-height:0; }
+/* Player is a fixed-height app shell: the ayah text scrolls inside
+   .player-body while the header and transport stay put. Without a definite
+   height the body grew to its full content and the whole PAGE scrolled,
+   which on phones let the transport drift under the browser's dynamic
+   toolbar. flex:none is required because the shared `.screen { flex:1 }`
+   sets flex-basis:0, which otherwise ignores the height. Scoped below the
+   desktop breakpoint, which sets its own height:100dvh + row layout. */
+@media (max-width:1099px) {
+  #scr-player { flex:none; height:100dvh; }
+  /* Mode picker ALSO at the top: a full-width pill strip on its own row
+     under the header. The "Verse ▾" button stays in the transport too, so
+     both are available and syncModePill() keeps them in step. */
+  .player-head { flex-wrap:wrap; }
+  .mode-pills { display:flex; order:9; flex-basis:100%; width:100%; gap:6px; margin-top:10px; overflow-x:auto; scrollbar-width:none; }
+  .mode-pills::-webkit-scrollbar { display:none; }
+  .mode-pills button { flex:1 1 0; min-width:max-content; white-space:nowrap; padding:8px 10px; border-radius:8px; border:1px solid var(--border-default); background:var(--bg-surface-alt); font-size:13px; font-weight:600; color:var(--text-secondary); }
+  .mode-pills button.on { background:var(--action-secondary); color:var(--bg-surface); border-color:transparent; }
+  [data-theme="dark"] .mode-pills button.on { color:#1A1712; }
+}
+.loopband { position:absolute; top:0; bottom:0; background:rgba(240,164,0,.35); border-radius:5px; display:none; pointer-events:none; }
+#set-arsize { accent-color:var(--action-primary); }
+
+/* ============================================================
+   DESKTOP — hi-fi screen G: sidebar + player + passage panel
+   ============================================================ */
+@media (min-width:1100px) {
+  #app { max-width:none; height:100dvh; flex-direction:row; border:none !important; }
+  .screen { min-height:0; height:100dvh; }
+  .screen.active { flex:1; min-width:0; }
+
+  /* sidebar (212px) */
+  .side-nav { display:flex; width:212px; flex:none; flex-direction:column; gap:2px; background:var(--bg-surface); border-right:1px solid var(--border-default); padding:20px 12px; }
+  .sn-brand { font-family:var(--font-display); font-weight:700; font-size:18px; padding:0 10px 16px; }
+  .sn-item { display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; font-size:14px; font-weight:500; color:var(--text-secondary); text-align:left; transition:background var(--dur) var(--ease-standard); }
+  .sn-item .icon { width:17px; height:17px; }
+  .sn-item:hover { background:var(--bg-surface-alt); }
+  .sn-item.on { background:var(--bg-surface-alt); font-weight:600; color:var(--action-primary); }
+
+  /* picker: centered column, internal scroll, footer in flow */
+  .picker-head { padding:20px max(24px, calc((100% - 720px)/2)) 12px; }
+  .picker-body { overflow-y:auto; padding:16px max(24px, calc((100% - 720px)/2)) 24px; }
+  .picker-foot { position:static; left:auto; transform:none; max-width:none; border-top:1px solid var(--border-default); background:var(--bg-surface); padding:12px max(24px, calc((100% - 720px)/2)) 16px; }
+
+  /* player: main column + 280px passage panel */
+  #scr-player { flex-direction:row; }
+  .pl-main { height:100dvh; }
+  .pl-side { display:flex; width:280px; flex:none; flex-direction:column; gap:16px; background:var(--bg-surface); border-left:1px solid var(--border-default); padding:20px; overflow-y:auto; }
+  .ps-title { font-size:15px; font-weight:600; }
+  .ps-sec { font-size:13px; line-height:1.5; color:var(--text-secondary); }
+  .ps-sec + .ps-sec { border-top:1px solid var(--border-default); padding-top:14px; margin-top:2px; }
+  .ps-chip { display:inline-block; font-size:11px; font-weight:600; padding:3px 8px; border-radius:6px; background:var(--bg-surface-alt); color:var(--text-secondary); }
+  .ps-body { margin-top:6px; }
+  .ps-body b { color:var(--text-primary); font-weight:600; }
+  .ps-gloss-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:5px 0; border-bottom:1px dashed var(--border-default); }
+  .ps-gloss-row:last-child { border-bottom:none; }
+  .ps-gloss-row .ps-ar { font-family:var(--font-arabic); font-size:18px; direction:rtl; color:var(--text-primary); flex:none; }
+  .pl-side .legend-grid { grid-template-columns:1fr; padding:8px 0 0; }
+  .ps-note { background:var(--bg-surface-alt); border-radius:8px; padding:12px; font-size:12px; line-height:1.5; color:var(--text-secondary); }
+
+  /* player header: title · view tabs · → mode pills */
+  .player-head { position:static; padding:16px 24px; gap:16px; }
+  #back-btn { display:none; }
+  .player-head .ttl { flex:none; max-width:34%; }
+  .player-head .ttl .t1 { font-size:20px; }
+  .mode-pills { display:flex; gap:8px; margin-left:auto; }
+  .mode-pills button { font-size:13px; font-weight:500; padding:6px 14px; border-radius:8px; border:1px solid var(--border-default); color:var(--text-secondary); transition:background var(--dur) var(--ease-standard); }
+  .mode-pills button:hover { background:var(--bg-surface-alt); }
+  .mode-pills button.on { background:var(--action-secondary); border-color:transparent; color:#fff; font-weight:600; }
+  [data-theme="dark"] .mode-pills button.on { color:#1A1712; }
+
+  /* content: mushaf in a card */
+  .player-body { padding:24px; }
+  .mushaf { background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--radius-card); box-shadow:var(--shadow-sm); padding:28px 32px; font-size:var(--ar-size, 29px); line-height:2.5; }
+  .player-body .vtrans, .player-body .tap-hint { display:none; }
+  .focus-card, .masked-banner, .masked-stats, .wordbar, .relay-queue, .your-turn { max-width:760px; margin-left:auto; margin-right:auto; }
+  .focus-card { padding-top:48px; }
+
+  /* footer in flow: labeled timeline + centered square transport */
+  .player-foot { position:static; background:transparent; border-top:none; padding:4px 24px 22px; }
+  .loop-chip { max-width:640px; margin:0 auto 10px; }
+  .seekwrap { display:grid; grid-template-columns:1fr auto auto; grid-template-areas:"cap cur dur" "bar bar bar"; row-gap:7px; column-gap:3px; align-items:baseline; margin-bottom:14px; }
+  .seek-cap { display:block; grid-area:cap; font-size:12px; color:var(--text-secondary); }
+  .seekwrap #tm-cur { grid-area:cur; min-width:0; font-weight:700; }
+  .seekwrap #tm-cur::after { content:" / "; color:var(--text-muted); font-weight:500; }
+  .seekwrap #tm-dur { grid-area:dur; min-width:0; font-weight:700; }
+  .seekbar { grid-area:bar; height:22px; }
+  .seekbar .track { height:12px; background:var(--bg-surface); border:1px solid var(--border-default); border-radius:6px; }
+  .seekbar .fill { background:rgba(232,89,12,.25); border-radius:5px; overflow:visible; }
+  .seekbar .fill::after { content:""; position:absolute; right:-1.5px; top:-5px; width:3px; height:20px; background:var(--action-primary); border-radius:2px; }
+  .transport { justify-content:center; gap:12px; }
+  .transport .side { display:contents; }
+  #loopverse-btn { order:1; } #prev-btn { order:2; } #play-btn { order:3; } #next-btn { order:4; }
+  /* rounded transport to match the mobile look: circular controls + a
+     round orange play button (mode stays in the header pills, not here) */
+  .transport .icon-btn { width:44px; height:44px; border-radius:50%; border:1px solid var(--border-default); background:var(--bg-surface); }
+  .play-btn { width:56px; height:56px; border-radius:50%; }
+  #mode-btn { display:none; }
+  .transport .speed-btn { order:5; width:44px; height:44px; min-width:0; padding:0; border-radius:50%; border:1px solid var(--border-default); background:var(--bg-surface); }
+
+  /* sheets become centered modals */
+  .sheet-scrim { align-items:center; padding:24px; }
+  .sheet { max-width:460px; border-radius:var(--radius-modal); animation:pop var(--dur-spring) var(--ease-spring); }
+
+  .toast { bottom:40px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- DESKTOP SIDEBAR (hi-fi screen G) -->
+  <nav class="side-nav" id="side-nav" aria-label="Sections">
+    <div class="sn-brand">Hifz player</div>
+    <button class="sn-item" id="nav-library"></button>
+    <button class="sn-item" id="nav-player"></button>
+    <button class="sn-item" id="nav-qaris"></button>
+    <button class="sn-item" id="nav-settings"></button>
+  </nav>
+  <!-- PICKER -->
+  <section class="screen active" id="scr-picker">
+    <div class="picker-head">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="picker-title">Choose a passage</div>
+        <button class="icon-btn" id="theme-btn" aria-label="Toggle dark mode"></button>
+      </div>
+      <div class="search-row">
+        <span class="icon" id="ic-search"></span>
+        <input id="surah-search" type="search" placeholder="Surah name or number" autocomplete="off">
+      </div>
+    </div>
+    <div class="picker-body">
+      <div id="recents-wrap" style="display:none">
+        <div class="section-label">Recent</div>
+        <div class="card" id="recents-list"></div>
+      </div>
+      <div>
+        <div class="section-label">Surahs</div>
+        <div class="card" id="surah-list">
+          <div class="status-block"><div class="spinner"></div><div>Loading surahs…</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="picker-foot">
+      <div class="reciter-row">
+        <select id="reciter-select" aria-label="Qari"><option>Loading qaris…</option></select>
+      </div>
+      <button class="btn-primary" id="open-player" disabled>Open player</button>
+    </div>
+  </section>
+
+  <!-- PLAYER -->
+  <section class="screen" id="scr-player">
+   <div class="pl-main">
+    <div class="player-head">
+      <button class="icon-btn" id="back-btn" aria-label="Back"></button>
+      <div class="ttl">
+        <div class="t1" id="pl-title">—</div>
+        <button class="t2 qari-btn" id="qari-btn"><span id="pl-sub">—</span><svg class="icon" style="width:12px;height:12px" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
+      </div>
+      <div class="style-toggle" id="style-toggle">
+        <button data-style="mushaf" class="on">Mushaf</button>
+        <button data-style="focus">Focus</button>
+      </div>
+      <div class="mode-pills" id="mode-pills" role="group" aria-label="Playback mode"></div>
+    </div>
+    <div class="player-body" id="player-body">
+      <div class="status-block"><div class="spinner"></div><div id="load-msg">Loading passage…</div></div>
+    </div>
+    <div class="player-foot">
+      <div class="loop-chip" id="loop-chip" style="display:none"></div>
+      <div class="seekwrap">
+        <span class="seek-cap">Verse timeline</span>
+        <span class="tm" id="tm-cur">0:00</span>
+        <div class="seekbar" id="seekbar"><div class="track"><div class="fill" id="seek-fill"></div><div class="loopband" id="seek-loop"></div></div></div>
+        <span class="tm" id="tm-dur" style="text-align:right">0:00</span>
+        <button class="speed-btn" id="speed-btn">1×</button>
+      </div>
+      <div class="transport">
+        <div class="side">
+          <button class="icon-btn" id="prev-btn" aria-label="Previous"></button>
+          <button class="icon-btn" id="loopverse-btn" aria-label="Repeat verse"></button>
+        </div>
+        <button class="play-btn" id="play-btn" aria-label="Play"></button>
+        <div class="side">
+          <button class="mode-pill" id="mode-btn" aria-label="Playback mode"></button>
+          <button class="icon-btn" id="next-btn" aria-label="Next"></button>
+        </div>
+      </div>
+    </div>
+   </div>
+   <!-- DESKTOP PASSAGE PANEL (hi-fi screen G) -->
+   <aside class="pl-side" id="pl-side" aria-label="Passage details">
+     <div class="ps-title">This passage</div>
+     <div id="ps-content"></div>
+   </aside>
+  </section>
+
+  <!-- RELAY SETUP SHEET -->
+  <div class="sheet-scrim" id="relay-scrim">
+    <div class="sheet" id="relay-sheet">
+      <h3>Relay setup</h3>
+      <div class="sub">Set the order once — the relay walks your verse range, one verse per turn, cycling the order. Each round the order rotates so everyone gets new verses.</div>
+      <div class="rl-label">Order</div>
+      <div id="order-list"></div>
+      <button class="btn-ghost" id="add-part" style="margin-top:10px;width:100%">+ Add to the order</button>
+      <div class="rl-label" style="margin-top:14px">Verses</div>
+      <div class="range-row" style="padding:2px 0">
+        <label>From</label><select id="relay-from"></select>
+        <label>to</label><select id="relay-to"></select>
+      </div>
+      <div class="repeat-row">
+        <span class="rlabel">Rounds</span>
+        <div class="seg-toggle" id="repeat-toggle">
+          <button data-rep="1">Once</button>
+          <button data-rep="2" class="on">×2</button>
+          <button data-rep="4">×4</button>
+          <button data-rep="0">Until I stop</button>
+        </div>
+      </div>
+      <div class="sheet-actions">
+        <button class="btn-ghost" id="relay-cancel" style="flex:1">Cancel</button>
+        <button class="btn-primary" id="relay-begin" style="flex:2;padding:11px">Begin relay</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODE SHEET -->
+  <div class="sheet-scrim" id="mode-scrim">
+    <div class="sheet">
+      <h3>Playback mode</h3>
+      <div id="mode-opts" style="margin-top:10px"></div>
+      <div class="taj-row">
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600">Tajweed colours</div>
+          <div style="font-size:12px;color:var(--text-secondary)">Colour-codes letters by recitation rule</div>
+        </div>
+        <button class="switch" id="taj-switch" role="switch"><i></i></button>
+      </div>
+      <button class="btn-ghost" id="taj-legend-btn" style="width:100%;margin-top:8px">View colour legend</button>
+      <div id="taj-legend" style="display:none"></div>
+    </div>
+  </div>
+  <!-- QARI SHEET -->
+  <div class="sheet-scrim" id="qari-scrim">
+    <div class="sheet">
+      <h3>Choose qari</h3>
+      <div class="sub">Switches mid-verse and keeps your place.</div>
+      <div id="qari-opts" style="margin-top:8px;max-height:52dvh;overflow-y:auto"></div>
+    </div>
+  </div>
+  <!-- SETTINGS SHEET -->
+  <div class="sheet-scrim" id="settings-scrim">
+    <div class="sheet">
+      <h3>Settings</h3>
+      <div class="taj-row">
+        <div style="flex:1"><div style="font-size:14px;font-weight:600">Dark theme</div></div>
+        <button class="switch" id="set-dark" role="switch"><i></i></button>
+      </div>
+      <div class="taj-row">
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600">Tajweed colours</div>
+          <div style="font-size:12px;color:var(--text-secondary)">Colour-codes letters by recitation rule</div>
+        </div>
+        <button class="switch" id="set-taj" role="switch"><i></i></button>
+      </div>
+      <div class="taj-row" style="flex-direction:column;align-items:stretch;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-size:14px;font-weight:600">Arabic size</span>
+          <span class="num" id="set-arsize-val" style="font-size:13px;color:var(--text-secondary)">27px</span>
+        </div>
+        <input type="range" id="set-arsize" min="22" max="34" step="1" value="27" aria-label="Arabic text size">
+      </div>
+    </div>
+  </div>
+
+  <div id="popover-layer"></div>
+  <audio id="audio" preload="auto"></audio>
+</div>
+<script>
+"use strict";
+/* ============================================================
+   Hifz Player — standalone. Data: quran.com API v4.
+   Text + word glosses + tajweed markup + per-ayah audio +
+   word-level segments (0- or 1-based, auto-detected).
+   ============================================================ */
+
+const API = "https://api.quran.com/api/v4";
+const AUDIO_BASE = "https://verses.quran.com/";
+const TRANSLATION_ID = 131; // Dr. Mustafa Khattab — The Clear Quran
+const $ = (id) => document.getElementById(id);
+
+/* ---------- icons ---------- */
+const ICONS = {
+  search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  play: '<polygon points="6 3 20 12 6 21 6 3" fill="currentColor" stroke="none"/>',
+  pause: '<rect x="5" y="4" width="4.5" height="16" rx="1" fill="currentColor" stroke="none"/><rect x="14.5" y="4" width="4.5" height="16" rx="1" fill="currentColor" stroke="none"/>',
+  prev: '<polygon points="19 20 9 12 19 4 19 20" fill="currentColor" stroke="none"/><line x1="5" y1="19" x2="5" y2="5"/>',
+  next: '<polygon points="5 4 15 12 5 20 5 4" fill="currentColor" stroke="none"/><line x1="19" y1="5" x2="19" y2="19"/>',
+  repeat: '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+  back: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  chevR: '<path d="m9 18 6-6-6-6"/>',
+  chevL: '<path d="m15 18-6-6 6-6"/>',
+  chevD: '<path d="m6 9 6 6 6-6"/>',
+  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+  rotate: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+  mic: '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/>',
+  moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+  trash: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  textCursor: '<path d="M17 22h-1a4 4 0 0 1-4-4V6a4 4 0 0 1 4-4h1"/><path d="M7 22h1a4 4 0 0 0 4-4v-1"/><path d="M7 2h1a4 4 0 0 1 4 4v1"/>',
+  eyeOff: '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c6.5 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3.5 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  library: '<path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/>',
+  audioLines: '<path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/>',
+  sliders: '<path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>'
+};
+function icon(name, cls) {
+  return '<svg class="icon ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true">' + ICONS[name] + '</svg>';
+}
+
+/* ---------- helpers ---------- */
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmt(t) { if (!isFinite(t) || t < 0) t = 0; const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + String(s).padStart(2, '0'); }
+function store(key, val) { try { if (val === undefined) { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; } localStorage.setItem(key, JSON.stringify(val)); } catch (e) { return null; } }
+let toastTimer = null;
+function toast(msg) {
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const el = document.createElement('div');
+  el.className = 'toast'; el.textContent = msg;
+  document.body.appendChild(el);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.remove(), 2400);
+}
+async function getJSON(url) {
+  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url);
+  return res.json();
+}
+function cachedFetch(key, url, maxAgeMs) {
+  const hit = store(key);
+  if (hit && hit.t && (Date.now() - hit.t) < maxAgeMs) return Promise.resolve(hit.d);
+  return getJSON(url).then(d => { store(key, { t: Date.now(), d }); return d; });
+}
+/* Convert quran.com tajweed markup to safe colored spans.
+   DOM-based: parse in an inert document, keep only text + <tajweed class=rule>
+   wrappers (as <i class="tj tj-rule">), unwrap everything else. Handles
+   entities, quoted/unquoted attributes, nesting, and malformed markup —
+   structurally cannot double-escape. */
+let _tajRoot = null;
+function tajToSpans(src) {
+  try {
+    if (!_tajRoot) _tajRoot = document.implementation.createHTMLDocument('taj').createElement('div');
+    _tajRoot.innerHTML = String(src == null ? '' : src);
+    const walk = (node) => {
+      let out = '';
+      for (const c of node.childNodes) {
+        if (c.nodeType === 3) out += esc(c.nodeValue);
+        else if (c.nodeType === 1) {
+          const cls = ((c.getAttribute && c.getAttribute('class')) || '').trim().split(/\s+/)[0];
+          const tag = c.tagName.toLowerCase();
+          /* verse-level markup uses <tajweed>, word-level uses <rule> */
+          if ((tag === 'tajweed' || tag === 'rule') && /^[\w-]+$/.test(cls)) {
+            out += '<i class="tj tj-' + cls + '">' + walk(c) + '</i>';
+          } else out += walk(c);
+        }
+      }
+      return out;
+    };
+    const html = walk(_tajRoot);
+    _tajRoot.innerHTML = '';
+    return html;
+  } catch (e) { return esc(src); }
+}
+/* Fallback for missing word-level tajweed: split the VERSE-level tajweed
+   markup into one HTML chunk per word. Rules that span the space between
+   two words (idgham/iqlab/ikhfa on tanween) get their tag closed at the
+   boundary and reopened on the next word, so joining is never broken.
+   Ayah-number wrappers (<span class=end>) are dropped; standalone
+   ornaments (۞ rub el hizb, ۩ sajdah) merge into a neighbouring word so
+   counts line up. Returns null on any mismatch — caller falls back to
+   plain text, never a misaligned colouring. */
+function splitTajweedVerse(src, wordCount) {
+  if (!src || !wordCount) return null;
+  try {
+    if (!_tajRoot) _tajRoot = document.implementation.createHTMLDocument('taj').createElement('div');
+    _tajRoot.innerHTML = String(src);
+    const out = [], stack = [];
+    let cur = '', hasText = false;
+    const openAll = () => stack.map(cl => '<i class="tj tj-' + cl + '">').join('');
+    const closeAll = () => '</i>'.repeat(stack.length);
+    const pushWord = () => { if (hasText) out.push(cur); cur = ''; hasText = false; };
+    const boundary = () => { cur += closeAll(); pushWord(); cur = openAll(); };
+    const emitText = (txt) => {
+      const parts = String(txt).split(/\s+/);
+      for (let i = 0; i < parts.length; i++) {
+        if (i > 0) boundary();
+        if (parts[i]) { cur += esc(parts[i]); hasText = true; }
+      }
+    };
+    const walk = (node) => {
+      for (const c of node.childNodes) {
+        if (c.nodeType === 3) emitText(c.nodeValue);
+        else if (c.nodeType === 1) {
+          const cls = ((c.getAttribute && c.getAttribute('class')) || '').trim().split(/\s+/)[0];
+          const tag = c.tagName.toLowerCase();
+          if ((tag === 'tajweed' || tag === 'rule') && /^[\w-]+$/.test(cls)) {
+            stack.push(cls); cur += '<i class="tj tj-' + cls + '">';
+            walk(c);
+            stack.pop(); cur += '</i>';
+          } else if (cls === 'end') { boundary(); }
+          else walk(c);
+        }
+      }
+    };
+    walk(_tajRoot);
+    pushWord();
+    _tajRoot.innerHTML = '';
+    /* merge standalone ornament tokens into a neighbouring word */
+    for (let i = out.length - 1; i >= 0 && out.length > wordCount; i--) {
+      const bare = out[i].replace(/<[^>]+>/g, '');
+      if (/^[\u06DE\u06E9]+$/.test(bare)) {
+        if (i + 1 < out.length) { out[i + 1] = out[i] + ' ' + out[i + 1]; }
+        else if (i > 0) { out[i - 1] = out[i - 1] + ' ' + out[i]; }
+        else continue;
+        out.splice(i, 1);
+      }
+    }
+    return out.length === wordCount ? out : null;
+  } catch (e) { return null; }
+}
+
+/* ---------- state ---------- */
+const S = {
+  chapters: [], recitations: [],
+  reciterId: null,
+  passage: null,
+  verses: [],
+  audioByReciter: {},     // "rid:ch:from-to" -> { verseKey: {url, rawSegments} }
+  style: store('hifz.style') || 'mushaf',
+  mode: 'verse',
+  rate: 1,
+  vIdx: 0,
+  curWord: 0,
+  playing: false,
+  oneshot: null,          // {vIdx, endW}
+  loop: null,             // {vIdx, startW, endW, passes, pass, label}
+  verseLoop: false,
+  wordRepeat: store('hifz.wrep') || 2,
+  loopCount: store('hifz.passes') != null ? store('hifz.passes') : 5,
+  taj: !!store('hifz.taj'),
+  focusPhrase: 0,
+  masked: {},
+  relay: null,
+  pendingLoopStart: null,
+  seekDrag: false
+};
+const audio = $('audio');
+const RATES = [0.75, 1, 1.25, 1.5];
+const LOOP_BREATH_MS = 600; // pause between loop passes, like a reciter taking a breath
+const MODES = [
+  { id: 'word',   name: 'Word',   ic: 'textCursor', desc: 'Step through each word with repeats — drill pronunciation.' },
+  { id: 'verse',  name: 'Verse',  ic: 'play',       desc: 'Continuous recitation with a word-by-word highlight.' },
+  { id: 'masked', name: 'Masked', ic: 'eyeOff',     desc: 'Words stay hidden until recited — recall before you hear.' },
+  { id: 'relay',  name: 'Relay',  ic: 'users',      desc: 'Take turns with your qaris, verse by verse.' }
+];
+
+/* ---------- theme ---------- */
+function applyTheme() {
+  const dark = store('hifz.dark');
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  $('theme-btn').innerHTML = icon(dark ? 'sun' : 'moon');
+}
+$('theme-btn').onclick = () => { store('hifz.dark', !store('hifz.dark')); applyTheme(); };
+
+/* ---------- segment parsing ----------
+   Accepts [w,start,end] or [w,?,start,end]; ms. Auto-detects 0- vs 1-based
+   word indices: the live quran.com API is 0-based, other datasets are 1-based. */
+function parseSegments(raw, wordCount) {
+  if (!Array.isArray(raw) || !raw.length) return null;
+  let out = [];
+  for (const s of raw) {
+    if (!Array.isArray(s) || s.length < 3) continue;
+    let w = Number(s[0]), a = Number(s[s.length - 2]), b = Number(s[s.length - 1]);
+    if (!isFinite(w) || !isFinite(a) || !isFinite(b)) continue;
+    if (b < a) { const t = a; a = b; b = t; }
+    out.push({ w, start: a / 1000, end: b / 1000 });
+  }
+  if (!out.length) return null;
+  const ws = out.map(s => s.w);
+  const hasZero = ws.includes(0);
+  const maxW = Math.max.apply(null, ws);
+  const zeroBased = hasZero || (wordCount && maxW === wordCount - 1 && !ws.includes(wordCount));
+  if (zeroBased) for (const s of out) s.w += 1;
+  if (wordCount) out = out.filter(s => s.w >= 1 && s.w <= wordCount);
+  if (!out.length) return null;
+  out.sort((x, y) => x.start - y.start);
+  return out;
+}
+function estimateSegments(duration, wordCount) {
+  if (!isFinite(duration) || duration <= 0 || !wordCount) return null;
+  const per = duration / wordCount, out = [];
+  for (let i = 0; i < wordCount; i++) out.push({ w: i + 1, start: i * per, end: (i + 1) * per, est: true });
+  return out;
+}
+function segsFor(verse) {
+  const a = verse.audio;
+  if (!a) return null;
+  if (a.segments && a.segments.length) return a.segments;
+  if (isFinite(audio.duration) && audio.duration > 0 && currentVerse() === verse) {
+    if (!verse._est || verse._estDur !== audio.duration) {
+      verse._est = estimateSegments(audio.duration, verse.words.length);
+      verse._estDur = audio.duration;
+    }
+    return verse._est;
+  }
+  return null;
+}
+function wordAt(verse, t) {
+  const segs = segsFor(verse);
+  if (!segs) return 0;
+  let cur = 0;
+  for (const s of segs) { if (t >= s.start - 0.02) cur = s.w; if (t < s.end) break; }
+  return cur;
+}
+function segForWord(verse, w) {
+  const segs = segsFor(verse);
+  if (!segs) return null;
+  for (const s of segs) if (s.w === w) return s;
+  return null;
+}
+
+/* ---------- boot ---------- */
+/* ============================================================
+   Desktop chrome — hi-fi screen G (sidebar · header pills · panel)
+   ============================================================ */
+const DESK = window.matchMedia('(min-width:1100px)');
+
+function syncSideNav() {
+  const onPlayer = $('scr-player').classList.contains('active');
+  $('nav-library').classList.toggle('on', !onPlayer);
+  $('nav-player').classList.toggle('on', onPlayer);
+}
+function bindSideNav() {
+  $('nav-library').innerHTML = icon('library') + 'Library';
+  $('nav-player').innerHTML = icon('play') + 'Player';
+  $('nav-qaris').innerHTML = icon('audioLines') + 'Qaris';
+  $('nav-settings').innerHTML = icon('sliders') + 'Settings';
+  $('nav-library').onclick = () => { if (!$('scr-picker').classList.contains('active')) $('back-btn').onclick(); };
+  $('nav-player').onclick = () => {
+    if ($('scr-player').classList.contains('active')) return;
+    if (S.verses.length) showScreen('player'); else toast('Pick a passage first');
+  };
+  $('nav-qaris').onclick = () => { $('qari-btn').onclick(); }; /* inherits the relay guard */
+  $('nav-settings').onclick = openSettings;
+  syncSideNav();
+}
+
+/* header mode pills mirror the mode sheet */
+function renderModePills() {
+  const el = $('mode-pills'); if (!el) return;
+  el.innerHTML = MODES.map(m =>
+    '<button data-mode="' + m.id + '"' + (S.mode === m.id ? ' class="on"' : '') + ' title="' + esc(m.desc) + '">' + m.name + '</button>').join('');
+  el.querySelectorAll('button').forEach(b => { b.onclick = () => setMode(b.dataset.mode); });
+}
+
+/* passage panel: real data mapped into the mockup's side panel */
+function renderSidePanel() {
+  const el = $('ps-content'); if (!el) return;
+  const v = currentVerse();
+  if (!v) { el.innerHTML = ''; return; }
+  let html = '';
+  if (S.mode === 'masked') {
+    html += '<div class="ps-sec"><div class="ps-note"><b>Recall first.</b> Translation and word meanings stay hidden in Masked mode — reveal the verse to see them.</div></div>';
+  } else {
+    if (v.translation) html += '<div class="ps-sec"><span class="ps-chip">Verse ' + v.key + '</span><div class="ps-body">' + esc(v.translation) + '</div></div>';
+    const glossed = v.words.filter(w => w.gloss);
+    if (glossed.length) html += '<div class="ps-sec"><span class="ps-chip">Word meanings</span><div>' + glossed.map(w =>
+      '<div class="ps-gloss-row"><span>' + esc(w.gloss) + '</span><span class="ps-ar">' + esc(w.ar) + '</span></div>').join('') + '</div></div>';
+  }
+  if (S.taj) html += '<div class="ps-sec"><span class="ps-chip">Tajweed colours</span><div class="legend-grid">' + TAJ_LEGEND.map(legendItemHTML).join('') + '</div></div>';
+  el.innerHTML = html;
+}
+
+/* settings sheet: theme · tajweed · Arabic size (mockup tweak, 22–34px) */
+function openSettings() { syncSettingsSheet(); $('settings-scrim').classList.add('open'); }
+function syncSettingsSheet() {
+  $('set-dark').classList.toggle('on', !!store('hifz.dark'));
+  $('set-dark').setAttribute('aria-checked', String(!!store('hifz.dark')));
+  $('set-taj').classList.toggle('on', S.taj);
+  $('set-taj').setAttribute('aria-checked', String(S.taj));
+  const az = store('hifz.arsize') || 27;
+  $('set-arsize').value = az;
+  $('set-arsize-val').textContent = az + 'px';
+}
+$('settings-scrim').addEventListener('click', (e) => { if (e.target === $('settings-scrim')) $('settings-scrim').classList.remove('open'); });
+$('set-dark').onclick = () => { $('theme-btn').onclick(); syncSettingsSheet(); };
+$('set-taj').onclick = () => { $('taj-switch').onclick(); syncSettingsSheet(); };
+$('set-arsize').oninput = (e) => {
+  const v2 = Number(e.target.value);
+  store('hifz.arsize', v2);
+  document.documentElement.style.setProperty('--ar-size', v2 + 'px');
+  $('set-arsize-val').textContent = v2 + 'px';
+};
+
+/* the speed button lives beside the seekbar on mobile, in the transport on desktop */
+function placeSpeedBtn() {
+  const sp = $('speed-btn');
+  if (DESK.matches) document.querySelector('.transport').appendChild(sp);
+  else document.querySelector('.seekwrap').appendChild(sp);
+}
+if (DESK.addEventListener) DESK.addEventListener('change', placeSpeedBtn);
+
+async function boot() {
+  applyTheme();
+  $('ic-search').outerHTML = icon('search');
+  $('back-btn').innerHTML = icon('back');
+  $('prev-btn').innerHTML = icon('prev');
+  $('next-btn').innerHTML = icon('next');
+  $('play-btn').innerHTML = icon('play', 'lg');
+  $('loopverse-btn').innerHTML = icon('repeat');
+  syncModePill(); syncTajSwitch();
+  bindSideNav(); renderModePills(); placeSpeedBtn();
+  const az = store('hifz.arsize');
+  if (az) document.documentElement.style.setProperty('--ar-size', az + 'px');
+  try {
+    const [chData, recData] = await Promise.all([
+      cachedFetch('hifz.chapters', API + '/chapters?language=en', 7 * 864e5),
+      cachedFetch('hifz.recitations', API + '/resources/recitations?language=en', 7 * 864e5)
+    ]);
+    S.chapters = chData.chapters || [];
+    S.recitations = (recData.recitations || []).map(r => ({
+      id: r.id,
+      name: (r.translated_name && r.translated_name.name) || r.reciter_name || ('Reciter ' + r.id),
+      style: r.style || ''
+    }));
+    const savedRec = store('hifz.reciter');
+    const pick = (needle) => { const f = S.recitations.find(r => (r.name || '').toLowerCase().includes(needle)); return f && f.id; };
+    S.reciterId = (savedRec && S.recitations.some(r => r.id === savedRec) && savedRec) ||
+      pick('minshawi') || pick('husary') || pick('alafasy') || (S.recitations[0] && S.recitations[0].id);
+    renderReciterSelect();
+    renderSurahList('');
+    renderRecents();
+  } catch (e) {
+    $('surah-list').innerHTML = '<div class="status-block">Could not reach quran.com.<br>Check your connection, then retry.<button class="btn-ghost" onclick="boot()" style="margin-top:8px">Retry</button></div>';
+  }
+}
+
+function renderReciterSelect() {
+  const sel = $('reciter-select');
+  sel.innerHTML = S.recitations.map(r =>
+    '<option value="' + r.id + '"' + (r.id === S.reciterId ? ' selected' : '') + '>' +
+    esc(r.name) + (r.style ? ' · ' + esc(r.style) : '') + '</option>').join('');
+  sel.onchange = () => { S.reciterId = Number(sel.value); store('hifz.reciter', S.reciterId); };
+}
+
+/* ---------- picker ---------- */
+let selChapter = null, selFrom = 1, selTo = 1;
+
+function renderSurahList(query) {
+  const q = (query || '').trim().toLowerCase();
+  const list = S.chapters.filter(c =>
+    !q || String(c.id) === q || c.name_simple.toLowerCase().includes(q) ||
+    (c.translated_name && c.translated_name.name || '').toLowerCase().includes(q));
+  if (!list.length) { $('surah-list').innerHTML = '<div class="status-block">No surah matches “' + esc(query) + '”.</div>'; return; }
+  $('surah-list').innerHTML = list.map(c => {
+    const sel = selChapter === c.id;
+    let html = '<button class="surah-row' + (sel ? ' sel' : '') + '" data-ch="' + c.id + '">' +
+      '<span class="sn">' + c.id + '</span><span class="name">' + esc(c.name_simple) + '</span>' +
+      '<span class="ar">' + esc(c.name_arabic) + '</span></button>';
+    if (sel) {
+      const opts = (v) => { let o = ''; for (let i = 1; i <= c.verses_count; i++) o += '<option value="' + i + '"' + (i === v ? ' selected' : '') + '>' + i + '</option>'; return o; };
+      html += '<div class="surah-expand"><div class="range-row">' +
+        '<label>Verses</label>' +
+        '<select id="from-sel">' + opts(selFrom) + '</select>' +
+        '<label>to</label>' +
+        '<select id="to-sel">' + opts(selTo) + '</select>' +
+        '<span style="font-size:12px;color:var(--text-muted)">of ' + c.verses_count + '</span>' +
+        '</div></div>';
+    }
+    return html;
+  }).join('');
+  $('surah-list').querySelectorAll('.surah-row').forEach(btn => {
+    btn.onclick = () => {
+      const ch = Number(btn.dataset.ch);
+      if (selChapter === ch) { selChapter = null; }
+      else { selChapter = ch; selFrom = 1; const c = S.chapters.find(x => x.id === ch); selTo = Math.min(c.verses_count, 3); }
+      renderSurahList($('surah-search').value);
+      updateOpenBtn();
+    };
+  });
+  const fs = $('from-sel'), ts = $('to-sel');
+  if (fs && ts) {
+    fs.onchange = () => { selFrom = Number(fs.value); if (selTo < selFrom) { selTo = selFrom; ts.value = selTo; } updateOpenBtn(); };
+    ts.onchange = () => { selTo = Number(ts.value); if (selTo < selFrom) { selFrom = selTo; fs.value = selFrom; } updateOpenBtn(); };
+  }
+}
+function updateOpenBtn() {
+  const b = $('open-player');
+  b.disabled = !selChapter;
+  if (selChapter) {
+    const c = S.chapters.find(x => x.id === selChapter);
+    b.textContent = 'Open player — ' + c.name_simple + ' ' + selFrom + (selTo > selFrom ? '–' + selTo : '');
+  } else b.textContent = 'Open player';
+}
+$('surah-search').addEventListener('input', e => renderSurahList(e.target.value));
+$('open-player').onclick = () => { if (selChapter) openPassage(selChapter, selFrom, selTo); };
+
+function renderRecents() {
+  const rec = store('hifz.recents') || [];
+  const wrap = $('recents-wrap');
+  if (!rec.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  $('recents-list').innerHTML = rec.slice(0, 3).map((r, i) =>
+    '<button class="recent-item" data-i="' + i + '">' + icon('rotate') +
+    '<div style="flex:1"><div class="recent-title">' + esc(r.name) + ' · ' + r.from + (r.to > r.from ? '–' + r.to : '') + '</div>' +
+    '<div class="recent-sub">' + esc(r.reciter || '') + '</div></div>' + icon('chevR') + '</button>').join('');
+  $('recents-list').querySelectorAll('.recent-item').forEach(btn => {
+    btn.onclick = () => { const r = rec[Number(btn.dataset.i)]; if (r) openPassage(r.chapter, r.from, r.to); };
+  });
+}
+function pushRecent(p) {
+  const c = S.chapters.find(x => x.id === p.chapter);
+  const rname = (S.recitations.find(r => r.id === S.reciterId) || {}).name || '';
+  let rec = store('hifz.recents') || [];
+  rec = rec.filter(r => !(r.chapter === p.chapter && r.from === p.from && r.to === p.to));
+  rec.unshift({ chapter: p.chapter, from: p.from, to: p.to, name: c ? c.name_simple : ('Surah ' + p.chapter), reciter: rname });
+  store('hifz.recents', rec.slice(0, 6));
+}
+
+/* ---------- external word-timing providers ----------
+   Hook for GitHub-hosted timing datasets (e.g. quran-align JSON via
+   cdn.jsdelivr.net or raw.githubusercontent.com — both CORS-open).
+   Provider gets {chapter, from, to, reciterId, reciterName} and resolves
+   to { '4:11': [[wordPos, startMs, endMs], ...] } or null.
+   First provider that answers wins; quran.com segments stay the fallback. */
+const TIMING_PROVIDERS = [];
+function registerTimingProvider(fn) { TIMING_PROVIDERS.push(fn); }
+async function externalTimings(ctx) {
+  for (const p of TIMING_PROVIDERS) {
+    try { const r = await p(ctx); if (r) return r; } catch (e) { /* fall through */ }
+  }
+  return null;
+}
+
+/* ---------- passage loading ---------- */
+async function fetchVersePages(chapter, from, to, extraParams) {
+  const perPage = 50;
+  const p1 = Math.ceil(from / perPage), p2 = Math.ceil(to / perPage);
+  const pages = [];
+  for (let p = p1; p <= p2; p++) pages.push(p);
+  const results = await Promise.all(pages.map(p =>
+    getJSON(API + '/verses/by_chapter/' + chapter + '?page=' + p + '&per_page=' + perPage + (extraParams || ''))));
+  const verses = [];
+  for (const r of results) for (const v of (r.verses || [])) {
+    if (v.verse_number >= from && v.verse_number <= to) verses.push(v);
+  }
+  verses.sort((a, b) => a.verse_number - b.verse_number);
+  return verses;
+}
+
+async function loadAudioForReciter(reciterId) {
+  const p = S.passage;
+  const key = reciterId + ':' + p.chapter + ':' + p.from + '-' + p.to;
+  if (S.audioByReciter[key]) return S.audioByReciter[key];
+  const raw = await fetchVersePages(p.chapter, p.from, p.to, '&audio=' + reciterId);
+  const map = {};
+  for (const v of raw) {
+    if (v.audio && v.audio.url) {
+      const url = /^https?:/i.test(v.audio.url) ? v.audio.url : AUDIO_BASE + v.audio.url.replace(/^\//, '');
+      map[v.verse_key] = { url, rawSegments: v.audio.segments || null };
+    }
+  }
+  const ext = await externalTimings({ chapter: p.chapter, from: p.from, to: p.to, reciterId, reciterName: reciterName(reciterId) });
+  if (ext) for (const k in ext) { if (map[k] && Array.isArray(ext[k]) && ext[k].length) map[k].rawSegments = ext[k]; }
+  S.audioByReciter[key] = map;
+  return map;
+}
+
+let passageToken = 0;
+async function openPassage(chapter, from, to) {
+  const tok = ++passageToken;
+  const c = S.chapters.find(x => x.id === chapter);
+  S.passage = { chapter, from, to, chapterMeta: c };
+  S.vIdx = 0; S.curWord = 0; S.loop = null; S.verseLoop = false; S.relay = null;
+  S.mode = 'verse'; S.focusPhrase = 0; S.masked = {}; S.oneshot = null;
+  stopAudio();
+  showScreen('player');
+  $('pl-title').textContent = (c ? c.name_simple : 'Surah ' + chapter) + ' · ' + chapter + ':' + from + (to > from ? '–' + to : '');
+  updateSubtitle();
+  $('player-body').innerHTML = '<div class="status-block"><div class="spinner"></div><div id="load-msg">Loading passage…</div></div>';
+  syncModePill(); syncStyleToggle(); syncLoopChip(); updatePlayBtn(); syncLoopVerseBtn();
+  try {
+    const [textVerses, audioMap] = await Promise.all([
+      fetchVersePages(chapter, from, to,
+        '&language=en&words=true&word_fields=text_uthmani,text_uthmani_tajweed&translations=' + TRANSLATION_ID + '&fields=text_uthmani,text_uthmani_tajweed'),
+      loadAudioForReciter(S.reciterId).catch(() => ({}))
+    ]);
+    if (tok !== passageToken) return; /* a newer passage superseded this load */
+    S.verses = textVerses.map(v => {
+      const words = [], marks = [];
+      for (const w of (v.words || [])) {
+        const kind = w.char_type_name || w.char_type || 'word';
+        if (kind === 'word') {
+          words.push({
+            pos: w.position,
+            ar: w.text_uthmani || w.text || '',
+            taj: w.text_uthmani_tajweed || null,
+            gloss: (w.translation && w.translation.text) || '',
+            tr: (w.transliteration && w.transliteration.text) || ''
+          });
+        } else {
+          marks.push({ afterPos: words.length ? words[words.length - 1].pos : 0, ar: w.text_uthmani || w.text || '', kind });
+        }
+      }
+      /* Word-level tajweed is not reliably returned by the API — rule-less
+         words come back as bare text, and some responses carry no markup at
+         all. Only skip the verse-level split when real markup is present. */
+      if (!words.some(w => w.taj && /<(tajweed|rule)[\s>]/i.test(w.taj))) {
+        const chunks = splitTajweedVerse(v.text_uthmani_tajweed, words.length);
+        if (chunks) for (let i = 0; i < words.length; i++) words[i].tajHTML = chunks[i];
+      }
+      const am = audioMap[v.verse_key] || null;
+      return {
+        key: v.verse_key, number: v.verse_number,
+        words, marks,
+        translation: (v.translations && v.translations[0] && v.translations[0].text || '').replace(/<sup[^>]*>.*?<\/sup>/g, '').replace(/<[^>]+>/g, ''),
+        audio: am ? { url: am.url, segments: parseSegments(am.rawSegments, words.length) } : null
+      };
+    });
+    if (!S.verses.length) throw new Error('empty');
+    pushRecent(S.passage);
+    renderRecents();
+    renderPlayerBody();
+    loadVerseAudio(0, false);
+  } catch (e) {
+    if (tok !== passageToken) return;
+    $('player-body').innerHTML = '<div class="status-block">Couldn\u2019t load this passage.<br>' + esc(e.message || '') +
+      '<button class="btn-ghost" style="margin-top:8px" onclick="location.reload()">Reload app</button></div>';
+  }
+}
+
+function updateSubtitle() {
+  const r = S.recitations.find(x => x.id === S.reciterId);
+  $('pl-sub').textContent = 'Qari: ' + (r ? r.name : '—') + (S.rate !== 1 ? ' · ' + (S.rate === 0.75 ? '¾' : S.rate) + '×' : '');
+}
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $('scr-' + name).classList.add('active');
+  window.scrollTo(0, 0);
+  syncSideNav();
+}
+$('back-btn').onclick = () => { stopAudio(); S.relay = null; restoreMainAudio(); showScreen('picker'); };
+function currentVerse() { return S.verses[S.vIdx] || null; }
+function reciterName(id) { const r = S.recitations.find(x => x.id === id); return r ? r.name : 'Qari'; }
+function restoreMainAudio() {
+  const p = S.passage; if (!p) return;
+  const map = S.audioByReciter[S.reciterId + ':' + p.chapter + ':' + p.from + '-' + p.to];
+  if (!map) return;
+  for (const v of S.verses) {
+    const am = map[v.key];
+    v.audio = am ? { url: am.url, segments: parseSegments(am.rawSegments, v.words.length) } : null;
+    v._est = null;
+  }
+}
+/* ============================================================
+   Playback engine — single armed seek, no stale callbacks
+   ============================================================ */
+let rafId = null, wordGapTimer = null, armed = null, srcFresh = false;
+let playToken = 0;        // invalidates stale play() promise rejections
+let pendingWordInit = false; // word mode waiting for metadata (replaces stacking once-listeners)
+let loopEdgeAt = 0;       // re-entrancy guard so a loop pass can't double-count
+
+/* Central src setter: marks metadata as stale until the new file loads. */
+function setSrc(url) {
+  if (audio.src !== url) {
+    srcFresh = true; audio.src = url; audio.load();
+    $('seek-fill').style.width = '0%';
+    $('tm-cur').textContent = '0:00'; $('tm-dur').textContent = '0:00';
+  }
+}
+/* One pending seek at a time. Arming replaces any previous intent,
+   so a mode/verse switch can never resurrect an old seek-and-play.
+   If the src just changed, the seek waits for the NEW metadata. */
+function armSeek(t, thenPlay) {
+  armed = { t: Math.max(0, t), play: !!thenPlay };
+  if (!srcFresh && audio.readyState >= 1) fireArm();
+}
+function fireArm() {
+  if (!armed) return;
+  const a = armed; armed = null;
+  try { audio.currentTime = a.t; } catch (e) {}
+  if (a.play) playAudio();
+}
+audio.addEventListener('loadedmetadata', () => {
+  srcFresh = false; fireArm();
+  if (pendingWordInit) { pendingWordInit = false; if (S.mode === 'word') wordModePlayCurrent(); }
+});
+audio.addEventListener('error', () => {
+  srcFresh = false; armed = null; pendingWordInit = false;
+  clearTimeout(wordGapTimer); wordGapTimer = null;
+  if (S.playing) { S.playing = false; updatePlayBtn(); }
+  if (audio.src && $('scr-player').classList.contains('active')) toast('Audio failed to load — check your connection.');
+});
+
+function stopAudio() {
+  audio.pause(); audio.muted = false;
+  armed = null; pendingWordInit = false;
+  clearTimeout(wordGapTimer); wordGapTimer = null;
+  S.playing = false; updatePlayBtn();
+}
+
+function loadVerseAudio(vIdx, autoplay, opts) {
+  const v = S.verses[vIdx];
+  if (!v) return;
+  if (vIdx !== S.vIdx) {
+    /* per-verse state must not leak into the next verse */
+    wordStep.range = null;
+    wordStep.w = 1; wordStep.playedTimes = 0;
+    S.focusPhrase = 0;
+  }
+  S.vIdx = vIdx; S.curWord = 0; S.oneshot = null;
+  armed = null; pendingWordInit = false;
+  clearTimeout(wordGapTimer); wordGapTimer = null;
+  if (S.mode === 'masked') ensureMaskState(v);
+  const src = v.audio && v.audio.url;
+  if (!src) {
+    toast('No audio for verse ' + v.key + ' from this qari.');
+    renderPlayerBody();
+    /* only keep auto-skipping if we're still in a playing chain — a pause
+       during the gap must not resurrect playback */
+    if (autoplay && vIdx < S.verses.length - 1) setTimeout(() => { if (S.vIdx === vIdx && S.playing) loadVerseAudio(vIdx + 1, true); }, 600);
+    else { S.playing = false; updatePlayBtn(); }
+    return;
+  }
+  setSrc(src);
+  audio.playbackRate = S.rate;
+  audio.muted = !!(opts && opts.muted);
+  armSeek((opts && typeof opts.seekTo === 'number') ? opts.seekTo : 0, false);
+  renderPlayerBody();
+  if (autoplay) {
+    if (S.mode === 'word') wordModePlayCurrent(); /* never continuous in Word mode */
+    else playAudio();
+  }
+}
+
+function playAudio() {
+  /* a fresh play intent supersedes any scheduled resume (loop breath or
+     word gap) — otherwise the stale timer's window makes the 'pause'
+     listener swallow a bare element pause (e.g. OS media keys) */
+  clearTimeout(wordGapTimer); wordGapTimer = null;
+  audio.playbackRate = S.rate;
+  const tok = ++playToken;
+  const p = audio.play();
+  if (p && p.catch) p.catch(() => {
+    /* only honour the rejection if it's the latest play() AND playback is
+       genuinely stopped — stale AbortErrors from an interrupting pause or
+       src change used to flip the button and halt the highlight loop */
+    if (tok === playToken && audio.paused) { S.playing = false; updatePlayBtn(); }
+  });
+  S.playing = true; updatePlayBtn(); tick();
+}
+function pauseAudio() {
+  if (armed) armed.play = false; /* a pending seek may complete, but must not auto-play */
+  audio.pause(); clearTimeout(wordGapTimer); wordGapTimer = null;
+  S.playing = false; updatePlayBtn();
+}
+
+function updatePlayBtn() {
+  $('play-btn').innerHTML = icon(S.playing ? 'pause' : 'play', 'lg');
+  $('play-btn').setAttribute('aria-label', S.playing ? 'Pause' : 'Play');
+}
+
+$('play-btn').onclick = () => {
+  if (S.mode === 'relay') { relayTogglePlay(); return; }
+  if (S.playing) { pauseAudio(); return; }
+  if (S.mode === 'word') { wordModePlayCurrent(); return; }
+  if (!audio.src) loadVerseAudio(S.vIdx, true); else playAudio();
+};
+
+/* rAF loop */
+function tick() {
+  cancelAnimationFrame(rafId);
+  const step = () => {
+    const v = currentVerse();
+    if (v && !audio.paused) {
+      const t = audio.currentTime;
+      const w = wordAt(v, t);
+      if (w !== S.curWord) { S.curWord = w; onWordChange(v, w); }
+      if (S.oneshot && S.oneshot.vIdx === S.vIdx) {
+        const os = segForWord(v, S.oneshot.endW);
+        if (os && t >= os.end - 0.02) { S.oneshot = null; pauseAudio(); }
+      }
+      if (S.loop && S.loop.vIdx === S.vIdx) {
+        const endSeg = segForWord(v, S.loop.endW);
+        if (endSeg && t >= endSeg.end - 0.03) handleLoopEdge(v);
+      }
+      if (S.mode === 'word' && wordStep.active) {
+        const seg = segForWord(v, wordStep.w);
+        if (seg && t >= seg.end - 0.02) wordStepEnded();
+      }
+      updateSeekUI();
+    }
+    if (S.playing) rafId = requestAnimationFrame(step);
+  };
+  rafId = requestAnimationFrame(step);
+}
+
+function onWordChange(v, w) {
+  highlightWord(v, w);
+  if (S.mode === 'masked') revealTo(v, w);
+}
+
+function highlightWord(v, w) {
+  const body = $('player-body');
+  body.querySelectorAll('.w.cur').forEach(el => el.classList.remove('cur'));
+  if (w > 0) {
+    const el = body.querySelector('.w[data-v="' + S.vIdx + '"][data-w="' + w + '"]');
+    if (el) {
+      el.classList.add('cur');
+      const r = el.getBoundingClientRect(), bb = body.getBoundingClientRect();
+      if (r.top < bb.top + 40 || r.bottom > bb.bottom - 40) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+    if (S.style === 'focus' && S.mode !== 'masked' && S.mode !== 'relay') syncFocusPhrase(v, w);
+  }
+  updateWordBar();
+}
+
+function handleLoopEdge(v) {
+  const now = performance.now();
+  if (now - loopEdgeAt < 80) return; /* tick + 'ended' can both catch the same edge */
+  loopEdgeAt = now;
+  const L = S.loop;
+  L.pass++;
+  if (L.passes !== 0 && L.pass >= L.passes) {
+    S.loop = null; syncLoopChip();
+    document.querySelectorAll('.w.inloop').forEach(el => el.classList.remove('inloop'));
+    toast('Loop done — continuing');
+    return;
+  }
+  syncLoopChip();
+  const s = segForWord(v, L.startW);
+  if (!s) return;
+  /* Replay like a reciter repeating the phrase: let the last word finish,
+     rewind to the first word, breathe, then recite the range again — never
+     a mid-stream jump cut. The gap rides wordGapTimer so the 'pause'
+     listener keeps S.playing true and every existing cancel path
+     (pauseAudio / loadVerseAudio / stopAudio) also cancels the replay. */
+  audio.pause();
+  /* rewind lands just before the first word; if the -0.02 lead-in falls
+     inside the PREVIOUS word's segment, wordAt would highlight that word
+     for the whole breath — snap to the exact start instead */
+  let t0 = Math.max(0, s.start - 0.02);
+  if (wordAt(v, t0) !== L.startW) t0 = s.start;
+  try { audio.currentTime = t0; } catch (e) {}
+  S.playing = true; updatePlayBtn();
+  clearTimeout(wordGapTimer);
+  wordGapTimer = setTimeout(() => {
+    wordGapTimer = null;
+    if (!S.playing || S.mode === 'word' || !audio.paused || audio.ended) return;
+    playAudio();
+  }, LOOP_BREATH_MS / S.rate);
+}
+
+/* verse ended */
+audio.addEventListener('ended', () => {
+  const v = currentVerse();
+  if (S.mode === 'relay') { relayTurnEnded(); return; }
+  /* In word mode the last word's segment ends exactly at the file's end, so
+     'ended' can beat the tick check — treat file-end as word-end and keep
+     the sequence alive (wordStepEnded is idempotent via the gap timer). */
+  if (S.mode === 'word') {
+    if (wordStep.active) { wordStepEnded(); }
+    else { clearTimeout(wordGapTimer); wordGapTimer = null; S.playing = false; updatePlayBtn(); }
+    return;
+  }
+  clearTimeout(wordGapTimer); wordGapTimer = null;
+  if (S.oneshot && S.oneshot.vIdx === S.vIdx) { S.oneshot = null; S.playing = false; updatePlayBtn(); return; }
+  if (S.loop && S.loop.vIdx === S.vIdx) {
+    handleLoopEdge(v);
+    if (S.loop) return; /* handleLoopEdge rewound and scheduled the replay */
+  }
+  if (S.verseLoop) { armSeek(0, true); return; }
+  if (S.vIdx < S.verses.length - 1) {
+    markVerseDone(S.vIdx);
+    loadVerseAudio(S.vIdx + 1, true);
+  } else {
+    markVerseDone(S.vIdx);
+    S.playing = false; updatePlayBtn();
+    toast('End of passage');
+  }
+});
+audio.addEventListener('pause', () => { if (!audio.ended && !wordGapTimer) { S.playing = false; updatePlayBtn(); } });
+audio.addEventListener('play', () => { S.playing = true; updatePlayBtn(); tick(); });
+audio.addEventListener('loadedmetadata', updateSeekUI);
+/* keep the word highlight honest on seeks, incl. while paused */
+audio.addEventListener('seeked', () => {
+  updateSeekUI();
+  /* masked reveals must only come from playing audio, never from a seek event
+     (a late 'seeked' from a prior mode's reset would leak a reveal) */
+  if (S.mode === 'relay' || S.mode === 'masked' || (S.mode === 'word' && wordStep.active)) return;
+  const v = currentVerse();
+  if (!v) return;
+  const w = wordAt(v, audio.currentTime);
+  if (w !== S.curWord) { S.curWord = w; onWordChange(v, w); }
+});
+
+function markVerseDone(vIdx) {
+  const el = $('player-body').querySelector('.v[data-vi="' + vIdx + '"]');
+  if (el) el.classList.add('done');
+}
+
+/* ---------- transport ---------- */
+$('prev-btn').onclick = () => {
+  if (S.mode === 'word') { stepWordManual(-1); return; }
+  if (S.vIdx > 0) { S.loop = null; syncLoopChip(); loadVerseAudio(S.vIdx - 1, S.playing); }
+  else armSeek(0, S.playing);
+};
+$('next-btn').onclick = () => {
+  if (S.mode === 'word') { stepWordManual(1); return; }
+  if (S.vIdx < S.verses.length - 1) { S.loop = null; syncLoopChip(); loadVerseAudio(S.vIdx + 1, S.playing); }
+};
+$('speed-btn').onclick = () => {
+  const i = RATES.indexOf(S.rate);
+  S.rate = RATES[(i + 1) % RATES.length];
+  audio.playbackRate = S.rate;
+  $('speed-btn').textContent = (S.rate === 0.75 ? '¾' : S.rate) + '×';
+  updateSubtitle();
+};
+$('loopverse-btn').onclick = () => {
+  S.verseLoop = !S.verseLoop;
+  syncLoopVerseBtn();
+  toast(S.verseLoop ? 'Repeating this verse until you turn it off' : 'Verse repeat off');
+};
+function syncLoopVerseBtn() {
+  $('loopverse-btn').classList.toggle('on', S.verseLoop);
+  $('loopverse-btn').setAttribute('aria-pressed', String(S.verseLoop));
+}
+
+/* seekbar */
+function updateSeekUI() {
+  if (S.seekDrag) return;
+  const d = audio.duration;
+  $('tm-cur').textContent = fmt(audio.currentTime);
+  $('tm-dur').textContent = fmt(d);
+  $('seek-fill').style.width = (isFinite(d) && d > 0 ? (audio.currentTime / d) * 100 : 0) + '%';
+  syncLoopBand(d);
+}
+/* gold band on the timeline showing the active loop/drill range */
+function syncLoopBand(d) {
+  const band = $('seek-loop'); if (!band) return;
+  let a = null, b = null;
+  const v = currentVerse();
+  if (isFinite(d) && d > 0 && v) {
+    let r = null;
+    if (S.loop && S.loop.vIdx === S.vIdx) r = { s: S.loop.startW, e: S.loop.endW };
+    else if (S.mode === 'word' && wordStep.range) r = { s: wordStep.range.startW, e: wordStep.range.endW };
+    if (r) {
+      const s1 = segForWord(v, r.s), s2 = segForWord(v, r.e);
+      if (s1 && s2) { a = s1.start; b = s2.end; }
+    }
+  }
+  if (a == null || b == null || b <= a) { band.style.display = 'none'; return; }
+  band.style.display = 'block';
+  band.style.left = Math.max(0, a / d * 100) + '%';
+  band.style.width = Math.min(100, (b - a) / d * 100) + '%';
+}
+(function initSeek() {
+  const bar = $('seekbar');
+  let dragFrac = 0;
+  const fracFor = (clientX) => {
+    const r = bar.getBoundingClientRect();
+    return Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+  };
+  const showFrac = (frac) => {
+    $('seek-fill').style.width = frac * 100 + '%';
+    if (isFinite(audio.duration)) $('tm-cur').textContent = fmt(frac * audio.duration);
+  };
+  /* While dragging only the UI moves; the audio element is seeked ONCE on
+     release. Seeking on every pointermove made the audio stutter and
+     re-buffer continuously. */
+  bar.addEventListener('pointerdown', (e) => {
+    if (S.mode === 'relay') return;
+    S.seekDrag = true;
+    try { bar.setPointerCapture(e.pointerId); } catch (err) {}
+    dragFrac = fracFor(e.clientX); showFrac(dragFrac);
+  });
+  bar.addEventListener('pointermove', (e) => {
+    if (!S.seekDrag) return;
+    dragFrac = fracFor(e.clientX); showFrac(dragFrac);
+  });
+  const commit = () => {
+    if (!S.seekDrag) return;
+    S.seekDrag = false;
+    if (isFinite(audio.duration)) { try { audio.currentTime = dragFrac * audio.duration; } catch (e) {} }
+    updateSeekUI();
+  };
+  bar.addEventListener('pointerup', commit);
+  /* a cancelled gesture used to leave seekDrag stuck true, freezing the
+     timeline for the rest of the session */
+  bar.addEventListener('pointercancel', () => { S.seekDrag = false; updateSeekUI(); });
+  bar.addEventListener('lostpointercapture', () => { if (S.seekDrag) commit(); });
+})();
+
+/* ---------- mode sheet ---------- */
+$('mode-btn').onclick = () => { renderModeSheet(); $('mode-scrim').classList.add('open'); };
+$('mode-scrim').addEventListener('click', (e) => { if (e.target === $('mode-scrim')) $('mode-scrim').classList.remove('open'); });
+function renderModeSheet() {
+  $('mode-opts').innerHTML = MODES.map(m =>
+    '<button class="mode-opt' + (S.mode === m.id ? ' on' : '') + '" data-mode="' + m.id + '">' +
+      '<span class="mo-ic">' + icon(m.ic) + '</span>' +
+      '<span class="mo-t"><b>' + m.name + '</b><span>' + m.desc + '</span></span>' +
+      '<span class="mo-check">' + icon('check') + '</span>' +
+    '</button>').join('');
+  $('mode-opts').querySelectorAll('.mode-opt').forEach(btn => {
+    btn.onclick = () => { $('mode-scrim').classList.remove('open'); setMode(btn.dataset.mode); };
+  });
+  syncTajSwitch();
+}
+$('taj-switch').onclick = () => {
+  S.taj = !S.taj; store('hifz.taj', S.taj);
+  syncTajSwitch();
+  if (S.verses.length && $('scr-player').classList.contains('active')) {
+    renderPlayerBody();
+    if (S.curWord) highlightWord(currentVerse(), S.curWord);
+  }
+};
+function syncTajSwitch() {
+  $('taj-switch').classList.toggle('on', S.taj);
+  $('taj-switch').setAttribute('aria-checked', String(S.taj));
+}
+/* [colour, name, English meaning] */
+const TAJ_LEGEND = [
+  ['#FF7E1E', 'Ghunnah', 'Nasalisation'],
+  ['#9400A8', 'Ikhfa', 'Concealment'],
+  ['#D500B7', 'Ikhfa shafawi', 'Labial concealment'],
+  ['#26BFFD', 'Iqlab', 'Conversion to “m”'],
+  ['#169777', 'Idgham (ghunnah)', 'Merging with nasalisation'],
+  ['#169200', 'Idgham (no ghunnah)', 'Merging without nasalisation'],
+  ['#58B800', 'Idgham shafawi', 'Labial merging'],
+  ['#DD0008', 'Qalqalah', 'Echoing bounce'],
+  ['#537FFF', 'Madd (2)', 'Prolongation · 2 counts'],
+  ['#4050FF', 'Madd (4–5)', 'Prolongation · 4–5 counts'],
+  ['#0018C9', 'Madd (6)', 'Prolongation · 6 counts'],
+  ['#9A958C', 'Silent / hamzat wasl', 'Unpronounced letter']
+];
+function legendItemHTML(l) {
+  return '<span class="lg"><span class="dot" style="background:' + l[0] + '"></span>' +
+    '<span class="lg-t"><span>' + l[1] + '</span>' + (l[2] ? '<span class="lg-en">' + l[2] + '</span>' : '') + '</span></span>';
+}
+$('taj-legend-btn').onclick = () => {
+  const el = $('taj-legend');
+  if (el.style.display === 'none') {
+    el.innerHTML = '<div class="legend-grid">' + TAJ_LEGEND.map(legendItemHTML).join('') + '</div>';
+    el.style.display = 'block';
+    $('taj-legend-btn').textContent = 'Hide colour legend';
+  } else {
+    el.style.display = 'none';
+    $('taj-legend-btn').textContent = 'View colour legend';
+  }
+};
+
+function setMode(mode) {
+  if (mode === S.mode && mode !== 'relay') return;
+  stopAudio();
+  S.loop = null; S.pendingLoopStart = null; S.oneshot = null;
+  wordStep.active = false; wordStep.range = null; syncLoopChip();
+  S.mode = mode;
+  syncModePill(); updateSubtitle();
+  closePopover();
+  if (mode === 'relay') { openRelaySetup(); return; }
+  if (mode === 'masked') { S.masked = {}; }
+  loadVerseAudio(S.vIdx, false);
+}
+function syncModePill() {
+  const m = MODES.find(x => x.id === S.mode) || MODES[1];
+  $('mode-btn').innerHTML = icon(m.ic, 'sm') + ' ' + m.name + ' ' + icon('chevD', 'sm');
+  $('style-toggle').style.visibility = (S.mode === 'verse' || S.mode === 'word') ? 'visible' : 'hidden';
+  renderModePills();
+}
+$('style-toggle').querySelectorAll('button').forEach(btn => {
+  btn.onclick = () => {
+    S.style = btn.dataset.style; store('hifz.style', S.style);
+    syncStyleToggle(); S.focusPhrase = 0; renderPlayerBody();
+    if (S.curWord) highlightWord(currentVerse(), S.curWord);
+  };
+});
+function syncStyleToggle() {
+  $('style-toggle').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.style === S.style));
+}
+
+/* ---------- WORD MODE ---------- */
+const wordStep = { active: false, w: 1, playedTimes: 0, range: null }; // range: {startW,endW,passes,pass}
+function wordModePlayCurrent() {
+  const v = currentVerse();
+  if (!v) return;
+  if (!segsFor(v)) {
+    if (v.audio && v.audio.url) {
+      setSrc(v.audio.url);
+      pendingWordInit = true; /* consumed once by the loadedmetadata handler */
+      return;
+    }
+    toast('No audio for this verse.'); return;
+  }
+  wordStep.active = true;
+  if (wordStep.w < 1 || wordStep.w > v.words.length) wordStep.w = 1;
+  playWordOnce(v, wordStep.w);
+}
+function playWordOnce(v, w) {
+  const seg = segForWord(v, w);
+  if (!seg) { wordStepEnded(); return; }
+  S.curWord = w; highlightWord(v, w);
+  if (v.audio) setSrc(v.audio.url);
+  audio.muted = false; audio.playbackRate = S.rate;
+  armSeek(seg.start - 0.02, true);
+}
+function wordStepEnded() {
+  if (wordGapTimer) return; // already in a between-words gap (tick and 'ended' can both fire)
+  audio.pause(); S.playing = true; updatePlayBtn();
+  wordStep.playedTimes++;
+  const v = currentVerse();
+  const gap = 380 / S.rate;
+  clearTimeout(wordGapTimer);
+  wordGapTimer = setTimeout(() => {
+    wordGapTimer = null;
+    if (S.mode !== 'word' || !wordStep.active) return;
+    if (wordStep.playedTimes < S.wordRepeat) { playWordOnce(v, wordStep.w); return; }
+    wordStep.playedTimes = 0;
+    const R = wordStep.range;
+    if (R) {
+      if (wordStep.w >= R.endW) {
+        R.pass++;
+        if (R.passes !== 0 && R.pass >= R.passes) {
+          wordStep.range = null; syncLoopChip();
+          document.querySelectorAll('.w.inloop').forEach(el => el.classList.remove('inloop'));
+          S.playing = false; updatePlayBtn();
+          toast('Drill done — nice work');
+          return;
+        }
+        wordStep.w = R.startW; syncLoopChip(); playWordOnce(v, wordStep.w); return;
+      }
+      wordStep.w++; syncLoopChip(); playWordOnce(v, wordStep.w); return;
+    }
+    if (wordStep.w < v.words.length) { wordStep.w++; playWordOnce(v, wordStep.w); }
+    else if (S.vIdx < S.verses.length - 1) {
+      wordStep.w = 1; markVerseDone(S.vIdx);
+      loadVerseAudio(S.vIdx + 1, false);
+      setTimeout(() => { if (S.mode === 'word') wordModePlayCurrent(); }, 300);
+    } else { wordStep.active = false; S.playing = false; updatePlayBtn(); toast('End of passage'); }
+  }, gap);
+}
+/* prev/next remapped to word stepping in Word mode */
+function stepWordManual(d) {
+  const v = currentVerse(); if (!v) return;
+  const wasPlaying = S.playing;
+  clearTimeout(wordGapTimer); wordGapTimer = null;
+  if (wordStep.range) {
+    wordStep.range = null; syncLoopChip();
+    document.querySelectorAll('.w.inloop').forEach(el => el.classList.remove('inloop'));
+  }
+  let w = (wordStep.active || wordStep.w > 1 ? wordStep.w : (S.curWord || 1)) + d;
+  if (w < 1) {
+    if (S.vIdx > 0) { loadVerseAudio(S.vIdx - 1, false); wordStep.w = currentVerse().words.length; }
+    else wordStep.w = 1;
+  } else if (w > v.words.length) {
+    if (S.vIdx < S.verses.length - 1) { loadVerseAudio(S.vIdx + 1, false); wordStep.w = 1; }
+    else wordStep.w = v.words.length;
+  } else wordStep.w = w;
+  wordStep.playedTimes = 0;
+  const nv = currentVerse();
+  if (wasPlaying) { wordStep.active = true; if (segsFor(nv)) playWordOnce(nv, wordStep.w); else wordModePlayCurrent(); }
+  else { S.curWord = wordStep.w; highlightWord(nv, wordStep.w); }
+}
+
+/* ---------- MASKED ---------- */
+function ensureMaskState(v) {
+  if (!S.masked[v.key]) S.masked[v.key] = { maxRev: 0, peeks: 3 };
+}
+function revealTo(v, w) {
+  const m = S.masked[v.key]; if (!m) return;
+  if (w > m.maxRev) {
+    m.maxRev = w;
+    for (let i = 1; i <= w; i++) {
+      const el = $('player-body').querySelector('.w[data-v="' + S.vIdx + '"][data-w="' + i + '"]');
+      if (el) el.classList.add('rev');
+    }
+    updateMaskStats(v);
+  }
+}
+function peek() {
+  const v = currentVerse(); if (!v) return;
+  ensureMaskState(v);
+  const m = S.masked[v.key];
+  if (m.peeks <= 0) { toast('No peeks left for this verse'); return; }
+  if (m.maxRev >= v.words.length) { toast('Everything is revealed'); return; }
+  m.peeks--; m.maxRev++;
+  const el = $('player-body').querySelector('.w[data-v="' + S.vIdx + '"][data-w="' + m.maxRev + '"]');
+  if (el) el.classList.add('rev');
+  updateMaskStats(v);
+}
+function updateMaskStats(v) {
+  const m = S.masked[v.key]; if (!m) return;
+  const revEl = $('mask-rev'), pkEl = $('peek-btn'), meter = $('mask-meter');
+  if (revEl) revEl.innerHTML = 'Revealed <span class="num">' + m.maxRev + '</span> of <span class="num">' + v.words.length + '</span>';
+  if (pkEl) pkEl.innerHTML = icon('eye', 'sm') + ' Peek · ' + m.peeks + ' left';
+  if (meter) meter.style.width = (m.maxRev / v.words.length * 100) + '%';
+}
+
+/* ============================================================
+   Rendering
+   ============================================================ */
+function renderPlayerBody() {
+  if (!S.verses.length) return;
+  renderSidePanel();
+  if (S.mode === 'relay' && S.relay && S.relay.active) { renderRelayLive(); return; }
+  if (S.mode === 'masked') { renderMasked(); return; }
+  if (S.style === 'focus') { renderFocus(); return; }
+  renderMushaf();
+}
+
+function wordInner(w) {
+  if (S.taj) {
+    if (w._tj === undefined) w._tj = w.tajHTML || (w.taj ? tajToSpans(w.taj) : null);
+    if (w._tj) return w._tj;
+  }
+  return esc(w.ar);
+}
+function arabicWordSpan(vIdx, w, extra) {
+  return '<span class="w' + (extra || '') + '" data-v="' + vIdx + '" data-w="' + w.pos + '">' + wordInner(w) + '</span>';
+}
+function verseHTML(v, vIdx, opts) {
+  const parts = [];
+  const marksAfter = {};
+  for (const m of v.marks) {
+    if (/^\d|[٠-٩۰-۹]/.test(m.ar) || m.kind === 'end') marksAfter[m.afterPos] = (marksAfter[m.afterPos] || '') + '<span class="vmark" data-vi="' + vIdx + '">﴿' + toArabicNum(v.number) + '﴾</span>';
+    else marksAfter[m.afterPos] = (marksAfter[m.afterPos] || '') + '<span style="color:var(--text-muted)">' + esc(m.ar) + '</span> ';
+  }
+  for (const w of v.words) {
+    let cls = '';
+    if (S.loop && S.loop.vIdx === vIdx && w.pos >= S.loop.startW && w.pos <= S.loop.endW) cls += ' inloop';
+    if (S.mode === 'word' && wordStep.range && vIdx === S.vIdx && w.pos >= wordStep.range.startW && w.pos <= wordStep.range.endW) cls += ' inloop';
+    if (S.pendingLoopStart && S.pendingLoopStart.vIdx === vIdx && S.pendingLoopStart.w === w.pos) cls += ' lsel';
+    if (opts && opts.masked && S.masked[v.key] && w.pos <= S.masked[v.key].maxRev) cls += ' rev';
+    parts.push(arabicWordSpan(vIdx, w, cls));
+    if (marksAfter[w.pos]) parts.push(marksAfter[w.pos]);
+  }
+  if (!Object.keys(marksAfter).length) parts.push('<span class="vmark" data-vi="' + vIdx + '">﴿' + toArabicNum(v.number) + '﴾</span>');
+  return '<span class="v" data-vi="' + vIdx + '">' + parts.join(' ') + '</span>';
+}
+function toArabicNum(n) { return String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]); }
+
+/* word-mode control bar */
+function wordBarHTML() {
+  if (S.mode !== 'word') return '';
+  const v = currentVerse();
+  const cur = wordStep.w || S.curWord || 1;
+  return '<div class="wordbar">' +
+    '<span style="flex:1">Word <span class="num" id="wb-pos">' + cur + '</span> of <span class="num">' + v.words.length + '</span> · verse ' + v.key + '</span>' +
+    '<span style="font-size:12px">repeats</span>' +
+    '<div class="seg-toggle" id="wrep-toggle">' + [1, 2, 3].map(n =>
+      '<button data-n="' + n + '"' + (S.wordRepeat === n ? ' class="on"' : '') + '>×' + n + '</button>').join('') + '</div>' +
+    '</div>';
+}
+function bindWordBar() {
+  const t = $('wrep-toggle');
+  if (!t) return;
+  t.querySelectorAll('button').forEach(b => {
+    b.onclick = () => {
+      S.wordRepeat = Number(b.dataset.n); store('hifz.wrep', S.wordRepeat);
+      t.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    };
+  });
+}
+function updateWordBar() {
+  const el = $('wb-pos');
+  if (el) el.textContent = S.mode === 'word' ? (wordStep.w || S.curWord || 1) : (S.curWord || 1);
+}
+
+function renderMushaf() {
+  const body = $('player-body');
+  const cur = currentVerse();
+  body.innerHTML =
+    wordBarHTML() +
+    '<div class="mushaf" data-ar="main">' + S.verses.map((v, i) => verseHTML(v, i)).join(' ') + '</div>' +
+    (cur && cur.translation ? '<div class="vtrans"><b>' + cur.key + '</b> — ' + cur.translation + '</div>' : '') +
+    '<div style="height:12px"></div>' +
+    '<div class="tap-hint" style="font-size:12px;color:var(--text-muted);text-align:center;padding:4px 0 8px">Tap a word for its meaning, to play it, or to set a loop range.</div>';
+  bindWordTaps(); bindWordBar();
+  if (S.curWord) highlightWord(cur, S.curWord);
+}
+
+function renderMasked() {
+  const body = $('player-body');
+  const v = currentVerse();
+  ensureMaskState(v);
+  body.innerHTML =
+    '<div class="masked-banner">' + icon('eye') + '<span><b style="color:var(--text-primary)">Masked · recall before you hear.</b> Each word fades in as the audio reaches it.</span></div>' +
+    '<div class="mushaf masked" data-ar="main">' + verseHTML(v, S.vIdx, { masked: true }) + '</div>' +
+    '<div class="masked-stats">' +
+      '<span style="font-size:13px;color:var(--text-secondary)" id="mask-rev"></span>' +
+      '<div class="reveal-meter" style="max-width:110px"><i id="mask-meter"></i></div>' +
+      '<button class="btn-ghost" id="peek-btn"></button>' +
+    '</div>' +
+    (v.translation ? '<div class="vtrans"><b>' + v.key + '</b> — ' + v.translation + '</div>' : '');
+  $('peek-btn').onclick = peek;
+  updateMaskStats(v);
+  const m = S.masked[v.key];
+  for (let i = 1; i <= m.maxRev; i++) {
+    const el = body.querySelector('.w[data-w="' + i + '"]');
+    if (el) el.classList.add('rev');
+  }
+}
+
+/* ---------- FOCUS FLOW ---------- */
+function phrasesOf(v) {
+  if (v._phrases) return v._phrases;
+  const PAUSE = /[\u06D6-\u06DC]/;
+  const out = []; let buf = [];
+  const markSet = new Set(v.marks.filter(m => PAUSE.test(m.ar)).map(m => m.afterPos));
+  for (const w of v.words) {
+    buf.push(w);
+    if (markSet.has(w.pos) || PAUSE.test(w.ar) || buf.length >= 6) { out.push(buf); buf = []; }
+  }
+  if (buf.length) {
+    if (out.length && buf.length <= 2) out[out.length - 1] = out[out.length - 1].concat(buf);
+    else out.push(buf);
+  }
+  v._phrases = out.length ? out : [v.words];
+  return v._phrases;
+}
+function renderFocus() {
+  const body = $('player-body');
+  const v = currentVerse();
+  const phrases = phrasesOf(v);
+  if (S.focusPhrase >= phrases.length) S.focusPhrase = 0;
+  const ph = phrases[S.focusPhrase];
+  const next = phrases[S.focusPhrase + 1];
+  body.innerHTML =
+    wordBarHTML() +
+    '<div class="focus-card">' +
+      '<div class="focus-ar" data-ar="main">' + ph.map(w => arabicWordSpan(S.vIdx, w)).join(' ') + '</div>' +
+      '<div class="focus-gloss" data-gloss>' + esc(ph.map(w => w.gloss).filter(Boolean).join(' · ')) + '</div>' +
+      (next ? '<div class="focus-next">' + esc(next.map(w => w.ar).join(' ')) + '…</div>' : '') +
+      '<div class="focus-meta">Verse ' + v.key + ' · phrase <span class="num">' + (S.focusPhrase + 1) + '</span> of <span class="num">' + phrases.length + '</span></div>' +
+      '<div class="focus-nav">' +
+        '<button class="icon-btn" id="ph-prev">' + icon('chevL') + '</button>' +
+        '<button class="btn-ghost" id="ph-loop">' + icon('repeat', 'sm') + ' Loop ×5</button>' +
+        '<button class="icon-btn" id="ph-next">' + icon('chevR') + '</button>' +
+      '</div>' +
+    '</div>' +
+    (v.translation ? '<div class="vtrans"><b>' + v.key + '</b> — ' + v.translation + '</div>' : '');
+  bindWordTaps(); bindWordBar();
+  $('ph-prev').onclick = () => stepPhrase(-1);
+  $('ph-next').onclick = () => stepPhrase(1);
+  $('ph-loop').onclick = () => {
+    setLoop(S.vIdx, ph[0].pos, ph[ph.length - 1].pos, 5, 'phrase ' + (S.focusPhrase + 1));
+    playFromWord(ph[0].pos);
+  };
+  if (S.curWord) highlightWord(v, S.curWord);
+}
+function stepPhrase(d) {
+  const v = currentVerse();
+  const phrases = phrasesOf(v);
+  let p = S.focusPhrase + d;
+  if (p < 0) {
+    if (S.vIdx > 0) {
+      const wasPlaying = S.playing;
+      loadVerseAudio(S.vIdx - 1, false);
+      S.focusPhrase = Math.max(0, phrasesOf(currentVerse()).length - 1);
+      renderPlayerBody();
+      if (wasPlaying) { const ph = phrasesOf(currentVerse())[S.focusPhrase]; if (ph) playFromWord(ph[0].pos); }
+    }
+    return;
+  }
+  if (p >= phrases.length) { if (S.vIdx < S.verses.length - 1) { S.focusPhrase = 0; loadVerseAudio(S.vIdx + 1, S.playing); } return; }
+  S.focusPhrase = p; renderPlayerBody();
+  const ph = phrasesOf(currentVerse())[S.focusPhrase];
+  if (S.playing) playFromWord(ph[0].pos);
+}
+function syncFocusPhrase(v, w) {
+  const phrases = phrasesOf(v);
+  const idx = phrases.findIndex(ph => w >= ph[0].pos && w <= ph[ph.length - 1].pos);
+  if (idx >= 0 && idx !== S.focusPhrase) { S.focusPhrase = idx; renderPlayerBody(); }
+}
+
+function playFromWord(w) {
+  const v = currentVerse();
+  if (!v.audio || !v.audio.url) { toast('No audio for this verse.'); return; }
+  setSrc(v.audio.url);
+  audio.muted = false; audio.playbackRate = S.rate;
+  const seg = segForWord(v, w);
+  armSeek(seg ? seg.start - 0.02 : 0, true);
+}
+/* ============================================================
+   Word popover + configurable loops / drills
+   ============================================================ */
+function bindWordTaps() {
+  $('player-body').querySelectorAll('.w').forEach(el => {
+    el.onclick = (e) => {
+      e.stopPropagation();
+      if (S.mode === 'masked' || (S.relay && S.relay.active)) return;
+      openPopover(el, Number(el.dataset.v), Number(el.dataset.w));
+    };
+  });
+  $('player-body').querySelectorAll('.vmark').forEach(el => {
+    el.onclick = () => { const vi = Number(el.dataset.vi); S.loop = null; syncLoopChip(); loadVerseAudio(vi, true); };
+  });
+}
+
+function countLabel(n) { return n === 0 ? '∞' : '×' + n; }
+
+function openPopover(anchor, vIdx, wPos) {
+  closePopover();
+  const v = S.verses[vIdx];
+  const w = v.words.find(x => x.pos === wPos);
+  if (!w) return;
+  const pop = document.createElement('div');
+  pop.className = 'popover';
+  const pending = S.pendingLoopStart;
+  const canEnd = pending && (pending.vIdx === vIdx) && (wPos !== pending.w);
+  const isWordMode = S.mode === 'word';
+  pop.innerHTML =
+    '<div class="p-ar">' + esc(w.ar) + '</div>' +
+    (w.tr ? '<div class="p-tr">' + esc(w.tr) + '</div>' : '') +
+    (w.gloss ? '<div class="p-gl">' + esc(w.gloss) + '</div>' : '<div class="p-gl" style="color:var(--text-muted)">—</div>') +
+    '<div class="p-count"><span class="plbl">REPEAT</span>' +
+      '<div class="seg-toggle" id="pp-count">' + [3, 5, 10, 0].map(n =>
+        '<button data-c="' + n + '"' + (S.loopCount === n ? ' class="on"' : '') + '>' + countLabel(n) + '</button>').join('') +
+      '</div></div>' +
+    '<div class="p-actions">' +
+      '<button id="pp-play">' + icon('play', 'sm') + ' Play this word</button>' +
+      '<button id="pp-loopw">' + icon('repeat', 'sm') + ' ' + (isWordMode ? 'Drill' : 'Loop') + ' this word ' + countLabel(S.loopCount) + '</button>' +
+      (canEnd
+        ? '<button id="pp-endloop" class="pri">' + icon('repeat', 'sm') + ' ' + (isWordMode ? 'Drill' : 'Loop') + ' words ' + Math.min(pending.w, wPos) + '–' + Math.max(pending.w, wPos) + ' ' + countLabel(S.loopCount) + '</button>'
+        : '<button id="pp-startloop">' + icon('repeat', 'sm') + ' Start ' + (isWordMode ? 'drill' : 'loop') + ' range here</button>') +
+    '</div>';
+  $('popover-layer').appendChild(pop);
+  const r = anchor.getBoundingClientRect();
+  const pw = 230;
+  let left = Math.min(window.innerWidth - pw - 10, Math.max(10, r.left + r.width / 2 - pw / 2));
+  let top = r.bottom + 8;
+  pop.style.position = 'fixed';
+  pop.style.left = left + 'px';
+  pop.style.top = top + 'px';
+  requestAnimationFrame(() => {
+    const ph = pop.offsetHeight;
+    if (top + ph > window.innerHeight - 12) pop.style.top = Math.max(10, r.top - ph - 8) + 'px';
+  });
+
+  /* pass-count selector */
+  pop.querySelectorAll('#pp-count button').forEach(b => {
+    b.onclick = (e) => {
+      e.stopPropagation();
+      S.loopCount = Number(b.dataset.c); store('hifz.passes', S.loopCount);
+      pop.querySelectorAll('#pp-count button').forEach(x => x.classList.toggle('on', x === b));
+      const lw = $('pp-loopw'), le = $('pp-endloop');
+      if (lw) lw.innerHTML = icon('repeat', 'sm') + ' ' + (isWordMode ? 'Drill' : 'Loop') + ' this word ' + countLabel(S.loopCount);
+      if (le) le.innerHTML = icon('repeat', 'sm') + ' ' + (isWordMode ? 'Drill' : 'Loop') + ' words ' + Math.min(pending.w, wPos) + '–' + Math.max(pending.w, wPos) + ' ' + countLabel(S.loopCount);
+    };
+  });
+
+  function startWordDrill(a, b) {
+    wordStep.range = { startW: a, endW: b, passes: S.loopCount, pass: 0 };
+    wordStep.w = a; wordStep.playedTimes = 0;
+    syncLoopChip(); renderPlayerBody();
+    wordModePlayCurrent();
+  }
+
+  $('pp-play').onclick = () => {
+    closePopover();
+    S.loop = null; syncLoopChip();
+    document.querySelectorAll('.w.inloop').forEach(el => el.classList.remove('inloop'));
+    if (vIdx !== S.vIdx) loadVerseAudio(vIdx, false);
+    if (S.mode === 'word') { wordStep.w = wPos; wordStep.playedTimes = 0; wordModePlayCurrent(); return; }
+    S.oneshot = { vIdx, endW: wPos };
+    playFromWord(wPos);
+  };
+  $('pp-loopw').onclick = () => {
+    closePopover();
+    if (vIdx !== S.vIdx) loadVerseAudio(vIdx, false);
+    if (S.mode === 'word') { startWordDrill(wPos, wPos); return; }
+    setLoop(vIdx, wPos, wPos, S.loopCount, '“' + (w.gloss || w.tr || 'word') + '”');
+    playFromWord(wPos);
+  };
+  const startBtn = $('pp-startloop'), endBtn = $('pp-endloop');
+  if (startBtn) startBtn.onclick = () => {
+    S.pendingLoopStart = { vIdx, w: wPos };
+    closePopover(); renderPlayerBody();
+    toast('Range start set — now tap the last word');
+  };
+  if (endBtn) endBtn.onclick = () => {
+    const a = Math.min(pending.w, wPos), b = Math.max(pending.w, wPos);
+    S.pendingLoopStart = null;
+    closePopover();
+    if (vIdx !== S.vIdx) loadVerseAudio(vIdx, false);
+    if (S.mode === 'word') { startWordDrill(a, b); return; }
+    setLoop(vIdx, a, b, S.loopCount, 'words ' + a + '–' + b);
+    playFromWord(a);
+  };
+}
+function closePopover() { $('popover-layer').innerHTML = ''; }
+document.addEventListener('click', (e) => { if (!e.target.closest('.popover')) closePopover(); });
+
+function setLoop(vIdx, startW, endW, passes, label) {
+  S.oneshot = null;
+  S.loop = { vIdx, startW, endW, passes, pass: 0, label: label || ('words ' + startW + '–' + endW) };
+  syncLoopChip(); renderPlayerBody();
+}
+function syncLoopChip() {
+  const chip = $('loop-chip');
+  const D = wordStep.range;
+  if (S.loop) {
+    const L = S.loop;
+    chip.style.display = 'flex';
+    chip.innerHTML =
+      '<span class="gold">' + icon('repeat', 'sm') + '</span>' +
+      '<span style="flex:1">Loop: ' + esc(L.label) + ' · pass <span class="num">' + Math.min(L.pass + 1, L.passes || L.pass + 1) + '</span>' +
+      (L.passes ? ' of <span class="num">' + L.passes + '</span>' : ' · until stopped') + '</span>' +
+      '<button class="x" id="loop-x">' + icon('x', 'sm') + '</button>';
+    $('loop-x').onclick = () => {
+      S.loop = null; syncLoopChip();
+      document.querySelectorAll('.w.inloop').forEach(el => el.classList.remove('inloop'));
+    };
+    return;
+  }
+  if (S.mode === 'word' && D) {
+    chip.style.display = 'flex';
+    chip.innerHTML =
+      '<span class="gold">' + icon('repeat', 'sm') + '</span>' +
+      '<span style="flex:1">Drill: words ' + D.startW + '–' + D.endW + ' · pass <span class="num">' + Math.min(D.pass + 1, D.passes || D.pass + 1) + '</span>' +
+      (D.passes ? ' of <span class="num">' + D.passes + '</span>' : ' · until stopped') + '</span>' +
+      '<button class="x" id="drill-x">' + icon('x', 'sm') + '</button>';
+    $('drill-x').onclick = () => {
+      wordStep.range = null; syncLoopChip();
+      document.querySelectorAll('.w.inloop').forEach(el => el.classList.remove('inloop'));
+    };
+    return;
+  }
+  chip.style.display = 'none';
+}
+
+/* ============================================================
+   QARI SHEET — switch reciter mid-playback, keep your place
+   ============================================================ */
+$('qari-btn').onclick = () => {
+  if (S.relay && S.relay.active) { toast('Relay chooses qaris per turn — use Edit relay'); return; }
+  renderQariSheet();
+  $('qari-scrim').classList.add('open');
+};
+$('qari-scrim').addEventListener('click', (e) => { if (e.target === $('qari-scrim')) $('qari-scrim').classList.remove('open'); });
+function renderQariSheet() {
+  $('qari-opts').innerHTML = S.recitations.map(r =>
+    '<button class="qari-opt' + (r.id === S.reciterId ? ' on' : '') + '" data-id="' + r.id + '">' +
+      '<span>' + esc(r.name) + (r.style ? ' <span class="q-style">· ' + esc(r.style) + '</span>' : '') + '</span>' +
+      '<span class="mo-check">' + icon('check') + '</span>' +
+    '</button>').join('');
+  $('qari-opts').querySelectorAll('.qari-opt').forEach(btn => {
+    btn.onclick = () => { $('qari-scrim').classList.remove('open'); switchReciter(Number(btn.dataset.id)); };
+  });
+}
+async function switchReciter(newId) {
+  if (newId === S.reciterId) return;
+  const wasPlaying = S.playing;
+  const word = S.curWord;
+  pauseAudio();
+  S.reciterId = newId; store('hifz.reciter', newId);
+  renderReciterSelect();
+  updateSubtitle();
+  toast('Switching to ' + reciterName(newId) + '…');
+  try {
+    const map = await loadAudioForReciter(newId);
+    if (S.reciterId !== newId) return; /* user switched again while this loaded */
+    for (const v of S.verses) {
+      const am = map[v.key];
+      v.audio = am ? { url: am.url, segments: parseSegments(am.rawSegments, v.words.length) } : null;
+      v._est = null;
+    }
+    const v = currentVerse();
+    if (v && v.audio && v.audio.url) {
+      setSrc(v.audio.url);
+      audio.playbackRate = S.rate;
+      const seg = word ? segForWord(v, word) : null;
+      armSeek(seg ? seg.start : 0, wasPlaying);
+      if (word) { S.curWord = word; highlightWord(v, word); }
+    } else if (v) {
+      toast('No audio for verse ' + v.key + ' from ' + reciterName(newId));
+    }
+  } catch (e) {
+    toast('Could not switch qari — check connection');
+  }
+}
+$('reciter-select').addEventListener('change', () => {
+  const id = Number($('reciter-select').value);
+  if (S.passage && $('scr-player').classList.contains('active')) switchReciter(id);
+});
+
+/* ============================================================
+   RELAY — order of participants + verse range + rounds
+   ============================================================ */
+let relayDraft = null;
+
+function initials(name) {
+  return name.split(/[\s-]+/).filter(Boolean).slice(0, 2).map(x => x[0]).join('').toUpperCase() || 'Q';
+}
+function ensureRelayDraft() {
+  const p = S.passage;
+  const key = p.chapter + ':' + p.from + '-' + p.to;
+  if (relayDraft && relayDraft.key === key) return;
+  const alt = (S.recitations.find(r => r.id !== S.reciterId && /husary|minshawi|alafasy|abdul/i.test(r.name)) || {}).id;
+  const order = [{ kind: 'qari', reciterId: S.reciterId }];
+  if (alt) order.push({ kind: 'qari', reciterId: alt });
+  order.push({ kind: 'you' });
+  relayDraft = { key, order, vFrom: S.verses[0].number, vTo: S.verses[S.verses.length - 1].number, rounds: 2 };
+}
+
+function openRelaySetup() {
+  ensureRelayDraft();
+  renderOrderList();
+  renderRelayRange();
+  syncRepeatToggle();
+  $('relay-scrim').classList.add('open');
+}
+function renderOrderList() {
+  const n = relayDraft.order.length;
+  $('order-list').innerHTML = relayDraft.order.map((p, i) => {
+    const who = p.kind === 'you' ? 'You' : reciterName(p.reciterId);
+    const recOpts = S.recitations.map(r => '<option value="q' + r.id + '">' + esc(r.name) + '</option>').join('');
+    return '<div class="order-row' + (p.kind === 'you' ? ' you' : '') + '" data-i="' + i + '">' +
+      '<span class="ord num" style="width:14px;text-align:center">' + (i + 1) + '</span>' +
+      '<div class="avatar">' + (p.kind === 'you' ? 'YOU' : esc(initials(who))) + '</div>' +
+      '<select class="o-who"><option value="you">You (paced)</option>' +
+        '<optgroup label="Qaris">' + recOpts + '</optgroup></select>' +
+      '<div class="ord-move">' +
+        '<button class="mv-up"' + (i === 0 ? ' disabled' : '') + '>' + icon('chevD', 'sm') + '</button>' +
+        '<button class="mv-dn"' + (i === n - 1 ? ' disabled' : '') + '>' + icon('chevD', 'sm') + '</button>' +
+      '</div>' +
+      '<button class="rm">' + icon('trash', 'sm') + '</button>' +
+    '</div>';
+  }).join('');
+  $('order-list').querySelectorAll('.order-row .mv-up .icon').forEach(ic => ic.style.transform = 'rotate(180deg)');
+  $('order-list').querySelectorAll('.order-row').forEach(row => {
+    const i = Number(row.dataset.i);
+    const whoSel = row.querySelector('.o-who');
+    whoSel.value = relayDraft.order[i].kind === 'qari' ? 'q' + relayDraft.order[i].reciterId : 'you';
+    whoSel.onchange = () => {
+      const val = whoSel.value;
+      if (val === 'you') relayDraft.order[i] = { kind: 'you' };
+      else relayDraft.order[i] = { kind: 'qari', reciterId: Number(val.slice(1)) };
+      renderOrderList();
+    };
+    row.querySelector('.mv-up').onclick = () => {
+      if (i === 0) return;
+      const t = relayDraft.order[i - 1]; relayDraft.order[i - 1] = relayDraft.order[i]; relayDraft.order[i] = t;
+      renderOrderList();
+    };
+    row.querySelector('.mv-dn').onclick = () => {
+      if (i >= relayDraft.order.length - 1) return;
+      const t = relayDraft.order[i + 1]; relayDraft.order[i + 1] = relayDraft.order[i]; relayDraft.order[i] = t;
+      renderOrderList();
+    };
+    row.querySelector('.rm').onclick = () => {
+      if (relayDraft.order.length <= 1) { toast('The order needs at least one participant'); return; }
+      relayDraft.order.splice(i, 1); renderOrderList();
+    };
+  });
+}
+$('add-part').onclick = () => {
+  relayDraft.order.push({ kind: 'qari', reciterId: S.reciterId });
+  renderOrderList();
+};
+function renderRelayRange() {
+  const nums = S.verses.map(v => v.number);
+  const opts = (sel) => nums.map(n => '<option value="' + n + '"' + (n === sel ? ' selected' : '') + '>' + S.passage.chapter + ':' + n + '</option>').join('');
+  $('relay-from').innerHTML = opts(relayDraft.vFrom);
+  $('relay-to').innerHTML = opts(relayDraft.vTo);
+  $('relay-from').onchange = () => {
+    relayDraft.vFrom = Number($('relay-from').value);
+    if (relayDraft.vTo < relayDraft.vFrom) { relayDraft.vTo = relayDraft.vFrom; renderRelayRange(); }
+  };
+  $('relay-to').onchange = () => {
+    relayDraft.vTo = Number($('relay-to').value);
+    if (relayDraft.vTo < relayDraft.vFrom) { relayDraft.vFrom = relayDraft.vTo; renderRelayRange(); }
+  };
+}
+$('repeat-toggle').querySelectorAll('button').forEach(b => {
+  b.onclick = () => { relayDraft.rounds = Number(b.dataset.rep); syncRepeatToggle(); };
+});
+function syncRepeatToggle() {
+  $('repeat-toggle').querySelectorAll('button').forEach(b => b.classList.toggle('on', Number(b.dataset.rep) === relayDraft.rounds));
+}
+$('relay-cancel').onclick = () => { $('relay-scrim').classList.remove('open'); restoreMainAudio(); setMode('verse'); };
+$('relay-scrim').addEventListener('click', (e) => { if (e.target === $('relay-scrim')) { $('relay-scrim').classList.remove('open'); restoreMainAudio(); setMode('verse'); } });
+
+/* one verse per turn, cycling the order; the order rotates each round */
+function buildRelayTurns(round) {
+  const D = S.relay || relayDraft;
+  const verses = S.verses.filter(v => v.number >= D.vFrom && v.number <= D.vTo);
+  const order = D.order;
+  const offset = (round - 1) % order.length;
+  const turns = [];
+  let lastQari = order.find(p => p.kind === 'qari');
+  lastQari = lastQari ? lastQari.reciterId : S.reciterId;
+  for (let i = 0; i < verses.length; i++) {
+    const p = order[(i + offset) % order.length];
+    if (p.kind === 'qari') {
+      lastQari = p.reciterId;
+      turns.push({ kind: 'qari', reciterId: p.reciterId, verseKey: verses[i].key });
+    } else {
+      turns.push({ kind: 'you', reciterId: lastQari, verseKey: verses[i].key });
+    }
+  }
+  return turns;
+}
+
+$('relay-begin').onclick = async () => {
+  const btn = $('relay-begin');
+  if (btn.disabled) return;
+  btn.disabled = true;
+  $('relay-scrim').classList.remove('open');
+  const recIds = [...new Set(relayDraft.order.filter(p => p.kind === 'qari').map(p => p.reciterId).concat([S.reciterId]))];
+  $('player-body').innerHTML = '<div class="status-block"><div class="spinner"></div><div>Preparing qaris…</div></div>';
+  try { await Promise.all(recIds.map(id => loadAudioForReciter(id))); }
+  catch (e) { toast('Could not load a qari — using main qari'); }
+  btn.disabled = false;
+  S.relay = {
+    order: relayDraft.order.slice(), vFrom: relayDraft.vFrom, vTo: relayDraft.vTo,
+    rounds: relayDraft.rounds, round: 1, idx: 0, active: true, waitingTap: true
+  };
+  S.relay.turns = buildRelayTurns(1);
+  if (!S.relay.turns.length) { toast('No verses in that range'); S.relay = null; setMode('verse'); return; }
+  renderRelayLive();
+}
+
+function relayAudioFor(turn) {
+  const p = S.passage;
+  const rangeKey = (id) => id + ':' + p.chapter + ':' + p.from + '-' + p.to;
+  const map = S.audioByReciter[rangeKey(turn.reciterId)] || S.audioByReciter[rangeKey(S.reciterId)] || {};
+  return map[turn.verseKey] || null;
+}
+function verseByKey(k) { return S.verses.find(v => v.key === k); }
+function vIdxByKey(k) { return S.verses.findIndex(v => v.key === k); }
+
+/* pure render — never starts audio; advanceRelay/relayTogglePlay drive playback */
+function renderRelayLive() {
+  const R = S.relay; if (!R) return;
+  const body = $('player-body');
+  const turn = R.turns[R.idx];
+  const v = verseByKey(turn.verseKey);
+  const vi = vIdxByKey(turn.verseKey);
+  S.vIdx = vi >= 0 ? vi : 0;
+  const roundLabel = R.rounds === 0 ? 'Round <span class="num">' + R.round + '</span> · until you stop' : 'Round <span class="num">' + R.round + '</span> of <span class="num">' + R.rounds + '</span>';
+  body.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+      '<span style="font-size:13px;font-weight:600;color:var(--text-secondary)">' + roundLabel + '</span>' +
+      '<button class="btn-ghost" id="relay-edit" style="padding:5px 10px;font-size:12px">Edit relay</button>' +
+    '</div>' +
+    '<div class="relay-queue">' + R.turns.map((t, i) => {
+      const who = t.kind === 'you' ? 'You' : reciterName(t.reciterId).split(' ')[0];
+      return '<div class="turn-chip' + (i === R.idx ? ' now' : '') + (i < R.idx ? ' done' : '') + (t.kind === 'you' ? ' you' : '') + '">' +
+        '<div class="avatar">' + (t.kind === 'you' ? 'YOU' : esc(initials(who))) + '</div>' + esc(who) + ' · ' + t.verseKey.split(':')[1] + '</div>';
+    }).join('') + '</div>' +
+    '<div class="mushaf" data-ar="main">' + verseHTML(v, S.vIdx) + '</div>' +
+    (turn.kind === 'you'
+      ? '<div class="your-turn"><div class="yt1">' + icon('mic', 'sm') + ' Your turn — verse ' + turn.verseKey.split(':')[1] + '</div>' +
+        '<div class="yt2">The highlight paces you at ' + esc(reciterName(turn.reciterId)) + '\u2019s speed. Recite along in his style.</div>' +
+        '<div class="yt-actions"><button id="relay-replay">Replay qari</button><button id="relay-skip">Skip my turn</button></div></div>'
+      : '<div style="margin-top:16px;font-size:13.5px;color:var(--text-secondary);text-align:center">' + esc(reciterName(turn.reciterId)) + ' recites verse ' + turn.verseKey.split(':')[1] +
+        (R.waitingTap ? ' — tap play to begin' : '') + '</div>');
+  const editBtn = $('relay-edit');
+  if (editBtn) editBtn.onclick = () => { stopAudio(); S.relay.active = false; openRelaySetup(); };
+  const rp = $('relay-replay'), sk = $('relay-skip');
+  if (rp) rp.onclick = () => startRelayTurn(true);
+  if (sk) sk.onclick = () => advanceRelay();
+}
+function relayTogglePlay() {
+  const R = S.relay;
+  if (!R || !R.active) { openRelaySetup(); return; }
+  if (S.playing) { pauseAudio(); return; }
+  if (!R.waitingTap && audio.src && audio.currentTime > 0 && !audio.ended) { playAudio(); return; }
+  R.waitingTap = false;
+  renderRelayLive();
+  startRelayTurn(false);
+}
+function startRelayTurn(forceAudible) {
+  const R = S.relay; if (!R || !R.active) return;
+  const turn = R.turns[R.idx];
+  const a = relayAudioFor(turn);
+  const vi = vIdxByKey(turn.verseKey);
+  if (!a || !a.url || vi < 0) { toast('No audio for ' + turn.verseKey + ' — skipping'); advanceRelay(); return; }
+  const v = S.verses[vi];
+  v.audio = { url: a.url, segments: parseSegments(a.rawSegments, v.words.length) || (v.audio && v.audio.segments) || null };
+  v._est = null;
+  S.vIdx = vi; S.curWord = 0;
+  const youSilent = (turn.kind === 'you') && !forceAudible;
+  setSrc(v.audio.url);
+  audio.muted = youSilent;
+  audio.playbackRate = S.rate;
+  armSeek(0, true);
+  R.replaying = forceAudible && turn.kind === 'you';
+}
+function relayTurnEnded() {
+  const R = S.relay; if (!R || !R.active) return;
+  if (R.replaying) { R.replaying = false; startRelayTurn(false); return; }
+  advanceRelay();
+}
+function advanceRelay() {
+  const R = S.relay; if (!R) return;
+  audio.muted = false;
+  R.idx++;
+  if (R.idx >= R.turns.length) {
+    R.idx = 0; R.round++;
+    if (R.rounds !== 0 && R.round > R.rounds) {
+      R.active = false; stopAudio();
+      restoreMainAudio();
+      toast('Relay complete — well done');
+      setMode('verse');
+      return;
+    }
+    R.turns = buildRelayTurns(R.round);
+    toast('Round ' + R.round + ' — the order rotates');
+  }
+  renderRelayLive();
+  if (!R.waitingTap) startRelayTurn(false);
+}
+
+window.S = S;
+window.registerTimingProvider = registerTimingProvider;
+boot();
+
+</script>
+</body>
+</html>
