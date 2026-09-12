@@ -63,7 +63,8 @@ export default async function PrivacyPage({
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Study annotations</h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
-            Recurring-phrase and near-twin markings are coming soon. They are not shown in the player yet.
+            Recurring-phrase and near-twin markings are coming next. They are not shown in the player yet. See{" "}
+            <Link href="/roadmap?from=privacy">what&apos;s coming</Link>.
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>

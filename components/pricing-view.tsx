@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useMemo, useState } from "react";
 import { APP_NAME } from "@/lib/brand";
@@ -192,7 +193,10 @@ function PricingForm({
         </p>
       </div>
 
-      <p className="pricing-soon">Recurring phrases and near-twin words are coming soon, and stay free.</p>
+      <p className="pricing-soon">
+        Recurring phrases and near-twin words are coming soon, and stay free.{" "}
+        <Link href="/roadmap">See what&apos;s coming</Link>
+      </p>
     </div>
   );
 }

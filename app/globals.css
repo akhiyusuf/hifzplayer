@@ -254,3 +254,23 @@ a.qari-inline{text-decoration:none;color:inherit}
 .list-bar-title{font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .list-bar>span:last-child{font-size:12.5px;color:var(--text-secondary)}
 .index-row .in svg{display:block;margin:0 auto}
+.road-page{flex:1;padding:8px 20px 32px;display:flex;flex-direction:column;gap:14px;max-width:640px}
+.road-lead{margin:0 2px 2px;font-size:14px;line-height:1.5;color:var(--text-secondary)}
+.road-hero{position:relative;display:flex;flex-direction:column;gap:10px;padding:18px 16px 16px;border-radius:var(--radius-card);background:var(--bg-surface);border:1px solid var(--border-default);box-shadow:var(--shadow-sm);overflow:hidden}
+.road-hero-ar{position:absolute;top:8px;right:14px;font-family:var(--font-arabic);font-size:42px;line-height:1;color:var(--tint-primary-border);opacity:.7;pointer-events:none}
+.road-hero h2{font-family:var(--font-display);font-weight:700;font-size:22px;letter-spacing:-.01em;margin:0}
+.road-hero p,.road-card p{margin:0;font-size:13.5px;line-height:1.5;color:var(--text-secondary)}
+.road-detail{color:var(--text-muted)!important;font-size:13px!important}
+.road-status{display:inline-flex;align-self:flex-start;padding:4px 8px;border-radius:var(--radius-pill);background:var(--bg-surface-alt);color:var(--text-secondary);font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.road-status.hot{background:var(--tint-primary-08);color:var(--action-primary)}
+.road-ask{display:flex;align-items:center;gap:8px;margin-top:4px;padding:12px 14px;border-radius:var(--radius-card);border:1px dashed var(--border-default);background:var(--bg-surface-alt);color:var(--text-muted);font-size:13.5px}
+.road-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none}
+.road-chips li{padding:7px 11px;border-radius:var(--radius-pill);border:1px solid var(--border-default);background:var(--bg-app);font-size:12.5px;line-height:1.35;color:var(--text-secondary)}
+.road-card{display:flex;align-items:flex-start;gap:12px;padding:14px;border-radius:var(--radius-card);background:var(--bg-surface);border:1px solid var(--border-default)}
+.road-tile{width:36px;height:36px;border-radius:10px;background:var(--tint-primary-08);color:var(--action-primary);display:flex;align-items:center;justify-content:center;flex:none}
+.road-text{display:flex;flex-direction:column;gap:6px;min-width:0}
+.road-card-top{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.road-card h2{margin:0;font-family:var(--font-display);font-weight:600;font-size:16px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+.road-ar{font-family:var(--font-arabic);font-size:18px;font-weight:400;color:var(--text-secondary)}
+.road-foot{margin:4px 2px 0;font-size:12.5px;line-height:1.45;color:var(--text-muted)}
+.pricing-note a{color:inherit}
