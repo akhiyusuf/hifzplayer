@@ -197,7 +197,7 @@ export default function SettingsPage() {
         ) : null}
         <Row
           title="Show translation while playing"
-          sub="Current verse meaning sits above play, in every listen mode"
+          sub="Verse meaning sits above play while you read. Focus shows it under the Arabic."
           checked={translation}
           onChange={setTranslation}
         />
