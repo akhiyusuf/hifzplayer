@@ -228,3 +228,5 @@ button.listen-sheet-row{cursor:pointer}
   .pricing-buy .pricing-foot{text-align:left}
 }
 @media (max-width:359px){.pricing-split{grid-template-columns:1fr}}
+.practise-job.locked{opacity:.72}
+.play-btn.locked{box-shadow:none;opacity:.72}

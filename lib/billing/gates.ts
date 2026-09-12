@@ -10,31 +10,32 @@ export const PLUS_COPY: Record<PlusFeature, { title: string; body: string }> = {
     body: "The Repeat button loops the current verse for free, as many times as you like. Playing a word once or twice stays free. Three or more word passes, and looping a word until you stop, are Diras Plus.",
   },
   focus: {
-    title: "Focus is included",
-    body: "Focus — Drill, Masked, or Relay on one stage — stays free. Diras Plus is 3× word repeats and extra relay qaris.",
+    title: "Focus is Diras Plus",
+    body: "You can open Focus and look around for free. Playing the verse, and Drill, Masked, or Relay, are Diras Plus. Leave whenever you like — Mushaf reading stays free.",
   },
   "relay-qaris": {
     title: "More than one qari",
-    body: "Relay with you and one qari stays free. Adding a second reciter is Diras Plus.",
+    body: "Relay is part of Focus, which is Diras Plus. Adding a second reciter is also Diras Plus.",
   },
 };
 
 /** Canonical Plus pitch — Settings row, explanation sheet, and pricing stay in sync. */
 export const PLUS_EXPLAIN = {
   rowTitle: `What ${PLUS_NAME} is`,
-  rowSub: "Word repeats past ×2, and extra qaris in Relay",
-  rowOn: "3× to unlimited word repeats, and extra qaris in Relay",
-  lead: "Reading stays free. Focus stays free. Looping a verse with Repeat stays free.",
+  rowSub: "Focus practice, word repeats past ×2, and extra qaris in Relay",
+  rowOn: "Focus, 3× to unlimited word repeats, and extra qaris in Relay",
+  lead: "Reading stays free. Looping a verse with Repeat stays free. You can open Focus and look around.",
   freeTitle: "Always free",
   free: [
     "Quran with audio, translation, and tajweed",
-    "Focus — Drill, Masked, and Relay with one qari",
     "Repeat under play, looping this verse until you turn it off",
     "A word played once or twice",
     "Colour themes — orange, green, black and white, pink, and gold",
+    "Opening Focus and leaving it",
   ],
   plusTitle: PLUS_NAME,
   plus: [
+    "Play, Drill, Masked, and Relay in Focus",
     "A word played 3×, 5×, 10×, or until you stop",
     "Relay with more than one qari",
   ],
@@ -57,4 +58,9 @@ export function qariCount(order: { kind?: string }[] | null | undefined) {
 
 export function isPaidRelay(order: { kind?: string }[] | null | undefined) {
   return qariCount(order) > 1;
+}
+
+/** Drill, Masked, and Relay. Opening the Focus view itself stays free. */
+export function isPaidFocusJob(mode: string | null | undefined) {
+  return mode === "word" || mode === "masked" || mode === "relay";
 }
