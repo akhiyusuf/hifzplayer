@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+<<<<<<< HEAD
     "test": "node --experimental-strip-types --test lib/billing/*.test.ts lib/auth/*.test.ts lib/security/*.test.ts lib/email/*.test.ts lib/nav.test.ts lib/mushaf-window.test.ts lib/palettes.test.ts lib/onboarding.test.ts lib/playlists.test.ts"
+=======
+    "test": "node --experimental-strip-types --test lib/billing/*.test.ts lib/auth/*.test.ts lib/security/*.test.ts lib/email/*.test.ts lib/nav.test.ts lib/mushaf-window.test.ts lib/waqf.test.ts"
+>>>>>>> origin/cursor/focus-waqf-wrap-d42f
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.2",

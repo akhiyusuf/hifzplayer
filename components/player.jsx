@@ -39,27 +39,10 @@ import { markToday, upsertSession } from "@/lib/sessions";
 import { getStore, setStore } from "@/lib/storage";
 import { tajToSpans } from "@/lib/tajweed";
 import { useToast } from "@/lib/toast";
+import { isWaqfBreak, phrasesOf, visibleMarksAfter } from "@/lib/waqf";
 
-let m = /[ۖ-ۜ]/;
 function v(e) {
-  if (e._phrases) return e._phrases;
-  let t = [],
-    s = [],
-    r = new Set(
-      e.marks.filter((e) => m.test(e.ar)).map((e) => e.afterPos),
-    );
-  for (let a of e.words)
-    (s.push(a),
-      (r.has(a.pos) || m.test(a.ar) || s.length >= 6) &&
-        (t.push(s), (s = [])));
-  return (
-    s.length &&
-      (t.length && s.length <= 2
-        ? (t[t.length - 1] = t[t.length - 1].concat(s))
-        : t.push(s)),
-    (e._phrases = t.length ? t : [e.words]),
-    e._phrases
-  );
+  return phrasesOf(e);
 }
 function wantsTranslation() {
   let e = getStore(KEYS.showTranslation);
@@ -2752,6 +2735,58 @@ let D = memo(function (e) {
         })
       : _jsx("span", { ...f, children: t.ar });
 });
+function FocusLines(e) {
+  let {
+      verse: t,
+      vIdx: s,
+      curWord: n,
+      pendingW: i,
+      onTap: l,
+      onHold: o,
+      interactive: d = !0,
+    } = e;
+  return v(t).map((a, r) =>
+    _jsx(
+      "span",
+      {
+        className: "focus-line",
+        children: a.map((e) =>
+          _jsxs(
+            _Fragment,
+            {
+              children: [
+                _jsx(D, {
+                  word: e,
+                  vIdx: s,
+                  taj: !1,
+                  isCur: e.pos === n,
+                  inRange: !1,
+                  isRangeStart: !1,
+                  isRangeEnd: !1,
+                  isPending: i === e.pos,
+                  mask: null,
+                  interactive: d,
+                  onTap: l,
+                  onHold: o,
+                }),
+                visibleMarksAfter(t, e.pos).map((t, s) =>
+                  _jsx(
+                    "span",
+                    { className: "focus-waqf", children: t.ar },
+                    s,
+                  ),
+                ),
+                " ",
+              ],
+            },
+            e.pos,
+          ),
+        ),
+      },
+      r,
+    ),
+  );
+}
 function F(e) {
   let { state: s, onWordTap: a, onWordHold: n } = e,
     i = s.verses[s.vIdx];
@@ -2776,29 +2811,13 @@ function F(e) {
           }
         : undefined,
     gloss: wantsTranslation() ? u || i.translation || null : null,
-    children: i.words.map((e) => {
-      var t;
-      return _jsx(
-        D,
-        {
-          word: e,
-          vIdx: s.vIdx,
-          taj: !1,
-          isCur: e.pos === s.curWord,
-          inRange: !1,
-          isRangeStart: !1,
-          isRangeEnd: !1,
-          isPending:
-            (null === (t = s.pendingLoopStart) || void 0 === t
-              ? void 0
-              : t.w) === e.pos,
-          mask: null,
-          interactive: !0,
-          onTap: a,
-          onHold: n,
-        },
-        e.pos,
-      );
+    children: _jsx(FocusLines, {
+      verse: i,
+      vIdx: s.vIdx,
+      curWord: s.curWord,
+      pendingW: s.pendingLoopStart ? s.pendingLoopStart.w : 0,
+      onTap: a,
+      onHold: n,
     }),
   });
 }
@@ -2821,6 +2840,7 @@ let O = memo(function (e) {
       onWordTap: y,
       onWordHold: b,
       onMarkTap: g,
+      breakWaqf: k = !1,
     } = e,
     j = new Map();
   for (let e of t.marks) {
@@ -2867,20 +2887,25 @@ let O = memo(function (e) {
                     _jsx(
                       "span",
                       {
+                        className: "focus-waqf",
                         style: { color: "var(--text-muted)" },
                         children: e,
                       },
                       t,
                     ),
                   ),
-              w
-                ? _jsx("span", {
-                    className: "recurring-join".concat(
-                      w.v ? " variant" : "",
-                    ),
-                    children: " ",
-                  })
-                : " ",
+              k &&
+              (isWaqfBreak(e.ar) ||
+                (j.get(e.pos) || []).some((e) => isWaqfBreak(e)))
+                ? _jsx("br", { className: "waqf-br" })
+                : w
+                  ? _jsx("span", {
+                      className: "recurring-join".concat(
+                        w.v ? " variant" : "",
+                      ),
+                      children: " ",
+                    })
+                  : " ",
             ],
           },
           e.pos,
@@ -2943,6 +2968,7 @@ function _(e) {
       masked: !0,
       interactive: !1,
       annotations: a(n.number),
+      breakWaqf: !0,
     }),
   });
 }
@@ -3261,6 +3287,7 @@ function K(e) {
       masked: !1,
       interactive: !1,
       annotations: a(c.number),
+      breakWaqf: !0,
     }),
   });
 }
@@ -3319,25 +3346,13 @@ function G(e) {
       ],
     }),
     gloss: wantsTranslation() ? y || null : null,
-    children: h.words.map((e) =>
-      _jsx(
-        D,
-        {
-          word: e,
-          vIdx: i.vIdx,
-          taj: !1,
-          isCur: e.pos === m,
-          inRange: !1,
-          isRangeStart: !1,
-          isRangeEnd: !1,
-          isPending: !1,
-          mask: null,
-          interactive: !0,
-          onTap: l,
-        },
-        e.pos,
-      ),
-    ),
+    children: _jsx(FocusLines, {
+      verse: h,
+      vIdx: i.vIdx,
+      curWord: m,
+      pendingW: 0,
+      onTap: l,
+    }),
   });
 }
 function U(e) {
