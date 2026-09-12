@@ -9,7 +9,7 @@ export const PLUS_COPY: Record<PlusFeature, { title: string; body: string }> = {
   },
   focus: {
     title: "Focus is included",
-    body: "Focus — phrase, drill, masked, or relay on one stage — stays free. Diras Plus is 3× repeats and extra relay qaris.",
+    body: "Focus — verse, drill, masked, or relay on one stage — stays free. Diras Plus is 3× repeats and extra relay qaris.",
   },
   "relay-qaris": {
     title: "More than one qari",

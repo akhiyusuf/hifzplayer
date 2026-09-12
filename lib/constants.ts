@@ -11,7 +11,7 @@ export const MODES = [
     id: "word",
     name: "Drill words",
     icon: "brackets",
-    desc: "Pick a span and loop it until it sticks",
+    desc: "Tap a word and replay it until it sticks",
   },
   {
     id: "verse",

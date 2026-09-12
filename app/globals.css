@@ -121,3 +121,7 @@
 .practice-strip-actions .focus-act:disabled{opacity:.45}
 .practice-strip .pass-dots{align-self:center}
 @media (min-width:834px){.focus-stage .focus-ar{font-size:36px}}
+.practice-strip .rep-seg.seg{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;align-self:center}
+.practice-strip .rep-seg .label-eyebrow{flex:1 0 100%;text-align:center;margin:0}
+.practice-strip .rep-seg button{min-width:40px;min-height:32px;padding:6px 10px;border-radius:var(--radius-button);border:1px solid var(--border-default);background:var(--bg-surface);font-family:var(--font-numeral);font-size:13px;font-weight:600;color:var(--text-secondary)}
+.practice-strip .rep-seg button.on{border-color:var(--action-primary);background:var(--tint-primary-08);color:var(--action-primary)}
