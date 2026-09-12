@@ -24,6 +24,13 @@ import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration } from "@/l
 import { fmtTime, segsForVerse, segForWord, toArabicDigits, wordAt } from "@/lib/audio";
 import { APP_NAME } from "@/lib/brand";
 import { isPaidRelay, isPaidRepeat } from "@/lib/billing/gates";
+import {
+  MUSHAF_HOT_PAD,
+  MUSHAF_VIEW_PAD,
+  isHotVerse,
+  rangeAround,
+  viewFromVisible,
+} from "@/lib/mushaf-window";
 import { KEYS, LOOP_COUNTS, RATES } from "@/lib/constants";
 import { usePlus } from "@/lib/plus";
 import { markToday, upsertSession } from "@/lib/sessions";
@@ -77,7 +84,14 @@ function x(e, t, s, r, a, n) {
 }
 class g {
   notify() {
-    ((this.snap = { ...this.st }), this.listeners.forEach((e) => e()));
+    ((this.snap = { ...this.st }),
+      (this.wordSnap = { vIdx: this.st.vIdx, curWord: this.st.curWord }),
+      this.listeners.forEach((e) => e()),
+      this.wordListeners.forEach((e) => e()));
+  }
+  notifyWord() {
+    ((this.wordSnap = { vIdx: this.st.vIdx, curWord: this.st.curWord }),
+      this.wordListeners.forEach((e) => e()));
   }
   emitTime() {
     let e = this.audio.duration;
@@ -233,8 +247,8 @@ class g {
         "masked" !== this.st.mode &&
         "relay" !== this.st.mode &&
         t > 0 &&
-        this.syncFocusPhrase(e, t),
-      this.notify());
+        this.syncFocusPhrase(e, t));
+    "mushaf" === this.st.style ? this.notifyWord() : this.notify();
   }
   handleLoopEdge(e) {
     let t = performance.now();
@@ -1084,7 +1098,8 @@ class g {
     } catch (e) {}
     (this.listeners.clear(),
       this.timeListeners.clear(),
-      this.toastListeners.clear());
+      this.toastListeners.clear(),
+      this.wordListeners.clear());
   }
   constructor() {
     var e, t, s, r, a;
@@ -1092,6 +1107,13 @@ class g {
       ((this.listeners = new Set()),
       (this.timeListeners = new Set()),
       (this.toastListeners = new Set()),
+      (this.wordListeners = new Set()),
+      (this.wordSnap = { vIdx: 0, curWord: 0 }),
+      (this.subscribeWord = (e) => (
+        this.wordListeners.add(e),
+        () => this.wordListeners.delete(e)
+      )),
+      (this.getWordSnap = () => this.wordSnap),
       (this.rafId = null),
       (this.wordGapTimer = null),
       (this.armed = null),
@@ -2893,6 +2915,77 @@ function q(e, t, s) {
                 : 0,
           };
 }
+function escHtml(e) {
+  return String(e ?? "").replace(
+    /[&<>"']/g,
+    (e) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[e],
+  );
+}
+let ColdVerse = memo(function (e) {
+  let { verse: t, vIdx: s, done: n, onMarkTap: i } = e,
+    l = useMemo(
+      () =>
+        t.words.map((e) => escHtml(e.ar)).join(" ") +
+        ' <span class="vmark">' +
+        toArabicDigits(t.number) +
+        "</span> ",
+      [t],
+    );
+  return _jsx("span", {
+    className: "v cold".concat(n ? " done" : ""),
+    "data-vi": s,
+    role: "button",
+    tabIndex: 0,
+    "aria-label": "Play verse ".concat(t.key),
+    onClick: () => i(s),
+    onKeyDown: (e) => {
+      ("Enter" === e.key || " " === e.key) && (e.preventDefault(), i(s));
+    },
+    dangerouslySetInnerHTML: { __html: l },
+  });
+});
+function MushafVerseActive(e) {
+  let t = useSyncExternalStore(
+      e.engine.subscribeWord,
+      e.engine.getWordSnap,
+      e.engine.getWordSnap,
+    ),
+    s = t.vIdx === e.vIdx ? t.curWord : 0;
+  useEffect(() => {
+    let t = document.querySelector(".player-body"),
+      n = t && t.querySelector('[data-cur="1"]');
+    if (!n || !t) return;
+    let i = n.getBoundingClientRect(),
+      l = t.getBoundingClientRect();
+    (i.top < l.top + 48 || i.bottom > l.bottom - 48) &&
+      n.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [s, e.vIdx]);
+  return _jsx(O, {
+    verse: e.verse,
+    vIdx: e.vIdx,
+    taj: e.taj,
+    curWord: s,
+    done: e.done,
+    rangeStart: e.rangeStart,
+    rangeEnd: e.rangeEnd,
+    pendingPos: e.pendingPos,
+    revealUpTo: 0,
+    masked: !1,
+    interactive: !0,
+    annotations: e.annotations,
+    arrivedFrom: e.arrivedFrom,
+    arrivedTo: e.arrivedTo,
+    onWordTap: e.onWordTap,
+    onMarkTap: e.onMarkTap,
+  });
+}
 function H(e) {
   let {
       engine: t,
@@ -2902,21 +2995,46 @@ function H(e) {
       annFor: l,
       arrived: o,
     } = e,
-    d = useRef(null);
-  (s.verses[s.vIdx],
+    d = useRef(null),
+    c = s.verses.length,
+    h = useCallback((e) => t.jumpToVerse(e), [t]),
+    u = rangeAround(c, s.vIdx, MUSHAF_HOT_PAD),
+    [p, m] = useState(u);
+  (useEffect(() => {
+    m(rangeAround(s.verses.length, s.vIdx, MUSHAF_HOT_PAD));
+  }, [s.verses]),
     useEffect(() => {
-      var e;
-      let t =
-          null === (e = d.current) || void 0 === e
-            ? void 0
-            : e.querySelector('[data-cur="1"]'),
-        s = d.current;
-      if (!t || !s) return;
-      let r = t.getBoundingClientRect(),
-        a = s.getBoundingClientRect();
-      (r.top < a.top + 48 || r.bottom > a.bottom - 48) &&
-        t.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }, [s.curWord, s.vIdx]),
+      let e = d.current;
+      if (!e) return;
+      let t = !1,
+        n = () => {
+          t = !1;
+          let i = e.getBoundingClientRect(),
+            l = 500,
+            o = c,
+            r = -1;
+          for (let t of e.querySelectorAll("[data-vi]")) {
+            let e = t.getBoundingClientRect();
+            if (e.bottom >= i.top - l && e.top <= i.bottom + l) {
+              let e = Number(t.getAttribute("data-vi"));
+              (e < o && (o = e), e > r && (r = e));
+            }
+          }
+          r >= o &&
+            m((e) => {
+              let t = viewFromVisible(c, o, r, MUSHAF_VIEW_PAD);
+              return e.start === t.start && e.end === t.end ? e : t;
+            });
+        },
+        i = () => {
+          t || ((t = !0), requestAnimationFrame(n));
+        };
+      return (
+        e.addEventListener("scroll", i, { passive: !0 }),
+        n(),
+        () => e.removeEventListener("scroll", i)
+      );
+    }, [c, s.verses]),
     useEffect(() => {
       var e;
       if (!o) return;
@@ -2927,8 +3045,8 @@ function H(e) {
       null == t ||
         t.scrollIntoView({ block: "center", behavior: "smooth" });
     }, [o, s.verses]));
-  let c = s.passage,
-    h = !!c && 1 === c.from && 1 !== c.chapter && 9 !== c.chapter;
+  let y = s.passage,
+    b = !!y && 1 === y.from && 1 !== y.chapter && 9 !== y.chapter;
   return _jsx("div", {
     ref: d,
     className: "player-body",
@@ -2936,7 +3054,7 @@ function H(e) {
     children: _jsxs("div", {
       className: "mushaf-wrap",
       children: [
-        h &&
+        b &&
           _jsx("div", {
             className: "basmala",
             children: "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
@@ -2944,21 +3062,22 @@ function H(e) {
         _jsx("div", {
           className: "mushaf",
           children: s.verses.map((e, a) => {
-            let d = q(a, s, i);
-            return _jsx(
-              O,
-              {
+            let r = t.isVerseDone(a);
+            if (!isHotVerse(a, u, p))
+              return _jsx(
+                ColdVerse,
+                { verse: e, vIdx: a, done: r, onMarkTap: h },
+                e.key,
+              );
+            let d = q(a, s, i),
+              c = {
                 verse: e,
                 vIdx: a,
                 taj: s.taj,
-                curWord: a === s.vIdx ? s.curWord : 0,
-                done: t.isVerseDone(a),
+                done: r,
                 rangeStart: d.start,
                 rangeEnd: d.end,
                 pendingPos: d.pending,
-                revealUpTo: 0,
-                masked: !1,
-                interactive: !0,
                 annotations: l(e.number),
                 arrivedFrom:
                   (null == o ? void 0 : o.verse) === e.number
@@ -2967,10 +3086,11 @@ function H(e) {
                 arrivedTo:
                   (null == o ? void 0 : o.verse) === e.number ? o.to : 0,
                 onWordTap: n,
-                onMarkTap: (e) => t.jumpToVerse(e),
-              },
-              e.key,
-            );
+                onMarkTap: h,
+              };
+            return a === s.vIdx
+              ? _jsx(MushafVerseActive, { engine: t, ...c }, e.key)
+              : _jsx(O, { ...c, curWord: 0, revealUpTo: 0, masked: !1, interactive: !0 }, e.key);
           }),
         }),
       ],
