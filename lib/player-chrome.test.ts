@@ -11,6 +11,7 @@ import {
   rateFace,
   sidebarKind,
   sortedWordRange,
+  wordTapIntent,
   spanForVerse,
   indexOfVerseInPassage,
   verseRatioLabel,
@@ -40,6 +41,25 @@ describe("sidebarKind", () => {
     assert.equal(sidebarKind("focus", "word"), "word");
     assert.equal(sidebarKind("focus", "masked"), "masked");
     assert.equal(sidebarKind("focus", "relay"), "relay");
+  });
+});
+
+describe("wordTapIntent", () => {
+  it("keeps a mushaf mouse click as play-from-this-word", () => {
+    assert.equal(wordTapIntent("mushaf", "verse", "mouse"), "play");
+    assert.equal(wordTapIntent("mushaf", "verse", "pen"), "play");
+    assert.equal(wordTapIntent("mushaf", "verse"), "play");
+  });
+
+  it("opens meaning on a mushaf finger tap", () => {
+    assert.equal(wordTapIntent("mushaf", "verse", "touch"), "meaning");
+  });
+
+  it("uses Word Reps taps for the pin bar, and plays in other Focus jobs", () => {
+    assert.equal(wordTapIntent("focus", "word", "touch"), "wordRep");
+    assert.equal(wordTapIntent("focus", "word", "mouse"), "wordRep");
+    assert.equal(wordTapIntent("focus", "verse", "touch"), "play");
+    assert.equal(wordTapIntent("focus", "masked", "mouse"), "play");
   });
 });
 

@@ -52,6 +52,7 @@ import {
   wordIsAway,
   wordRangePassComplete,
   wordRepsPlayKind,
+  wordTapIntent,
   writeRelayDraft,
 } from "@/lib/player-chrome";
 import { usePlus } from "@/lib/plus";
@@ -2035,19 +2036,18 @@ function S(e) {
           className: "p-actions",
           children: [
             _jsxs("button", {
-              className: "sec",
+              className: "pri",
               onClick: v,
               children: [
                 _jsx(Icon, {
                   name: "volume-2",
                   size: 15,
-                  style: { color: "var(--action-primary)" },
                 }),
-                "Play this word",
+                "Play sound",
               ],
             }),
             _jsxs("button", {
-              className: "pri",
+              className: "sec",
               onClick: x,
               children: [
                 _jsx(Icon, { name: "repeat", size: 15 }),
@@ -2872,6 +2872,7 @@ let D = memo(function (e) {
     holdTimer = useRef(null),
     held = useRef(!1),
     holdStart = useRef({ x: 0, y: 0 }),
+    lastPtr = useRef("mouse"),
     clearHold = () => {
       holdTimer.current &&
         (clearTimeout(holdTimer.current), (holdTimer.current = null));
@@ -2931,6 +2932,7 @@ let D = memo(function (e) {
           .concat(t.ar)
           .concat(t.gloss ? " — ".concat(t.gloss) : ""),
         onPointerDown: (e) => {
+          lastPtr.current = e.pointerType || "mouse";
           if (!y || ("mouse" === e.pointerType && 0 !== e.button)) return;
           ((held.current = !1),
             (holdStart.current = { x: e.clientX, y: e.clientY }));
@@ -2963,13 +2965,13 @@ let D = memo(function (e) {
             held.current = !1;
             return;
           }
-          null == m || m(s, t.pos, e.currentTarget);
+          null == m || m(s, t.pos, e.currentTarget, lastPtr.current);
         },
         onKeyDown: (e) => {
           ("Enter" === e.key || " " === e.key) &&
             (e.preventDefault(),
             e.stopPropagation(),
-            null == m || m(s, t.pos, e.currentTarget));
+            null == m || m(s, t.pos, e.currentTarget, "mouse"));
         },
         ...(x ? { dangerouslySetInnerHTML: { __html: x.html } } : {}),
         children: x ? void 0 : t.ar,
@@ -3021,7 +3023,7 @@ function FocusLines(e) {
                       inRange: !!inPin,
                       isRangeStart: start === e.pos,
                       isRangeEnd: end === e.pos,
-                      isPending: i === e.pos || (wordRep && wordRep.open === e.pos),
+                      isPending: i === e.pos,
                       mask: null,
                       interactive: d,
                       onTap: l,
@@ -3837,7 +3839,7 @@ function U(e) {
       );
     }, [z, V, D, eM, ei, eu, eWantPlay, plusOn]));
   let eH = useCallback(
-      (e, t, s) => {
+      (e, t, s, pointerType) => {
         let r = eu.getSnapshot(),
           a = r.pendingLoopStart;
         if (a) {
@@ -3863,12 +3865,14 @@ function U(e) {
           }
           return;
         }
-        if ("word" === r.mode) {
+        let intent = wordTapIntent(r.style, r.mode, pointerType);
+        if ("wordRep" === intent) {
           (eS(null), eu.tapWordRep(e, t));
           return;
         }
-        if ("mushaf" === r.style) {
-          eu.playWordOneshot(e, t);
+        if ("meaning" === intent) {
+          (eS(null),
+            eN({ vIdx: e, pos: t, rect: s.getBoundingClientRect() }));
           return;
         }
         eu.playWordOneshot(e, t);
@@ -3877,12 +3881,7 @@ function U(e) {
     ),
     eHold = useCallback((e, t, s) => {
       let r = eu.getSnapshot();
-      if (
-        r.pendingLoopStart ||
-        "mushaf" === r.style ||
-        "word" === r.mode
-      )
-        return;
+      if (r.pendingLoopStart || "word" === r.mode) return;
       (eS(null),
         eN({ vIdx: e, pos: t, rect: s.getBoundingClientRect() }));
     }, [eu]),
