@@ -12,6 +12,10 @@ export function unauthorized(error: string, extra?: Record<string, unknown>) {
   return json({ error, ...extra }, 401);
 }
 
+export function forbidden(error: string, extra?: Record<string, unknown>) {
+  return json({ error, ...extra }, 403);
+}
+
 export function serviceUnavailable(error: string, extra?: Record<string, unknown>) {
   return json({ error, ...extra }, 503);
 }

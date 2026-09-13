@@ -1,6 +1,7 @@
 import { PLUS_NAME } from "@/lib/brand";
 import { signedInEmail, signedInUserId } from "@/lib/auth/session";
 import { clerkConfigured } from "@/lib/auth/config";
+import { userHasCurrentLegal } from "@/lib/auth/legal";
 import { logBillingEvent } from "@/lib/billing/analytics";
 import { checkoutRegionId } from "@/lib/billing/country";
 import { appUrl, processorsReady } from "@/lib/billing/env";
@@ -11,6 +12,7 @@ import {
   processorFailed,
   serviceUnavailable,
   unauthorized,
+  forbidden,
 } from "@/lib/billing/http";
 import { createPaystackCheckout } from "@/lib/billing/paystack";
 import { isPlanId, REGIONS } from "@/lib/billing/plans";
@@ -31,6 +33,9 @@ export async function POST(request: Request) {
   const userId = accountsOn ? await signedInUserId() : null;
   if (accountsOn && !userId) {
     return unauthorized(`Sign in to buy ${PLUS_NAME}`, { code: "SIGN_IN_REQUIRED" });
+  }
+  if (userId && !(await userHasCurrentLegal(userId))) {
+    return forbidden(`Agree to the usage and privacy policies to buy ${PLUS_NAME}`, { code: "LEGAL_REQUIRED" });
   }
 
   const planId = body.planId || "";

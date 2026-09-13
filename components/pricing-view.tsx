@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { APP_NAME } from "@/lib/brand";
 import { clerkBrowserReady } from "@/lib/auth/config";
 import { PLUS_EXPLAIN } from "@/lib/billing/gates";
+import { agreeHref } from "@/lib/legal";
 import type { Catalog, PlanId } from "@/lib/billing/plans";
 
 type Processors = { stripe: boolean; paystack: boolean };
@@ -87,6 +88,10 @@ function PricingForm({
       const data = (await res.json()) as { url?: string; error?: string; code?: string };
       if (data.code === "SIGN_IN_REQUIRED" || res.status === 401) {
         window.location.assign("/sign-in?redirect_url=/pricing");
+        return;
+      }
+      if (data.code === "LEGAL_REQUIRED" || res.status === 403) {
+        window.location.assign(agreeHref("/pricing"));
         return;
       }
       if (!res.ok || !data.url) throw new Error(checkoutError(data, res.status));
@@ -224,7 +229,9 @@ function PricingForm({
         </button>
 
         <p className="pricing-foot">
-          Card details never touch {APP_NAME}. Quran reading stays free either way.
+          Card details never touch {APP_NAME}. Quran reading stays free either way. Paying means you agree to the{" "}
+          <Link href="/terms?from=pricing">usage</Link> and{" "}
+          <Link href="/privacy?from=pricing">privacy</Link> policies.
         </p>
       </div>
 

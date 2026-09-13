@@ -31,6 +31,7 @@ const nextConfig: NextConfig = {
       { source: "/sign-in/:path*", headers: noIndex },
       { source: "/sign-up", headers: noIndex },
       { source: "/sign-up/:path*", headers: noIndex },
+      { source: "/agree", headers: noIndex },
     ];
   },
 };

@@ -346,6 +346,8 @@ export default function HomePage() {
               <span aria-hidden="true">·</span>
               <Link href="/credits">Data & attributions</Link>
               <span aria-hidden="true">·</span>
+              <Link href="/terms">Usage</Link>
+              <span aria-hidden="true">·</span>
               <Link href="/privacy">Privacy</Link>
             </div>
           </>

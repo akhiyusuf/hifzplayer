@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { Icon } from "@/components/icon";
 import { PLUS_NAME } from "@/lib/brand";
+import { agreeHref } from "@/lib/legal";
 
 type GiftState =
   | { status: "working" }
@@ -64,7 +65,12 @@ export function GiftAssign({ sessionId, reference }: { sessionId: string; refere
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId, reference, email }),
       });
-      const data = (await res.json()) as { sent?: boolean; existingAccount?: boolean; error?: string };
+      const data = (await res.json()) as { sent?: boolean; existingAccount?: boolean; error?: string; code?: string };
+      if (data.code === "LEGAL_REQUIRED" || res.status === 403) {
+        const q = sessionId ? `session_id=${encodeURIComponent(sessionId)}` : `reference=${encodeURIComponent(reference)}`;
+        window.location.assign(agreeHref(`/pricing/gift?${q}`));
+        return;
+      }
       if (!res.ok || !data.sent) throw new Error(data.error || "Could not send the gift.");
       setState({ status: "sent", existingAccount: Boolean(data.existingAccount) });
     } catch (err) {

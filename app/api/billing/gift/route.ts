@@ -1,5 +1,6 @@
 import { assignGiftToEmail, giftHoldsForBuyer } from "@/lib/auth/gifts";
 import { clerkConfigured } from "@/lib/auth/config";
+import { userHasCurrentLegal } from "@/lib/auth/legal";
 import { signedInUserId } from "@/lib/auth/session";
 import { appUrl } from "@/lib/billing/env";
 import {
@@ -8,7 +9,8 @@ import {
   isFulfillGift,
 } from "@/lib/billing/fulfill";
 import { validateGiftEmails } from "@/lib/billing/gift";
-import { badRequest, json, unauthorized } from "@/lib/billing/http";
+import { badRequest, forbidden, json, unauthorized } from "@/lib/billing/http";
+import { PLUS_NAME } from "@/lib/brand";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +19,9 @@ export async function POST(request: Request) {
   if (!clerkConfigured()) return unauthorized("Sign in to send this gift", { code: "SIGN_IN_REQUIRED" });
   const userId = await signedInUserId();
   if (!userId) return unauthorized("Sign in to send this gift", { code: "SIGN_IN_REQUIRED" });
+  if (!(await userHasCurrentLegal(userId))) {
+    return forbidden(`Agree to the usage and privacy policies to gift ${PLUS_NAME}`, { code: "LEGAL_REQUIRED" });
+  }
 
   let body: { sessionId?: string; reference?: string; emails?: string | string[]; email?: string };
   try {
