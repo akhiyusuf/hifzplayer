@@ -5,13 +5,17 @@ import {
   drillHint,
   loopCountFace,
   nextLoopCount,
+  nextRate,
   nextVerseInLoop,
   nextWordInRange,
+  rateFace,
   sidebarKind,
   sortedWordRange,
   spanForVerse,
   verseRatioLabel,
+  wordNeedsFollow,
   wordRangePassComplete,
+  wordRepsPlayKind,
 } from "./player-chrome.ts";
 
 describe("verseRatioLabel", () => {
@@ -86,5 +90,35 @@ describe("loop counts", () => {
     assert.equal(nextLoopCount(10), 0);
     assert.equal(nextLoopCount(0), 1);
     assert.equal(nextLoopCount(99), 1);
+  });
+});
+
+describe("playback rate", () => {
+  it("shows a multiplier and walks 0.75 → 1 → 1.25 → 1.5", () => {
+    assert.equal(rateFace(1), "1×");
+    assert.equal(rateFace(1.25), "1.25×");
+    assert.equal(rateFace(0.75), "0.75×");
+    assert.equal(rateFace(0), "1×");
+    assert.equal(nextRate(0.75), 1);
+    assert.equal(nextRate(1), 1.25);
+    assert.equal(nextRate(1.25), 1.5);
+    assert.equal(nextRate(1.5), 0.75);
+    assert.equal(nextRate(99), 1);
+  });
+});
+
+describe("word reps play kind", () => {
+  it("steps one word and plays a pinned range as one span", () => {
+    assert.equal(wordRepsPlayKind(4, 4), "steps");
+    assert.equal(wordRepsPlayKind(2, 5), "span");
+    assert.equal(wordRepsPlayKind(5, 2), "span");
+  });
+});
+
+describe("wordNeedsFollow", () => {
+  it("asks to follow when the word leaves the pad inside the view", () => {
+    assert.equal(wordNeedsFollow(80, 110, 0, 400, 48), false);
+    assert.equal(wordNeedsFollow(10, 40, 0, 400, 48), true);
+    assert.equal(wordNeedsFollow(370, 395, 0, 400, 48), true);
   });
 });
