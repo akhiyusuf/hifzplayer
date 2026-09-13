@@ -18,11 +18,11 @@ import { FocusStage } from "@/components/focus-stage";
 import { PracticeSheet } from "@/components/practice-sheet";
 import { PlayerSettingsSheet } from "@/components/player-settings-sheet";
 import { ReciterSheet } from "@/components/reciter-sheet";
-import { PlaylistBar } from "@/components/playlist-bar";
+import { WordRepBar } from "@/components/word-rep-bar";
 import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
 import { clampStopIndex, playlistHref, resolvePlaylist, stopLabel } from "@/lib/playlists";
-import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration } from "@/lib/api";
+import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration, fetchTranslation } from "@/lib/api";
 import { fmtTime, segsForVerse, segForWord, toArabicDigits, wordAt } from "@/lib/audio";
 import { APP_NAME } from "@/lib/brand";
 import { isPaidFocusJob, isPaidRelay, isPaidRepeat } from "@/lib/billing/gates";
@@ -34,7 +34,21 @@ import {
   viewFromVisible,
 } from "@/lib/mushaf-window";
 import { KEYS, LOOP_COUNTS, RATES } from "@/lib/constants";
-import { loopCountFace, nextLoopCount, verseRatioLabel } from "@/lib/player-chrome";
+import {
+  coversRange,
+  drillHint,
+  DRILL_HINT_MS,
+  loopCountFace,
+  nextLoopCount,
+  nextVerseInLoop,
+  nextWordInRange,
+  readRelayDraft,
+  sortedWordRange,
+  spanForVerse,
+  verseRatioLabel,
+  wordRangePassComplete,
+  writeRelayDraft,
+} from "@/lib/player-chrome";
 import { usePlus } from "@/lib/plus";
 import { markToday, upsertSession } from "@/lib/sessions";
 import { getStore, setStore } from "@/lib/storage";
@@ -48,6 +62,9 @@ function v(e) {
 function wantsTranslation() {
   let e = getStore(KEYS.showTranslation);
   return null == e || e;
+}
+function emptyWordPick() {
+  return { start: null, end: null, count: null, open: null };
 }
 function x(e, t, s, r, a, n) {
   let i = e.filter((e) => e.number >= t && e.number <= s),
@@ -290,6 +307,16 @@ class g {
       return;
     }
     if (this.st.verseLoop) {
+      let range = this.st.verseLoopRange,
+        cur = e && e.number;
+      if (range && null != cur) {
+        let next = nextVerseInLoop(cur, range.from, range.to),
+          idx = this.st.verses.findIndex((v) => v.number === next);
+        if (idx >= 0) {
+          this.loadVerseAudio(idx, !0);
+          return;
+        }
+      }
       this.armSeek(0, !0);
       return;
     }
@@ -328,6 +355,7 @@ class g {
         curWord: 0,
         loop: null,
         verseLoop: !1,
+        verseLoopRange: null,
         relay: null,
         mode: "verse",
         focusPhrase: 0,
@@ -335,6 +363,7 @@ class g {
         oneshot: null,
         pendingLoopStart: null,
         wordStep: { active: !1, w: 1, playedTimes: 0, range: null },
+        wordPick: emptyWordPick(),
       }),
       this.notify());
     try {
@@ -428,6 +457,21 @@ class g {
       return;
     }
     if ("word" === this.st.mode) {
+      let p = this.st.wordPick,
+        w = this.st.wordStep.w || 1;
+      if (p && null != p.start && null != p.end && null != p.count) {
+        this.startWordDrill(p.start, p.end, p.count);
+        return;
+      }
+      if (p && null != p.count) {
+        let word = p.open || p.start || w;
+        this.startWordDrill(word, word, p.count);
+        return;
+      }
+      if (p && null != p.start && null != p.end) {
+        this.toast("Pick 5×, 10×, or ∞ on the first word, then play");
+        return;
+      }
       this.wordModePlayCurrent();
       return;
     }
@@ -472,12 +516,33 @@ class g {
     )
       return;
     ((this.st.verseLoop = !this.st.verseLoop),
+      (this.st.verseLoopRange = null),
       this.toast(
         this.st.verseLoop
           ? "Repeating this verse until you turn it off"
           : "Verse repeat off",
       ),
       this.notify());
+  }
+  setVerseLoopRange(from, to) {
+    if ("focus" === this.st.style && !this.requirePlus("focus")) return;
+    let a = Math.min(from, to),
+      b = Math.max(from, to);
+    if (!coversRange(this.st.verses, a, b)) {
+      this.toast("That range is not on this page");
+      return;
+    }
+    ((this.st.verseLoop = !0),
+      (this.st.verseLoopRange = a === b ? null : { from: a, to: b }));
+    let idx = this.st.verses.findIndex((v) => v.number === a);
+    this.toast(
+      a === b
+        ? "Repeating this verse until you turn it off"
+        : "Repeating verses ".concat(a, "–").concat(b),
+    );
+    this.notify();
+    if (idx >= 0 && idx !== this.st.vIdx) this.loadVerseAudio(idx, !0);
+    else if (!this.st.playing) this.playAudio();
   }
   commitSeek(e) {
     if (isFinite(this.audio.duration))
@@ -495,6 +560,7 @@ class g {
       (this.stopAudio(),
       (this.st.loop = null),
       (this.st.pendingLoopStart = null),
+      (this.st.wordPick = emptyWordPick()),
       (this.st.oneshot = null),
       (this.st.wordStep = {
         active: !1,
@@ -556,6 +622,17 @@ class g {
   setLoopCount(e) {
     if (isPaidRepeat(e) && !this.requirePlus("repeats")) return;
     ((this.st.loopCount = e), setStore(KEYS.loopCount, e), this.notify());
+  }
+  setShowTranslation(e) {
+    ((this.st.showTranslation = !!e), setStore(KEYS.showTranslation, !!e), this.notify());
+  }
+  setVerseTranslations(e, t) {
+    ((this.st.verses = this.st.verses.map((s) => ({
+      ...s,
+      translation: e.get(s.number) || "",
+    }))),
+      (this.st.translationName = t || this.st.translationName),
+      this.notify());
   }
   requirePlus(e) {
     if (this.plus) return !0;
@@ -624,10 +701,6 @@ class g {
     if (this.wordGapTimer) return;
     (this.audio.pause(),
       (this.st.playing = !0),
-      (this.st.wordStep = {
-        ...this.st.wordStep,
-        playedTimes: this.st.wordStep.playedTimes + 1,
-      }),
       this.notify());
     let e = this.currentVerse();
     if (!e) return;
@@ -638,20 +711,46 @@ class g {
         "word" !== this.st.mode || !this.st.wordStep.active)
       )
         return;
-      if (
-        0 === this.st.wordRepeat ||
-        this.st.wordStep.playedTimes < this.st.wordRepeat
-      ) {
-        this.playWordOnce(e, this.st.wordStep.w);
+      let step = this.st.wordStep,
+        range = step.range;
+      if (range) {
+        let next = nextWordInRange(step.w, range.endW);
+        if (null != next) {
+          ((this.st.wordStep = { ...step, w: next }),
+            this.playWordOnce(e, next));
+          return;
+        }
+        let pass = (range.pass || 0) + 1;
+        if (!wordRangePassComplete(pass, range.passes)) {
+          ((this.st.wordStep = {
+            ...step,
+            w: range.startW,
+            playedTimes: 0,
+            range: { ...range, pass },
+          }),
+            this.playWordOnce(e, range.startW));
+          return;
+        }
+        ((this.st.wordStep = {
+          ...step,
+          active: !1,
+          playedTimes: 0,
+        }),
+          (this.st.playing = !1),
+          this.notify());
         return;
       }
-      ((this.st.wordStep = {
-        ...this.st.wordStep,
-        active: !1,
-        playedTimes: 0,
-      }),
-        (this.st.playing = !1),
-        this.notify());
+      let played = step.playedTimes + 1;
+      ((this.st.wordStep = { ...step, playedTimes: played }),
+        0 === this.st.wordRepeat || played < this.st.wordRepeat
+          ? this.playWordOnce(e, step.w)
+          : ((this.st.wordStep = {
+              ...step,
+              active: !1,
+              playedTimes: 0,
+            }),
+            (this.st.playing = !1),
+            this.notify()));
     }, t);
   }
   stepWordManual(e) {
@@ -861,15 +960,65 @@ class g {
     ((this.st.wordStep = { ...this.st.wordStep, range: null }),
       this.notify());
   }
-  startWordDrill(e, t) {
-    ((this.st.wordStep = {
-      ...this.st.wordStep,
-      range: { startW: e, endW: t, passes: this.st.loopCount, pass: 0 },
-      w: e,
-      playedTimes: 0,
-    }),
+  startWordDrill(e, t, s) {
+    let start = Math.min(e, t),
+      end = Math.max(e, t),
+      passes = null == s ? this.st.loopCount : s;
+    if (isPaidRepeat(passes) && !this.requirePlus("repeats")) return;
+    ((this.st.wordRepeat = passes),
+      (this.st.wordPick = { ...emptyWordPick(), start, end, count: passes }),
+      (this.st.wordStep = {
+        ...this.st.wordStep,
+        range:
+          start === end
+            ? null
+            : { startW: start, endW: end, passes, pass: 0 },
+        w: start,
+        playedTimes: 0,
+      }),
       this.notify(),
       this.wordModePlayCurrent());
+  }
+  tapWordRep(e, t) {
+    e !== this.st.vIdx && this.loadVerseAudio(e, !1);
+    let p = this.st.wordPick || emptyWordPick(),
+      open = p.open === t ? null : t;
+    ((this.st.wordPick = { ...p, open }),
+      (this.st.wordStep = {
+        ...this.st.wordStep,
+        w: t,
+        playedTimes: 0,
+        range: null,
+        active: !1,
+      }),
+      (this.st.curWord = t),
+      this.notify());
+  }
+  pinWordRep(t) {
+    let p = this.st.wordPick || emptyWordPick();
+    if (null == p.start) {
+      this.st.wordPick = { ...p, start: t, end: null, open: t };
+    } else if (t === p.start && null == p.end) {
+      this.st.wordPick = { ...p, start: null, open: t };
+    } else if (null == p.end) {
+      let span = sortedWordRange(p.start, t);
+      this.st.wordPick = {
+        ...p,
+        start: span.start,
+        end: span.end,
+        open: span.start,
+      };
+    } else {
+      this.st.wordPick = { ...p, start: t, end: null, open: t };
+    }
+    this.notify();
+  }
+  setWordRepCount(n) {
+    if (isPaidRepeat(n) && !this.requirePlus("repeats")) return;
+    let p = this.st.wordPick || emptyWordPick();
+    ((this.st.wordPick = { ...p, count: n }),
+      (this.st.wordRepeat = n),
+      this.notify());
   }
   playWordSlow(e, t) {
     ((this.oneshotRate = 0.75), this.playWordOneshot(e, t));
@@ -1189,7 +1338,9 @@ class g {
         playing: !1,
         loop: null,
         verseLoop: !1,
+        verseLoopRange: null,
         wordStep: { active: !1, w: 1, playedTimes: 0, range: null },
+        wordPick: emptyWordPick(),
         oneshot: null,
         wordRepeat:
           null !== (e = getStore(KEYS.wordRepeat)) && void 0 !== e && !isPaidRepeat(e)
@@ -1205,6 +1356,8 @@ class g {
         masked: {},
         relay: null,
         pendingLoopStart: null,
+        showTranslation:
+          null === getStore(KEYS.showTranslation) || getStore(KEYS.showTranslation),
       }),
       (this.snap = { ...this.st }),
       "undefined" != typeof Audio)
@@ -1348,17 +1501,17 @@ function k(e) {
   let { engine: t, state: s } = e,
     { plus: plusOn } = usePlus(),
     focusLocked = "focus" === s.style && !plusOn,
-    [l] = useState(() => {
-      var e;
-      return (
-        null === (e = getStore(KEYS.showTranslation)) || void 0 === e || e
-      );
-    }),
-    d = l && "mushaf" === s.style ? s.verses[s.vIdx] : void 0,
+    d = s.showTranslation && "mushaf" === s.style ? s.verses[s.vIdx] : void 0,
     c = "relay" === s.mode,
     u = "word" === s.mode,
     [transOpen, setTransOpen] = useState(!1),
+    [repeatOpen, setRepeatOpen] = useState(!1),
     p = s.wordStep.range,
+    verseNums = s.verses.map((v) => v.number),
+    loopFromDefault = (s.verses[s.vIdx] && s.verses[s.vIdx].number) || verseNums[0] || 1,
+    loopToDefault = verseNums[verseNums.length - 1] || loopFromDefault,
+    [loopFrom, setLoopFrom] = useState(loopFromDefault),
+    [loopTo, setLoopTo] = useState(loopToDefault),
     m = s.loop
       ? {
           label: ""
@@ -1375,7 +1528,7 @@ function k(e) {
         }
       : p
         ? {
-            label: "Drill: words "
+            label: "Word Reps: words "
               .concat(p.startW, "–")
               .concat(p.endW, " \xb7 pass ")
               .concat(Math.min(p.pass + 1, p.passes || p.pass + 1))
@@ -1479,18 +1632,124 @@ function k(e) {
               size: u ? 24 : 22,
             }),
           }),
-          _jsx("button", {
-            type: "button",
-            className: "tr-btn tap"
-              .concat(s.verseLoop ? " on" : "")
-              .concat(focusLocked && !s.verseLoop ? " locked" : ""),
-            "aria-pressed": !!s.verseLoop,
-            "aria-label": s.verseLoop
-              ? "Stop repeating this verse"
-              : "Repeat this verse",
-            disabled: c,
-            onClick: () => t.toggleVerseLoop(),
-            children: _jsx(Icon, { name: "repeat", size: 20 }),
+          _jsxs("span", {
+            className: "repeat-wrap",
+            children: [
+              repeatOpen && !s.verseLoop
+                ? _jsxs("div", {
+                    className: "repeat-pop",
+                    role: "dialog",
+                    "aria-label": "Repeat",
+                    onClick: (e) => e.stopPropagation(),
+                    children: [
+                      _jsx("button", {
+                        type: "button",
+                        className: "tap",
+                        onClick: () => {
+                          (setRepeatOpen(!1), t.toggleVerseLoop());
+                        },
+                        children: "This verse",
+                      }),
+                      _jsxs("div", {
+                        className: "sidebar-range",
+                        children: [
+                          _jsxs("label", {
+                            className: "range-field",
+                            children: [
+                              _jsx("span", { className: "label-eyebrow", children: "From" }),
+                              _jsxs("span", {
+                                className: "select-box",
+                                children: [
+                                  loopFrom,
+                                  _jsx(Icon, { name: "chevron-down", size: 14 }),
+                                  _jsx("select", {
+                                    "aria-label": "From verse",
+                                    value: loopFrom,
+                                    onChange: (e) => {
+                                      let n = Number(e.target.value);
+                                      (setLoopFrom(n), n > loopTo && setLoopTo(n));
+                                    },
+                                    children: verseNums.map((n) =>
+                                      _jsx("option", { value: n, children: n }, n),
+                                    ),
+                                  }),
+                                ],
+                              }),
+                            ],
+                          }),
+                          _jsxs("label", {
+                            className: "range-field",
+                            children: [
+                              _jsx("span", { className: "label-eyebrow", children: "To" }),
+                              _jsxs("span", {
+                                className: "select-box",
+                                children: [
+                                  loopTo,
+                                  _jsx(Icon, { name: "chevron-down", size: 14 }),
+                                  _jsx("select", {
+                                    "aria-label": "To verse",
+                                    value: loopTo,
+                                    onChange: (e) => {
+                                      let n = Number(e.target.value);
+                                      (setLoopTo(n), n < loopFrom && setLoopFrom(n));
+                                    },
+                                    children: verseNums.map((n) =>
+                                      _jsx("option", { value: n, children: n }, n),
+                                    ),
+                                  }),
+                                ],
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      _jsx("button", {
+                        type: "button",
+                        className: "btn-primary",
+                        onClick: () => {
+                          (setRepeatOpen(!1), t.setVerseLoopRange(loopFrom, loopTo));
+                        },
+                        children: "Repeat this range",
+                      }),
+                    ],
+                  })
+                : null,
+              _jsx("button", {
+                type: "button",
+                className: "tr-btn tap"
+                  .concat(s.verseLoop ? " on" : "")
+                  .concat(focusLocked && !s.verseLoop ? " locked" : "")
+                  .concat(repeatOpen ? " on" : ""),
+                "aria-pressed": !!s.verseLoop,
+                "aria-expanded": !!repeatOpen,
+                "aria-label": s.verseLoop
+                  ? s.verseLoopRange
+                    ? "Stop repeating verses "
+                        .concat(s.verseLoopRange.from, "–")
+                        .concat(s.verseLoopRange.to)
+                    : "Stop repeating this verse"
+                  : "Repeat this verse or a range",
+                disabled: c,
+                onClick: () => {
+                  if (focusLocked && !s.verseLoop) {
+                    t.toggleVerseLoop();
+                    return;
+                  }
+                  if (s.verseLoop) {
+                    (setRepeatOpen(!1), t.toggleVerseLoop());
+                    return;
+                  }
+                  setRepeatOpen((e) => {
+                    if (!e) {
+                      setLoopFrom(loopFromDefault);
+                      setLoopTo(loopToDefault);
+                    }
+                    return !e;
+                  });
+                },
+                children: _jsx(Icon, { name: "repeat", size: 20 }),
+              }),
+            ],
           }),
         ],
       }),
@@ -1618,7 +1877,7 @@ function S(e) {
         () => document.removeEventListener("keydown", s)
       );
     }, [y]));
-  let S = p ? "Drill" : "Loop";
+  let S = p ? "Word Reps" : "Loop";
   return _jsx("div", {
     className: "pop-wrap",
     onClick: y,
@@ -2672,30 +2931,56 @@ function FocusLines(e) {
       onTap: l,
       onHold: o,
       interactive: d = !0,
+      wordRep: wordRep = null,
     } = e;
   return v(t).map((a, r) =>
     _jsx(
       "span",
       {
         className: "focus-line",
-        children: a.map((e) =>
-          _jsxs(
+        children: a.map((e) => {
+          let start = wordRep && wordRep.start,
+            end = wordRep && wordRep.end,
+            inPin =
+              null != start &&
+              (null == end
+                ? e.pos === start
+                : e.pos >= Math.min(start, end) &&
+                  e.pos <= Math.max(start, end));
+          return _jsxs(
             _Fragment,
             {
               children: [
-                _jsx(D, {
-                  word: e,
-                  vIdx: s,
-                  taj: !1,
-                  isCur: e.pos === n,
-                  inRange: !1,
-                  isRangeStart: !1,
-                  isRangeEnd: !1,
-                  isPending: i === e.pos,
-                  mask: null,
-                  interactive: d,
-                  onTap: l,
-                  onHold: o,
+                _jsxs("span", {
+                  className: "focus-word-wrap",
+                  children: [
+                    _jsx(D, {
+                      word: e,
+                      vIdx: s,
+                      taj: !1,
+                      isCur: e.pos === n,
+                      inRange: !!inPin,
+                      isRangeStart: start === e.pos,
+                      isRangeEnd: end === e.pos,
+                      isPending: i === e.pos || (wordRep && wordRep.open === e.pos),
+                      mask: null,
+                      interactive: d,
+                      onTap: l,
+                      onHold: o,
+                    }),
+                    wordRep && wordRep.open === e.pos
+                      ? _jsx(WordRepBar, {
+                          pos: e.pos,
+                          start: wordRep.start,
+                          end: wordRep.end,
+                          count: wordRep.count,
+                          plusOn: wordRep.plusOn,
+                          onPin: wordRep.onPin,
+                          onCount: wordRep.onCount,
+                          onAskPlus: wordRep.onAskPlus,
+                        })
+                      : null,
+                  ],
                 }),
                 visibleMarksAfter(t, e.pos).map((t, s) =>
                   _jsx(
@@ -2708,8 +2993,8 @@ function FocusLines(e) {
               ],
             },
             e.pos,
-          ),
-        ),
+          );
+        }),
       },
       r,
     ),
@@ -2729,7 +3014,7 @@ function F(e) {
       s.verses.length > 1
         ? "".concat(s.vIdx + 1, " of ", s.verses.length)
         : undefined,
-    hint: "Look around, or pick a job in Settings",
+    hint: "verse" === s.mode ? "Look around, or pick a job in Settings" : undefined,
     progress:
       s.verses.length > 1
         ? {
@@ -2867,7 +3152,7 @@ function _(e) {
   return _jsx(FocusStage, {
     title: "Revealed ".concat(i.maxRev, " of ", l),
     meta: n.key,
-    hint: "Words stay covered until the audio reaches them",
+    hint: undefined,
     progress: {
       now: i.maxRev,
       max: l,
@@ -3224,62 +3509,33 @@ function G(e) {
     { plus: plusOn, askPlus: ask } = usePlus(),
     h = i.verses[i.vIdx];
   if (!h) return null;
-  let m = i.wordStep.w || i.curWord || 1,
+  let pick = i.wordPick || emptyWordPick(),
+    m = i.wordStep.w || i.curWord || 1,
     w = h.words.find((e) => e.pos === m) || h.words[0],
     y = w
       ? [w.tr, w.gloss].filter(Boolean).join(" \xb7 ")
       : "";
   return _jsx(FocusStage, {
-    title: w ? w.ar : "Drill",
+    title: w ? w.ar : "Word Reps",
     meta: h.key,
-    hint: "Tap the word you want, then play",
-    extra: _jsxs("div", {
-      className: "rep-seg seg",
-      role: "group",
-      "aria-label": "Replay this word",
-      children: [
-        _jsx("span", {
-          className: "label-eyebrow",
-          children: "Replay",
-        }),
-        LOOP_COUNTS.map((count) => {
-          let locked = isPaidRepeat(count) && !plusOn;
-          return _jsx(
-            "button",
-            {
-              type: "button",
-              className: ""
-                .concat(i.wordRepeat === count ? "on" : "")
-                .concat(locked ? " locked" : ""),
-              onClick: () =>
-                locked ? ask("repeats") : t.setWordRepeat(count),
-              "aria-pressed": i.wordRepeat === count,
-              children: locked
-                ? _jsxs("span", {
-                    style: {
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 3,
-                    },
-                    children: [
-                      I(count),
-                      _jsx(Icon, { name: "sparkles", size: 11 }),
-                    ],
-                  })
-                : I(count),
-            },
-            count,
-          );
-        }),
-      ],
-    }),
+    hint: undefined,
     gloss: wantsTranslation() ? y || null : null,
     children: _jsx(FocusLines, {
       verse: h,
       vIdx: i.vIdx,
       curWord: m,
-      pendingW: 0,
+      pendingW: pick.start && !pick.end ? pick.start : 0,
       onTap: l,
+      wordRep: {
+        open: pick.open,
+        start: pick.start,
+        end: pick.end,
+        count: pick.count,
+        plusOn,
+        onPin: (pos) => t.pinWordRep(pos),
+        onCount: (n) => t.setWordRepCount(n),
+        onAskPlus: () => ask("repeats"),
+      },
     }),
   });
 }
@@ -3332,6 +3588,9 @@ function U(e) {
     [eg, ej] = useState(!1),
     [ew, eb] = useState(!1),
     [eTools, eSetTools] = useState(!1),
+    [eHint, eSetHint] = useState(""),
+    eHintFor = useRef(null),
+    eHintTimer = useRef(null),
     [ek, eN] = useState(null),
     [eI, eS] = useState(null),
     [eC, eT] = useState(null),
@@ -3472,7 +3731,7 @@ function U(e) {
           return;
         }
         if ("word" === r.mode) {
-          (eS(null), eu.setDrillWord(e, t));
+          (eS(null), eu.tapWordRep(e, t));
           return;
         }
         if ("mushaf" === r.style) {
@@ -3520,9 +3779,12 @@ function U(e) {
         er && ["word", "verse", "masked", "relay"].includes(er)
           ? er
           : "verse";
-      if (e !== eu.getSnapshot().mode) {
-        eu.setMode(e);
-        if ("relay" === eu.getSnapshot().mode) eb(!0);
+      if (e !== eu.getSnapshot().mode) eu.setMode(e);
+      if ("relay" !== eu.getSnapshot().mode) return;
+      let draft = readRelayDraft();
+      if (draft && draft.start) {
+        writeRelayDraft({ ...draft, start: !1 });
+        eu.beginRelay(draft.order, draft.vFrom, draft.vTo, draft.rounds);
       }
     }, [ep, er, plusReady, plusOn]),
     useEffect(() => {
@@ -3551,6 +3813,26 @@ function U(e) {
         }),
         markToday());
     }, [ep, ez.vIdx, ez.reciterId]),
+    useEffect(() => {
+      let text = drillHint(ez.mode);
+      if (!text) {
+        (eSetHint(""), (eHintFor.current = null));
+        eHintTimer.current && clearTimeout(eHintTimer.current);
+        return;
+      }
+      if (eTools) return;
+      if (eHintFor.current === ez.mode) return;
+      eHintFor.current = ez.mode;
+      eSetHint(text);
+      eHintTimer.current && clearTimeout(eHintTimer.current);
+      eHintTimer.current = setTimeout(() => eSetHint(""), DRILL_HINT_MS);
+    }, [ez.mode, eTools]),
+    useEffect(
+      () => () => {
+        eHintTimer.current && clearTimeout(eHintTimer.current);
+      },
+      [],
+    ),
     useEffect(() => {
       let e = (e) => {
         let t = e.target;
@@ -3853,6 +4135,13 @@ function U(e) {
             onSettings: () => eSetTools(!0),
             settingsOpen: eTools,
           }),
+          eHint
+            ? _jsx("p", {
+                className: "player-drill-hint",
+                role: "status",
+                children: eHint,
+              })
+            : null,
           eList
             ? _jsx(PlaylistBar, {
                 title: eList.title,
@@ -3864,10 +4153,6 @@ function U(e) {
                     : null,
               })
             : null,
-          _jsx(PlayerViewBar, {
-            style: ez.style,
-            onStyle: (e) => eu.setStyle(e),
-          }),
         ],
       }),
       _jsx(OfflineBanner, {}),
@@ -4020,7 +4305,7 @@ function U(e) {
               children: [
                 _jsxs("b", {
                   children: [
-                    "word" === ez.mode ? "Drill" : "Loop",
+                    "word" === ez.mode ? "Word Reps" : "Loop",
                     " words ",
                     eI.start,
                     "–",
@@ -4056,7 +4341,7 @@ function U(e) {
               },
               children: [
                 _jsx(Icon, { name: "repeat", size: 15 }),
-                "word" === ez.mode ? "Drill" : "Loop",
+                "word" === ez.mode ? "Word Reps" : "Loop",
               ],
             }),
           ],
@@ -4069,30 +4354,84 @@ function U(e) {
         _jsx(PlayerSettingsSheet, {
           engine: eu,
           state: ez,
+          verseNumber:
+            (ez.verses[ez.vIdx] && ez.verses[ez.vIdx].number) || V,
           qariName: ed(
             null !== (b = ez.reciterId) && void 0 !== b ? b : eM,
           ),
+          reciterId:
+            null !== (b = ez.reciterId) && void 0 !== b ? b : eM,
+          relay: ez.relay
+            ? {
+                chapter: z,
+                order: ez.relay.order,
+                vFrom: ez.relay.vFrom,
+                vTo: ez.relay.vTo,
+                rounds: ez.relay.rounds,
+              }
+            : readRelayDraft(),
           onClose: () => eSetTools(!1),
           onOpenReciter: () => {
             (eSetTools(!1), ej(!0));
           },
-          onEditRelay: () => {
-            (eSetTools(!1), eu.pauseRelayForEdit(), eb(!0));
-          },
           onPickMode: (e) => {
-            (eSetTools(!1), eu.setMode(e), "relay" === eu.getSnapshot().mode && eb(!0));
+            (eHintFor.current = null);
+            eu.setMode(e);
           },
-          onOpenPassage: (ch, from, to) => {
-            let n = new URLSearchParams({
-              from: String(from),
-              to: String(to),
-            });
+          onRelayStart: async (order, vFrom, vTo, rounds) => {
+            let cover = coversRange(ez.verses, vFrom, vTo);
+            if (!cover) {
+              writeRelayDraft({
+                chapter: z,
+                order,
+                vFrom,
+                vTo,
+                rounds,
+                start: !0,
+              });
+              let n = new URLSearchParams({
+                from: String(vFrom),
+                to: String(vTo),
+                mode: "relay",
+              });
+              (null != ez.reciterId && n.set("reciter", String(ez.reciterId)),
+                eSetTools(!1),
+                Y.push("/read/".concat(z, "?").concat(n.toString())));
+              return;
+            }
+            (await eu.beginRelay(order, vFrom, vTo, rounds)) && eSetTools(!1);
+          },
+          onLocate: (ch, verse) => {
+            let count =
+                (en.find((item) => item.id === ch) &&
+                  en.find((item) => item.id === ch).verses_count) ||
+                verse,
+              inRange = ch === z && verse >= V && verse <= D,
+              idx = inRange
+                ? ez.verses.findIndex((item) => item.number === verse)
+                : -1;
+            if (idx >= 0) {
+              eu.loadVerseAudio(idx, !1);
+              return;
+            }
+            let span = spanForVerse(verse, count),
+              n = new URLSearchParams({
+                from: String(span.from),
+                to: String(span.to),
+                at: String(verse),
+              });
             (eSetTools(!1),
               null != ez.reciterId && n.set("reciter", String(ez.reciterId)),
               "focus" === ez.style &&
                 "verse" !== ez.mode &&
                 n.set("mode", ez.mode),
               Y.push("/read/".concat(ch, "?").concat(n.toString())));
+          },
+          onTranslationId: (id) => {
+            setStore(KEYS.translationId, id);
+            fetchTranslation(z, id)
+              .then((t) => eu.setVerseTranslations(t.byVerse, t.name))
+              .catch(() => {});
           },
         }),
       ek &&
@@ -4208,7 +4547,9 @@ function U(e) {
           initialMode: ez.mode,
           variant: "mode",
           onStart: (e, t, s) => {
-            (ey(!1), eu.setMode(s), "relay" === eu.getSnapshot().mode && eb(!0));
+            (ey(!1),
+              eu.setMode(s),
+              "relay" === eu.getSnapshot().mode && eSetTools(!0));
           },
           onClose: () => ey(!1),
         }),

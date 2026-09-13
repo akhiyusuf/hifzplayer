@@ -41,7 +41,7 @@ describe("Plus explanation copy", () => {
       true,
     );
     assert.equal(
-      PLUS_EXPLAIN.plus.some((line) => /Play, Drill, Masked, and Relay/.test(line)),
+      PLUS_EXPLAIN.plus.some((line) => /Play, Word Reps, Masked, and Relay/.test(line)),
       true,
     );
     assert.equal(
@@ -70,7 +70,7 @@ describe("Plus explanation copy", () => {
 });
 
 describe("Focus job gating", () => {
-  it("treats Drill, Masked, and Relay as Plus", () => {
+  it("treats Word Reps, Masked, and Relay as Plus", () => {
     assert.equal(isPaidFocusJob("word"), true);
     assert.equal(isPaidFocusJob("masked"), true);
     assert.equal(isPaidFocusJob("relay"), true);

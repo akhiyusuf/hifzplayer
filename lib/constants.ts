@@ -9,9 +9,9 @@ export const LOOP_COUNTS = [1, 2, 3, 5, 10, 0] as const;
 export const FOCUS_JOBS = [
   {
     id: "word",
-    name: "Drill",
+    name: "Word Reps",
     icon: "brackets",
-    desc: "Tap one word and choose how many times it plays",
+    desc: "Tap a word. Pin a range, or pick 5×, 10×, or ∞, then play",
   },
   {
     id: "masked",
@@ -69,4 +69,7 @@ export const KEYS = {
   layerPhrases: "hifz.layer.phrases",
   layerConfusables: "hifz.layer.confusables",
   showTranslation: "hifz.trans",
+  translationId: "hifz.transId",
+  translations: "hifz.translations",
+  relayDraft: "hifz.relay.draft",
 } as const;

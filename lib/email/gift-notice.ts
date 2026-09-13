@@ -17,7 +17,7 @@ export function giftNoticeText(input: GiftNoticeInput) {
   return [
     `Assalamu alaikum — someone just gifted you ${PLUS_NAME}.`,
     "",
-    `${PLUS_NAME} unlocks Focus (Drill, Masked, Relay), occasion lists, and extra word repeats. Quran reading stays free either way.`,
+    `${PLUS_NAME} unlocks Focus (Word Reps, Masked, Relay), occasion lists, and extra word repeats. Quran reading stays free either way.`,
     "",
     how,
     "",

@@ -1,6 +1,18 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { loopCountFace, nextLoopCount, verseRatioLabel } from "./player-chrome.ts";
+import {
+  coversRange,
+  drillHint,
+  loopCountFace,
+  nextLoopCount,
+  nextVerseInLoop,
+  nextWordInRange,
+  sidebarKind,
+  sortedWordRange,
+  spanForVerse,
+  verseRatioLabel,
+  wordRangePassComplete,
+} from "./player-chrome.ts";
 
 describe("verseRatioLabel", () => {
   it("shows surah and ayah as a ratio", () => {
@@ -11,6 +23,57 @@ describe("verseRatioLabel", () => {
   it("keeps the ayah at least 1 and the total at least the ayah", () => {
     assert.equal(verseRatioLabel("Al-Fatiha", 0, 7), "Al-Fatiha 1/7");
     assert.equal(verseRatioLabel("Al-Fatiha", 8, 7), "Al-Fatiha 8/8");
+  });
+});
+
+describe("sidebarKind", () => {
+  it("splits mushaf, empty Focus, and each drill type", () => {
+    assert.equal(sidebarKind("mushaf", "verse"), "mushaf");
+    assert.equal(sidebarKind("mushaf", "word"), "mushaf");
+    assert.equal(sidebarKind("focus", "verse"), "focus");
+    assert.equal(sidebarKind("focus", "word"), "word");
+    assert.equal(sidebarKind("focus", "masked"), "masked");
+    assert.equal(sidebarKind("focus", "relay"), "relay");
+  });
+});
+
+describe("spanForVerse", () => {
+  it("loads a short surah whole and a long surah around the ayah", () => {
+    assert.deepEqual(spanForVerse(2, 7), { from: 1, to: 7 });
+    assert.deepEqual(spanForVerse(50, 286), { from: 50, to: 59 });
+    assert.deepEqual(spanForVerse(1, 286), { from: 1, to: 10 });
+  });
+});
+
+describe("drillHint", () => {
+  it("returns one line per drill type and nothing otherwise", () => {
+    assert.equal(drillHint("word"), "Tap a word. Pin a range, or pick 5×, 10×, or ∞, then play.");
+    assert.equal(drillHint("masked"), "Words are covered. Peek if you need a look.");
+    assert.equal(drillHint("relay"), "Recite your ayah. The reciter takes the next.");
+    assert.equal(drillHint("verse"), "");
+    assert.equal(drillHint("mushaf"), "");
+  });
+});
+
+describe("coversRange", () => {
+  it("requires every ayah in the span to be loaded", () => {
+    const verses = [{ number: 1 }, { number: 2 }, { number: 3 }];
+    assert.equal(coversRange(verses, 1, 3), true);
+    assert.equal(coversRange(verses, 1, 4), false);
+    assert.equal(coversRange(verses, 2, 1), false);
+  });
+});
+
+describe("word range helpers", () => {
+  it("sorts pins and walks a pass, then the next verse in a free Repeat range", () => {
+    assert.deepEqual(sortedWordRange(5, 2), { start: 2, end: 5 });
+    assert.equal(nextWordInRange(2, 5), 3);
+    assert.equal(nextWordInRange(5, 5), null);
+    assert.equal(wordRangePassComplete(4, 5), false);
+    assert.equal(wordRangePassComplete(5, 5), true);
+    assert.equal(wordRangePassComplete(99, 0), false);
+    assert.equal(nextVerseInLoop(3, 1, 7), 4);
+    assert.equal(nextVerseInLoop(7, 1, 7), 1);
   });
 });
 

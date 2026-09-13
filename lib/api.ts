@@ -1,4 +1,5 @@
 import { API, AUDIO_BASE, CACHE_MS, KEYS, TRANSLATION_ID } from "./constants";
+import { currentTranslationId } from "./translations";
 import { parseSegments } from "./audio";
 import { cachedGet, cachedSet } from "./storage";
 import { splitTajweedVerse } from "./tajweed";
@@ -77,8 +78,9 @@ export async function fetchAudio(reciterId: number, chapter: number, from: numbe
   return out;
 }
 
-async function fetchTranslation(chapter: number) {
-  const data = await getJSON(`${API}/quran/translations/${TRANSLATION_ID}?chapter_number=${chapter}`);
+export async function fetchTranslation(chapter: number, translationId = currentTranslationId()) {
+  const id = translationId > 0 ? translationId : TRANSLATION_ID;
+  const data = await getJSON(`${API}/quran/translations/${id}?chapter_number=${chapter}`);
   const byVerse = new Map<number, string>();
   (data.translations || []).forEach((t: any, i: number) => {
     const text = (t.text || "")
@@ -94,6 +96,7 @@ async function fetchTranslation(chapter: number) {
 }
 
 export async function fetchPassage(chapter: number, from: number, to: number) {
+  const translationId = currentTranslationId();
   const [raw, translation] = await Promise.all([
     versesByChapter(
       chapter,
@@ -101,7 +104,10 @@ export async function fetchPassage(chapter: number, from: number, to: number) {
       to,
       "&language=en&words=true&word_fields=text_uthmani,text_uthmani_tajweed&fields=text_uthmani,text_uthmani_tajweed",
     ),
-    fetchTranslation(chapter).catch(() => ({ byVerse: new Map<number, string>(), name: "Translation" })),
+    fetchTranslation(chapter, translationId).catch(() => ({
+      byVerse: new Map<number, string>(),
+      name: "Translation",
+    })),
   ]);
   return {
     verses: raw.map((v: any) => {

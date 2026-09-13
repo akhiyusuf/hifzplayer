@@ -7,11 +7,11 @@ export type PlusFeature = "repeats" | "focus" | "relay-qaris" | "playlists";
 export const PLUS_COPY: Record<PlusFeature, { title: string; body: string }> = {
   repeats: {
     title: "3× and unlimited word repeats",
-    body: "The Repeat button loops the current verse for free, as many times as you like. Playing a word once or twice stays free. Three or more word passes, and looping a word until you stop, are Diras Plus.",
+    body: "The Repeat button loops this verse, or a range of verses, for free, as many times as you like. Playing a word once or twice stays free. Three or more word passes, and looping a word until you stop, are Diras Plus.",
   },
   focus: {
     title: "Focus is Diras Plus",
-    body: "You can open Focus and look around for free. Playing the verse, and Drill, Masked, or Relay, are Diras Plus. Leave whenever you like — Mushaf reading stays free.",
+    body: "You can open Focus and look around for free. Playing the verse, and Word Reps, Masked, or Relay, are Diras Plus. Leave whenever you like — Mushaf reading stays free.",
   },
   "relay-qaris": {
     title: "More than one qari",
@@ -32,14 +32,14 @@ export const PLUS_EXPLAIN = {
   freeTitle: "Always free",
   free: [
     "Quran with audio, translation, and tajweed",
-    "Repeat on the player, looping this verse until you turn it off",
+    "Repeat on the player, this verse or a range of verses, until you turn it off",
     "A word played once or twice",
     "Colour themes — orange, green, black and white, pink, and gold",
     "Opening Focus or Listen and leaving",
   ],
   plusTitle: PLUS_NAME,
   plus: [
-    "Play, Drill, Masked, and Relay in Focus",
+    "Play, Word Reps, Masked, and Relay in Focus",
     "Occasion lists — Friday, night, morning, and the rest",
     "A word played 3×, 5×, 10×, or until you stop",
     "Relay with more than one qari",
@@ -65,7 +65,7 @@ export function isPaidRelay(order: { kind?: string }[] | null | undefined) {
   return qariCount(order) > 1;
 }
 
-/** Drill, Masked, and Relay. Opening the Focus view itself stays free. */
+/** Word Reps, Masked, and Relay. Opening the Focus view itself stays free. */
 export function isPaidFocusJob(mode: string | null | undefined) {
   return mode === "word" || mode === "masked" || mode === "relay";
 }

@@ -30,7 +30,7 @@ export function plusWelcomeText(input: PlusWelcomeInput) {
     until,
     "",
     "Unlocked now:",
-    "• Focus — Drill, Masked, and Relay",
+    "• Focus — Word Reps, Masked, and Relay",
     "• Occasion lists",
     "• 3×, 5×, 10× and unlimited word repeats",
     "• Relay with more than one qari",
