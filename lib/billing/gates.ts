@@ -11,7 +11,7 @@ export const PLUS_COPY: Record<PlusFeature, { title: string; body: string }> = {
   },
   focus: {
     title: "Focus is Diras Plus",
-    body: "You can open Focus and look around for free. Playing the verse, and Drill, Masked, or Relay, are Diras Plus. Leave whenever you like — Mushaf reading stays free.",
+    body: "You can open Focus and look around for free. Playing the verse, and Word Reps, Masked, or Relay, are Diras Plus. Leave whenever you like — Mushaf reading stays free.",
   },
   "relay-qaris": {
     title: "More than one qari",
@@ -39,7 +39,7 @@ export const PLUS_EXPLAIN = {
   ],
   plusTitle: PLUS_NAME,
   plus: [
-    "Play, Drill, Masked, and Relay in Focus",
+    "Play, Word Reps, Masked, and Relay in Focus",
     "Occasion lists — Friday, night, morning, and the rest",
     "A word played 3×, 5×, 10×, or until you stop",
     "Relay with more than one qari",
@@ -65,7 +65,7 @@ export function isPaidRelay(order: { kind?: string }[] | null | undefined) {
   return qariCount(order) > 1;
 }
 
-/** Drill, Masked, and Relay. Opening the Focus view itself stays free. */
+/** Word Reps, Masked, and Relay. Opening the Focus view itself stays free. */
 export function isPaidFocusJob(mode: string | null | undefined) {
   return mode === "word" || mode === "masked" || mode === "relay";
 }

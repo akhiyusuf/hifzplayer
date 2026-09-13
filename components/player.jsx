@@ -22,7 +22,7 @@ import { PlaylistBar } from "@/components/playlist-bar";
 import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
 import { clampStopIndex, playlistHref, resolvePlaylist, stopLabel } from "@/lib/playlists";
-import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration } from "@/lib/api";
+import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration, fetchTranslation } from "@/lib/api";
 import { fmtTime, segsForVerse, segForWord, toArabicDigits, wordAt } from "@/lib/audio";
 import { APP_NAME } from "@/lib/brand";
 import { isPaidFocusJob, isPaidRelay, isPaidRepeat } from "@/lib/billing/gates";
@@ -34,7 +34,7 @@ import {
   viewFromVisible,
 } from "@/lib/mushaf-window";
 import { KEYS, LOOP_COUNTS, RATES } from "@/lib/constants";
-import { loopCountFace, nextLoopCount, verseRatioLabel } from "@/lib/player-chrome";
+import { loopCountFace, nextLoopCount, spanForVerse, verseRatioLabel } from "@/lib/player-chrome";
 import { usePlus } from "@/lib/plus";
 import { markToday, upsertSession } from "@/lib/sessions";
 import { getStore, setStore } from "@/lib/storage";
@@ -556,6 +556,17 @@ class g {
   setLoopCount(e) {
     if (isPaidRepeat(e) && !this.requirePlus("repeats")) return;
     ((this.st.loopCount = e), setStore(KEYS.loopCount, e), this.notify());
+  }
+  setShowTranslation(e) {
+    ((this.st.showTranslation = !!e), setStore(KEYS.showTranslation, !!e), this.notify());
+  }
+  setVerseTranslations(e, t) {
+    ((this.st.verses = this.st.verses.map((s) => ({
+      ...s,
+      translation: e.get(s.number) || "",
+    }))),
+      (this.st.translationName = t || this.st.translationName),
+      this.notify());
   }
   requirePlus(e) {
     if (this.plus) return !0;
@@ -1205,6 +1216,8 @@ class g {
         masked: {},
         relay: null,
         pendingLoopStart: null,
+        showTranslation:
+          null === getStore(KEYS.showTranslation) || getStore(KEYS.showTranslation),
       }),
       (this.snap = { ...this.st }),
       "undefined" != typeof Audio)
@@ -1348,13 +1361,7 @@ function k(e) {
   let { engine: t, state: s } = e,
     { plus: plusOn } = usePlus(),
     focusLocked = "focus" === s.style && !plusOn,
-    [l] = useState(() => {
-      var e;
-      return (
-        null === (e = getStore(KEYS.showTranslation)) || void 0 === e || e
-      );
-    }),
-    d = l && "mushaf" === s.style ? s.verses[s.vIdx] : void 0,
+    d = s.showTranslation && "mushaf" === s.style ? s.verses[s.vIdx] : void 0,
     c = "relay" === s.mode,
     u = "word" === s.mode,
     [transOpen, setTransOpen] = useState(!1),
@@ -1375,7 +1382,7 @@ function k(e) {
         }
       : p
         ? {
-            label: "Drill: words "
+            label: "Word Reps: words "
               .concat(p.startW, "–")
               .concat(p.endW, " \xb7 pass ")
               .concat(Math.min(p.pass + 1, p.passes || p.pass + 1))
@@ -1618,7 +1625,7 @@ function S(e) {
         () => document.removeEventListener("keydown", s)
       );
     }, [y]));
-  let S = p ? "Drill" : "Loop";
+  let S = p ? "Word Reps" : "Loop";
   return _jsx("div", {
     className: "pop-wrap",
     onClick: y,
@@ -3230,7 +3237,7 @@ function G(e) {
       ? [w.tr, w.gloss].filter(Boolean).join(" \xb7 ")
       : "";
   return _jsx(FocusStage, {
-    title: w ? w.ar : "Drill",
+    title: w ? w.ar : "Word Reps",
     meta: h.key,
     hint: "Tap the word you want, then play",
     extra: _jsxs("div", {
@@ -3864,10 +3871,6 @@ function U(e) {
                     : null,
               })
             : null,
-          _jsx(PlayerViewBar, {
-            style: ez.style,
-            onStyle: (e) => eu.setStyle(e),
-          }),
         ],
       }),
       _jsx(OfflineBanner, {}),
@@ -4020,7 +4023,7 @@ function U(e) {
               children: [
                 _jsxs("b", {
                   children: [
-                    "word" === ez.mode ? "Drill" : "Loop",
+                    "word" === ez.mode ? "Word Reps" : "Loop",
                     " words ",
                     eI.start,
                     "–",
@@ -4056,7 +4059,7 @@ function U(e) {
               },
               children: [
                 _jsx(Icon, { name: "repeat", size: 15 }),
-                "word" === ez.mode ? "Drill" : "Loop",
+                "word" === ez.mode ? "Word Reps" : "Loop",
               ],
             }),
           ],
@@ -4069,6 +4072,8 @@ function U(e) {
         _jsx(PlayerSettingsSheet, {
           engine: eu,
           state: ez,
+          verseNumber:
+            (ez.verses[ez.vIdx] && ez.verses[ez.vIdx].number) || V,
           qariName: ed(
             null !== (b = ez.reciterId) && void 0 !== b ? b : eM,
           ),
@@ -4076,23 +4081,43 @@ function U(e) {
           onOpenReciter: () => {
             (eSetTools(!1), ej(!0));
           },
-          onEditRelay: () => {
-            (eSetTools(!1), eu.pauseRelayForEdit(), eb(!0));
-          },
           onPickMode: (e) => {
-            (eSetTools(!1), eu.setMode(e), "relay" === eu.getSnapshot().mode && eb(!0));
+            eu.setMode(e);
+            if ("relay" === eu.getSnapshot().mode) {
+              (eSetTools(!1), eb(!0));
+            }
           },
-          onOpenPassage: (ch, from, to) => {
-            let n = new URLSearchParams({
-              from: String(from),
-              to: String(to),
-            });
+          onLocate: (ch, verse) => {
+            let count =
+                (en.find((item) => item.id === ch) &&
+                  en.find((item) => item.id === ch).verses_count) ||
+                verse,
+              inRange = ch === z && verse >= V && verse <= D,
+              idx = inRange
+                ? ez.verses.findIndex((item) => item.number === verse)
+                : -1;
+            if (idx >= 0) {
+              eu.loadVerseAudio(idx, !1);
+              return;
+            }
+            let span = spanForVerse(verse, count),
+              n = new URLSearchParams({
+                from: String(span.from),
+                to: String(span.to),
+                at: String(verse),
+              });
             (eSetTools(!1),
               null != ez.reciterId && n.set("reciter", String(ez.reciterId)),
               "focus" === ez.style &&
                 "verse" !== ez.mode &&
                 n.set("mode", ez.mode),
               Y.push("/read/".concat(ch, "?").concat(n.toString())));
+          },
+          onTranslationId: (id) => {
+            setStore(KEYS.translationId, id);
+            fetchTranslation(z, id)
+              .then((t) => eu.setVerseTranslations(t.byVerse, t.name))
+              .catch(() => {});
           },
         }),
       ek &&

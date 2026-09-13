@@ -8,6 +8,7 @@ import { setStore } from "./storage";
 type ThemeValue = {
   dark: boolean;
   toggle: () => void;
+  setDark: (next: boolean) => void;
   palette: PaletteId;
   setPalette: (id: PaletteId) => void;
 };
@@ -15,6 +16,7 @@ type ThemeValue = {
 const ThemeContext = createContext<ThemeValue>({
   dark: false,
   toggle: () => {},
+  setDark: () => {},
   palette: DEFAULT_PALETTE,
   setPalette: () => {},
 });
@@ -26,17 +28,27 @@ function applyTheme(dark: boolean, palette: PaletteId) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [dark, setDark] = useState(false);
+  const [dark, setDarkState] = useState(false);
   const [palette, setPaletteState] = useState<PaletteId>(DEFAULT_PALETTE);
 
   useEffect(() => {
     const root = document.documentElement;
-    setDark(root.getAttribute("data-theme") === "dark");
+    setDarkState(root.getAttribute("data-theme") === "dark");
     setPaletteState(parsePalette(root.getAttribute("data-palette")));
   }, []);
 
+  const setDark = useCallback((next: boolean) => {
+    setDarkState((prev) => {
+      if (prev === next) return prev;
+      const current = parsePalette(document.documentElement.getAttribute("data-palette"));
+      applyTheme(next, current);
+      setStore(KEYS.dark, next);
+      return next;
+    });
+  }, []);
+
   const toggle = useCallback(() => {
-    setDark((prev) => {
+    setDarkState((prev) => {
       const next = !prev;
       const current = parsePalette(document.documentElement.getAttribute("data-palette"));
       applyTheme(next, current);
@@ -54,8 +66,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ dark, toggle, palette, setPalette }),
-    [dark, toggle, palette, setPalette],
+    () => ({ dark, toggle, setDark, palette, setPalette }),
+    [dark, toggle, setDark, palette, setPalette],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
