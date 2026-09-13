@@ -43,6 +43,7 @@ import {
   nextWordInRange,
   rateFace,
   readRelayDraft,
+  shouldDropWordRangeOnPause,
   sortedWordRange,
   spanForVerse,
   verseRatioLabel,
@@ -200,11 +201,17 @@ class g {
       this.tick());
   }
   pauseAudio() {
+    let dropWordRange = shouldDropWordRangeOnPause(
+      this.st.mode,
+      this.st.playing,
+      this.st.wordStep,
+    );
     ((this.oneshotRate = null),
       this.armed && (this.armed.play = !1),
       this.audio.pause(),
       this.clearGap(),
       (this.st.playing = !1),
+      dropWordRange && this.clearWordRange(!1),
       this.notify());
   }
   clearGap() {
@@ -270,7 +277,7 @@ class g {
     if (0 !== s.passes && r >= s.passes) {
       ((this.st.loop = null),
         "word" === this.st.mode
-          ? (this.pauseAudio(), this.clearWordRange(!1), this.toast("Word Reps done"))
+          ? (this.clearWordRange(!1), this.pauseAudio(), this.toast("Word Reps done"))
           : this.toast("Loop done — continuing"),
         this.notify());
       return;
@@ -1776,8 +1783,8 @@ function k(e) {
                   .concat(s.verseLoop && "focus" !== s.style ? " on" : "")
                   .concat(focusLocked && !s.verseLoop && "focus" !== s.style ? " locked" : "")
                   .concat(repeatOpen && "focus" !== s.style ? " on" : ""),
-                "aria-pressed": !!s.verseLoop,
-                "aria-expanded": !!repeatOpen,
+                "aria-pressed": "focus" === s.style ? !1 : !!s.verseLoop,
+                "aria-expanded": "focus" === s.style ? !1 : !!repeatOpen,
                 "aria-label":
                   "focus" === s.style
                     ? "Open Mushaf to repeat"
@@ -3006,10 +3013,9 @@ function FocusLines(e) {
             end = wordRep && wordRep.end,
             inPin =
               null != start &&
-              (null == end
-                ? e.pos === start
-                : e.pos >= Math.min(start, end) &&
-                  e.pos <= Math.max(start, end));
+              null != end &&
+              e.pos >= Math.min(start, end) &&
+              e.pos <= Math.max(start, end);
           return _jsxs(
             _Fragment,
             {

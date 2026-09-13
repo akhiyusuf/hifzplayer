@@ -16,6 +16,7 @@ import {
   wordNeedsFollow,
   wordIsAway,
   rangeReplayActive,
+  shouldDropWordRangeOnPause,
   wordRangePassComplete,
   wordRepsPlayKind,
 } from "./player-chrome.ts";
@@ -133,6 +134,24 @@ describe("rangeReplayActive", () => {
         wordStep: { range: null },
         wordPick: { start: null, end: null },
       }),
+      false,
+    );
+  });
+});
+
+describe("shouldDropWordRangeOnPause", () => {
+  it("drops a Word Reps range when playback is paused, and keeps a single-word drill", () => {
+    assert.equal(
+      shouldDropWordRangeOnPause("word", true, { range: { startW: 1, endW: 4 } }),
+      true,
+    );
+    assert.equal(shouldDropWordRangeOnPause("word", true, { range: null }), false);
+    assert.equal(
+      shouldDropWordRangeOnPause("verse", true, { range: { startW: 1, endW: 4 } }),
+      false,
+    );
+    assert.equal(
+      shouldDropWordRangeOnPause("word", false, { range: { startW: 1, endW: 4 } }),
       false,
     );
   });

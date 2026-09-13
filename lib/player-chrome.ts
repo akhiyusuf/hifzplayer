@@ -106,6 +106,14 @@ export function rangeReplayActive(state: {
   return false;
 }
 
+export function shouldDropWordRangeOnPause(
+  mode: string,
+  playing: boolean,
+  wordStep?: { range?: { startW: number; endW: number } | null } | null,
+) {
+  return playing && mode === "word" && !!wordStep?.range;
+}
+
 export function nextVerseInLoop(current: number, from: number, to: number) {
   if (current < to) return current + 1;
   return from;
