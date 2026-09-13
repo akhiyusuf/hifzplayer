@@ -43,6 +43,7 @@ import {
   nextWordInRange,
   rateFace,
   readRelayDraft,
+  shouldDropWordRangeOnPause,
   sortedWordRange,
   spanForVerse,
   verseRatioLabel,
@@ -200,11 +201,17 @@ class g {
       this.tick());
   }
   pauseAudio() {
+    let dropWordRange = shouldDropWordRangeOnPause(
+      this.st.mode,
+      this.st.playing,
+      this.st.wordStep,
+    );
     ((this.oneshotRate = null),
       this.armed && (this.armed.play = !1),
       this.audio.pause(),
       this.clearGap(),
       (this.st.playing = !1),
+      dropWordRange && this.clearWordRange(!1),
       this.notify());
   }
   clearGap() {
@@ -270,9 +277,7 @@ class g {
     if (0 !== s.passes && r >= s.passes) {
       ((this.st.loop = null),
         "word" === this.st.mode
-          ? (this.pauseAudio(),
-            (this.st.wordStep = { ...this.st.wordStep, active: !1 }),
-            this.toast("Word Reps done"))
+          ? (this.clearWordRange(!1), this.pauseAudio(), this.toast("Word Reps done"))
           : this.toast("Loop done — continuing"),
         this.notify());
       return;
@@ -597,6 +602,8 @@ class g {
       if ("verse" !== this.st.mode) {
         ((this.st.mode = "verse"),
           (this.st.relay = null),
+          (this.st.wordPick = emptyWordPick()),
+          (this.st.loop = null),
           (this.st.wordStep = {
             active: !1,
             w: 1,
@@ -743,13 +750,9 @@ class g {
             this.playWordOnce(e, range.startW));
           return;
         }
-        ((this.st.wordStep = {
-          ...step,
-          active: !1,
-          playedTimes: 0,
-        }),
+        ((this.clearWordRange(!1),
           (this.st.playing = !1),
-          this.notify());
+          this.notify()));
         return;
       }
       let played = step.playedTimes + 1;
@@ -966,11 +969,23 @@ class g {
       this.notify());
   }
   clearLoop() {
-    ((this.st.loop = null), this.notify());
+    ((this.st.loop = null),
+      "word" === this.st.mode && this.clearWordRange(!1),
+      this.notify());
   }
   clearDrill() {
-    ((this.st.wordStep = { ...this.st.wordStep, range: null }),
-      this.notify());
+    this.clearWordRange();
+  }
+  clearWordRange() {
+    let notify = !(arguments.length > 0 && !1 === arguments[0]);
+    ((this.st.loop = null),
+      (this.st.wordStep = {
+        ...this.st.wordStep,
+        range: null,
+        active: !1,
+      }),
+      (this.st.wordPick = emptyWordPick()),
+      notify && this.notify());
   }
   startWordDrill(e, t, s) {
     let start = Math.min(e, t),
@@ -1683,7 +1698,7 @@ function k(e) {
           _jsxs("span", {
             className: "repeat-wrap",
             children: [
-              repeatOpen && !s.verseLoop
+              repeatOpen && !s.verseLoop && "focus" !== s.style
                 ? _jsxs("div", {
                     className: "repeat-pop",
                     role: "dialog",
@@ -1765,12 +1780,15 @@ function k(e) {
               _jsx("button", {
                 type: "button",
                 className: "tr-btn tap"
-                  .concat(s.verseLoop ? " on" : "")
-                  .concat(focusLocked && !s.verseLoop ? " locked" : "")
-                  .concat(repeatOpen ? " on" : ""),
-                "aria-pressed": !!s.verseLoop,
-                "aria-expanded": !!repeatOpen,
-                "aria-label": s.verseLoop
+                  .concat(s.verseLoop && "focus" !== s.style ? " on" : "")
+                  .concat(focusLocked && !s.verseLoop && "focus" !== s.style ? " locked" : "")
+                  .concat(repeatOpen && "focus" !== s.style ? " on" : ""),
+                "aria-pressed": "focus" === s.style ? !1 : !!s.verseLoop,
+                "aria-expanded": "focus" === s.style ? !1 : !!repeatOpen,
+                "aria-label":
+                  "focus" === s.style
+                    ? "Open Mushaf to repeat"
+                    : s.verseLoop
                   ? s.verseLoopRange
                     ? "Stop repeating verses "
                         .concat(s.verseLoopRange.from, "–")
@@ -1779,6 +1797,10 @@ function k(e) {
                   : "Repeat this verse or a range",
                 disabled: c,
                 onClick: () => {
+                  if ("focus" === s.style) {
+                    (setRepeatOpen(!1), t.setStyle("mushaf"));
+                    return;
+                  }
                   if (focusLocked && !s.verseLoop) {
                     t.toggleVerseLoop();
                     return;
@@ -2991,10 +3013,9 @@ function FocusLines(e) {
             end = wordRep && wordRep.end,
             inPin =
               null != start &&
-              (null == end
-                ? e.pos === start
-                : e.pos >= Math.min(start, end) &&
-                  e.pos <= Math.max(start, end));
+              null != end &&
+              e.pos >= Math.min(start, end) &&
+              e.pos <= Math.max(start, end);
           return _jsxs(
             _Fragment,
             {
@@ -3010,7 +3031,11 @@ function FocusLines(e) {
                       inRange: !!inPin,
                       isRangeStart: start === e.pos,
                       isRangeEnd: end === e.pos,
-                      isPending: i === e.pos || (wordRep && wordRep.open === e.pos),
+                      isPending:
+                        i === e.pos ||
+                        (wordRep &&
+                          wordRep.open === e.pos &&
+                          !(null != start && null != end)),
                       mask: null,
                       interactive: d,
                       onTap: l,

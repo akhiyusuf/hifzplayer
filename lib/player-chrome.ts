@@ -95,6 +95,25 @@ export function wordRangePassComplete(pass: number, passes: number) {
   return pass >= passes;
 }
 
+export function rangeReplayActive(state: {
+  loop?: { startW: number; endW: number } | null;
+  wordStep?: { range?: { startW: number; endW: number } | null };
+  wordPick?: { start?: number | null; end?: number | null };
+}) {
+  if (state.loop && state.loop.startW !== state.loop.endW) return true;
+  if (state.wordStep?.range) return true;
+  if (state.wordPick?.start != null && state.wordPick?.end != null) return true;
+  return false;
+}
+
+export function shouldDropWordRangeOnPause(
+  mode: string,
+  playing: boolean,
+  wordStep?: { range?: { startW: number; endW: number } | null } | null,
+) {
+  return playing && mode === "word" && !!wordStep?.range;
+}
+
 export function nextVerseInLoop(current: number, from: number, to: number) {
   if (current < to) return current + 1;
   return from;
