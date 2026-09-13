@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Icon } from "./icon";
 import { Sheet } from "./sheet";
 import { ThemePicker } from "./theme-picker";
 import { useAppData } from "@/lib/app-data";
+import { isPaidRelay, isPaidRepeat } from "@/lib/billing/gates";
 import { FOCUS_JOBS, type ModeId } from "@/lib/constants";
-import { sidebarKind } from "@/lib/player-chrome";
+import {
+  RELAY_ROUNDS,
+  readRelayDraft,
+  sidebarKind,
+  writeRelayDraft,
+  type RelayDraft,
+  type RelaySeat,
+} from "@/lib/player-chrome";
 import { usePlus } from "@/lib/plus";
 import { useTheme } from "@/lib/theme";
 import { currentTranslationId, fetchTranslations, type TranslationOption } from "@/lib/translations";
@@ -181,6 +189,244 @@ function ThemeFoot() {
   );
 }
 
+function defaultOrder(reciterId: number): RelaySeat[] {
+  return [{ kind: "qari", reciterId }, { kind: "you" }];
+}
+
+function RelaySetup({
+  chapter,
+  versesCount,
+  passageFrom,
+  passageTo,
+  reciterId,
+  initial,
+  onStart,
+}: {
+  chapter: number;
+  versesCount: number;
+  passageFrom: number;
+  passageTo: number;
+  reciterId: number;
+  initial?: RelayDraft | null;
+  onStart: (order: RelaySeat[], vFrom: number, vTo: number, rounds: number) => void | Promise<void>;
+}) {
+  const { recitations, reciterName } = useAppData();
+  const { plus: plusOn, askPlus } = usePlus();
+  const draft = initial || readRelayDraft();
+  const sameChapter = !draft?.chapter || draft.chapter === chapter;
+  const [order, setOrder] = useState<RelaySeat[]>(() =>
+    draft?.order?.length ? draft.order : defaultOrder(reciterId),
+  );
+  const [from, setFrom] = useState(() => {
+    const n = sameChapter ? draft?.vFrom || passageFrom : passageFrom;
+    return Math.min(versesCount, Math.max(1, n));
+  });
+  const [to, setTo] = useState(() => {
+    const n = sameChapter ? draft?.vTo || passageTo : passageTo;
+    return Math.min(versesCount, Math.max(1, n));
+  });
+  const [rounds, setRounds] = useState(() => draft?.rounds ?? 2);
+  const [busy, setBusy] = useState(false);
+  const skipWrite = useRef(true);
+
+  useEffect(() => {
+    if (skipWrite.current) {
+      skipWrite.current = false;
+      return;
+    }
+    writeRelayDraft({ chapter, order, vFrom: from, vTo: to, rounds, start: false });
+  }, [chapter, order, from, to, rounds]);
+
+  const move = (index: number, dir: number) => {
+    const next = index + dir;
+    if (next < 0 || next >= order.length) return;
+    const copy = order.slice();
+    const item = copy[index];
+    copy[index] = copy[next];
+    copy[next] = item;
+    setOrder(copy);
+  };
+
+  const setSeat = (index: number, value: string) => {
+    const copy = order.slice();
+    copy[index] = value === "you" ? { kind: "you" } : { kind: "qari", reciterId: Number(value.slice(1)) };
+    if (isPaidRelay(copy) && !plusOn) {
+      askPlus("relay-qaris");
+      return;
+    }
+    setOrder(copy);
+  };
+
+  return (
+    <>
+      <div className="sidebar-range">
+        {[
+          { label: "From", value: from, set: setFrom },
+          { label: "To", value: to, set: setTo },
+        ].map((field) => (
+          <label key={field.label} className="range-field">
+            <span className="label-eyebrow">{field.label}</span>
+            <span className="select-box">
+              {chapter}:{field.value}
+              <Icon name="chevron-down" size={15} style={{ color: "var(--text-muted)" }} />
+              <select
+                aria-label={`${field.label} verse`}
+                value={field.value}
+                onChange={(e) => {
+                  const n = Number(e.target.value);
+                  field.set(n);
+                  if (field.label === "From" && to < n) setTo(n);
+                  if (field.label === "To" && n < from) setFrom(n);
+                }}
+              >
+                {Array.from({ length: versesCount }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n}>
+                    {chapter}:{n}
+                  </option>
+                ))}
+              </select>
+            </span>
+          </label>
+        ))}
+      </div>
+      <div>
+        <span className="label-eyebrow">Reciters</span>
+        <div className="sheet-list" style={{ marginTop: 6 }}>
+          {order.map((seat, index) => {
+            const name = seat.kind === "you" ? "You (paced)" : reciterName(seat.reciterId);
+            return (
+              <div key={`${seat.kind}-${index}`} className={`order-row${seat.kind === "you" ? " you" : ""}`}>
+                <Icon name="grip-vertical" size={17} style={{ color: "var(--text-muted)", flex: "none" }} />
+                <span className="order-avatar">
+                  <Icon name={seat.kind === "you" ? "user" : "mic"} size={16} />
+                </span>
+                <label className="order-name">
+                  {name}
+                  <select
+                    aria-label={`Participant ${index + 1}`}
+                    value={seat.kind === "you" ? "you" : `q${seat.reciterId}`}
+                    onChange={(e) => setSeat(index, e.target.value)}
+                  >
+                    <option value="you">You (paced)</option>
+                    <optgroup label="Qaris">
+                      {recitations.map((item) => (
+                        <option key={item.id} value={`q${item.id}`}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  className="tap"
+                  onClick={() => move(index, -1)}
+                  disabled={index === 0}
+                  aria-label={`Move ${name} up`}
+                  style={{ color: "var(--text-muted)", opacity: index === 0 ? 0.3 : 1 }}
+                >
+                  <Icon name="chevron-up" size={16} />
+                </button>
+                <button
+                  type="button"
+                  className="tap"
+                  onClick={() => move(index, 1)}
+                  disabled={index === order.length - 1}
+                  aria-label={`Move ${name} down`}
+                  style={{ color: "var(--text-muted)", opacity: index === order.length - 1 ? 0.3 : 1 }}
+                >
+                  <Icon name="chevron-down" size={16} />
+                </button>
+                <button
+                  type="button"
+                  className="tap"
+                  onClick={() => {
+                    if (order.length <= 1) return;
+                    setOrder(order.filter((_, i) => i !== index));
+                  }}
+                  disabled={order.length <= 1}
+                  aria-label={`Remove ${name}`}
+                  style={{ color: "var(--text-muted)", opacity: order.length <= 1 ? 0.3 : 1 }}
+                >
+                  <Icon name="x" size={16} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          className={`btn-dashed${plusOn ? "" : " locked"}`}
+          style={{ marginTop: 8 }}
+          onClick={() => {
+            const next = [...order, { kind: "qari" as const, reciterId }];
+            if (isPaidRelay(next) && !plusOn) {
+              askPlus("relay-qaris");
+              return;
+            }
+            setOrder(next);
+          }}
+        >
+          <Icon name={plusOn ? "plus" : "sparkles"} size={16} />
+          {plusOn ? "Add participant" : "Add another reciter"}
+        </button>
+      </div>
+      <div>
+        <span className="label-eyebrow">Rounds</span>
+        <div className="rounds-row" style={{ marginTop: 6 }} role="group" aria-label="Rounds">
+          {RELAY_ROUNDS.map((item) => {
+            const locked = isPaidRepeat(item.value) && !plusOn;
+            return (
+              <button
+                key={item.value}
+                type="button"
+                className={`${rounds === item.value ? "on" : ""}${locked ? " locked" : ""}`}
+                onClick={() => (locked ? askPlus("repeats") : setRounds(item.value))}
+                aria-pressed={rounds === item.value}
+                style={item.value === 0 ? { fontSize: 12 } : undefined}
+              >
+                {locked ? (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    {item.label}
+                    <Icon name="sparkles" size={11} />
+                  </span>
+                ) : (
+                  item.label
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <button
+        type="button"
+        className="btn-primary"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          try {
+            await onStart(order, from, to, rounds);
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        {busy ? (
+          <>
+            <span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
+            Preparing reciters…
+          </>
+        ) : (
+          <>
+            <Icon name="play" size={18} />
+            Start relay
+          </>
+        )}
+      </button>
+    </>
+  );
+}
+
 export function PlayerSettingsSheet({
   engine,
   state,
@@ -191,6 +437,9 @@ export function PlayerSettingsSheet({
   qariName,
   onOpenReciter,
   onTranslationId,
+  reciterId,
+  relay,
+  onRelayStart,
 }: {
   engine: Engine;
   state: State;
@@ -201,6 +450,9 @@ export function PlayerSettingsSheet({
   qariName?: string;
   onOpenReciter?: () => void;
   onTranslationId?: (id: number) => void;
+  reciterId?: number;
+  relay?: RelayDraft | null;
+  onRelayStart?: (order: RelaySeat[], vFrom: number, vTo: number, rounds: number) => void | Promise<void>;
 }) {
   const { plus: plusOn, askPlus } = usePlus();
   const { chapters } = useAppData();
@@ -228,14 +480,15 @@ export function PlayerSettingsSheet({
   }, []);
 
   const currentTrans =
-    translations.find((item) => item.id === transId) ||
-    translations.find((item) => item.id === 20);
+    translations.find((item) => item.id === transId) || translations.find((item) => item.id === 20);
 
-  const locate = kind === "mushaf" || kind === "word" || kind === "masked" || kind === "relay";
+  const locate = kind === "mushaf" || kind === "word" || kind === "masked";
+  const relayOn = kind === "relay";
   const drill = kind !== "mushaf";
   const compactDrill = kind !== "focus";
-  const reciter = kind !== "focus";
+  const reciter = kind !== "focus" && kind !== "relay";
   const translation = kind === "mushaf";
+  const qariId = reciterId || 0;
 
   return (
     <Sheet title="Settings" side="right" onClose={onClose}>
@@ -250,35 +503,46 @@ export function PlayerSettingsSheet({
             onPick={(id) => onPickMode(id)}
           />
         ) : null}
+        {locate || relayOn ? (
+          <SelectRow label="Surah" value={surahName}>
+            <select
+              aria-label="Surah"
+              value={passage.chapter}
+              onChange={(e) => onLocate(Number(e.target.value), 1)}
+            >
+              {chapters.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.id}. {item.name_simple}
+                </option>
+              ))}
+            </select>
+          </SelectRow>
+        ) : null}
         {locate ? (
-          <>
-            <SelectRow label="Surah" value={surahName}>
-              <select
-                aria-label="Surah"
-                value={passage.chapter}
-                onChange={(e) => onLocate(Number(e.target.value), 1)}
-              >
-                {chapters.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.id}. {item.name_simple}
-                  </option>
-                ))}
-              </select>
-            </SelectRow>
-            <SelectRow label="Verse" value={String(verseNumber || passage.from)}>
-              <select
-                aria-label="Verse"
-                value={verseNumber || passage.from}
-                onChange={(e) => onLocate(passage.chapter, Number(e.target.value))}
-              >
-                {Array.from({ length: versesCount }, (_, i) => i + 1).map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </SelectRow>
-          </>
+          <SelectRow label="Verse" value={String(verseNumber || passage.from)}>
+            <select
+              aria-label="Verse"
+              value={verseNumber || passage.from}
+              onChange={(e) => onLocate(passage.chapter, Number(e.target.value))}
+            >
+              {Array.from({ length: versesCount }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </SelectRow>
+        ) : null}
+        {relayOn && onRelayStart ? (
+          <RelaySetup
+            chapter={passage.chapter}
+            versesCount={versesCount}
+            passageFrom={passage.from}
+            passageTo={passage.to}
+            reciterId={qariId}
+            initial={relay}
+            onStart={onRelayStart}
+          />
         ) : null}
         {translation ? (
           <>

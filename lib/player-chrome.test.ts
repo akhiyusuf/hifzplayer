@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { loopCountFace, nextLoopCount, sidebarKind, spanForVerse, verseRatioLabel } from "./player-chrome.ts";
+import {
+  coversRange,
+  drillHint,
+  loopCountFace,
+  nextLoopCount,
+  sidebarKind,
+  spanForVerse,
+  verseRatioLabel,
+} from "./player-chrome.ts";
 
 describe("verseRatioLabel", () => {
   it("shows surah and ayah as a ratio", () => {
@@ -30,6 +38,25 @@ describe("spanForVerse", () => {
     assert.deepEqual(spanForVerse(2, 7), { from: 1, to: 7 });
     assert.deepEqual(spanForVerse(50, 286), { from: 50, to: 59 });
     assert.deepEqual(spanForVerse(1, 286), { from: 1, to: 10 });
+  });
+});
+
+describe("drillHint", () => {
+  it("returns one line per drill type and nothing otherwise", () => {
+    assert.equal(drillHint("word"), "Tap a word, then choose how many times it plays.");
+    assert.equal(drillHint("masked"), "Words are covered. Peek if you need a look.");
+    assert.equal(drillHint("relay"), "Recite your ayah. The reciter takes the next.");
+    assert.equal(drillHint("verse"), "");
+    assert.equal(drillHint("mushaf"), "");
+  });
+});
+
+describe("coversRange", () => {
+  it("requires every ayah in the span to be loaded", () => {
+    const verses = [{ number: 1 }, { number: 2 }, { number: 3 }];
+    assert.equal(coversRange(verses, 1, 3), true);
+    assert.equal(coversRange(verses, 1, 4), false);
+    assert.equal(coversRange(verses, 2, 1), false);
   });
 });
 

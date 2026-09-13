@@ -34,7 +34,17 @@ import {
   viewFromVisible,
 } from "@/lib/mushaf-window";
 import { KEYS, LOOP_COUNTS, RATES } from "@/lib/constants";
-import { loopCountFace, nextLoopCount, spanForVerse, verseRatioLabel } from "@/lib/player-chrome";
+import {
+  coversRange,
+  drillHint,
+  DRILL_HINT_MS,
+  loopCountFace,
+  nextLoopCount,
+  readRelayDraft,
+  spanForVerse,
+  verseRatioLabel,
+  writeRelayDraft,
+} from "@/lib/player-chrome";
 import { usePlus } from "@/lib/plus";
 import { markToday, upsertSession } from "@/lib/sessions";
 import { getStore, setStore } from "@/lib/storage";
@@ -2736,7 +2746,7 @@ function F(e) {
       s.verses.length > 1
         ? "".concat(s.vIdx + 1, " of ", s.verses.length)
         : undefined,
-    hint: "Look around, or pick a job in Settings",
+    hint: "verse" === s.mode ? "Look around, or pick a job in Settings" : undefined,
     progress:
       s.verses.length > 1
         ? {
@@ -2874,7 +2884,7 @@ function _(e) {
   return _jsx(FocusStage, {
     title: "Revealed ".concat(i.maxRev, " of ", l),
     meta: n.key,
-    hint: "Words stay covered until the audio reaches them",
+    hint: undefined,
     progress: {
       now: i.maxRev,
       max: l,
@@ -3239,7 +3249,7 @@ function G(e) {
   return _jsx(FocusStage, {
     title: w ? w.ar : "Word Reps",
     meta: h.key,
-    hint: "Tap the word you want, then play",
+    hint: undefined,
     extra: _jsxs("div", {
       className: "rep-seg seg",
       role: "group",
@@ -3339,6 +3349,9 @@ function U(e) {
     [eg, ej] = useState(!1),
     [ew, eb] = useState(!1),
     [eTools, eSetTools] = useState(!1),
+    [eHint, eSetHint] = useState(""),
+    eHintFor = useRef(null),
+    eHintTimer = useRef(null),
     [ek, eN] = useState(null),
     [eI, eS] = useState(null),
     [eC, eT] = useState(null),
@@ -3527,9 +3540,12 @@ function U(e) {
         er && ["word", "verse", "masked", "relay"].includes(er)
           ? er
           : "verse";
-      if (e !== eu.getSnapshot().mode) {
-        eu.setMode(e);
-        if ("relay" === eu.getSnapshot().mode) eb(!0);
+      if (e !== eu.getSnapshot().mode) eu.setMode(e);
+      if ("relay" !== eu.getSnapshot().mode) return;
+      let draft = readRelayDraft();
+      if (draft && draft.start) {
+        writeRelayDraft({ ...draft, start: !1 });
+        eu.beginRelay(draft.order, draft.vFrom, draft.vTo, draft.rounds);
       }
     }, [ep, er, plusReady, plusOn]),
     useEffect(() => {
@@ -3558,6 +3574,26 @@ function U(e) {
         }),
         markToday());
     }, [ep, ez.vIdx, ez.reciterId]),
+    useEffect(() => {
+      let text = drillHint(ez.mode);
+      if (!text) {
+        (eSetHint(""), (eHintFor.current = null));
+        eHintTimer.current && clearTimeout(eHintTimer.current);
+        return;
+      }
+      if (eTools) return;
+      if (eHintFor.current === ez.mode) return;
+      eHintFor.current = ez.mode;
+      eSetHint(text);
+      eHintTimer.current && clearTimeout(eHintTimer.current);
+      eHintTimer.current = setTimeout(() => eSetHint(""), DRILL_HINT_MS);
+    }, [ez.mode, eTools]),
+    useEffect(
+      () => () => {
+        eHintTimer.current && clearTimeout(eHintTimer.current);
+      },
+      [],
+    ),
     useEffect(() => {
       let e = (e) => {
         let t = e.target;
@@ -3860,6 +3896,13 @@ function U(e) {
             onSettings: () => eSetTools(!0),
             settingsOpen: eTools,
           }),
+          eHint
+            ? _jsx("p", {
+                className: "player-drill-hint",
+                role: "status",
+                children: eHint,
+              })
+            : null,
           eList
             ? _jsx(PlaylistBar, {
                 title: eList.title,
@@ -4077,15 +4120,47 @@ function U(e) {
           qariName: ed(
             null !== (b = ez.reciterId) && void 0 !== b ? b : eM,
           ),
+          reciterId:
+            null !== (b = ez.reciterId) && void 0 !== b ? b : eM,
+          relay: ez.relay
+            ? {
+                chapter: z,
+                order: ez.relay.order,
+                vFrom: ez.relay.vFrom,
+                vTo: ez.relay.vTo,
+                rounds: ez.relay.rounds,
+              }
+            : readRelayDraft(),
           onClose: () => eSetTools(!1),
           onOpenReciter: () => {
             (eSetTools(!1), ej(!0));
           },
           onPickMode: (e) => {
+            (eHintFor.current = null);
             eu.setMode(e);
-            if ("relay" === eu.getSnapshot().mode) {
-              (eSetTools(!1), eb(!0));
+          },
+          onRelayStart: async (order, vFrom, vTo, rounds) => {
+            let cover = coversRange(ez.verses, vFrom, vTo);
+            if (!cover) {
+              writeRelayDraft({
+                chapter: z,
+                order,
+                vFrom,
+                vTo,
+                rounds,
+                start: !0,
+              });
+              let n = new URLSearchParams({
+                from: String(vFrom),
+                to: String(vTo),
+                mode: "relay",
+              });
+              (null != ez.reciterId && n.set("reciter", String(ez.reciterId)),
+                eSetTools(!1),
+                Y.push("/read/".concat(z, "?").concat(n.toString())));
+              return;
             }
+            (await eu.beginRelay(order, vFrom, vTo, rounds)) && eSetTools(!1);
           },
           onLocate: (ch, verse) => {
             let count =
@@ -4233,7 +4308,9 @@ function U(e) {
           initialMode: ez.mode,
           variant: "mode",
           onStart: (e, t, s) => {
-            (ey(!1), eu.setMode(s), "relay" === eu.getSnapshot().mode && eb(!0));
+            (ey(!1),
+              eu.setMode(s),
+              "relay" === eu.getSnapshot().mode && eSetTools(!0));
           },
           onClose: () => ey(!1),
         }),

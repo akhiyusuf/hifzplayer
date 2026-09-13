@@ -311,3 +311,12 @@ a.qari-inline{text-decoration:none;color:inherit}
 @media (min-width:1440px){
   .player-head{padding-inline:max(32px,calc((100% - 820px) / 2))}
 }
+.player-drill-hint{margin:0;padding:6px 12px 8px;font-size:13px;line-height:1.35;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid var(--border-default)}
+.player-side{overflow:auto}
+.sidebar-range{display:flex;gap:12px}
+@media (min-width:834px){
+  .player-drill-hint{padding-inline:max(24px,calc((100% - 760px) / 2))}
+}
+@media (min-width:1440px){
+  .player-drill-hint{padding-inline:max(32px,calc((100% - 820px) / 2))}
+}

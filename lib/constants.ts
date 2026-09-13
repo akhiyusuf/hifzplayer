@@ -71,4 +71,5 @@ export const KEYS = {
   showTranslation: "hifz.trans",
   translationId: "hifz.transId",
   translations: "hifz.translations",
+  relayDraft: "hifz.relay.draft",
 } as const;
