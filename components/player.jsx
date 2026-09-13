@@ -752,7 +752,7 @@ class g {
         }
         ((this.clearWordRange(!1),
           (this.st.playing = !1),
-          this.notify());
+          this.notify()));
         return;
       }
       let played = step.playedTimes + 1;
