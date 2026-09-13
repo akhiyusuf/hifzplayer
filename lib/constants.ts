@@ -62,6 +62,7 @@ export const KEYS = {
   onboarded: "hifz.onboarded",
   style: "hifz.style",
   reciter: "hifz.reciter",
+  focusReciter: "hifz.reciter.focus",
   recents: "hifz.recents",
   taj: "hifz.taj",
   wordRepeat: "hifz.wrep",
