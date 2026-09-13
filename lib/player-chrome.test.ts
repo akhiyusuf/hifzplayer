@@ -5,9 +5,13 @@ import {
   drillHint,
   loopCountFace,
   nextLoopCount,
+  nextVerseInLoop,
+  nextWordInRange,
   sidebarKind,
+  sortedWordRange,
   spanForVerse,
   verseRatioLabel,
+  wordRangePassComplete,
 } from "./player-chrome.ts";
 
 describe("verseRatioLabel", () => {
@@ -43,7 +47,7 @@ describe("spanForVerse", () => {
 
 describe("drillHint", () => {
   it("returns one line per drill type and nothing otherwise", () => {
-    assert.equal(drillHint("word"), "Tap a word, then choose how many times it plays.");
+    assert.equal(drillHint("word"), "Tap a word. Pin a range, or pick 5×, 10×, or ∞, then play.");
     assert.equal(drillHint("masked"), "Words are covered. Peek if you need a look.");
     assert.equal(drillHint("relay"), "Recite your ayah. The reciter takes the next.");
     assert.equal(drillHint("verse"), "");
@@ -57,6 +61,19 @@ describe("coversRange", () => {
     assert.equal(coversRange(verses, 1, 3), true);
     assert.equal(coversRange(verses, 1, 4), false);
     assert.equal(coversRange(verses, 2, 1), false);
+  });
+});
+
+describe("word range helpers", () => {
+  it("sorts pins and walks a pass, then the next verse in a free Repeat range", () => {
+    assert.deepEqual(sortedWordRange(5, 2), { start: 2, end: 5 });
+    assert.equal(nextWordInRange(2, 5), 3);
+    assert.equal(nextWordInRange(5, 5), null);
+    assert.equal(wordRangePassComplete(4, 5), false);
+    assert.equal(wordRangePassComplete(5, 5), true);
+    assert.equal(wordRangePassComplete(99, 0), false);
+    assert.equal(nextVerseInLoop(3, 1, 7), 4);
+    assert.equal(nextVerseInLoop(7, 1, 7), 1);
   });
 });
 

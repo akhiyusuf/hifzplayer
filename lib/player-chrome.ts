@@ -40,10 +40,30 @@ export function spanForVerse(verse: number, count: number) {
 export const DRILL_HINT_MS = 10_000;
 
 export const DRILL_HINTS = {
-  word: "Tap a word, then choose how many times it plays.",
+  word: "Tap a word. Pin a range, or pick 5×, 10×, or ∞, then play.",
   masked: "Words are covered. Peek if you need a look.",
   relay: "Recite your ayah. The reciter takes the next.",
 } as const;
+
+export const WORD_REP_COUNTS = [5, 10, 0] as const;
+
+export function sortedWordRange(a: number, b: number) {
+  return a <= b ? { start: a, end: b } : { start: b, end: a };
+}
+
+export function nextWordInRange(w: number, end: number) {
+  return w < end ? w + 1 : null;
+}
+
+export function wordRangePassComplete(pass: number, passes: number) {
+  if (passes === 0) return false;
+  return pass >= passes;
+}
+
+export function nextVerseInLoop(current: number, from: number, to: number) {
+  if (current < to) return current + 1;
+  return from;
+}
 
 export function drillHint(mode: string) {
   if (mode === "word" || mode === "masked" || mode === "relay") return DRILL_HINTS[mode];

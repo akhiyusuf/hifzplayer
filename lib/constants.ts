@@ -11,7 +11,7 @@ export const FOCUS_JOBS = [
     id: "word",
     name: "Word Reps",
     icon: "brackets",
-    desc: "Tap one word and choose how many times it plays",
+    desc: "Tap a word. Pin a range, or pick 5×, 10×, or ∞, then play",
   },
   {
     id: "masked",

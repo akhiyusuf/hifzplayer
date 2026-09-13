@@ -7,7 +7,7 @@ export type PlusFeature = "repeats" | "focus" | "relay-qaris" | "playlists";
 export const PLUS_COPY: Record<PlusFeature, { title: string; body: string }> = {
   repeats: {
     title: "3× and unlimited word repeats",
-    body: "The Repeat button loops the current verse for free, as many times as you like. Playing a word once or twice stays free. Three or more word passes, and looping a word until you stop, are Diras Plus.",
+    body: "The Repeat button loops this verse, or a range of verses, for free, as many times as you like. Playing a word once or twice stays free. Three or more word passes, and looping a word until you stop, are Diras Plus.",
   },
   focus: {
     title: "Focus is Diras Plus",
@@ -32,7 +32,7 @@ export const PLUS_EXPLAIN = {
   freeTitle: "Always free",
   free: [
     "Quran with audio, translation, and tajweed",
-    "Repeat on the player, looping this verse until you turn it off",
+    "Repeat on the player, this verse or a range of verses, until you turn it off",
     "A word played once or twice",
     "Colour themes — orange, green, black and white, pink, and gold",
     "Opening Focus or Listen and leaving",
