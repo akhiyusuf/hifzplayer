@@ -34,6 +34,7 @@ import {
   viewFromVisible,
 } from "@/lib/mushaf-window";
 import { KEYS, LOOP_COUNTS, RATES } from "@/lib/constants";
+import { loopCountFace, nextLoopCount, verseRatioLabel } from "@/lib/player-chrome";
 import { usePlus } from "@/lib/plus";
 import { markToday, upsertSession } from "@/lib/sessions";
 import { getStore, setStore } from "@/lib/storage";
@@ -1197,7 +1198,7 @@ class g {
         loopCount:
           null !== (t = getStore(KEYS.loopCount)) && void 0 !== t && !isPaidRepeat(t)
             ? t
-            : 2,
+            : 1,
         taj: !!getStore(KEYS.taj),
         layers: { phrases: !1, confusables: !1 },
         focusPhrase: 0,
@@ -1344,7 +1345,7 @@ function b(e) {
   });
 }
 function k(e) {
-  let { engine: t, state: s, onPickMode: n, onOpenPassage: open } = e,
+  let { engine: t, state: s } = e,
     { plus: plusOn } = usePlus(),
     focusLocked = "focus" === s.style && !plusOn,
     [l] = useState(() => {
@@ -1357,7 +1358,6 @@ function k(e) {
     c = "relay" === s.mode,
     u = "word" === s.mode,
     [transOpen, setTransOpen] = useState(!1),
-    [toolsOpen, setToolsOpen] = useState(!1),
     p = s.wordStep.range,
     m = s.loop
       ? {
@@ -1387,9 +1387,7 @@ function k(e) {
             clear: () => t.clearDrill(),
           }
         : null;
-  return _jsxs(_Fragment, {
-    children: [
-  _jsxs("footer", {
+  return _jsxs("footer", {
     className: "player-foot",
     children: [
       (null == d ? void 0 : d.translation) &&
@@ -1438,46 +1436,22 @@ function k(e) {
           ],
         }),
       _jsxs("div", {
-        className: "player-tools",
+        className: "player-deck",
         children: [
-          !u && _jsx(b, { engine: t, disabled: c }),
-          !u &&
-            _jsxs("button", {
-              type: "button",
-              className: "listen-menu-btn tap"
-                .concat(s.verseLoop ? " on" : "")
-                .concat(focusLocked && !s.verseLoop ? " locked" : ""),
-              "aria-pressed": !!s.verseLoop,
-              "aria-label": s.verseLoop
-                ? "Stop repeating this verse"
-                : "Repeat this verse",
-              disabled: c,
-              onClick: () => t.toggleVerseLoop(),
-              children: [
-                _jsx(Icon, { name: "repeat", size: 16 }),
-                "Repeat",
-              ],
-            }),
-          _jsxs("button", {
-            type: "button",
-            className: "listen-menu-btn tap".concat(toolsOpen ? " open" : ""),
-            "aria-expanded": toolsOpen,
-            "aria-haspopup": "dialog",
-            onClick: () => setToolsOpen(!0),
-            "aria-label": "Settings",
+          _jsx(b, { engine: t, disabled: c }),
+          _jsxs("div", {
+            className: "transport",
             children: [
-              _jsx(Icon, {
-                name: "sliders-horizontal",
-                size: 16,
-              }),
-              "Settings",
-            ],
+          _jsx("button", {
+            type: "button",
+            className: "tr-btn loop-count tap",
+            onClick: () => t.setLoopCount(nextLoopCount(s.loopCount)),
+            "aria-label":
+              0 === s.loopCount
+                ? "Repeat until stopped. Tap to set 1"
+                : "Repeat ".concat(loopCountFace(s.loopCount), " times. Tap to change"),
+            children: loopCountFace(s.loopCount),
           }),
-        ],
-      }),
-      _jsxs("div", {
-        className: "transport",
-        children: [
           _jsx("button", {
             className: "tr-btn tap",
             onClick: () => t.prev(),
@@ -1493,7 +1467,7 @@ function k(e) {
             "aria-label": s.playing ? "Pause" : "Play",
             children: _jsx(Icon, {
               name: s.playing ? "pause" : "play",
-              size: 26,
+              size: 22,
             }),
           }),
           _jsx("button", {
@@ -1505,106 +1479,60 @@ function k(e) {
               size: u ? 24 : 22,
             }),
           }),
+          _jsx("button", {
+            type: "button",
+            className: "tr-btn tap"
+              .concat(s.verseLoop ? " on" : "")
+              .concat(focusLocked && !s.verseLoop ? " locked" : ""),
+            "aria-pressed": !!s.verseLoop,
+            "aria-label": s.verseLoop
+              ? "Stop repeating this verse"
+              : "Repeat this verse",
+            disabled: c,
+            onClick: () => t.toggleVerseLoop(),
+            children: _jsx(Icon, { name: "repeat", size: 20 }),
+          }),
         ],
       }),
-    ],
-  }),
-      toolsOpen &&
-        _jsx(PlayerSettingsSheet, {
-          engine: t,
-          state: s,
-          onClose: () => setToolsOpen(!1),
-          onPickMode: (e) => {
-            (setToolsOpen(!1), n(e));
-          },
-          onOpenPassage: (ch, from, to) => {
-            (setToolsOpen(!1), open(ch, from, to));
-          },
-        }),
+        ],
+      }),
     ],
   });
 }
 function N(e) {
   let {
       title: t,
-      subtitle: s,
-      qariName: a,
-      mode: i,
-      style: l,
-      onStyle: d,
-      onQari: c,
-      onEditRelay: h,
-      matchLabel: u = null,
       backLabel: p = null,
       onBack: onBack = null,
+      onSettings: onSettings = null,
+      settingsOpen: settingsOpen = !1,
     } = e,
-    m = useRouter(),
-    x = "relay" === i;
+    m = useRouter();
   return _jsxs("header", {
     className: "player-head",
     children: [
-      _jsxs("button", {
-        className: "icon-btn sm tap".concat(p ? " labelled" : ""),
+      _jsx("button", {
+        className: "icon-btn sm tap",
         onClick: () =>
           onBack ? onBack() : p ? m.back() : m.push("/"),
         "aria-label": p ? "Back to ".concat(p) : "Back to passage list",
-        children: [
-          _jsx(Icon, { name: "chevron-left", size: 19 }),
-          p && _jsx("span", { children: p }),
-        ],
+        children: _jsx(Icon, { name: "chevron-left", size: 19 }),
       }),
-      _jsxs("div", {
+      _jsx("div", {
         className: "ttl",
-        children: [
-          _jsx("h1", { children: t }),
-          u &&
-            _jsx("span", { className: "match-chip", children: u }),
-          x
-            ? _jsx("span", { className: "sub", children: s })
-            : _jsxs("button", {
-                className: "qari-pill tap",
-                onClick: c,
-                "aria-label": "Reciter: ".concat(a, ". Change reciter"),
-                children: [
-                  _jsx(Icon, {
-                    name: "mic",
-                    size: 11,
-                    style: {
-                      color: "var(--action-primary)",
-                      flex: "none",
-                    },
-                  }),
-                  _jsx("span", { children: a }),
-                  _jsx(Icon, {
-                    name: "chevron-down",
-                    size: 12,
-                    style: { color: "var(--text-muted)", flex: "none" },
-                  }),
-                ],
-              }),
-        ],
+        children: _jsx("h1", { children: t }),
       }),
-      x &&
-        h &&
-        _jsxs("button", {
-          onClick: h,
-          style: {
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "7px 10px",
-            borderRadius: "var(--radius-button)",
-            border: "1px solid var(--border-default)",
-            fontSize: 12,
-            fontWeight: 500,
-            color: "var(--text-secondary)",
-            flex: "none",
-          },
-          children: [
-            _jsx(Icon, { name: "settings-2", size: 14 }),
-            "Edit",
-          ],
-        }),
+      onSettings
+        ? _jsx("button", {
+            type: "button",
+            className: "icon-btn sm tap".concat(settingsOpen ? " on" : ""),
+            "aria-label": "Settings",
+            "aria-expanded": !!settingsOpen,
+            "aria-haspopup": "dialog",
+            onClick: onSettings,
+            children: _jsx(Icon, { name: "settings", size: 18 }),
+          })
+        : _jsx("span", { className: "icon-btn sm", "aria-hidden": "true" }),
     ],
   });
 }
@@ -3403,6 +3331,7 @@ function U(e) {
     [ef, ey] = useState(!1),
     [eg, ej] = useState(!1),
     [ew, eb] = useState(!1),
+    [eTools, eSetTools] = useState(!1),
     [ek, eN] = useState(null),
     [eI, eS] = useState(null),
     [eC, eT] = useState(null),
@@ -3426,9 +3355,9 @@ function U(e) {
       [eListId, eM, ed, eVoice],
     ),
     eStopN = eList ? clampStopIndex(eList, eStopRaw) : 0,
-    eV = !!(ek || ef || eg || ew || eW || eL),
+    eV = !!(ek || ef || eg || ew || eW || eL || eTools),
     eD = useCallback(() => {
-      (eN(null), ey(!1), ej(!1), eb(!1), eA(null), eE(null));
+      (eN(null), ey(!1), ej(!1), eb(!1), eA(null), eE(null), eSetTools(!1));
     }, []),
     eF = useRef(!1);
   j(eV, eD, eF);
@@ -3437,10 +3366,11 @@ function U(e) {
       null !== (y = null == eO ? void 0 : eO.name_simple) && void 0 !== y
         ? y
         : "Surah ".concat(z),
-    eq = ""
-      .concat(e_, " ")
-      .concat(V)
-      .concat(D > V ? "–".concat(D) : "");
+    eHead = verseRatioLabel(
+      e_,
+      (ez.verses[ez.vIdx] && ez.verses[ez.vIdx].number) || V,
+      (eO && eO.verses_count) || D,
+    );
   (useEffect(() => () => eu.destroy(), [eu]),
     useEffect(() => eu.subscribeToast(eh), [eu, eh]),
     useEffect(() => {
@@ -3778,12 +3708,8 @@ function U(e) {
       id: "main",
       children: [
         _jsx(N, {
-          title: eq,
-          qariName: ed(eM),
-          mode: "verse",
-          style: ez.style,
-          onStyle: () => {},
-          onQari: () => {},
+          title: eHead,
+          backLabel: $ ? $.split(" ")[0] : null,
         }),
         _jsx(OfflineBanner, {}),
         $ &&
@@ -3877,12 +3803,7 @@ function U(e) {
       id: "main",
       children: [
         _jsx(N, {
-          title: eq,
-          qariName: ed(eM),
-          mode: "verse",
-          style: ez.style,
-          onStyle: () => {},
-          onQari: () => {},
+          title: eHead,
         }),
         _jsx(OfflineBanner, {}),
         _jsxs("div", {
@@ -3917,10 +3838,7 @@ function U(e) {
             ? _jsx(G, { ...eX })
             : "focus" === ez.style
               ? _jsx(F, { ...eX })
-              : _jsx(H, { ...eX }),
-    e$ = ez.relay
-      ? "Relay \xb7 ".concat(ez.relay.order.length, " participants")
-      : void 0;
+              : _jsx(H, { ...eX });
   return _jsxs("main", {
     className: "shell player",
     id: "main",
@@ -3929,38 +3847,11 @@ function U(e) {
         className: "player-chrome",
         children: [
           _jsx(N, {
-            title: eq,
-            subtitle: e$,
-            qariName: ed(
-              null !== (b = ez.reciterId) && void 0 !== b ? b : eM,
-            ),
-            mode: ez.mode,
-            style: ez.style,
-            onStyle: (e) => eu.setStyle(e),
-            onQari: () => ej(!0),
-            matchLabel:
-              eR && es && (null == eC ? void 0 : eC.groups[es])
-                ? (() => {
-                    let e = eC.groups[es].occ,
-                      t = e.findIndex(
-                        (e) =>
-                          e.k === "".concat(z, ":").concat(eR.verse) &&
-                          e.f === eR.from,
-                      );
-                    return t >= 0
-                      ? "Match ".concat(t + 1, " of ").concat(e.length)
-                      : null;
-                  })()
-                : et
-                  ? "Match "
-                      .concat(et.split("-")[0], " of ")
-                      .concat(et.split("-")[1])
-                  : null,
+            title: eHead,
             backLabel: eList ? "Listen" : $ ? $.split(" ")[0] : null,
             onBack: eList ? () => Y.push("/listen") : undefined,
-            onEditRelay: () => {
-              (eu.pauseRelayForEdit(), eb(!0));
-            },
+            onSettings: () => eSetTools(!0),
+            settingsOpen: eTools,
           }),
           eList
             ? _jsx(PlaylistBar, {
@@ -4173,21 +4064,37 @@ function U(e) {
       _jsx(k, {
         engine: eu,
         state: ez,
-        onPickMode: (e) => {
-          (eu.setMode(e), "relay" === eu.getSnapshot().mode && eb(!0));
-        },
-        onOpenPassage: (ch, from, to) => {
-          let n = new URLSearchParams({
-            from: String(from),
-            to: String(to),
-          });
-          (null != ez.reciterId && n.set("reciter", String(ez.reciterId)),
-            "focus" === ez.style &&
-              "verse" !== ez.mode &&
-              n.set("mode", ez.mode),
-            Y.push("/read/".concat(ch, "?").concat(n.toString())));
-        },
       }),
+      eTools &&
+        _jsx(PlayerSettingsSheet, {
+          engine: eu,
+          state: ez,
+          qariName: ed(
+            null !== (b = ez.reciterId) && void 0 !== b ? b : eM,
+          ),
+          onClose: () => eSetTools(!1),
+          onOpenReciter: () => {
+            (eSetTools(!1), ej(!0));
+          },
+          onEditRelay: () => {
+            (eSetTools(!1), eu.pauseRelayForEdit(), eb(!0));
+          },
+          onPickMode: (e) => {
+            (eSetTools(!1), eu.setMode(e), "relay" === eu.getSnapshot().mode && eb(!0));
+          },
+          onOpenPassage: (ch, from, to) => {
+            let n = new URLSearchParams({
+              from: String(from),
+              to: String(to),
+            });
+            (eSetTools(!1),
+              null != ez.reciterId && n.set("reciter", String(ez.reciterId)),
+              "focus" === ez.style &&
+                "verse" !== ez.mode &&
+                n.set("mode", ez.mode),
+              Y.push("/read/".concat(ch, "?").concat(n.toString())));
+          },
+        }),
       ek &&
         eK &&
         _jsx(S, {

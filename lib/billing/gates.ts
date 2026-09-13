@@ -32,7 +32,7 @@ export const PLUS_EXPLAIN = {
   freeTitle: "Always free",
   free: [
     "Quran with audio, translation, and tajweed",
-    "Repeat under play, looping this verse until you turn it off",
+    "Repeat on the player, looping this verse until you turn it off",
     "A word played once or twice",
     "Colour themes — orange, green, black and white, pink, and gold",
     "Opening Focus or Listen and leaving",
