@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Icon } from "@/components/icon";
 import { Sheet } from "@/components/sheet";
+import { useAppData } from "@/lib/app-data";
 import { reciterDisplayName, reciterMatchesQuery } from "@/lib/playlists";
 
 export function ReciterSheet({
