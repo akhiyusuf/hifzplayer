@@ -15,6 +15,7 @@ import {
   verseRatioLabel,
   wordNeedsFollow,
   wordIsAway,
+  rangeReplayActive,
   wordRangePassComplete,
   wordRepsPlayKind,
 } from "./player-chrome.ts";
@@ -113,6 +114,27 @@ describe("word reps play kind", () => {
     assert.equal(wordRepsPlayKind(4, 4), "steps");
     assert.equal(wordRepsPlayKind(2, 5), "span");
     assert.equal(wordRepsPlayKind(5, 2), "span");
+  });
+});
+
+describe("rangeReplayActive", () => {
+  it("turns off when the loop, drill range, and pins are cleared", () => {
+    assert.equal(
+      rangeReplayActive({
+        loop: { startW: 1, endW: 4 },
+        wordStep: { range: { startW: 1, endW: 4 } },
+        wordPick: { start: 1, end: 4 },
+      }),
+      true,
+    );
+    assert.equal(
+      rangeReplayActive({
+        loop: null,
+        wordStep: { range: null },
+        wordPick: { start: null, end: null },
+      }),
+      false,
+    );
   });
 });
 
