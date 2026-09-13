@@ -13,6 +13,9 @@ export function stripeWebhookAction(type: string): WebhookAction {
       return "revoke";
     case "customer.subscription.updated":
       return "renew";
+    case "charge.refunded":
+    case "charge.dispute.created":
+      return "revoke";
     default:
       return "ignore";
   }
@@ -34,6 +37,9 @@ export function paystackWebhookAction(type: string): WebhookAction {
       return "fail";
     case "subscription.disable":
     case "subscription.not_renew":
+      return "revoke";
+    case "refund.processed":
+    case "charge.dispute.create":
       return "revoke";
     default:
       return "ignore";

@@ -26,4 +26,28 @@ describe("gift notice email", () => {
     assert.match(text, /Sign in to Diras with this same email/);
     assert.match(giftNoticeHtml({ existingAccount: true, signUpUrl: "https://example.test/sign-in" }), /Diras Plus/);
   });
+
+  it("tells an existing Plus reader that they got extra time", () => {
+    const text = giftNoticeText({
+      existingAccount: true,
+      alreadyPlus: true,
+      stacked: true,
+      planId: "monthly",
+      signUpUrl: "https://example.test/sign-in",
+    });
+    assert.equal(
+      giftNoticeSubject({ alreadyPlus: true, stacked: true }),
+      "Someone added extra time to your Diras Plus",
+    );
+    assert.match(text, /extra month of Diras Plus/);
+    assert.match(text, /adds time on top of what you have/);
+    assert.doesNotMatch(text, /trxref|cs_live|reference|user_/i);
+    const lifetime = giftNoticeText({
+      existingAccount: true,
+      alreadyPlus: true,
+      keptLifetime: true,
+      signUpUrl: "https://example.test/sign-in",
+    });
+    assert.match(lifetime, /already have lifetime Diras Plus/);
+  });
 });

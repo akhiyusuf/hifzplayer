@@ -49,14 +49,6 @@ export async function resolveEntitlement(): Promise<Entitlement | null> {
         return bound;
       }
     }
-    if (cookie) {
-      const bound = { ...cookie, userId };
-      if (!cookie.userId) {
-        await writeEntitlement(bound);
-        await savePlusToClerk(userId, bound, "granted");
-      }
-      return bound;
-    }
     return null;
   }
 

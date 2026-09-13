@@ -49,7 +49,15 @@ export async function POST(request: Request) {
       email: parsed.emails[0],
       origin: appUrl(request),
     });
-    return json({ ok: true, gift: true, sent: true, existingAccount: assigned.existingAccount });
+    return json({
+      ok: true,
+      gift: true,
+      sent: true,
+      existingAccount: assigned.existingAccount,
+      alreadyPlus: assigned.alreadyPlus,
+      stacked: assigned.stacked,
+      keptLifetime: assigned.keptLifetime,
+    });
   }
   if (result.hold.buyerId !== userId) {
     return unauthorized("This gift belongs to another account");
@@ -59,5 +67,13 @@ export async function POST(request: Request) {
     email: parsed.emails[0],
     origin: appUrl(request),
   });
-  return json({ ok: true, gift: true, sent: true, existingAccount: assigned.existingAccount });
+  return json({
+    ok: true,
+    gift: true,
+    sent: true,
+    existingAccount: assigned.existingAccount,
+    alreadyPlus: assigned.alreadyPlus,
+    stacked: assigned.stacked,
+    keptLifetime: assigned.keptLifetime,
+  });
 }

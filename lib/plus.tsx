@@ -15,7 +15,7 @@ import { Sheet } from "@/components/sheet";
 import { PLUS_NAME } from "@/lib/brand";
 import { PLUS_COPY, type PlusFeature } from "@/lib/billing/gates";
 import { PLUS_STORAGE_KEY } from "@/lib/billing/keys";
-import { getStore, setStore } from "@/lib/storage";
+import { setStore } from "@/lib/storage";
 
 type PlusCtx = {
   plus: boolean;
@@ -24,13 +24,6 @@ type PlusCtx = {
 };
 
 const Ctx = createContext<PlusCtx | null>(null);
-
-function cachedPlus() {
-  const hit = getStore<{ plus?: boolean; until?: string | null }>(PLUS_STORAGE_KEY);
-  if (!hit?.plus) return false;
-  if (hit.until && Date.parse(hit.until) <= Date.now()) return false;
-  return true;
-}
 
 /** Dev-only: sessionStorage hifz.plus.preview=1. Compiled out of production. */
 function previewPlus() {
@@ -48,18 +41,18 @@ export function PlusProvider({ children }: { children: ReactNode }) {
   const [feature, setFeature] = useState<PlusFeature | null>(null);
 
   useEffect(() => {
-    setPlus(cachedPlus() || previewPlus());
+    setPlus(previewPlus());
     let cancelled = false;
     (async () => {
       try {
         const res = await fetch("/api/billing/status");
-        const data = (await res.json()) as { plus?: boolean };
+        const data = (await res.json()) as { plus?: boolean; until?: string | null };
         if (cancelled) return;
         const on = previewPlus() || Boolean(data.plus);
         setPlus(on);
-        if (!on) setStore(PLUS_STORAGE_KEY, { plus: false });
+        setStore(PLUS_STORAGE_KEY, { plus: on, until: data.until ?? null });
       } catch {
-        /* keep cache */
+        if (!cancelled) setPlus(previewPlus());
       } finally {
         if (!cancelled) setReady(true);
       }

@@ -7,6 +7,9 @@ import {
   publicEntitlement,
   applyChargebackRevoke,
   plusRevokedByChargeback,
+  stackGiftOnEntitlement,
+  mergePaidOnAccount,
+  addPlanPeriod,
   type PlusFields,
 } from "./entitlement-bind.ts";
 
@@ -52,9 +55,9 @@ describe("account-bound plus", () => {
     assert.equal(entitlementForUser(sample({ userId: "user_1" }), "user_1", true)?.plus, true);
   });
 
-  it("binds a legacy cookie to the signed-in user", () => {
-    const ent = entitlementForUser(sample(), "user_9", true);
-    assert.equal(ent?.userId, "user_9");
+  it("ignores a cookie with no owner when accounts are on", () => {
+    assert.equal(entitlementForUser(sample(), "user_9", true), null);
+    assert.equal(entitlementForUser(sample({ userId: "user_9" }), "user_9", true)?.plus, true);
   });
 });
 
@@ -94,5 +97,56 @@ describe("pick best entitlement", () => {
     const cookie = sample();
     assert.equal(pickBestEntitlement(expired, cookie)?.ref, cookie.ref);
     assert.equal(pickBestEntitlement(sample({ plus: false }), cookie)?.ref, cookie.ref);
+  });
+});
+
+describe("gift stacking", () => {
+  it("adds a month on top of remaining Plus and keeps the paid ref", () => {
+    const now = new Date("2026-09-13T00:00:00.000Z");
+    const existingUntil = "2026-12-01T00:00:00.000Z";
+    const stacked = stackGiftOnEntitlement(
+      sample({ until: existingUntil, planId: "annual", ref: "own_pay" }),
+      sample({ until: "2026-10-14T00:00:00.000Z", planId: "monthly", ref: "gift_pay" }),
+      now,
+    );
+    assert.equal(stacked.alreadyPlus, true);
+    assert.equal(stacked.stacked, true);
+    assert.equal(stacked.keptLifetime, false);
+    assert.equal(stacked.next.ref, "own_pay");
+    assert.equal(stacked.next.planId, "annual");
+    assert.equal(stacked.next.until, addPlanPeriod("monthly", new Date(existingUntil)));
+  });
+
+  it("does not shorten lifetime when a monthly gift arrives", () => {
+    const stacked = stackGiftOnEntitlement(
+      sample({ until: null, planId: "lifetime", ref: "own_life" }),
+      sample({ until: "2026-10-14T00:00:00.000Z", planId: "monthly", ref: "gift_pay" }),
+    );
+    assert.equal(stacked.keptLifetime, true);
+    assert.equal(stacked.stacked, false);
+    assert.equal(stacked.next.until, null);
+    assert.equal(stacked.next.planId, "lifetime");
+    assert.equal(stacked.next.ref, "own_life");
+  });
+
+  it("applies a gift from now when the account has no Plus", () => {
+    const now = new Date("2026-09-13T00:00:00.000Z");
+    const stacked = stackGiftOnEntitlement(null, sample({ planId: "monthly", ref: "gift_pay" }), now);
+    assert.equal(stacked.alreadyPlus, false);
+    assert.equal(stacked.stacked, false);
+    assert.equal(stacked.next.until, addPlanPeriod("monthly", now));
+    assert.equal(stacked.next.ref, "gift_pay");
+  });
+});
+
+describe("paid merge", () => {
+  it("keeps lifetime when a shorter paid period arrives", () => {
+    const merged = mergePaidOnAccount(
+      sample({ until: null, planId: "lifetime", ref: "own_life" }),
+      sample({ until: "2026-10-14T00:00:00.000Z", planId: "monthly", ref: "sub_pay" }),
+    );
+    assert.equal(merged.until, null);
+    assert.equal(merged.planId, "lifetime");
+    assert.equal(merged.ref, "own_life");
   });
 });

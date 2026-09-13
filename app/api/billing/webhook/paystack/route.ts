@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     ok: action !== "fail",
   });
 
-  if (type === "charge.dispute.create") {
+  if (type === "charge.dispute.create" || type === "refund.processed") {
     try {
       const { revokePlusFromPaystackDispute } = await import("@/lib/billing/revoke-apply");
       const result = await revokePlusFromPaystackDispute(event.data);

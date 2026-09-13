@@ -8,7 +8,13 @@ import { PLUS_NAME } from "@/lib/brand";
 type GiftState =
   | { status: "working" }
   | { status: "form"; planId: string }
-  | { status: "sent"; existingAccount: boolean }
+  | {
+      status: "sent";
+      existingAccount: boolean;
+      alreadyPlus: boolean;
+      stacked: boolean;
+      keptLifetime: boolean;
+    }
   | { status: "err"; message: string };
 
 export function GiftAssign({ sessionId, reference }: { sessionId: string; reference: string }) {
@@ -64,9 +70,22 @@ export function GiftAssign({ sessionId, reference }: { sessionId: string; refere
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId, reference, email }),
       });
-      const data = (await res.json()) as { sent?: boolean; existingAccount?: boolean; error?: string };
+      const data = (await res.json()) as {
+        sent?: boolean;
+        existingAccount?: boolean;
+        alreadyPlus?: boolean;
+        stacked?: boolean;
+        keptLifetime?: boolean;
+        error?: string;
+      };
       if (!res.ok || !data.sent) throw new Error(data.error || "Could not send the gift.");
-      setState({ status: "sent", existingAccount: Boolean(data.existingAccount) });
+      setState({
+        status: "sent",
+        existingAccount: Boolean(data.existingAccount),
+        alreadyPlus: Boolean(data.alreadyPlus),
+        stacked: Boolean(data.stacked),
+        keptLifetime: Boolean(data.keptLifetime),
+      });
     } catch (err) {
       setState({
         status: "err",
@@ -95,9 +114,13 @@ export function GiftAssign({ sessionId, reference }: { sessionId: string; refere
         </span>
         <h2>Gift sent</h2>
         <p>
-          {state.existingAccount
-            ? "They already have a Diras account on that email. They should sign in with it — Google is fine if it uses the same address."
-            : "They will get an email. They only need to create a Diras account with that same address, with Google or without."}
+          {state.keptLifetime
+            ? "They already have lifetime Diras Plus on that email. We left that in place and emailed them."
+            : state.stacked
+              ? "They already had Diras Plus on that email. We added extra time on top — it does not replace what they had — and emailed them."
+              : state.existingAccount
+                ? "They already have a Diras account on that email. They should sign in with it — Google is fine if it uses the same address."
+                : "They will get an email. They only need to create a Diras account with that same address, with Google or without."}
         </p>
         <div className="status-actions">
           <Link className="btn-primary" href="/">
@@ -132,8 +155,9 @@ export function GiftAssign({ sessionId, reference }: { sessionId: string; refere
         Who is this for?
       </h2>
       <p>
-        Payment is done. Add their email now. They will get a note to sign up with that exact address — Google is
-        fine if the Google account uses it.
+        Payment is done. Add their email now. If they already have Plus, this adds extra time on top of
+        what they have — it does not replace it. They will get a note to sign in or sign up with that
+        exact address.
       </p>
       <label className="pricing-email">
         <span className="label-eyebrow">Their email</span>

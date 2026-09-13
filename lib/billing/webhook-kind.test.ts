@@ -10,6 +10,8 @@ describe("stripe webhook routing", () => {
     assert.equal(stripeWebhookAction("invoice.payment_failed"), "fail");
     assert.equal(stripeWebhookAction("customer.subscription.deleted"), "revoke");
     assert.equal(stripeWebhookAction("customer.subscription.updated"), "renew");
+    assert.equal(stripeWebhookAction("charge.refunded"), "revoke");
+    assert.equal(stripeWebhookAction("charge.dispute.created"), "revoke");
     assert.equal(stripeWebhookAction("ping"), "ignore");
   });
 
@@ -28,6 +30,8 @@ describe("paystack webhook routing", () => {
     assert.equal(paystackWebhookAction("invoice.payment_failed"), "fail");
     assert.equal(paystackWebhookAction("subscription.disable"), "revoke");
     assert.equal(paystackWebhookAction("subscription.not_renew"), "revoke");
+    assert.equal(paystackWebhookAction("refund.processed"), "revoke");
+    assert.equal(paystackWebhookAction("charge.dispute.create"), "revoke");
     assert.equal(paystackWebhookAction("transfer.success"), "ignore");
   });
 });
