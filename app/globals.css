@@ -346,6 +346,7 @@ a.qari-inline{text-decoration:none;color:inherit}
 .player-side .sidebar-row+.sidebar-row,.player-side .sidebar-jobs,.player-side .sidebar-block{border-top:1px solid var(--border-default)}
 .player-side .sidebar-k{font-size:13px;font-weight:600;color:var(--text-secondary);flex:none}
 .player-side .sidebar-v{flex:1 1;min-width:0;text-align:right;font-size:14px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-side .sidebar-v-wrap{white-space:normal;overflow:visible;text-overflow:unset;line-height:1.25}
 .player-side .sidebar-row .st{flex:1 1;min-width:0;display:flex;flex-direction:column;gap:2px;text-align:left}
 .player-side .sidebar-row .st b{font-size:14px;font-weight:600}
 .player-side .sidebar-row .st span{font-size:12.5px;font-weight:400;color:var(--text-muted)}
