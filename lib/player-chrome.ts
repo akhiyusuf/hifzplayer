@@ -63,6 +63,19 @@ export function sidebarKind(style: string, mode: string): SidebarKind {
   return "mushaf";
 }
 
+export type WordTapIntent = "play" | "meaning" | "wordRep";
+
+/** Mushaf mouse click still seeks from that word. A finger tap opens meaning. */
+export function wordTapIntent(
+  style: string,
+  mode: string,
+  pointerType?: string | null,
+): WordTapIntent {
+  if (style === "focus" && mode === "word") return "wordRep";
+  if (style === "mushaf" && pointerType === "touch") return "meaning";
+  return "play";
+}
+
 export function spanForVerse(verse: number, count: number) {
   const n = Math.max(1, verse || 1);
   const total = Math.max(n, count || n);
