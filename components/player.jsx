@@ -4528,8 +4528,9 @@ function U(e) {
                 mode: "relay",
               });
               (null != ez.reciterId && n.set("reciter", String(ez.reciterId)),
+                (eF.current = !0),
                 eSetTools(!1),
-                Y.push("/read/".concat(z, "?").concat(n.toString())));
+                Y.replace("/read/".concat(z, "?").concat(n.toString())));
               return;
             }
             (await eu.beginRelay(order, vFrom, vTo, rounds)) && eSetTools(!1);
@@ -4559,12 +4560,13 @@ function U(e) {
                 to: String(span.to),
                 at: String(verse),
               });
-            (eSetTools(!1),
-              null != ez.reciterId && n.set("reciter", String(ez.reciterId)),
+            (null != ez.reciterId && n.set("reciter", String(ez.reciterId)),
               "focus" === ez.style &&
                 "verse" !== ez.mode &&
                 n.set("mode", ez.mode),
-              Y.push("/read/".concat(ch, "?").concat(n.toString())));
+              (eF.current = !0),
+              eSetTools(!1),
+              Y.replace("/read/".concat(ch, "?").concat(n.toString())));
           },
           onTranslationId: (id) => {
             setStore(KEYS.translationId, id);
