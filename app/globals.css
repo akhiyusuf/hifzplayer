@@ -277,3 +277,29 @@ a.qari-inline{text-decoration:none;color:inherit}
 .pricing-who{display:flex;gap:8px}
 .pricing-who-btn{flex:1;padding:10px 12px;border-radius:var(--radius-card);border:1px solid var(--border-default);background:var(--bg-surface);font-size:13.5px;font-weight:600;color:var(--text-secondary)}
 .pricing-who-btn.on{border-color:var(--action-primary);background:var(--tint-primary-06);color:var(--action-primary)}
+.player-head{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border-default)}
+.player-head .ttl{flex:1 1;min-width:0;flex-direction:row;align-items:center}
+.player-head .ttl h1{font-size:15px;font-weight:700;max-width:100%}
+.player-foot{position:relative;gap:8px;padding:12px 14px calc(12px + env(safe-area-inset-bottom));overflow:visible}
+.player-deck{position:relative;padding-top:10px}
+.player-deck>.seek-row{position:absolute;left:0;right:0;top:0;transform:translateY(-50%);height:22px;z-index:3;gap:0;flex:none}
+.player-deck>.seek-row .tm{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap}
+.player-deck>.seek-row .seekbar{height:22px}
+.player-deck>.seek-row .seekbar .track{height:2px;border-radius:0;background:var(--border-default)}
+.player-deck>.seek-row .seekbar .fill{height:2px;border-radius:0}
+.player-deck>.seek-row .seekbar .thumb{width:12px;height:12px;box-shadow:0 0 0 2px var(--bg-surface),var(--shadow-sm)}
+.player-foot .transport{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:none;margin:0;gap:4px}
+.player-foot .play-btn{width:46px;height:46px}
+.player-foot .tr-btn{width:42px;height:42px}
+.player-foot .loop-count{font-family:var(--font-numeral);font-weight:700;font-size:17px;color:var(--text-primary)}
+.scrim.scrim-end{align-items:stretch;justify-content:flex-end}
+.sheet.sheet-side{width:min(380px,92vw);max-width:380px;height:100%;max-height:none;border-radius:0;margin:0;padding:16px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:var(--shadow-sheet);animation:none}
+.sheet.sheet-side .listen-sheet{padding-bottom:24px}
+@media (min-width:834px){
+  .player-head{padding-inline:max(24px,calc((100% - 760px) / 2))}
+  .player-foot{padding-inline:22px}
+  .player-deck>.seek-row{left:0;right:0}
+}
+@media (min-width:1440px){
+  .player-head{padding-inline:max(32px,calc((100% - 820px) / 2))}
+}

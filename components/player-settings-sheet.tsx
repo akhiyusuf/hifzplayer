@@ -225,12 +225,18 @@ export function PlayerSettingsSheet({
   onClose,
   onPickMode,
   onOpenPassage,
+  qariName,
+  onOpenReciter,
+  onEditRelay,
 }: {
   engine: Engine;
   state: State;
   onClose: () => void;
   onPickMode: (id: string) => void;
   onOpenPassage: (chapter: number, from: number, to: number) => void;
+  qariName?: string;
+  onOpenReciter?: () => void;
+  onEditRelay?: () => void;
 }) {
   const { plus: plusOn, askPlus } = usePlus();
   const { chapters } = useAppData();
@@ -250,10 +256,28 @@ export function PlayerSettingsSheet({
   const playback = (
     <section className="listen-section" aria-label="Playback">
       <span className="label-eyebrow">Playback</span>
+      {onOpenReciter ? (
+        <button type="button" className="listen-sheet-row tap" onClick={onOpenReciter}>
+          <span className="st">
+            <b>Reciter</b>
+            <span>{qariName || "Choose a reciter"}</span>
+          </span>
+          <Icon name="mic" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
+        </button>
+      ) : null}
+      {onEditRelay && state.mode === "relay" ? (
+        <button type="button" className="listen-sheet-row tap" onClick={onEditRelay}>
+          <span className="st">
+            <b>Edit relay</b>
+            <span>Change who recites, and the range</span>
+          </span>
+          <Icon name="settings-2" size={17} style={{ color: "var(--text-muted)", flex: "none" }} />
+        </button>
+      ) : null}
       <SpeedControl rate={state.rate} onRate={(rate) => engine.setRate(rate)} />
       {!mushaf && drill ? (
         <p className="listen-repeat-note">
-          Repeat the verse from the button under play. Word chips on the page: ×1 and ×2 stay free. {PLUS_NAME} is 3× and up.
+          Repeat this verse from the last button on the player. Word chips on the page: ×1 and ×2 stay free. {PLUS_NAME} is 3× and up.
         </p>
       ) : null}
     </section>
@@ -285,6 +309,7 @@ export function PlayerSettingsSheet({
     return (
       <Sheet
         title={PLUS_NAME}
+        side="right"
         onClose={onClose}
         icon={
           <span className="sheet-tile" style={{ color: "var(--action-primary)" }}>
@@ -298,11 +323,11 @@ export function PlayerSettingsSheet({
   }
 
   return (
-    <Sheet title="Settings" onClose={onClose}>
+    <Sheet title="Settings" side="right" onClose={onClose}>
       <div className="listen-sheet">
         <p className="listen-sheet-lead">
           {mushaf
-            ? "Reading stays free. Repeat on the player loops this verse."
+            ? "Reading stays free. The last button on the player loops this verse."
             : plusOn
               ? "Play this verse, or pick Drill, Masked, or Relay."
               : "Look around Focus. Play, Drill, Masked, and Relay are Diras Plus. Mushaf stays free."}

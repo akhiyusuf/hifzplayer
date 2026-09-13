@@ -9,12 +9,14 @@ export function Sheet({
   children,
   maxHeight,
   icon,
+  side = "bottom",
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
   maxHeight?: string | number;
   icon?: ReactNode;
+  side?: "bottom" | "right";
 }) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const prevFocus = useRef<HTMLElement | null>(null);
@@ -56,22 +58,24 @@ export function Sheet({
     };
   }, [onClose]);
 
+  const sidebar = side === "right";
+
   return (
     <div
-      className="scrim"
+      className={sidebar ? "scrim scrim-end" : "scrim"}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
-        className="sheet"
+        className={sidebar ? "sheet sheet-side" : "sheet"}
         role="dialog"
         aria-modal="true"
         aria-label={title}
         ref={sheetRef}
-        style={maxHeight ? { maxHeight } : undefined}
+        style={maxHeight && !sidebar ? { maxHeight } : undefined}
       >
-        <div className="sheet-handle" />
+        {sidebar ? null : <div className="sheet-handle" />}
         <div className="sheet-head">
           <span className="sheet-title-row">
             {icon}
