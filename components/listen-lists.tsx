@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { useAppData } from "@/lib/app-data";
 import { PLUS_NAME } from "@/lib/brand";
+import { listenLeadCopy, occasionHintCopy } from "@/lib/plus-presence";
 import { usePlus } from "@/lib/plus";
 import { OCCASION_PLAYLISTS, playlistHref, type Playlist } from "@/lib/playlists";
 
@@ -53,13 +54,18 @@ function OccasionCard({
           </>
         ) : (
           <>
-            <Icon name="play" size={13} />
-            {reciterName}
+            <Icon name="sparkles" size={13} />
+            Plus · {reciterName}
           </>
         )}
       </span>
     </button>
   );
+}
+
+export function ListenPageIntro() {
+  const { plus } = usePlus();
+  return <p className="lists-lead">{listenLeadCopy(plus)}</p>;
 }
 
 export function ListenLists() {
@@ -73,7 +79,7 @@ export function ListenLists() {
     <section className="picker-section">
       <div className="index-head">
         <span className="label-eyebrow">For occasions</span>
-        <span className="lists-hint">{locked ? `Look around · play is ${PLUS_NAME}` : qari}</span>
+        <span className="lists-hint">{occasionHintCopy(plus, qari)}</span>
       </div>
       <div className="occ-scroller">
         {OCCASION_PLAYLISTS.map((list) => (

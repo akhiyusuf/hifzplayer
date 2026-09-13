@@ -369,3 +369,4 @@ a.qari-inline{text-decoration:none;color:inherit}
 .player-side .player-side-foot{margin-top:0;padding:0;gap:0}
 .player-side .player-side-foot .theme-row{border:none;border-radius:0;border-top:1px solid var(--border-default);background:transparent;padding:12px 14px}
 .sheet.sheet-side{width:min(360px,94vw);max-width:360px}
+.sidebar-plus-on{display:flex;align-items:center;gap:8px;margin:0;padding:10px 14px;font-size:12.5px;font-weight:600;color:var(--action-primary);border-top:1px solid var(--border-default)}
