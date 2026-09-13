@@ -1,4 +1,5 @@
-import { API, AUDIO_BASE, CACHE_MS, KEYS, TRANSLATION_ID } from "./constants";
+import { API, CACHE_MS, KEYS, TRANSLATION_ID } from "./constants";
+import { resolveAudioUrl } from "./audio-url";
 import { currentTranslationId } from "./translations";
 import { parseSegments } from "./audio";
 import { cachedGet, cachedSet } from "./storage";
@@ -70,10 +71,8 @@ export async function fetchAudio(reciterId: number, chapter: number, from: numbe
   const verses = await versesByChapter(chapter, from, to, `&audio=${reciterId}`);
   const out: Record<string, { url: string; rawSegments: unknown }> = {};
   for (const v of verses) {
-    if (v.audio?.url) {
-      const url = /^https?:/i.test(v.audio.url) ? v.audio.url : AUDIO_BASE + String(v.audio.url).replace(/^\//, "");
-      out[v.verse_key] = { url, rawSegments: v.audio.segments || null };
-    }
+    const url = resolveAudioUrl(v.audio?.url);
+    if (url) out[v.verse_key] = { url, rawSegments: v.audio.segments || null };
   }
   return out;
 }

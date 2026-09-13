@@ -1,3 +1,5 @@
+import { AUDIO_MIRROR_ORIGIN } from "../constants.ts";
+
 /** Browser security headers. CSP is applied in middleware so Clerk can merge its own directives. */
 
 export const SECURITY_HEADERS: { key: string; value: string }[] = [
@@ -23,8 +25,8 @@ const CSP_BASE = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  "connect-src 'self' https://api.quran.com https://verses.quran.com https://va.vercel-scripts.com https://vitals.vercel-insights.com",
-  "media-src 'self' https://verses.quran.com blob:",
+  `connect-src 'self' https://api.quran.com https://verses.quran.com ${AUDIO_MIRROR_ORIGIN} https://va.vercel-scripts.com https://vitals.vercel-insights.com`,
+  `media-src 'self' https://verses.quran.com ${AUDIO_MIRROR_ORIGIN} blob:`,
   "worker-src 'self' blob:",
   "upgrade-insecure-requests",
 ];
@@ -47,11 +49,12 @@ export const CLERK_CSP_EXTRAS = {
   "connect-src": [
     "https://api.quran.com",
     "https://verses.quran.com",
+    AUDIO_MIRROR_ORIGIN,
     "https://va.vercel-scripts.com",
     "https://vitals.vercel-insights.com",
   ],
   "script-src": ["https://va.vercel-scripts.com"],
-  "media-src": ["'self'", "https://verses.quran.com", "blob:"],
+  "media-src": ["'self'", "https://verses.quran.com", AUDIO_MIRROR_ORIGIN, "blob:"],
   "frame-ancestors": ["'self'", "https://checkout.paystack.com", "https://standard.paystack.co", "https://paystack.com"],
   "object-src": ["'none'"],
 };

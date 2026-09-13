@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { fetchChapters, fetchRecitations } from "./api";
 import { KEYS } from "./constants";
+import { reciterDisplayName } from "./playlists";
 import { getStore, setStore } from "./storage";
 import type { Chapter, Recitation, Recent } from "./types";
 
@@ -80,7 +81,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const reciterName = useCallback(
-    (id: number | null | undefined) => recitations.find((r) => r.id === id)?.name || "—",
+    (id: number | null | undefined) => {
+      const rec = recitations.find((r) => r.id === id);
+      return rec ? reciterDisplayName(rec.name, rec.style) : "—";
+    },
     [recitations],
   );
 

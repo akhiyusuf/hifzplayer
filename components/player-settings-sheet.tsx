@@ -482,11 +482,11 @@ export function PlayerSettingsSheet({
   const currentTrans =
     translations.find((item) => item.id === transId) || translations.find((item) => item.id === 20);
 
-  const locate = kind === "mushaf" || kind === "word" || kind === "masked";
+  const locate = kind !== "relay";
   const relayOn = kind === "relay";
   const drill = kind !== "mushaf";
   const compactDrill = kind !== "focus";
-  const reciter = kind !== "focus" && kind !== "relay";
+  const reciter = kind !== "relay";
   const translation = kind === "mushaf";
   const qariId = reciterId || 0;
 

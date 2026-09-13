@@ -117,6 +117,18 @@ export function reciterDisplayName(name: string, style?: string | null) {
   return st ? `${trimmed} · ${st}` : trimmed;
 }
 
+export function reciterMatchesQuery(
+  name: string,
+  style: string | null | undefined,
+  query: string,
+) {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const blob = `${name} ${style || ""} ${reciterDisplayName(name, style)}`.toLowerCase();
+  const fold = (s: string) => s.replace(/[^a-z0-9]+/g, " ").replace(/(.)\1+/g, "$1").trim();
+  return blob.includes(q) || fold(blob).includes(fold(q));
+}
+
 export function bestOfPlaylist(reciterName: string, style?: string | null): Playlist {
   const shown = reciterDisplayName(reciterName, style);
   return {

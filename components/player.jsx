@@ -45,6 +45,7 @@ import {
   readRelayDraft,
   sortedWordRange,
   spanForVerse,
+  indexOfVerseInPassage,
   verseRatioLabel,
   wordNeedsFollow,
   wordIsAway,
@@ -68,6 +69,15 @@ function wantsTranslation() {
 }
 function emptyWordPick() {
   return { start: null, end: null, count: null, open: null };
+}
+function scrollPlayerToVerse(idx) {
+  if (typeof document === "undefined" || idx < 0) return;
+  requestAnimationFrame(() => {
+    let el = document.querySelector(
+      '.shell.player [data-vi="'.concat(idx, '"]'),
+    );
+    el && el.scrollIntoView({ block: "center", behavior: "smooth" });
+  });
 }
 function x(e, t, s, r, a, n) {
   let i = e.filter((e) => e.number >= t && e.number <= s),
@@ -3914,7 +3924,7 @@ function U(e) {
       let e = eu
         .getSnapshot()
         .verses.findIndex((e) => e.number === Number(ea));
-      e > 0 && eu.loadVerseAudio(e, !1);
+      e >= 0 && e !== eu.getSnapshot().vIdx && eu.loadVerseAudio(e, !1);
     }, [ep, ea]),
     useEffect(() => {
       var e;
@@ -4529,12 +4539,18 @@ function U(e) {
                 (en.find((item) => item.id === ch) &&
                   en.find((item) => item.id === ch).verses_count) ||
                 verse,
-              inRange = ch === z && verse >= V && verse <= D,
-              idx = inRange
-                ? ez.verses.findIndex((item) => item.number === verse)
-                : -1;
+              idx = indexOfVerseInPassage(
+                ez.verses,
+                ch,
+                z,
+                V,
+                D,
+                verse,
+              );
             if (idx >= 0) {
-              eu.loadVerseAudio(idx, !1);
+              (eu.loadVerseAudio(idx, !1),
+                eSetTools(!1),
+                scrollPlayerToVerse(idx));
               return;
             }
             let span = spanForVerse(verse, count),

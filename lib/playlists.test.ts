@@ -7,6 +7,7 @@ import {
   clampStopIndex,
   playlistHref,
   reciterDisplayName,
+  reciterMatchesQuery,
   resolvePlaylist,
   stopLabel,
 } from "./playlists.ts";
@@ -94,5 +95,11 @@ describe("playlist urls", () => {
   it("includes style only when present", () => {
     assert.equal(reciterDisplayName("Minshawi", "Murattal"), "Minshawi · Murattal");
     assert.equal(reciterDisplayName("Sudais", ""), "Sudais");
+  });
+
+  it("finds Muallim by style, not only by the reciter name", () => {
+    assert.equal(reciterMatchesQuery("Mahmoud Khalil Al-Husary", "Muallim", "mualim"), true);
+    assert.equal(reciterMatchesQuery("Mahmoud Khalil Al-Husary", "Muallim", "husary"), true);
+    assert.equal(reciterMatchesQuery("Mishari Rashid al-Afasy", "", "mualim"), false);
   });
 });
