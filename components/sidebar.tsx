@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { AccountEntry } from "./account-entry";
 import { Icon } from "./icon";
 import { APP_NAME, PLUS_NAME } from "@/lib/brand";
+import { plusOnLabel } from "@/lib/plus-presence";
+import { usePlus } from "@/lib/plus";
 
 const ITEMS = [
   { href: "/", label: "Read", icon: "book-open", match: (p: string) => p === "/" || p.startsWith("/read") },
@@ -15,6 +17,7 @@ const ITEMS = [
 
 export function AppSidebar() {
   const path = usePathname() || "/";
+  const { plus } = usePlus();
   return (
     <nav className="app-sidebar" aria-label="Main">
       <div className="as-brand">
@@ -38,7 +41,7 @@ export function AppSidebar() {
         <AccountEntry />
       </div>
       <div className="as-foot">
-        <Link href="/pricing">{PLUS_NAME}</Link>
+        <Link href={plus ? "/settings" : "/pricing"}>{plus ? plusOnLabel() : PLUS_NAME}</Link>
         <span aria-hidden="true"> · </span>
         <Link href="/roadmap">What&apos;s coming</Link>
         <span aria-hidden="true"> · </span>

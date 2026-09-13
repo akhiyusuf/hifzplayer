@@ -16,6 +16,7 @@ import {
   type RelaySeat,
 } from "@/lib/player-chrome";
 import { usePlus } from "@/lib/plus";
+import { plusOnLabel } from "@/lib/plus-presence";
 import { useTheme } from "@/lib/theme";
 import { currentTranslationId, fetchTranslations, type TranslationOption } from "@/lib/translations";
 
@@ -598,6 +599,12 @@ export function PlayerSettingsSheet({
               </button>
             ) : null}
           </div>
+        ) : null}
+        {plusOn ? (
+          <p className="sidebar-plus-on">
+            <Icon name="sparkles" size={13} />
+            {plusOnLabel()}
+          </p>
         ) : null}
         <ThemeFoot />
       </div>

@@ -18,6 +18,7 @@ import { FocusStage } from "@/components/focus-stage";
 import { PracticeSheet } from "@/components/practice-sheet";
 import { PlayerSettingsSheet } from "@/components/player-settings-sheet";
 import { ReciterSheet } from "@/components/reciter-sheet";
+import { PlaylistBar } from "@/components/playlist-bar";
 import { WordRepBar } from "@/components/word-rep-bar";
 import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
@@ -4279,6 +4280,7 @@ function U(e) {
                 title: eList.title,
                 index: eStopN,
                 total: eList.stops.length,
+                plusOn: plusOn,
                 nextLabel:
                   eStopN < eList.stops.length - 1
                     ? stopLabel(eList.stops[eStopN + 1], en)

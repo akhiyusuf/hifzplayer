@@ -2,12 +2,15 @@
 
 import { useUser } from "@clerk/nextjs";
 import { clerkBrowserReady } from "@/lib/auth/config";
-import { GUEST_NAME, SALAAM, givenNameFromAccount } from "@/lib/greeting";
+import { GUEST_NAME, givenNameFromAccount } from "@/lib/greeting";
+import { plusSalaamLine } from "@/lib/plus-presence";
+import { usePlus } from "@/lib/plus";
 
 export function HomeHello() {
+  const { plus } = usePlus();
   return (
     <div className="rh-left">
-      <span className="label-eyebrow salaam">{SALAAM}</span>
+      <span className="label-eyebrow salaam">{plusSalaamLine(plus)}</span>
       <HomeHelloName />
     </div>
   );

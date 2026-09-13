@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/icon";
-import { ListenLists } from "@/components/listen-lists";
+import { ListenLists, ListenPageIntro } from "@/components/listen-lists";
 import { OfflineBanner } from "@/components/offline-banner";
-import { PLUS_NAME } from "@/lib/brand";
 
 export default function ListenPage() {
   return (
@@ -15,10 +14,7 @@ export default function ListenPage() {
       </nav>
       <OfflineBanner />
       <div className="picker-body" style={{ paddingTop: 12 }}>
-        <p className="lists-lead">
-          Occasion lists for Friday, night, morning, and the rest. Reading stays on Read. Playing a list is{" "}
-          {PLUS_NAME}.
-        </p>
+        <ListenPageIntro />
         <ListenLists />
       </div>
     </main>
