@@ -41,6 +41,16 @@ export function wordNeedsFollow(
   return wordTop < viewTop + pad || wordBottom > viewBottom - pad;
 }
 
+export function wordIsAway(
+  wordTop: number,
+  wordBottom: number,
+  viewTop: number,
+  viewBottom: number,
+  pad = 8,
+) {
+  return wordBottom < viewTop + pad || wordTop > viewBottom - pad;
+}
+
 export type SidebarKind = "mushaf" | "focus" | "word" | "masked" | "relay";
 
 export function sidebarKind(style: string, mode: string): SidebarKind {

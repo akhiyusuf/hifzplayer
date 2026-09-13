@@ -47,6 +47,7 @@ import {
   spanForVerse,
   verseRatioLabel,
   wordNeedsFollow,
+  wordIsAway,
   wordRangePassComplete,
   wordRepsPlayKind,
   writeRelayDraft,
@@ -3330,10 +3331,13 @@ function MushafFollowButton(e) {
     }, []),
     h = useCallback(() => {
       let { body: e, word: t } = c();
-      if (!e || !t) return !1;
+      if (!e || !t) return { follow: !1, away: !1 };
       let s = t.getBoundingClientRect(),
         n = e.getBoundingClientRect();
-      return wordNeedsFollow(s.top, s.bottom, n.top, n.bottom, 48);
+      return {
+        follow: wordNeedsFollow(s.top, s.bottom, n.top, n.bottom, 48),
+        away: wordIsAway(s.top, s.bottom, n.top, n.bottom, 8),
+      };
     }, [c]),
     u = useCallback(
       (e) => {
@@ -3342,12 +3346,12 @@ function MushafFollowButton(e) {
         ((d.current = !0),
           (o.current = !0),
           t.scrollIntoView({
-            block: "nearest",
+            block: "center",
             behavior: e ? "smooth" : "auto",
           }),
           window.setTimeout(() => {
             ((d.current = !1), l(!1));
-          }, 320));
+          }, 420));
       },
       [c],
     );
@@ -3361,11 +3365,11 @@ function MushafFollowButton(e) {
     let t = () => {
       let n = h();
       if (d.current) {
-        n || l(!1);
+        n.away || l(!1);
         return;
       }
-      if (o.current && !n) return;
-      if (n) {
+      if (o.current && !n.away) return;
+      if (n.away) {
         ((o.current = !1), l(!0));
         return;
       }
@@ -3379,10 +3383,10 @@ function MushafFollowButton(e) {
     useEffect(() => {
       if ("mushaf" !== s) return;
       if (o.current) {
-        h() && u(!0);
+        h().follow && u(!0);
         return;
       }
-      l(h());
+      l(h().away);
     }, [n.curWord, n.vIdx, s, h, u]));
   return "mushaf" !== s || !i
     ? null

@@ -14,6 +14,7 @@ import {
   spanForVerse,
   verseRatioLabel,
   wordNeedsFollow,
+  wordIsAway,
   wordRangePassComplete,
   wordRepsPlayKind,
 } from "./player-chrome.ts";
@@ -120,5 +121,11 @@ describe("wordNeedsFollow", () => {
     assert.equal(wordNeedsFollow(80, 110, 0, 400, 48), false);
     assert.equal(wordNeedsFollow(10, 40, 0, 400, 48), true);
     assert.equal(wordNeedsFollow(370, 395, 0, 400, 48), true);
+  });
+
+  it("treats a word as away only when it leaves the view", () => {
+    assert.equal(wordIsAway(10, 40, 0, 400, 8), false);
+    assert.equal(wordIsAway(-30, -5, 0, 400, 8), true);
+    assert.equal(wordIsAway(410, 430, 0, 400, 8), true);
   });
 });
