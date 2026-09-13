@@ -3771,6 +3771,9 @@ function U(e) {
       ((eu.onPlusRequired = ask), eu.setPlus(plusOn));
     }, [eu, plusOn, ask]),
     useEffect(() => {
+      eN(null);
+    }, [ez.mode, ez.style]),
+    useEffect(() => {
       if (!eList || !eListId) {
         ((eu.onPassageEnd = null),
           (eu.onNeedNextStop = null),
