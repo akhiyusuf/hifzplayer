@@ -3031,7 +3031,11 @@ function FocusLines(e) {
                       inRange: !!inPin,
                       isRangeStart: start === e.pos,
                       isRangeEnd: end === e.pos,
-                      isPending: i === e.pos || (wordRep && wordRep.open === e.pos),
+                      isPending:
+                        i === e.pos ||
+                        (wordRep &&
+                          wordRep.open === e.pos &&
+                          !(null != start && null != end)),
                       mask: null,
                       interactive: d,
                       onTap: l,
