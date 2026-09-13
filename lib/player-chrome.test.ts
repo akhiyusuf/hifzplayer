@@ -12,6 +12,7 @@ import {
   sidebarKind,
   sortedWordRange,
   spanForVerse,
+  indexOfVerseInPassage,
   verseRatioLabel,
   wordNeedsFollow,
   wordIsAway,
@@ -47,6 +48,18 @@ describe("spanForVerse", () => {
     assert.deepEqual(spanForVerse(2, 7), { from: 1, to: 7 });
     assert.deepEqual(spanForVerse(50, 286), { from: 50, to: 59 });
     assert.deepEqual(spanForVerse(1, 286), { from: 1, to: 10 });
+  });
+});
+
+describe("indexOfVerseInPassage", () => {
+  const verses = [{ number: 1 }, { number: 2 }, { number: 3 }];
+  it("finds an ayah already loaded, including the first one", () => {
+    assert.equal(indexOfVerseInPassage(verses, 1, 1, 1, 3, 1), 0);
+    assert.equal(indexOfVerseInPassage(verses, 1, 1, 1, 3, 3), 2);
+  });
+  it("asks for a navigation when the ayah is in another surah or outside the span", () => {
+    assert.equal(indexOfVerseInPassage(verses, 2, 1, 1, 3, 1), -1);
+    assert.equal(indexOfVerseInPassage(verses, 1, 1, 1, 3, 20), -1);
   });
 });
 

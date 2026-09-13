@@ -72,6 +72,18 @@ export function spanForVerse(verse: number, count: number) {
   return { from, to };
 }
 
+export function indexOfVerseInPassage(
+  verses: { number: number }[],
+  chapter: number,
+  passageChapter: number,
+  from: number,
+  to: number,
+  verse: number,
+) {
+  if (chapter !== passageChapter || verse < from || verse > to) return -1;
+  return verses.findIndex((item) => item.number === verse);
+}
+
 export const DRILL_HINT_MS = 10_000;
 
 export const DRILL_HINTS = {

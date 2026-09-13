@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Icon } from "@/components/icon";
 import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
+import { reciterDisplayName, reciterMatchesQuery } from "@/lib/playlists";
 
 export function ReciterSheet({
   currentId,
@@ -19,7 +20,9 @@ export function ReciterSheet({
   const { recitations } = useAppData();
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
-  const list = q ? recitations.filter((r) => r.name.toLowerCase().includes(q)) : recitations;
+  const list = q
+    ? recitations.filter((r) => reciterMatchesQuery(r.name, r.style, q))
+    : recitations;
 
   return (
     <Sheet title="Reciter" onClose={onClose} maxHeight="80dvh">
@@ -48,7 +51,7 @@ export function ReciterSheet({
               type="button"
               className={`qari-row${r.id === currentId ? " on" : ""}`}
               onClick={() => {
-                onPick(r.id, r.name);
+                onPick(r.id, reciterDisplayName(r.name, r.style));
                 onClose();
               }}
               aria-current={r.id === currentId}

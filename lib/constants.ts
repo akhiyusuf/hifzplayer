@@ -1,5 +1,7 @@
 export const API = "https://api.quran.com/api/v4";
 export const AUDIO_BASE = "https://verses.quran.com/";
+/** Husary Muallim, Husary, and Tablawi stream from this host, not verses.quran.com. */
+export const AUDIO_MIRROR_ORIGIN = "https://mirrors.quranicaudio.com";
 export const TRANSLATION_ID = 20; // Saheeh International
 export const CACHE_MS = 7 * 24 * 60 * 60 * 1000;
 export const RATES = [0.75, 1, 1.25, 1.5] as const;
