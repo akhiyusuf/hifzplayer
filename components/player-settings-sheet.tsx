@@ -41,12 +41,10 @@ function SelectRow({
   children: ReactNode;
 }) {
   return (
-    <label className="verse-field sidebar-select">
-      <span>{label}</span>
-      <span className="vf-value" style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 14 }}>
-        {value}
-      </span>
-      <Icon name="chevron-down" size={14} style={{ color: "var(--text-muted)", flex: "none" }} />
+    <label className="sidebar-row">
+      <span className="sidebar-k">{label}</span>
+      <span className="sidebar-v">{value}</span>
+      <Icon name="chevron-down" size={16} style={{ color: "var(--text-muted)", flex: "none" }} />
       {children}
     </label>
   );
@@ -60,9 +58,9 @@ function ModeSwitch({
   onStyle: (next: "mushaf" | "focus") => void;
 }) {
   return (
-    <div className="sidebar-mode">
-      <span className="label-eyebrow">Mode</span>
-      <div className="style-toggle" role="group" aria-label="Reading view">
+    <div className="sidebar-row sidebar-row-stack">
+      <span className="sidebar-k">Mode</span>
+      <div className="style-toggle sidebar-seg" role="group" aria-label="Reading view">
         {(["mushaf", "focus"] as const).map((id) => (
           <button
             key={id}
@@ -123,8 +121,8 @@ function DrillTypePicker({
     );
   }
   return (
-    <section className="listen-section" aria-label="Drill type">
-      <span className="label-eyebrow">Drill type</span>
+    <section className="sidebar-jobs" aria-label="Drill type">
+      <span className="sidebar-k">Drill type</span>
       <p className="practise-jobs-lead">
         {current
           ? current.desc
@@ -172,10 +170,10 @@ function DrillTypePicker({
 function ThemeFoot() {
   const { dark, setDark } = useTheme();
   return (
-    <div className="player-side-foot">
-      <div className="sidebar-mode">
-        <span className="label-eyebrow">Theme</span>
-        <div className="style-toggle" role="group" aria-label="Theme">
+    <div className="player-side-foot sidebar-group">
+      <div className="sidebar-row sidebar-row-stack">
+        <span className="sidebar-k">Theme</span>
+        <div className="style-toggle sidebar-seg" role="group" aria-label="Theme">
           <button type="button" className={dark ? "" : "on"} aria-pressed={!dark} onClick={() => setDark(false)}>
             Light
           </button>
@@ -264,33 +262,33 @@ function RelaySetup({
           { label: "From", value: from, set: setFrom },
           { label: "To", value: to, set: setTo },
         ].map((field) => (
-          <label key={field.label} className="range-field">
-            <span className="label-eyebrow">{field.label}</span>
-            <span className="select-box">
+          <label key={field.label} className="sidebar-row sidebar-row-range">
+            <span className="sidebar-k">{field.label}</span>
+            <span className="sidebar-v">
               {chapter}:{field.value}
-              <Icon name="chevron-down" size={15} style={{ color: "var(--text-muted)" }} />
-              <select
-                aria-label={`${field.label} verse`}
-                value={field.value}
-                onChange={(e) => {
-                  const n = Number(e.target.value);
-                  field.set(n);
-                  if (field.label === "From" && to < n) setTo(n);
-                  if (field.label === "To" && n < from) setFrom(n);
-                }}
-              >
-                {Array.from({ length: versesCount }, (_, i) => i + 1).map((n) => (
-                  <option key={n} value={n}>
-                    {chapter}:{n}
-                  </option>
-                ))}
-              </select>
             </span>
+            <Icon name="chevron-down" size={16} style={{ color: "var(--text-muted)", flex: "none" }} />
+            <select
+              aria-label={`${field.label} verse`}
+              value={field.value}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                field.set(n);
+                if (field.label === "From" && to < n) setTo(n);
+                if (field.label === "To" && n < from) setFrom(n);
+              }}
+            >
+              {Array.from({ length: versesCount }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={n}>
+                  {chapter}:{n}
+                </option>
+              ))}
+            </select>
           </label>
         ))}
       </div>
-      <div>
-        <span className="label-eyebrow">Reciters</span>
+      <div className="sidebar-block">
+        <span className="sidebar-k">Reciters</span>
         <div className="sheet-list" style={{ marginTop: 6 }}>
           {order.map((seat, index) => {
             const name = seat.kind === "you" ? "You (paced)" : reciterName(seat.reciterId);
@@ -317,6 +315,7 @@ function RelaySetup({
                     </optgroup>
                   </select>
                 </label>
+                <span className="order-actions">
                 <button
                   type="button"
                   className="tap"
@@ -350,6 +349,7 @@ function RelaySetup({
                 >
                   <Icon name="x" size={16} />
                 </button>
+                </span>
               </div>
             );
           })}
@@ -371,8 +371,8 @@ function RelaySetup({
           {plusOn ? "Add participant" : "Add another reciter"}
         </button>
       </div>
-      <div>
-        <span className="label-eyebrow">Rounds</span>
+      <div className="sidebar-block">
+        <span className="sidebar-k">Rounds</span>
         <div className="rounds-row" style={{ marginTop: 6 }} role="group" aria-label="Rounds">
           {RELAY_ROUNDS.map((item) => {
             const locked = isPaidRepeat(item.value) && !plusOn;
@@ -492,108 +492,112 @@ export function PlayerSettingsSheet({
 
   return (
     <Sheet title="Settings" side="right" onClose={onClose}>
-      <div className="listen-sheet player-side">
-        <ModeSwitch style={state.style === "focus" ? "focus" : "mushaf"} onStyle={(next) => engine.setStyle(next)} />
-        {drill ? (
-          <DrillTypePicker
-            mode={state.mode}
-            plusOn={plusOn}
-            compact={compactDrill}
-            onAskPlus={() => askPlus("focus")}
-            onPick={(id) => onPickMode(id)}
-          />
-        ) : null}
-        {locate || relayOn ? (
-          <SelectRow label="Surah" value={surahName}>
-            <select
-              aria-label="Surah"
-              value={passage.chapter}
-              onChange={(e) => onLocate(Number(e.target.value), 1)}
-            >
-              {chapters.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.id}. {item.name_simple}
-                </option>
-              ))}
-            </select>
-          </SelectRow>
-        ) : null}
-        {locate ? (
-          <SelectRow label="Verse" value={String(verseNumber || passage.from)}>
-            <select
-              aria-label="Verse"
-              value={verseNumber || passage.from}
-              onChange={(e) => onLocate(passage.chapter, Number(e.target.value))}
-            >
-              {Array.from({ length: versesCount }, (_, i) => i + 1).map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </SelectRow>
-        ) : null}
-        {relayOn && onRelayStart ? (
-          <RelaySetup
-            chapter={passage.chapter}
-            versesCount={versesCount}
-            passageFrom={passage.from}
-            passageTo={passage.to}
-            reciterId={qariId}
-            initial={relay}
-            onStart={onRelayStart}
-          />
-        ) : null}
-        {translation ? (
-          <>
-            <div className="sidebar-switch-row">
-              <span className="st">
-                <b>Translation</b>
-                <span>Show the meaning under the ayah</span>
-              </span>
-              <button
-                type="button"
-                className={`switch${showTrans ? " on" : ""}`}
-                role="switch"
-                aria-checked={showTrans}
-                aria-label="Translation"
-                onClick={() => engine.setShowTranslation(!showTrans)}
-              >
-                <i />
-              </button>
-            </div>
-            {showTrans ? (
-              <SelectRow label="Which one" value={currentTrans?.name || "Saheeh International"}>
+      <div className="player-side" data-sidebar={kind}>
+        <div className="sidebar-group">
+          <ModeSwitch style={state.style === "focus" ? "focus" : "mushaf"} onStyle={(next) => engine.setStyle(next)} />
+          {drill ? (
+            <DrillTypePicker
+              mode={state.mode}
+              plusOn={plusOn}
+              compact={compactDrill}
+              onAskPlus={() => askPlus("focus")}
+              onPick={(id) => onPickMode(id)}
+            />
+          ) : null}
+        </div>
+        {locate || relayOn || translation || reciter ? (
+          <div className="sidebar-group">
+            {locate || relayOn ? (
+              <SelectRow label="Surah" value={surahName}>
                 <select
-                  aria-label="Translation"
-                  value={transId}
-                  onChange={(e) => {
-                    const id = Number(e.target.value);
-                    setTransId(id);
-                    onTranslationId?.(id);
-                  }}
+                  aria-label="Surah"
+                  value={passage.chapter}
+                  onChange={(e) => onLocate(Number(e.target.value), 1)}
                 >
-                  {(translations.length
-                    ? translations
-                    : [{ id: 20, name: "Saheeh International", language: "english" }]
-                  ).map((item) => (
+                  {chapters.map((item) => (
                     <option key={item.id} value={item.id}>
-                      {item.language ? `${item.name} · ${item.language}` : item.name}
+                      {item.id}. {item.name_simple}
                     </option>
                   ))}
                 </select>
               </SelectRow>
             ) : null}
-          </>
-        ) : null}
-        {reciter && onOpenReciter ? (
-          <button type="button" className="listen-sheet-row tap" onClick={onOpenReciter}>
-            <span className="st">
-              <b>Reciter</b>
-              <span>{qariName || "Choose a reciter"}</span>
-            </span>
-            <Icon name="mic" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
-          </button>
+            {locate ? (
+              <SelectRow label="Verse" value={String(verseNumber || passage.from)}>
+                <select
+                  aria-label="Verse"
+                  value={verseNumber || passage.from}
+                  onChange={(e) => onLocate(passage.chapter, Number(e.target.value))}
+                >
+                  {Array.from({ length: versesCount }, (_, i) => i + 1).map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </SelectRow>
+            ) : null}
+            {relayOn && onRelayStart ? (
+              <RelaySetup
+                chapter={passage.chapter}
+                versesCount={versesCount}
+                passageFrom={passage.from}
+                passageTo={passage.to}
+                reciterId={qariId}
+                initial={relay}
+                onStart={onRelayStart}
+              />
+            ) : null}
+            {translation ? (
+              <>
+                <div className="sidebar-row">
+                  <span className="st">
+                    <b>Translation</b>
+                    <span>Show the meaning under the ayah</span>
+                  </span>
+                  <button
+                    type="button"
+                    className={`switch${showTrans ? " on" : ""}`}
+                    role="switch"
+                    aria-checked={showTrans}
+                    aria-label="Translation"
+                    onClick={() => engine.setShowTranslation(!showTrans)}
+                  >
+                    <i />
+                  </button>
+                </div>
+                {showTrans ? (
+                  <SelectRow label="Which one" value={currentTrans?.name || "Saheeh International"}>
+                    <select
+                      aria-label="Translation"
+                      value={transId}
+                      onChange={(e) => {
+                        const id = Number(e.target.value);
+                        setTransId(id);
+                        onTranslationId?.(id);
+                      }}
+                    >
+                      {(translations.length
+                        ? translations
+                        : [{ id: 20, name: "Saheeh International", language: "english" }]
+                      ).map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.language ? `${item.name} · ${item.language}` : item.name}
+                        </option>
+                      ))}
+                    </select>
+                  </SelectRow>
+                ) : null}
+              </>
+            ) : null}
+            {reciter && onOpenReciter ? (
+              <button type="button" className="sidebar-row tap" onClick={onOpenReciter}>
+                <span className="sidebar-k">Reciter</span>
+                <span className="sidebar-v">{qariName || "Choose a reciter"}</span>
+                <Icon name="chevron-down" size={16} style={{ color: "var(--text-muted)", flex: "none" }} />
+              </button>
+            ) : null}
+          </div>
         ) : null}
         <ThemeFoot />
       </div>

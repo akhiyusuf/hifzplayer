@@ -1,4 +1,4 @@
-import { KEYS, LOOP_COUNTS } from "./constants.ts";
+import { KEYS, LOOP_COUNTS, RATES } from "./constants.ts";
 
 export function verseRatioLabel(name: string, verse: number, total: number) {
   const n = Math.max(1, verse || 1);
@@ -14,6 +14,41 @@ export function loopCountFace(count: number) {
 export function nextLoopCount(count: number) {
   const i = LOOP_COUNTS.indexOf(count as (typeof LOOP_COUNTS)[number]);
   return LOOP_COUNTS[i < 0 ? 0 : (i + 1) % LOOP_COUNTS.length];
+}
+
+export function rateFace(rate: number) {
+  const n = Number(rate);
+  if (!Number.isFinite(n) || n <= 0) return "1×";
+  return `${n}×`;
+}
+
+export function nextRate(rate: number) {
+  const i = RATES.indexOf(rate as (typeof RATES)[number]);
+  return RATES[i < 0 ? 1 : (i + 1) % RATES.length];
+}
+
+export function wordRepsPlayKind(start: number, end: number) {
+  return start === end ? "steps" : "span";
+}
+
+export function wordNeedsFollow(
+  wordTop: number,
+  wordBottom: number,
+  viewTop: number,
+  viewBottom: number,
+  pad = 48,
+) {
+  return wordTop < viewTop + pad || wordBottom > viewBottom - pad;
+}
+
+export function wordIsAway(
+  wordTop: number,
+  wordBottom: number,
+  viewTop: number,
+  viewBottom: number,
+  pad = 8,
+) {
+  return wordBottom < viewTop + pad || wordTop > viewBottom - pad;
 }
 
 export type SidebarKind = "mushaf" | "focus" | "word" | "masked" | "relay";

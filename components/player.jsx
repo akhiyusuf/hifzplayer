@@ -38,15 +38,18 @@ import {
   coversRange,
   drillHint,
   DRILL_HINT_MS,
-  loopCountFace,
-  nextLoopCount,
+  nextRate,
   nextVerseInLoop,
   nextWordInRange,
+  rateFace,
   readRelayDraft,
   sortedWordRange,
   spanForVerse,
   verseRatioLabel,
+  wordNeedsFollow,
+  wordIsAway,
   wordRangePassComplete,
+  wordRepsPlayKind,
   writeRelayDraft,
 } from "@/lib/player-chrome";
 import { usePlus } from "@/lib/plus";
@@ -266,7 +269,11 @@ class g {
     let r = s.pass + 1;
     if (0 !== s.passes && r >= s.passes) {
       ((this.st.loop = null),
-        this.toast("Loop done — continuing"),
+        "word" === this.st.mode
+          ? (this.pauseAudio(),
+            (this.st.wordStep = { ...this.st.wordStep, active: !1 }),
+            this.toast("Word Reps done"))
+          : this.toast("Loop done — continuing"),
         this.notify());
       return;
     }
@@ -285,6 +292,10 @@ class g {
       return;
     }
     if ("word" === this.st.mode) {
+      if (this.st.loop && e && (this.handleLoopEdge(e), this.st.loop)) {
+        this.playAudio();
+        return;
+      }
       this.st.wordStep.active
         ? this.wordStepEnded()
         : (this.clearGap(), (this.st.playing = !1), this.notify());
@@ -358,6 +369,7 @@ class g {
         verseLoopRange: null,
         relay: null,
         mode: "verse",
+        style: "mushaf",
         focusPhrase: 0,
         masked: {},
         oneshot: null,
@@ -365,6 +377,7 @@ class g {
         wordStep: { active: !1, w: 1, playedTimes: 0, range: null },
         wordPick: emptyWordPick(),
       }),
+      setStore(KEYS.style, "mushaf"),
       this.notify());
     try {
       let e = await this.ensureAudio(t);
@@ -460,7 +473,7 @@ class g {
       let p = this.st.wordPick,
         w = this.st.wordStep.w || 1;
       if (p && null != p.start && null != p.end && null != p.count) {
-        this.startWordDrill(p.start, p.end, p.count);
+        this.playWordReps(p.start, p.end, p.count);
         return;
       }
       if (p && null != p.count) {
@@ -645,8 +658,7 @@ class g {
       let t = getStore(KEYS.loopCount),
         s = getStore(KEYS.wordRepeat);
       (null != t && (this.st.loopCount = t),
-        null != s && (this.st.wordRepeat = s),
-        "focus" === getStore(KEYS.style) && (this.st.style = "focus"));
+        null != s && (this.st.wordRepeat = s));
     } else this.clampFree();
     this.notify();
   }
@@ -965,7 +977,8 @@ class g {
       end = Math.max(e, t),
       passes = null == s ? this.st.loopCount : s;
     if (isPaidRepeat(passes) && !this.requirePlus("repeats")) return;
-    ((this.st.wordRepeat = passes),
+    ((this.st.loop = null),
+      (this.st.wordRepeat = passes),
       (this.st.wordPick = { ...emptyWordPick(), start, end, count: passes }),
       (this.st.wordStep = {
         ...this.st.wordStep,
@@ -978,6 +991,44 @@ class g {
       }),
       this.notify(),
       this.wordModePlayCurrent());
+  }
+  playWordReps(e, t, s) {
+    if ("span" === wordRepsPlayKind(e, t)) {
+      this.playWordRangeSpan(e, t, s);
+      return;
+    }
+    this.startWordDrill(e, t, s);
+  }
+  playWordRangeSpan(e, t, s) {
+    let range = sortedWordRange(e, t),
+      passes = null == s ? this.st.loopCount : s;
+    if (isPaidRepeat(passes) && !this.requirePlus("repeats")) return;
+    ((this.st.wordRepeat = passes),
+      (this.st.wordPick = {
+        ...emptyWordPick(),
+        start: range.start,
+        end: range.end,
+        count: passes,
+      }),
+      (this.st.wordStep = {
+        active: !1,
+        w: range.start,
+        playedTimes: 0,
+        range: {
+          startW: range.start,
+          endW: range.end,
+          passes,
+          pass: 0,
+        },
+      }),
+      this.setLoop(
+        this.st.vIdx,
+        range.start,
+        range.end,
+        passes,
+        "words ".concat(range.start, "–").concat(range.end),
+      ),
+      this.playFromWord(range.start));
   }
   tapWordRep(e, t) {
     e !== this.st.vIdx && this.loadVerseAudio(e, !1);
@@ -1051,7 +1102,7 @@ class g {
       e !== this.st.vIdx && this.loadVerseAudio(e, !1),
       "word" === this.st.mode)
     ) {
-      this.startWordDrill(t, s);
+      this.playWordReps(t, s);
       return;
     }
     (this.setLoop(
@@ -1331,7 +1382,7 @@ class g {
         loading: !1,
         error: null,
         mode: "verse",
-        style: getStore(KEYS.style) || "mushaf",
+        style: "mushaf",
         rate: 1,
         vIdx: 0,
         curWord: 0,
@@ -1597,13 +1648,10 @@ function k(e) {
             children: [
           _jsx("button", {
             type: "button",
-            className: "tr-btn loop-count tap",
-            onClick: () => t.setLoopCount(nextLoopCount(s.loopCount)),
-            "aria-label":
-              0 === s.loopCount
-                ? "Repeat until stopped. Tap to set 1"
-                : "Repeat ".concat(loopCountFace(s.loopCount), " times. Tap to change"),
-            children: loopCountFace(s.loopCount),
+            className: "tr-btn speed-count tap",
+            onClick: () => t.setRate(nextRate(s.rate)),
+            "aria-label": "Playback speed ".concat(rateFace(s.rate), ". Tap to change"),
+            children: rateFace(s.rate),
           }),
           _jsx("button", {
             className: "tr-btn tap",
@@ -3251,15 +3299,6 @@ function MushafVerseActive(e) {
       e.engine.getWordSnap,
     ),
     s = t.vIdx === e.vIdx ? t.curWord : 0;
-  useEffect(() => {
-    let t = document.querySelector(".player-body"),
-      n = t && t.querySelector('[data-cur="1"]');
-    if (!n || !t) return;
-    let i = n.getBoundingClientRect(),
-      l = t.getBoundingClientRect();
-    (i.top < l.top + 48 || i.bottom > l.bottom - 48) &&
-      n.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }, [s, e.vIdx]);
   return _jsx(O, {
     verse: e.verse,
     vIdx: e.vIdx,
@@ -3278,6 +3317,89 @@ function MushafVerseActive(e) {
     onWordTap: e.onWordTap,
     onMarkTap: e.onMarkTap,
   });
+}
+function MushafFollowButton(e) {
+  let { engine: t, style: s } = e,
+    n = useSyncExternalStore(t.subscribeWord, t.getWordSnap, t.getWordSnap),
+    [i, l] = useState(!1),
+    o = useRef(!0),
+    d = useRef(!1),
+    c = useCallback(() => {
+      let e = document.querySelector(".shell.player .player-body"),
+        t = e && e.querySelector('[data-cur="1"]');
+      return { body: e, word: t };
+    }, []),
+    h = useCallback(() => {
+      let { body: e, word: t } = c();
+      if (!e || !t) return { follow: !1, away: !1 };
+      let s = t.getBoundingClientRect(),
+        n = e.getBoundingClientRect();
+      return {
+        follow: wordNeedsFollow(s.top, s.bottom, n.top, n.bottom, 48),
+        away: wordIsAway(s.top, s.bottom, n.top, n.bottom, 8),
+      };
+    }, [c]),
+    u = useCallback(
+      (e) => {
+        let { word: t } = c();
+        if (!t) return;
+        ((d.current = !0),
+          (o.current = !0),
+          t.scrollIntoView({
+            block: "center",
+            behavior: e ? "smooth" : "auto",
+          }),
+          window.setTimeout(() => {
+            ((d.current = !1), l(!1));
+          }, 420));
+      },
+      [c],
+    );
+  (useEffect(() => {
+    if ("mushaf" !== s) {
+      ((o.current = !0), l(!1));
+      return;
+    }
+    let e = c().body;
+    if (!e) return;
+    let t = () => {
+      let n = h();
+      if (d.current) {
+        n.away || l(!1);
+        return;
+      }
+      if (o.current && !n.away) return;
+      if (n.away) {
+        ((o.current = !1), l(!0));
+        return;
+      }
+      l(!1);
+    };
+    return (
+      e.addEventListener("scroll", t, { passive: !0 }),
+      () => e.removeEventListener("scroll", t)
+    );
+  }, [s, c, h]),
+    useEffect(() => {
+      if ("mushaf" !== s) return;
+      if (o.current) {
+        h().follow && u(!0);
+        return;
+      }
+      l(h().away);
+    }, [n.curWord, n.vIdx, s, h, u]));
+  return "mushaf" !== s || !i
+    ? null
+    : _jsxs("button", {
+        type: "button",
+        className: "follow-back tap",
+        onClick: () => u(!0),
+        "aria-label": "Back to the current word",
+        children: [
+          _jsx(Icon, { name: "corner-up-left", size: 14 }),
+          "Back to word",
+        ],
+      });
 }
 function H(e) {
   let {
@@ -3510,7 +3632,7 @@ function G(e) {
     h = i.verses[i.vIdx];
   if (!h) return null;
   let pick = i.wordPick || emptyWordPick(),
-    m = i.wordStep.w || i.curWord || 1,
+    m = i.curWord || i.wordStep.w || 1,
     w = h.words.find((e) => e.pos === m) || h.words[0],
     y = w
       ? [w.tr, w.gloss].filter(Boolean).join(" \xb7 ")
@@ -4346,6 +4468,7 @@ function U(e) {
             }),
           ],
         }),
+      _jsx(MushafFollowButton, { engine: eu, style: ez.style }),
       _jsx(k, {
         engine: eu,
         state: ez,
