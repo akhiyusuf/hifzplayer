@@ -7,13 +7,12 @@ export function plusSalaamLine(plus: boolean) {
 
 export function listenLeadCopy(plus: boolean) {
   return plus
-    ? `${PLUS_NAME} is on. Play a list in your reciter.`
+    ? `${PLUS_NAME} is on. Play a list.`
     : `Occasion lists for Friday, night, morning, and the rest. Reading stays on Read. Playing a list is ${PLUS_NAME}.`;
 }
 
-export function occasionHintCopy(plus: boolean, reciterName: string) {
-  const qari = (reciterName || "").trim() || "your reciter";
-  return plus ? `Plus · ${qari}` : `Look around · play is ${PLUS_NAME}`;
+export function occasionHintCopy(plus: boolean, _reciterName?: string) {
+  return plus ? "Play a list" : `Look around · play is ${PLUS_NAME}`;
 }
 
 export function plusOnLabel() {

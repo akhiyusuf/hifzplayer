@@ -30,12 +30,10 @@ export function useStartList() {
 
 function OccasionCard({
   list,
-  reciterName,
   locked,
   onPlay,
 }: {
   list: Playlist;
-  reciterName: string;
   locked: boolean;
   onPlay: () => void;
 }) {
@@ -55,7 +53,7 @@ function OccasionCard({
         ) : (
           <>
             <Icon name="sparkles" size={13} />
-            Plus · {reciterName}
+            Plus
           </>
         )}
       </span>
@@ -69,24 +67,21 @@ export function ListenPageIntro() {
 }
 
 export function ListenLists() {
-  const { reciterId, reciterName } = useAppData();
   const { plus } = usePlus();
   const start = useStartList();
-  const qari = reciterName(reciterId);
   const locked = !plus;
 
   return (
     <section className="picker-section">
       <div className="index-head">
         <span className="label-eyebrow">For occasions</span>
-        <span className="lists-hint">{occasionHintCopy(plus, qari)}</span>
+        <span className="lists-hint">{occasionHintCopy(plus)}</span>
       </div>
       <div className="occ-scroller">
         {OCCASION_PLAYLISTS.map((list) => (
           <OccasionCard
             key={list.id}
             list={list}
-            reciterName={qari}
             locked={locked}
             onPlay={() => start(list.id)}
           />

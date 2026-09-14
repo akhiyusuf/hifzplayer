@@ -20,13 +20,15 @@ describe("plus presence copy", () => {
     assert.match(listenLeadCopy(true), /is on/i);
     assert.match(listenLeadCopy(true), /Play a list/i);
     assert.doesNotMatch(listenLeadCopy(true), /Playing a list is/);
+    assert.doesNotMatch(listenLeadCopy(true), /reciter/i);
     assert.match(listenLeadCopy(false), /Diras Plus/);
     assert.match(listenLeadCopy(false), /Playing a list is/);
   });
 
-  it("puts Plus next to the reciter on occasion rows", () => {
-    assert.equal(occasionHintCopy(true, "Minshawi"), "Plus · Minshawi");
+  it("does not repeat the reciter on occasion rows", () => {
+    assert.equal(occasionHintCopy(true, "Minshawi"), "Play a list");
     assert.match(occasionHintCopy(false, "Minshawi"), /Look around/);
+    assert.doesNotMatch(occasionHintCopy(true, "Minshawi"), /Minshawi/);
   });
 
   it("marks a playing list as Plus", () => {

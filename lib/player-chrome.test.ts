@@ -20,7 +20,9 @@ import {
   wordNeedsFollow,
   wordIsAway,
   wordRangePassComplete,
+  wordRepsDoneState,
   wordRepsPlayKind,
+  wrapRelayIndex,
   exclusiveJobPatch,
   exclusiveLayer,
 } from "./player-chrome.ts";
@@ -198,10 +200,31 @@ describe("exclusive layers", () => {
 });
 
 describe("word reps play kind", () => {
-  it("steps one word and plays a pinned range as one span", () => {
+  it("marks one word as steps and a pin as a range", () => {
     assert.equal(wordRepsPlayKind(4, 4), "steps");
     assert.equal(wordRepsPlayKind(2, 5), "span");
     assert.equal(wordRepsPlayKind(5, 2), "span");
+  });
+});
+
+describe("word reps done state", () => {
+  it("clears the pin, loop, and word step so underlines do not stick", () => {
+    const next = wordRepsDoneState();
+    assert.equal(next.loop, null);
+    assert.equal(next.playing, false);
+    assert.equal(next.wordPick.start, null);
+    assert.equal(next.wordPick.end, null);
+    assert.equal(next.wordStep.active, false);
+    assert.equal(next.wordStep.range, null);
+  });
+});
+
+describe("relay skip", () => {
+  it("moves to the next or previous seat and wraps inside the round", () => {
+    assert.equal(wrapRelayIndex(0, 4, 1), 1);
+    assert.equal(wrapRelayIndex(3, 4, 1), 0);
+    assert.equal(wrapRelayIndex(0, 4, -1), 3);
+    assert.equal(wrapRelayIndex(2, 4, -1), 1);
   });
 });
 

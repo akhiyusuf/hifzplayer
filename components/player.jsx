@@ -51,7 +51,8 @@ import {
   wordNeedsFollow,
   wordIsAway,
   wordRangePassComplete,
-  wordRepsPlayKind,
+  wordRepsDoneState,
+  wrapRelayIndex,
   wordTapIntent,
   writeRelayDraft,
   exclusiveJobPatch,
@@ -225,7 +226,8 @@ class g {
       (this.wordGapTimer = null));
   }
   stopAudio() {
-    (this.audio.pause(),
+    (this.playToken++,
+      this.audio.pause(),
       (this.audio.muted = !1),
       (this.armed = null),
       (this.pendingWordInit = !1),
@@ -290,7 +292,7 @@ class g {
       ((this.st.loop = null),
         "word" === this.st.mode
           ? (this.pauseAudio(),
-            (this.st.wordStep = { ...this.st.wordStep, active: !1 }),
+            this.finishWordReps(),
             this.toast("Word Reps done"))
           : this.toast("Loop done — continuing"),
         this.notify());
@@ -512,6 +514,10 @@ class g {
       : this.loadVerseAudio(this.st.vIdx, !0);
   }
   prev() {
+    if ("relay" === this.st.mode) {
+      this.stepRelay(-1);
+      return;
+    }
     if ("word" === this.st.mode) {
       this.stepWordManual(-1);
       return;
@@ -525,6 +531,10 @@ class g {
     this.armSeek(0, this.st.playing);
   }
   next() {
+    if ("relay" === this.st.mode) {
+      this.stepRelay(1);
+      return;
+    }
     if ("word" === this.st.mode) {
       this.stepWordManual(1);
       return;
@@ -749,21 +759,14 @@ class g {
           active: !1,
           playedTimes: 0,
         }),
-          (this.st.playing = !1),
-          this.notify());
+          this.finishWordReps());
         return;
       }
       let played = step.playedTimes + 1;
       ((this.st.wordStep = { ...step, playedTimes: played }),
         0 === this.st.wordRepeat || played < this.st.wordRepeat
           ? this.playWordOnce(e, step.w)
-          : ((this.st.wordStep = {
-              ...step,
-              active: !1,
-              playedTimes: 0,
-            }),
-            (this.st.playing = !1),
-            this.notify()));
+          : this.finishWordReps());
     }, t);
   }
   stepWordManual(e) {
@@ -995,43 +998,18 @@ class g {
       this.wordModePlayCurrent());
   }
   playWordReps(e, t, s) {
-    if ("span" === wordRepsPlayKind(e, t)) {
-      this.playWordRangeSpan(e, t, s);
-      return;
-    }
     this.startWordDrill(e, t, s);
   }
+  finishWordReps() {
+    let w = this.st.wordStep.w || 1;
+    Object.assign(this.st, wordRepsDoneState());
+    this.st.wordStep = { ...this.st.wordStep, w };
+    this.st.curWord = w;
+    this.pauseAudio();
+    this.notify();
+  }
   playWordRangeSpan(e, t, s) {
-    let range = sortedWordRange(e, t),
-      passes = null == s ? this.st.loopCount : s;
-    if (isPaidRepeat(passes) && !this.requirePlus("repeats")) return;
-    (this.yieldJobs("word"),
-      (this.st.wordRepeat = passes),
-      (this.st.wordPick = {
-        ...emptyWordPick(),
-        start: range.start,
-        end: range.end,
-        count: passes,
-      }),
-      (this.st.wordStep = {
-        active: !1,
-        w: range.start,
-        playedTimes: 0,
-        range: {
-          startW: range.start,
-          endW: range.end,
-          passes,
-          pass: 0,
-        },
-      }),
-      this.setLoop(
-        this.st.vIdx,
-        range.start,
-        range.end,
-        passes,
-        "words ".concat(range.start, "–").concat(range.end),
-      ),
-      this.playFromWord(range.start));
+    this.startWordDrill(e, t, s);
   }
   tapWordRep(e, t) {
     this.yieldJobs("word");
@@ -1203,13 +1181,7 @@ class g {
     return this.st.verses.findIndex((t) => t.key === e);
   }
   relayAudioFor(e) {
-    return (
-      (this.audioByReciter[this.audioKey(e.reciterId)] ||
-        (null != this.st.reciterId
-          ? this.audioByReciter[this.audioKey(this.st.reciterId)]
-          : void 0) ||
-        {})[e.verseKey] || null
-    );
+    return (this.audioByReciter[this.audioKey(e.reciterId)] || {})[e.verseKey] || null;
   }
   relayTogglePlay() {
     let e = this.st.relay;
@@ -1218,22 +1190,37 @@ class g {
         this.pauseAudio();
         return;
       }
-      if (
-        !e.waitingTap &&
-        this.audio.src &&
-        this.audio.currentTime > 0 &&
-        !this.audio.ended
-      ) {
-        this.playAudio();
-        return;
-      }
-      ((this.st.relay = { ...e, waitingTap: !1 }),
+      ((this.st.relay = { ...e, waitingTap: !1, replaying: !1 }),
         this.notify(),
         this.startRelayTurn(!1));
     }
   }
+  stepRelay(delta) {
+    let e = this.st.relay;
+    if (!e || !e.active) return;
+    let r = e.turns || [];
+    if (!r.length) return;
+    this.stopAudio();
+    let t = wrapRelayIndex(e.idx, r.length, delta);
+    this.st.relay = {
+      ...e,
+      idx: t,
+      waitingTap: !1,
+      replaying: !1,
+    };
+    let a = this.vIdxByKey(r[t].verseKey);
+    (a >= 0 && (this.st.vIdx = a),
+      (this.st.curWord = 0),
+      this.notify(),
+      this.startRelayTurn(!1));
+  }
   startRelayTurn(e) {
     var t;
+    this.clearGap();
+    this.playToken++;
+    try {
+      (this.audio.pause(), (this.audio.muted = !1));
+    } catch (e) {}
     let s = this.st.relay;
     if (!s || !s.active) return;
     let r = s.turns[s.idx];

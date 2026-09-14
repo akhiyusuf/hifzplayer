@@ -138,6 +138,24 @@ export function wordRangePassComplete(pass: number, passes: number) {
   return pass >= passes;
 }
 
+export function wordRepsDoneState() {
+  return {
+    loop: null as null,
+    playing: false,
+    wordPick: { start: null as null, end: null as null, count: null as null, open: null as null },
+    wordStep: { active: false, w: 1, playedTimes: 0, range: null as null },
+  };
+}
+
+/** Skip to another Relay seat without wrapping into a new round. */
+export function wrapRelayIndex(idx: number, len: number, delta: number) {
+  if (len <= 0) return 0;
+  const n = idx + delta;
+  if (n < 0) return len - 1;
+  if (n >= len) return 0;
+  return n;
+}
+
 export function nextVerseInLoop(current: number, from: number, to: number) {
   if (current < to) return current + 1;
   return from;
