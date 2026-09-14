@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     });
     const raw = event.data as { unsafe_metadata?: unknown; unsafeMetadata?: unknown };
     const hint = parseLegalAccept(raw.unsafe_metadata ?? raw.unsafeMetadata);
-    if (isLegalCurrent(hint)) {
+    if (hint && isLegalCurrent(hint)) {
       try {
         await saveLegalAccept(event.data.id, hint);
       } catch {
