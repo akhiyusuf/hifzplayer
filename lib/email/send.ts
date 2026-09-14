@@ -54,6 +54,10 @@ async function deliver(to: string, ent: Entitlement) {
 export async function sendGiftNotice(opts: {
   to: string;
   existingAccount: boolean;
+  alreadyPlus?: boolean;
+  stacked?: boolean;
+  keptLifetime?: boolean;
+  planId?: string;
   signUpUrl: string;
 }) {
   const to = opts.to.trim().toLowerCase();
@@ -63,7 +67,14 @@ export async function sendGiftNotice(opts: {
     logBillingEvent({ type: "gift_failed", reason: "no_provider" });
     return;
   }
-  const input = { existingAccount: opts.existingAccount, signUpUrl: opts.signUpUrl };
+  const input = {
+    existingAccount: opts.existingAccount,
+    alreadyPlus: opts.alreadyPlus,
+    stacked: opts.stacked,
+    keptLifetime: opts.keptLifetime,
+    planId: opts.planId,
+    signUpUrl: opts.signUpUrl,
+  };
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -75,13 +86,17 @@ export async function sendGiftNotice(opts: {
     body: JSON.stringify({
       from: emailFrom(),
       to: [to],
-      subject: giftNoticeSubject(),
+      subject: giftNoticeSubject(input),
       text: giftNoticeText(input),
       html: giftNoticeHtml(input),
     }),
   });
   if (!res.ok) throw new Error(`Resend HTTP ${res.status}`);
-  logBillingEvent({ type: "welcome_sent", reason: "gift_notice", ok: true });
+  logBillingEvent({
+    type: "welcome_sent",
+    reason: opts.stacked ? "gift_extra_time" : "gift_notice",
+    ok: true,
+  });
 }
 
 /** Never throws — Plus grant must not fail because mail is down. */

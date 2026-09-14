@@ -6,6 +6,7 @@ import { clerkUserIdByEmail, plusFromClerk } from "@/lib/auth/plus";
 import { grantPlusToAccount, signedInUserId } from "@/lib/auth/session";
 import { logBillingEvent, type BillingEvent } from "./analytics";
 import { grantFromPayment, periodEnd, publicEntitlement, type Entitlement } from "./entitlement";
+import { mergePaidOnAccount } from "./entitlement-bind";
 import { parseCheckoutMetadata, resolvePaidPlan, type PaidPlan } from "./match";
 import {
   paystackChargeUntil,
@@ -67,7 +68,7 @@ function ownerForGrant(opts: {
     });
   }
 
-  if (opts.accountsOn && opts.source === "confirm" && !signedIn && !meta) {
+  if (opts.accountsOn && opts.source === "confirm" && !signedIn) {
     return fail(401, `Sign in to attach ${PLUS_NAME} to your account`, {
       source: opts.source,
       hasUserId: false,
@@ -83,6 +84,7 @@ async function persist(
   setCookie: boolean,
   source: FulfillSource,
   kind: FulfillKind,
+  signedIn: string | null = null,
 ): Promise<Entitlement> {
   if (!setCookie && !userId) {
     logBillingEvent({
@@ -96,7 +98,12 @@ async function persist(
     });
     return ent;
   }
-  const next = await grantPlusToAccount(ent, userId, { setCookie, kind });
+  const toSave =
+    userId && ent.plus !== false && kind !== "revoked"
+      ? (mergePaidOnAccount(await plusFromClerk(userId), ent) as Entitlement)
+      : ent;
+  const cookieForCaller = setCookie && (!userId || signedIn === userId);
+  const next = await grantPlusToAccount(toSave, userId, { setCookie: cookieForCaller, kind });
   logBillingEvent({
     type: kind,
     ok: true,
@@ -236,7 +243,7 @@ export async function fulfillPaystackReference(
     until,
     sub: data.subscription?.subscription_code,
   });
-  const next = await persist(ent, owner.userId, opts.setCookie, opts.source, kind);
+  const next = await persist(ent, owner.userId, opts.setCookie, opts.source, kind, signedIn);
   return { ok: true, entitlement: next, kind };
 }
 
@@ -325,7 +332,7 @@ export async function fulfillStripeSession(
     until,
     sub: subId || undefined,
   });
-  const next = await persist(ent, owner.userId, opts.setCookie, opts.source, kind);
+  const next = await persist(ent, owner.userId, opts.setCookie, opts.source, kind, signedIn);
   return { ok: true, entitlement: next, kind };
 }
 

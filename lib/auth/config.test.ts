@@ -3,8 +3,10 @@ import { describe, it } from "node:test";
 import { clerkBrowserReady, clerkConfigured } from "./config.ts";
 
 describe("clerk config", () => {
-  it("stays off when keys are missing", () => {
-    assert.equal(clerkConfigured(), false);
-    assert.equal(clerkBrowserReady(), false);
+  it("turns on only when both Clerk keys are present", () => {
+    const publishable = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+    const secret = Boolean(process.env.CLERK_SECRET_KEY);
+    assert.equal(clerkConfigured(), publishable && secret);
+    assert.equal(clerkBrowserReady(), publishable);
   });
 });

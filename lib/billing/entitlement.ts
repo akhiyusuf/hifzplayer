@@ -2,7 +2,15 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { billingSigningSecret } from "./env";
 import type { PlanId, Processor, RegionId } from "./plans";
 import { isPlanId, isRegionId } from "./plans";
-import { entitlementForUser, isPlusActive, pickBestEntitlement, publicEntitlement } from "./entitlement-bind";
+import {
+  addPlanPeriod,
+  entitlementForUser,
+  isPlusActive,
+  pickBestEntitlement,
+  publicEntitlement,
+} from "./entitlement-bind";
+
+export { addPlanPeriod, mergePaidOnAccount, stackGiftOnEntitlement } from "./entitlement-bind";
 
 export { entitlementForUser, isPlusActive, pickBestEntitlement, publicEntitlement };
 export const PLUS_COOKIE = "hifz_plus";
@@ -25,11 +33,7 @@ export type Entitlement = {
 const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
 
 export function periodEnd(planId: PlanId, from = new Date()): string | null {
-  if (planId === "lifetime") return null;
-  const d = new Date(from.getTime());
-  if (planId === "monthly") d.setUTCDate(d.getUTCDate() + 31);
-  else d.setUTCFullYear(d.getUTCFullYear() + 1);
-  return d.toISOString();
+  return addPlanPeriod(planId, from);
 }
 
 function encode(value: string) {

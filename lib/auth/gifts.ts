@@ -1,8 +1,9 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { clerkConfigured } from "@/lib/auth/config";
-import { clerkUserIdByEmail, savePlusToClerk } from "@/lib/auth/plus";
+import { clerkUserIdByEmail, plusFromClerk, savePlusToClerk } from "@/lib/auth/plus";
 import { logBillingEvent } from "@/lib/billing/analytics";
 import { grantFromPayment, type Entitlement } from "@/lib/billing/entitlement";
+import { stackGiftOnEntitlement } from "@/lib/billing/entitlement-bind";
 import { openGiftClaim, sealGiftClaim, type GiftClaim } from "@/lib/billing/gift";
 import type { PlanId, Processor, RegionId } from "@/lib/billing/plans";
 
@@ -201,6 +202,23 @@ async function clearPublicGift(userId: string) {
   }
 }
 
+export type GiftAssignResult = {
+  hold: GiftHold;
+  existingAccount: boolean;
+  alreadyPlus: boolean;
+  stacked: boolean;
+  keptLifetime: boolean;
+  signUpUrl: string;
+};
+
+function stackedGiftEntitlement(existing: Entitlement | null, gift: Entitlement) {
+  const stacked = stackGiftOnEntitlement(existing, gift);
+  return {
+    ...stacked,
+    next: stacked.next as Entitlement,
+  };
+}
+
 export async function claimGiftForUser(opts: {
   userId: string;
   emails?: string[];
@@ -218,7 +236,7 @@ export async function claimGiftForUser(opts: {
   if (!claim) return false;
 
   const email = emails[0];
-  const ent = grantFromPayment({
+  const gift = grantFromPayment({
     planId: claim.planId,
     regionId: claim.regionId,
     processor: claim.processor,
@@ -227,7 +245,9 @@ export async function claimGiftForUser(opts: {
     userId: opts.userId,
     email,
   });
-  await savePlusToClerk(opts.userId, ent, "granted");
+  const existing = await plusFromClerk(opts.userId);
+  const stacked = stackedGiftEntitlement(existing, gift);
+  await savePlusToClerk(opts.userId, stacked.next, stacked.alreadyPlus ? "renewed" : "granted");
   await markGiftClaimed({ buyerId: claim.buyerId, ref: claim.ref, recipientUserId: opts.userId });
   await clearPublicGift(opts.userId);
   logBillingEvent({
@@ -238,10 +258,11 @@ export async function claimGiftForUser(opts: {
     regionId: claim.regionId,
     hasUserId: true,
     accountId: opts.userId,
+    reason: stacked.stacked ? "gift_extra_time" : stacked.keptLifetime ? "gift_kept_lifetime" : undefined,
   });
   try {
     const { sendPlusWelcome } = await import("@/lib/email/send");
-    await sendPlusWelcome(ent);
+    if (!stacked.alreadyPlus) await sendPlusWelcome(stacked.next);
   } catch {
     logBillingEvent({
       type: "welcome_failed",
@@ -259,11 +280,13 @@ export async function assignGiftToEmail(opts: {
   hold: GiftHold;
   email: string;
   origin: string;
-}): Promise<{ hold: GiftHold; existingAccount: boolean; signUpUrl: string }> {
+}): Promise<GiftAssignResult> {
   const existingId = await clerkUserIdByEmail(opts.email);
   if (existingId) {
-    const ent = holdToEntitlement(opts.hold, existingId, opts.email);
-    await savePlusToClerk(existingId, ent, "granted");
+    const gift = holdToEntitlement(opts.hold, existingId, opts.email);
+    const existing = await plusFromClerk(existingId);
+    const stacked = stackedGiftEntitlement(existing, gift);
+    await savePlusToClerk(existingId, stacked.next, stacked.alreadyPlus ? "renewed" : "granted");
     const hold =
       (await markGiftAssigned({
         buyerId: opts.hold.buyerId,
@@ -279,15 +302,20 @@ export async function assignGiftToEmail(opts: {
       regionId: hold.regionId,
       hasUserId: true,
       accountId: existingId,
+      reason: stacked.stacked ? "gift_extra_time" : stacked.keptLifetime ? "gift_kept_lifetime" : undefined,
     });
     try {
       const { sendPlusWelcome, sendGiftNotice } = await import("@/lib/email/send");
       await sendGiftNotice({
         to: opts.email,
         existingAccount: true,
+        alreadyPlus: stacked.alreadyPlus,
+        stacked: stacked.stacked,
+        keptLifetime: stacked.keptLifetime,
+        planId: hold.planId,
         signUpUrl: `${opts.origin}/sign-in?redirect_url=/`,
       });
-      await sendPlusWelcome(ent);
+      if (!stacked.alreadyPlus) await sendPlusWelcome(stacked.next);
     } catch {
       logBillingEvent({
         type: "gift_failed",
@@ -298,7 +326,14 @@ export async function assignGiftToEmail(opts: {
         accountId: existingId,
       });
     }
-    return { hold, existingAccount: true, signUpUrl: `${opts.origin}/sign-in` };
+    return {
+      hold,
+      existingAccount: true,
+      alreadyPlus: stacked.alreadyPlus,
+      stacked: stacked.stacked,
+      keptLifetime: stacked.keptLifetime,
+      signUpUrl: `${opts.origin}/sign-in`,
+    };
   }
 
   const signUpUrl = await createGiftInvitation({
@@ -338,7 +373,14 @@ export async function assignGiftToEmail(opts: {
       accountId: opts.hold.buyerId,
     });
   }
-  return { hold, existingAccount: false, signUpUrl };
+  return {
+    hold,
+    existingAccount: false,
+    alreadyPlus: false,
+    stacked: false,
+    keptLifetime: false,
+    signUpUrl,
+  };
 }
 
 export async function renewGiftRecipients(buyerId: string, until: string | null, plus: boolean) {
@@ -349,8 +391,18 @@ export async function renewGiftRecipients(buyerId: string, until: string | null,
   await writeHolds(buyerId, next);
   for (const hold of next) {
     if (!hold.recipientUserId) continue;
-    const ent = holdToEntitlement(hold, hold.recipientUserId, hold.recipientEmail, plus);
-    await savePlusToClerk(hold.recipientUserId, ent, plus ? "renewed" : "revoked");
+    if (!plus) {
+      const current = await plusFromClerk(hold.recipientUserId);
+      if (current?.ref && current.ref !== hold.ref) continue;
+      const ent = holdToEntitlement(hold, hold.recipientUserId, hold.recipientEmail, false);
+      await savePlusToClerk(hold.recipientUserId, ent, "revoked");
+      n += 1;
+      continue;
+    }
+    const gift = holdToEntitlement(hold, hold.recipientUserId, hold.recipientEmail, true);
+    const current = await plusFromClerk(hold.recipientUserId);
+    const stacked = stackedGiftEntitlement(current, gift);
+    await savePlusToClerk(hold.recipientUserId, stacked.next, "renewed");
     n += 1;
   }
   return n;

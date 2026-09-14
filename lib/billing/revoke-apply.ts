@@ -111,14 +111,7 @@ export async function revokePlusFromPaystackDispute(data: unknown) {
   return stripAccount(userId, "paystack");
 }
 
-export async function revokePlusFromStripeDispute(dispute: Stripe.Dispute) {
-  const stripe = stripeClient();
-  const chargeId = idOf(dispute.charge);
-  if (!chargeId) return unmatched("stripe");
-
-  const charge = await stripe.charges.retrieve(chargeId, {
-    expand: ["payment_intent"],
-  });
+async function revokeFromStripeCharge(stripe: Stripe, charge: Stripe.Charge) {
   const pi =
     charge.payment_intent && typeof charge.payment_intent !== "string"
       ? charge.payment_intent
@@ -176,4 +169,26 @@ export async function revokePlusFromStripeDispute(dispute: Stripe.Dispute) {
   }
   if (await clerkPlusRevoked(userId)) return { revoked: true, hasUserId: true };
   return stripAccount(userId, "stripe");
+}
+
+export async function revokePlusFromStripeDispute(dispute: Stripe.Dispute) {
+  const stripe = stripeClient();
+  const chargeId = idOf(dispute.charge);
+  if (!chargeId) return unmatched("stripe");
+
+  const charge = await stripe.charges.retrieve(chargeId, {
+    expand: ["payment_intent"],
+  });
+  return revokeFromStripeCharge(stripe, charge);
+}
+
+export async function revokePlusFromStripeCharge(charge: Stripe.Charge) {
+  if (!charge.refunded) return { revoked: false, hasUserId: false };
+  const stripe = stripeClient();
+  const chargeId = charge.id;
+  if (!chargeId) return unmatched("stripe");
+  const expanded = await stripe.charges.retrieve(chargeId, {
+    expand: ["payment_intent"],
+  });
+  return revokeFromStripeCharge(stripe, expanded);
 }

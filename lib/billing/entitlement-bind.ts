@@ -67,6 +67,7 @@ export function entitlementForUser<T extends PlusFields>(
   if (!accountsOn) return ent;
   if (!userId) return null;
   if (ent.userId && ent.userId !== userId) return null;
+  if (!ent.userId) return null;
   return { ...ent, userId };
 }
 
@@ -83,4 +84,87 @@ export function pickBestEntitlement<T extends PlusFields>(account: T | null, coo
   if (!a) return c;
   if (!c) return a;
   return untilMs(a) >= untilMs(c) ? a : c;
+}
+
+export function addPlanPeriod(planId: string, from = new Date()): string | null {
+  if (planId === "lifetime") return null;
+  const d = new Date(from.getTime());
+  if (planId === "monthly") d.setUTCDate(d.getUTCDate() + 31);
+  else d.setUTCFullYear(d.getUTCFullYear() + 1);
+  return d.toISOString();
+}
+
+function planRank(planId: string | undefined) {
+  if (planId === "lifetime") return 3;
+  if (planId === "annual") return 2;
+  if (planId === "monthly") return 1;
+  return 0;
+}
+
+export type GiftStackResult<T extends PlusFields> = {
+  next: T;
+  alreadyPlus: boolean;
+  stacked: boolean;
+  keptLifetime: boolean;
+};
+
+/**
+ * Add a gift period on top of remaining Plus. Never shortens lifetime.
+ * Keeps the recipient's own payment ref so a gift chargeback cannot wipe paid Plus.
+ */
+export function stackGiftOnEntitlement<T extends PlusFields>(
+  existing: T | null,
+  gift: T,
+  now = new Date(),
+): GiftStackResult<T> {
+  const alreadyPlus = isPlusActive(existing);
+  const existingLifetime = Boolean(alreadyPlus && existing && !existing.until);
+
+  if (existingLifetime && existing) {
+    return { next: existing, alreadyPlus: true, stacked: false, keptLifetime: true };
+  }
+
+  if (gift.planId === "lifetime") {
+    return {
+      next: { ...gift, plus: true, until: null, planId: "lifetime" },
+      alreadyPlus,
+      stacked: false,
+      keptLifetime: false,
+    };
+  }
+
+  const from =
+    alreadyPlus && existing?.until
+      ? new Date(Math.max(now.getTime(), Date.parse(existing.until)))
+      : now;
+  const until = addPlanPeriod(gift.planId || "monthly", from);
+  const planId =
+    alreadyPlus && planRank(existing?.planId) > planRank(gift.planId) ? existing!.planId : gift.planId;
+
+  return {
+    next: {
+      ...gift,
+      plus: true,
+      until,
+      planId,
+      ref: alreadyPlus && existing?.ref ? existing.ref : gift.ref,
+    },
+    alreadyPlus,
+    stacked: alreadyPlus,
+    keptLifetime: false,
+  };
+}
+
+/** Paid renewals must not shorten a longer grant (lifetime, leftover gift time). */
+export function mergePaidOnAccount<T extends PlusFields>(account: T | null, incoming: T): T {
+  if (incoming.plus === false) return incoming;
+  const best = pickBestEntitlement(account, incoming);
+  if (!best || best === incoming) return incoming;
+  return {
+    ...incoming,
+    plus: true,
+    until: best.until,
+    planId: best.planId,
+    ref: best.ref || incoming.ref,
+  };
 }
