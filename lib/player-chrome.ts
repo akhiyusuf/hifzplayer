@@ -85,6 +85,24 @@ export function spanForVerse(verse: number, count: number) {
   return { from, to };
 }
 
+/** Home Play loads the whole surah. Settings verse-jump still uses `spanForVerse`. */
+export function spanForPlay(versesCount: number) {
+  const total = Math.max(1, versesCount || 1);
+  return { from: 1, to: total };
+}
+
+/** Set up can reopen a saved range. Otherwise it matches Play: the whole surah. */
+export function spanForSetup(
+  versesCount: number,
+  resume?: { from: number; to: number } | null,
+) {
+  const total = Math.max(1, versesCount || 1);
+  const from = resume?.from || 0;
+  const to = resume?.to || 0;
+  if (from >= 1 && to >= from && to <= total) return { from, to };
+  return { from: 1, to: total };
+}
+
 export function indexOfVerseInPassage(
   verses: { number: number }[],
   chapter: number,

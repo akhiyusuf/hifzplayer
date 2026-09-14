@@ -17,6 +17,7 @@ import {
   shouldStampExistingUser,
   snapshotOnboarding,
 } from "@/lib/onboarding";
+import { spanForPlay, spanForSetup } from "@/lib/player-chrome";
 import { listSessions, streakCount, timeAgo } from "@/lib/sessions";
 import type { Session } from "@/lib/types";
 
@@ -78,20 +79,15 @@ export default function HomePage() {
     return `/read/${chapter}?${n.toString()}`;
   };
 
-  const spanFor = (chapter: number, versesCount: number) => {
-    const last = [continueSession, ...pickups].find((s) => s?.chapter === chapter);
-    if (last) {
-      return { from: last.from, to: last.to, at: String(last.verse) };
-    }
-    const to = versesCount <= 12 ? versesCount : Math.min(10, versesCount);
-    return { from: 1, to };
-  };
+  const resumeFor = (chapter: number) =>
+    [continueSession, ...pickups].find((s) => s?.chapter === chapter) || null;
 
   const startChapter = (chapter: number, versesCount: number) => {
-    const span = spanFor(chapter, versesCount);
-    router.push(
-      hrefFor(chapter, span.from, span.to, span.at ? { at: span.at } : undefined),
-    );
+    const span = spanForPlay(versesCount);
+    const last = resumeFor(chapter);
+    const extra: Record<string, string> = { play: "1" };
+    if (last) extra.at = String(last.verse);
+    router.push(hrefFor(chapter, span.from, span.to, extra));
   };
 
   const span = continueSession ? continueSession.to - continueSession.from + 1 : 0;
@@ -332,7 +328,7 @@ export default function HomePage() {
                             setPracticeOpen(true);
                           }}
                         >
-                          <Icon name="settings-2" size={15} />
+                          <Icon name="settings-2" size={18} />
                           <span>Set up</span>
                         </button>
                       </div>
@@ -355,8 +351,8 @@ export default function HomePage() {
         <PracticeSheet
           surahName={selected.name_simple}
           versesCount={selected.verses_count}
-          initialFrom={spanFor(selected.id, selected.verses_count).from}
-          initialTo={spanFor(selected.id, selected.verses_count).to}
+          initialFrom={spanForSetup(selected.verses_count, resumeFor(selected.id)).from}
+          initialTo={spanForSetup(selected.verses_count, resumeFor(selected.id)).to}
           initialMode="verse"
           onStart={(from, to, mode) => {
             setPracticeOpen(false);

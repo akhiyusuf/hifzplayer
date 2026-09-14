@@ -13,6 +13,8 @@ import {
   sortedWordRange,
   wordTapIntent,
   spanForVerse,
+  spanForPlay,
+  spanForSetup,
   indexOfVerseInPassage,
   verseRatioLabel,
   wordNeedsFollow,
@@ -68,6 +70,21 @@ describe("spanForVerse", () => {
     assert.deepEqual(spanForVerse(2, 7), { from: 1, to: 7 });
     assert.deepEqual(spanForVerse(50, 286), { from: 50, to: 59 });
     assert.deepEqual(spanForVerse(1, 286), { from: 1, to: 10 });
+  });
+});
+
+describe("spanForPlay", () => {
+  it("opens the whole surah, including long ones", () => {
+    assert.deepEqual(spanForPlay(7), { from: 1, to: 7 });
+    assert.deepEqual(spanForPlay(286), { from: 1, to: 286 });
+  });
+});
+
+describe("spanForSetup", () => {
+  it("defaults to the whole surah and keeps a saved range", () => {
+    assert.deepEqual(spanForSetup(286), { from: 1, to: 286 });
+    assert.deepEqual(spanForSetup(286, { from: 2, to: 10 }), { from: 2, to: 10 });
+    assert.deepEqual(spanForSetup(7, { from: 1, to: 20 }), { from: 1, to: 7 });
   });
 });
 

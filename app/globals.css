@@ -453,3 +453,15 @@ a.qari-inline{text-decoration:none;color:inherit}
 .w.cur .tj,.focus-ar .w.cur .tj,.focus-word-wrap .w.cur .tj,.relay-verse .ar .w.cur .tj{
   color:var(--action-primary);
 }
+.index-row .index-setup{
+  width:auto;
+  min-width:58px;
+  padding:8px 10px;
+  flex-direction:column;
+  gap:3px;
+  font-size:10px;
+  font-weight:600;
+  line-height:1.15;
+  letter-spacing:.01em;
+}
+.index-row .index-setup svg{display:block;flex:none}
