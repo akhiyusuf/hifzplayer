@@ -52,6 +52,7 @@ import {
   wordIsAway,
   wordRangePassComplete,
   wordRepsDoneState,
+  wordRepsPlayKind,
   wrapRelayIndex,
   wordTapIntent,
   writeRelayDraft,
@@ -974,8 +975,7 @@ class g {
     ((this.st.loop = null), this.notify());
   }
   clearDrill() {
-    ((this.st.wordStep = { ...this.st.wordStep, range: null }),
-      this.notify());
+    this.finishWordReps();
   }
   startWordDrill(e, t, s) {
     let start = Math.min(e, t),
@@ -998,6 +998,10 @@ class g {
       this.wordModePlayCurrent());
   }
   playWordReps(e, t, s) {
+    if ("span" === wordRepsPlayKind(e, t)) {
+      this.playWordRangeSpan(e, t, s);
+      return;
+    }
     this.startWordDrill(e, t, s);
   }
   finishWordReps() {
@@ -1009,14 +1013,60 @@ class g {
     this.notify();
   }
   playWordRangeSpan(e, t, s) {
-    this.startWordDrill(e, t, s);
+    let range = sortedWordRange(e, t),
+      passes = null == s ? this.st.loopCount : s;
+    if (isPaidRepeat(passes) && !this.requirePlus("repeats")) return;
+    (this.yieldJobs("word"),
+      (this.st.wordRepeat = passes),
+      (this.st.wordPick = {
+        ...emptyWordPick(),
+        start: range.start,
+        end: range.end,
+        count: passes,
+      }),
+      (this.st.wordStep = {
+        active: !1,
+        w: range.start,
+        playedTimes: 0,
+        range: {
+          startW: range.start,
+          endW: range.end,
+          passes,
+          pass: 0,
+        },
+      }),
+      this.setLoop(
+        this.st.vIdx,
+        range.start,
+        range.end,
+        passes,
+        "words ".concat(range.start, "–").concat(range.end),
+      ),
+      this.playFromWord(range.start));
+  }
+  dismissWordRep() {
+    (this.pauseAudio(),
+      (this.st.wordPick = emptyWordPick()),
+      (this.st.wordStep = {
+        ...this.st.wordStep,
+        active: !1,
+        range: null,
+        playedTimes: 0,
+      }),
+      (this.st.loop = null),
+      this.notify());
   }
   tapWordRep(e, t) {
     this.yieldJobs("word");
+    this.pauseAudio();
     e !== this.st.vIdx && this.loadVerseAudio(e, !1);
     let p = this.st.wordPick || emptyWordPick(),
       open = p.open === t ? null : t;
-    ((this.st.wordPick = { ...p, open }),
+    // Closing the bar without a replay count cancels the underline selection.
+    ((this.st.wordPick =
+      null == open && null == p.count
+        ? emptyWordPick()
+        : { ...p, open }),
       (this.st.wordStep = {
         ...this.st.wordStep,
         w: t,
@@ -1028,6 +1078,7 @@ class g {
       this.notify());
   }
   pinWordRep(t) {
+    this.pauseAudio();
     let p = this.st.wordPick || emptyWordPick();
     if (null == p.start) {
       this.st.wordPick = { ...p, start: t, end: null, open: t };
@@ -1048,9 +1099,18 @@ class g {
   }
   setWordRepCount(n) {
     if (isPaidRepeat(n) && !this.requirePlus("repeats")) return;
+    // Arm the count only — do not auto-start. Play begins from the transport.
     let p = this.st.wordPick || emptyWordPick();
     ((this.st.wordPick = { ...p, count: n }),
       (this.st.wordRepeat = n),
+      this.pauseAudio(),
+      (this.st.wordStep = {
+        ...this.st.wordStep,
+        active: !1,
+        range: null,
+        playedTimes: 0,
+      }),
+      (this.st.loop = null),
       this.notify());
   }
   playWordSlow(e, t) {
@@ -3044,6 +3104,7 @@ function FocusLines(e) {
                           onPin: wordRep.onPin,
                           onCount: wordRep.onCount,
                           onAskPlus: wordRep.onAskPlus,
+                          onDismiss: wordRep.onDismiss,
                         })
                       : null,
                   ],
@@ -3675,6 +3736,7 @@ function G(e) {
         onPin: (pos) => t.pinWordRep(pos),
         onCount: (n) => t.setWordRepCount(n),
         onAskPlus: () => ask("repeats"),
+        onDismiss: () => t.dismissWordRep(),
       },
     }),
   });
