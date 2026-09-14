@@ -594,7 +594,7 @@ export function PlayerSettingsSheet({
             {reciter && onOpenReciter ? (
               <button type="button" className="sidebar-row tap" onClick={onOpenReciter}>
                 <span className="sidebar-k">Reciter</span>
-                <span className="sidebar-v">{qariName || "Choose a reciter"}</span>
+                <span className="sidebar-v sidebar-v-wrap">{qariName || "Choose a reciter"}</span>
                 <Icon name="chevron-down" size={16} style={{ color: "var(--text-muted)", flex: "none" }} />
               </button>
             ) : null}

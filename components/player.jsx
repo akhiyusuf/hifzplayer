@@ -22,7 +22,7 @@ import { PlaylistBar } from "@/components/playlist-bar";
 import { WordRepBar } from "@/components/word-rep-bar";
 import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
-import { clampStopIndex, playlistHref, resolvePlaylist, stopLabel } from "@/lib/playlists";
+import { clampStopIndex, playlistHref, reciterIdForStyle, resolvePlaylist, stopLabel } from "@/lib/playlists";
 import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration, fetchTranslation } from "@/lib/api";
 import { fmtTime, segsForVerse, segForWord, toArabicDigits, wordAt } from "@/lib/audio";
 import { APP_NAME } from "@/lib/brand";
@@ -1134,15 +1134,15 @@ class g {
   clearPendingLoopStart() {
     ((this.st.pendingLoopStart = null), this.notify());
   }
-  async switchReciter(e, t) {
+  async switchReciter(e, t, quiet) {
     if (e === this.st.reciterId) return;
     let s = this.st.playing,
       r = this.st.curWord;
     (this.pauseAudio(),
       (this.st.reciterId = e),
-      setStore(KEYS.reciter, e),
+      setStore("focus" === this.st.style ? KEYS.focusReciter : KEYS.reciter, e),
       this.notify(),
-      this.toast("Switching to ".concat(t, "…")));
+      quiet || this.toast("Switching to ".concat(t, "\u2026")));
     try {
       var a;
       let n = await this.ensureAudio(e);
@@ -1899,6 +1899,7 @@ function S(e) {
       annotation: g,
       onOpenPhrase: j,
       onOpenConfusable: w,
+      mushaf: mushafLite,
     } = e,
     b = useRef(null),
     [k, N] = useState(null),
@@ -1981,7 +1982,9 @@ function S(e) {
         _jsxs("div", {
           className: "p-word",
           children: [
-            _jsx("span", { className: "ar", children: d.ar }),
+            mushafLite
+              ? null
+              : _jsx("span", { className: "ar", children: d.ar }),
             d.tr &&
               _jsx("span", { className: "tr", children: d.tr }),
             _jsx("span", {
@@ -1990,7 +1993,9 @@ function S(e) {
             }),
           ],
         }),
-        _jsxs("div", {
+        mushafLite
+          ? null
+          : _jsxs("div", {
           className: "p-repeat",
           children: [
             _jsx("span", { id: "rep-lbl", children: "Repeat" }),
@@ -2046,7 +2051,9 @@ function S(e) {
                 "Play sound",
               ],
             }),
-            _jsxs("button", {
+            mushafLite
+              ? null
+              : _jsxs("button", {
               className: "sec",
               onClick: x,
               children: [
@@ -2058,7 +2065,9 @@ function S(e) {
             }),
           ],
         }),
-        _jsxs("button", {
+        mushafLite
+          ? null
+          : _jsxs("button", {
           className: "p-tertiary",
           onClick: f,
           children: [
@@ -3774,6 +3783,18 @@ function U(e) {
       eN(null);
     }, [ez.mode, ez.style]),
     useEffect(() => {
+      if ("ready" !== ei || !eRecs.length) return;
+      if ("focus" !== ez.style && !ez.reciterId) return;
+      let want = reciterIdForStyle(
+        ez.style,
+        eRecs,
+        getStore(KEYS.reciter) ?? el,
+        getStore(KEYS.focusReciter),
+      );
+      if (!want || want === ez.reciterId) return;
+      eu.switchReciter(want, ed(want), !0);
+    }, [ez.style, ei, eRecs, el, eu, ed, ez.reciterId]),
+    useEffect(() => {
       if (!eList || !eListId) {
         ((eu.onPassageEnd = null),
           (eu.onNeedNextStop = null),
@@ -4586,6 +4607,7 @@ function U(e) {
           target: ek,
           loopCount: ez.loopCount,
           isWordRangeMode: "word" === ez.mode,
+          mushaf: "mushaf" === ez.style,
           onSetCount: (e) => eu.setLoopCount(e),
           onPlayWord: () => {
             (eu.playWordOneshot(ek.vIdx, ek.pos), eN(null));
