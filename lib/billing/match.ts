@@ -1,4 +1,4 @@
-import { giftFlag, parseGiftEmails, parseGiftSeats } from "./gift.ts";
+import { giftFlag, parseGiftEmails, parseGiftSeats } from "./gift-parse.ts";
 import { isPlanId, isRegionId, PLAN_IDS, quote, REGIONS, type PlanId, type RegionId } from "./plans.ts";
 
 export type PaidPlan = {

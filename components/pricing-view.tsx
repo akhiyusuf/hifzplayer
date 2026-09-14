@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { APP_NAME } from "@/lib/brand";
 import { clerkBrowserReady } from "@/lib/auth/config";
 import { PLUS_EXPLAIN } from "@/lib/billing/gates";
-import { GIFT_SEATS, parseGiftEmails } from "@/lib/billing/gift";
+import { GIFT_SEATS, parseGiftEmails } from "@/lib/billing/gift-parse";
 import { formatMoney, type Catalog, type PlanId } from "@/lib/billing/plans";
 
 type Processors = { stripe: boolean; paystack: boolean };
