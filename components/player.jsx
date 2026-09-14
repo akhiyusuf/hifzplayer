@@ -1670,8 +1670,8 @@ function k(e) {
             onClick: () => t.prev(),
             "aria-label": u ? "Previous word" : "Previous verse",
             children: _jsx(Icon, {
-              name: u ? "chevron-right" : "skip-back",
-              size: u ? 24 : 22,
+              name: "skip-back",
+              size: 22,
             }),
           }),
           _jsx("button", {
@@ -1688,8 +1688,8 @@ function k(e) {
             onClick: () => t.next(),
             "aria-label": u ? "Next word" : "Next verse",
             children: _jsx(Icon, {
-              name: u ? "chevron-left" : "skip-forward",
-              size: u ? 24 : 22,
+              name: "skip-forward",
+              size: 22,
             }),
           }),
           _jsxs("span", {

@@ -58,6 +58,17 @@ export const ROADMAP: RoadmapItem[] = [
     icon: "git-compare",
   },
   {
+    id: "voice",
+    title: "Voice recognition",
+    arabic: "تلاوة",
+    blurb: "Read aloud, and the page checks the recitation as you go.",
+    detail:
+      "A listening pass while you recite — the ayah you are on, the words you hold, where you slipped. It stays on the page with you. Diras Plus when it lands.",
+    status: "next",
+    plus: true,
+    icon: "mic",
+  },
+  {
     id: "best-of",
     title: "Best of a reciter",
     arabic: "صوت",
