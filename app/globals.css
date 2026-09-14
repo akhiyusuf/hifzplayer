@@ -468,8 +468,15 @@ a.qari-inline{text-decoration:none;color:inherit}
 body:has(.scrim) .word-rep-bar,
 body:has(.scrim) .follow-back,
 body:has(.scrim) .repeat-pop,
+body:has(.scrim) .player-foot,
 body:has(.popover) .repeat-pop,
 body:has(.popover) .word-rep-bar{
+  display:none !important;
+}
+.scrim{z-index:11000}
+body:has(.scrim) .cl-userButtonBox,
+body:has(.scrim) .cl-userButtonTrigger,
+body:has(.scrim) .cl-avatarBox{
   visibility:hidden;
   pointer-events:none;
 }
