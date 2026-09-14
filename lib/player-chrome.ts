@@ -157,6 +157,47 @@ export function coversRange(verses: { number: number }[], from: number, to: numb
   return true;
 }
 
+export type ExclusiveJobKeep = "verseLoop" | "word" | null;
+
+/** Stop every other playback job so only one drill/loop runs. */
+export function exclusiveJobPatch(keep: ExclusiveJobKeep = null) {
+  return {
+    oneshot: null as null,
+    focusPhrase: 0,
+    ...(keep === "verseLoop"
+      ? {}
+      : { verseLoop: false as const, verseLoopRange: null as null }),
+    ...(keep === "word"
+      ? {}
+      : {
+          loop: null as null,
+          pendingLoopStart: null as null,
+          wordPick: { start: null, end: null, count: null, open: null },
+          wordStep: { active: false, w: 1, playedTimes: 0, range: null as null },
+        }),
+  };
+}
+
+export const PLAYER_LAYERS = [
+  "settings",
+  "meaning",
+  "reciter",
+  "practice",
+  "relay",
+  "phrase",
+  "twin",
+  "range",
+  "repeat",
+  "plus",
+] as const;
+
+export type PlayerLayer = (typeof PLAYER_LAYERS)[number];
+
+/** Only one sheet, pop, or gate stays open. */
+export function exclusiveLayer(keep: PlayerLayer | null): Set<PlayerLayer> {
+  return keep ? new Set([keep]) : new Set();
+}
+
 export const RELAY_ROUNDS = [
   { value: 1, label: "1" },
   { value: 2, label: "2" },

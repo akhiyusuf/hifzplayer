@@ -21,6 +21,8 @@ import {
   wordIsAway,
   wordRangePassComplete,
   wordRepsPlayKind,
+  exclusiveJobPatch,
+  exclusiveLayer,
 } from "./player-chrome.ts";
 
 describe("verseRatioLabel", () => {
@@ -155,6 +157,43 @@ describe("playback rate", () => {
     assert.equal(nextRate(1.25), 1.5);
     assert.equal(nextRate(1.5), 0.75);
     assert.equal(nextRate(99), 1);
+  });
+});
+
+describe("exclusive jobs", () => {
+  it("clears word reps when a verse loop takes over", () => {
+    const next = exclusiveJobPatch("verseLoop");
+    assert.equal(next.loop, null);
+    assert.equal(next.pendingLoopStart, null);
+    assert.equal(next.wordPick.start, null);
+    assert.equal(next.wordStep.active, false);
+    assert.equal("verseLoop" in next, false);
+  });
+
+  it("clears a verse loop when a word job takes over", () => {
+    const next = exclusiveJobPatch("word");
+    assert.equal(next.verseLoop, false);
+    assert.equal(next.verseLoopRange, null);
+    assert.equal("loop" in next, false);
+  });
+
+  it("clears every job when nothing is kept", () => {
+    const next = exclusiveJobPatch();
+    assert.equal(next.verseLoop, false);
+    assert.equal(next.loop, null);
+    assert.equal(next.oneshot, null);
+    assert.equal(next.focusPhrase, 0);
+  });
+});
+
+describe("exclusive layers", () => {
+  it("keeps only the layer that just opened", () => {
+    const settings = exclusiveLayer("settings");
+    assert.equal(settings.size, 1);
+    assert.equal(settings.has("settings"), true);
+    assert.equal(settings.has("repeat"), false);
+    assert.equal(settings.has("plus"), false);
+    assert.equal(exclusiveLayer(null).size, 0);
   });
 });
 

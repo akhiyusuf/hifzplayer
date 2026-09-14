@@ -23,6 +23,8 @@ type PlusCtx = {
   askPlus: (feature: PlusFeature) => void;
 };
 
+export const PLUS_GATE_EVENT = "hifz:plus-gate";
+
 const Ctx = createContext<PlusCtx | null>(null);
 
 function cachedPlus() {
@@ -69,7 +71,12 @@ export function PlusProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const askPlus = useCallback((next: PlusFeature) => setFeature(next), []);
+  const askPlus = useCallback((next: PlusFeature) => {
+    setFeature(next);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event(PLUS_GATE_EVENT));
+    }
+  }, []);
   const dismiss = useCallback(() => setFeature(null), []);
   const value = useMemo(() => ({ plus, ready, askPlus }), [plus, ready, askPlus]);
 

@@ -465,3 +465,11 @@ a.qari-inline{text-decoration:none;color:inherit}
   letter-spacing:.01em;
 }
 .index-row .index-setup svg{display:block;flex:none}
+body:has(.scrim) .word-rep-bar,
+body:has(.scrim) .follow-back,
+body:has(.scrim) .repeat-pop,
+body:has(.popover) .repeat-pop,
+body:has(.popover) .word-rep-bar{
+  visibility:hidden;
+  pointer-events:none;
+}
