@@ -4,6 +4,7 @@ import { APP_NAME } from "@/lib/brand";
 import { clerkAppearance } from "@/lib/auth/appearance";
 import { clerkBrowserReady } from "@/lib/auth/config";
 import { AccountsNotConfigured, AuthShell } from "@/components/auth-shell";
+import { agreeHref } from "@/lib/legal";
 import { safePath } from "@/lib/nav";
 
 export const metadata: Metadata = {
@@ -26,7 +27,7 @@ export default async function SignInPage({
           routing="path"
           path="/sign-in"
           signUpUrl="/sign-up"
-          fallbackRedirectUrl={next}
+          fallbackRedirectUrl={agreeHref(next)}
         />
       ) : (
         <AccountsNotConfigured />

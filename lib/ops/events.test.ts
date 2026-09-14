@@ -21,4 +21,21 @@ describe("ops events", () => {
     assert.equal(payload.accountId, "user_abc");
     assert.equal("email" in payload, false);
   });
+
+  it("logs a legal accept without an email", () => {
+    const lines: string[] = [];
+    const orig = console.info;
+    console.info = (msg?: unknown) => {
+      lines.push(String(msg));
+    };
+    try {
+      logOpsEvent({ type: "legal_accepted", accountId: "user_abc", ok: true });
+    } finally {
+      console.info = orig;
+    }
+    const payload = JSON.parse(lines[0] || "{}") as Record<string, unknown>;
+    assert.equal(payload.type, "legal_accepted");
+    assert.equal(payload.accountId, "user_abc");
+    assert.equal("email" in payload, false);
+  });
 });

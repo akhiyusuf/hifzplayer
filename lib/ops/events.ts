@@ -1,6 +1,6 @@
 /** Product and incident logs for Vercel. Never includes email, cards, or payment refs. */
 
-export type OpsEventType = "user_created" | "user_signed_in" | "incident";
+export type OpsEventType = "user_created" | "user_signed_in" | "incident" | "legal_accepted";
 
 export type OpsEvent = {
   type: OpsEventType;

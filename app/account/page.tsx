@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
 import { clerkConfigured } from "@/lib/auth/config";
+import { legalFromPrivateMetadata } from "@/lib/auth/legal";
 import { resolveEntitlement } from "@/lib/auth/session";
 import { AccountId } from "@/components/account-id";
 import { AccountsNotConfigured, AuthShell } from "@/components/auth-shell";
 import { publicEntitlement } from "@/lib/billing/entitlement";
 import { APP_NAME, PLUS_NAME } from "@/lib/brand";
+import { isLegalCurrent } from "@/lib/legal";
 import { backHref } from "@/lib/nav";
 
 export const metadata: Metadata = {
@@ -63,6 +65,7 @@ export default async function AccountPage({
   const plus = publicEntitlement(await resolveEntitlement());
   const email = user.primaryEmailAddress?.emailAddress;
   const name = user.firstName || user.username || "Signed in";
+  const legalOn = isLegalCurrent(legalFromPrivateMetadata(user.privateMetadata));
 
   return (
     <AuthShell title="Account" backHref={back}>
@@ -77,6 +80,17 @@ export default async function AccountPage({
         in on another browser. Quote your account ID if something goes wrong — it is the same id in our logs.
         Paystack and Stripe hold the payment ledger; this account shows the plan that was granted.
       </p>
+      {legalOn ? (
+        <p className="pricing-note" style={{ textAlign: "center", maxWidth: 360 }}>
+          You agreed to the{" "}
+          <Link href="/terms?from=account">usage</Link> and{" "}
+          <Link href="/privacy?from=account">privacy</Link> policies on this account.
+        </p>
+      ) : (
+        <Link className="btn-secondary" href={`/agree?next=${encodeURIComponent("/account")}`}>
+          Agree to usage and privacy
+        </Link>
+      )}
     </AuthShell>
   );
 }

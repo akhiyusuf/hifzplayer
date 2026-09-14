@@ -1,7 +1,9 @@
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import type { NextRequest } from "next/server";
 import { claimGiftForUser } from "@/lib/auth/gifts";
+import { saveLegalAccept } from "@/lib/auth/legal";
 import { logOpsEvent } from "@/lib/ops/events";
+import { isLegalCurrent, parseLegalAccept } from "@/lib/legal";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,6 +22,15 @@ export async function POST(request: NextRequest) {
       accountId: event.data.id,
       ok: true,
     });
+    const raw = event.data as { unsafe_metadata?: unknown; unsafeMetadata?: unknown };
+    const hint = parseLegalAccept(raw.unsafe_metadata ?? raw.unsafeMetadata);
+    if (hint && isLegalCurrent(hint)) {
+      try {
+        await saveLegalAccept(event.data.id, hint);
+      } catch {
+        /* /agree still records it */
+      }
+    }
     const emails = (event.data.email_addresses || [])
       .map((row) => (row.email_address || "").trim().toLowerCase())
       .filter(Boolean);
