@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { parseGiftEmails, sealGiftClaim, openGiftClaim, validateGiftEmails } from "./gift.ts";
+import { parseGiftEmails, sealGiftClaim, openGiftClaim, validateGiftEmails, classifyGiftRecipient, giftRecipientMessage } from "./gift.ts";
 
 describe("gift emails", () => {
   it("takes one address and rejects extras", () => {
@@ -15,6 +15,49 @@ describe("gift emails", () => {
     const ok = validateGiftEmails(["Reader@diras.app"]);
     assert.equal("error" in ok, false);
     if (!("error" in ok)) assert.deepEqual(ok.emails, ["reader@diras.app"]);
+  });
+});
+
+describe("gift recipient checks", () => {
+  it("requires an existing account and rejects gifting yourself", () => {
+    assert.equal(
+      classifyGiftRecipient({
+        buyerId: "user_buyer",
+        buyerEmail: "me@diras.app",
+        recipientEmail: "friend@diras.app",
+        recipientUserId: "user_friend",
+      }),
+      "ok",
+    );
+    assert.equal(
+      classifyGiftRecipient({
+        buyerId: "user_buyer",
+        buyerEmail: "me@diras.app",
+        recipientEmail: "missing@diras.app",
+        recipientUserId: null,
+      }),
+      "missing",
+    );
+    assert.equal(
+      classifyGiftRecipient({
+        buyerId: "user_buyer",
+        buyerEmail: "me@diras.app",
+        recipientEmail: "me@diras.app",
+        recipientUserId: "user_other",
+      }),
+      "self",
+    );
+    assert.equal(
+      classifyGiftRecipient({
+        buyerId: "user_buyer",
+        buyerEmail: "me@diras.app",
+        recipientEmail: "alias@diras.app",
+        recipientUserId: "user_buyer",
+      }),
+      "self",
+    );
+    assert.match(giftRecipientMessage("missing"), /sign up first/i);
+    assert.match(giftRecipientMessage("self"), /For me/);
   });
 });
 

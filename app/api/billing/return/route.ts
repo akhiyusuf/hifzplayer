@@ -34,6 +34,12 @@ export async function GET(request: Request) {
       : null;
 
   if (result && isFulfillGift(result)) {
+    if (result.sent) {
+      dest.searchParams.set("gift", "1");
+      dest.searchParams.set("granted", "1");
+      dest.searchParams.set("plan", result.hold.planId);
+      return paymentRedirect(dest);
+    }
     const gift = new URL("/pricing/gift", origin);
     if (sessionId) gift.searchParams.set("session_id", sessionId);
     if (reference) gift.searchParams.set("reference", reference);

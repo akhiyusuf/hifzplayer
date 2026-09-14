@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { PLUS_NAME } from "@/lib/brand";
-import { recordGiftHold, renewGiftRecipients, type GiftHold } from "@/lib/auth/gifts";
+import { recordGiftHold, renewGiftRecipients, assignGiftToEmail, type GiftHold } from "@/lib/auth/gifts";
 import { clerkConfigured } from "@/lib/auth/config";
 import { clerkUserIdByEmail, plusFromClerk } from "@/lib/auth/plus";
 import { grantPlusToAccount, signedInUserId } from "@/lib/auth/session";
 import { logBillingEvent, type BillingEvent } from "./analytics";
 import { grantFromPayment, periodEnd, publicEntitlement, type Entitlement } from "./entitlement";
+import { publicAppUrl } from "./env";
 import { parseCheckoutMetadata, resolvePaidPlan, type PaidPlan } from "./match";
 import {
   paystackChargeUntil,
@@ -29,7 +30,7 @@ export type FulfillKind = "granted" | "renewed" | "revoked";
 export type FulfillOk = { ok: true; entitlement: Entitlement; kind: FulfillKind };
 export type FulfillErr = { ok: false; status: number; error: string };
 export type FulfillSkip = { ok: true; skipped: true };
-export type FulfillGift = { ok: true; gift: true; hold: GiftHold };
+export type FulfillGift = { ok: true; gift: true; hold: GiftHold; sent: boolean };
 export type FulfillResult = FulfillOk | FulfillErr | FulfillSkip | FulfillGift;
 
 function fail(status: number, error: string, extra?: Omit<Partial<BillingEvent>, "type">): FulfillErr {
@@ -157,8 +158,22 @@ async function holdPaidGift(opts: {
     until: opts.until,
     sub: opts.sub,
     buyerId,
+    recipientEmail: opts.paid.recipientEmail,
+    recipientUserId: opts.paid.recipientUserId,
   });
-  return { ok: true, gift: true, hold };
+  const email = opts.paid.recipientEmail || hold.recipientEmail;
+  if (hold.sentAt && hold.recipientUserId) {
+    return { ok: true, gift: true, hold, sent: true };
+  }
+  if (email) {
+    const assigned = await assignGiftToEmail({
+      hold,
+      email,
+      origin: publicAppUrl(),
+    });
+    return { ok: true, gift: true, hold: assigned.hold, sent: true };
+  }
+  return { ok: true, gift: true, hold, sent: false };
 }
 
 async function renewPaidGift(metadata: unknown, until: string | null, plus: boolean): Promise<FulfillSkip | FulfillErr> {
@@ -504,6 +519,7 @@ export function fulfillJson(result: FulfillResult) {
       ok: true,
       gift: true,
       plus: false,
+      sent: result.sent,
       planId: result.hold.planId,
     });
   }

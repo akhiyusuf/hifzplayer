@@ -8,6 +8,8 @@ export type PaidPlan = {
   buyerId?: string;
   gift?: boolean;
   seats?: number;
+  recipientEmail?: string;
+  recipientUserId?: string;
 };
 
 function asRecord(raw: unknown): Record<string, unknown> | null {
@@ -40,6 +42,8 @@ export function parseCheckoutMetadata(raw: unknown): {
   buyerId: string;
   gift: boolean;
   seats: number;
+  recipientEmail: string;
+  recipientUserId: string;
 } {
   const rec = asRecord(raw) || {};
   const fields = fromCustomFields(rec.custom_fields);
@@ -53,6 +57,8 @@ export function parseCheckoutMetadata(raw: unknown): {
     buyerId,
     gift,
     seats: gift ? (seatsRaw === GIFT_SEATS ? GIFT_SEATS : GIFT_SEATS) : 1,
+    recipientEmail: asString(rec.recipientEmail) || asString(fields.recipientEmail),
+    recipientUserId: asString(rec.recipientUserId) || asString(fields.recipientUserId),
   };
 }
 
@@ -98,6 +104,8 @@ export function resolvePaidPlan(opts: {
       ...(meta.userId ? { userId: meta.userId } : {}),
       ...(meta.buyerId ? { buyerId: meta.buyerId } : {}),
       ...(meta.gift ? { gift: true, seats: meta.seats } : {}),
+      ...(meta.recipientEmail ? { recipientEmail: meta.recipientEmail } : {}),
+      ...(meta.recipientUserId ? { recipientUserId: meta.recipientUserId } : {}),
     };
   }
 

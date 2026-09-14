@@ -11,13 +11,18 @@ import {
   rateFace,
   sidebarKind,
   sortedWordRange,
+  wordTapIntent,
   spanForVerse,
+  spanForPlay,
+  spanForSetup,
   indexOfVerseInPassage,
   verseRatioLabel,
   wordNeedsFollow,
   wordIsAway,
   wordRangePassComplete,
   wordRepsPlayKind,
+  exclusiveJobPatch,
+  exclusiveLayer,
 } from "./player-chrome.ts";
 
 describe("verseRatioLabel", () => {
@@ -43,11 +48,45 @@ describe("sidebarKind", () => {
   });
 });
 
+describe("wordTapIntent", () => {
+  it("keeps a mushaf mouse click as play-from-this-word", () => {
+    assert.equal(wordTapIntent("mushaf", "verse", "mouse"), "play");
+    assert.equal(wordTapIntent("mushaf", "verse", "pen"), "play");
+    assert.equal(wordTapIntent("mushaf", "verse"), "play");
+  });
+
+  it("opens meaning on a mushaf finger tap", () => {
+    assert.equal(wordTapIntent("mushaf", "verse", "touch"), "meaning");
+  });
+
+  it("uses Word Reps taps for the pin bar, and plays in other Focus jobs", () => {
+    assert.equal(wordTapIntent("focus", "word", "touch"), "wordRep");
+    assert.equal(wordTapIntent("focus", "word", "mouse"), "wordRep");
+    assert.equal(wordTapIntent("focus", "verse", "touch"), "play");
+    assert.equal(wordTapIntent("focus", "masked", "mouse"), "play");
+  });
+});
+
 describe("spanForVerse", () => {
   it("loads a short surah whole and a long surah around the ayah", () => {
     assert.deepEqual(spanForVerse(2, 7), { from: 1, to: 7 });
     assert.deepEqual(spanForVerse(50, 286), { from: 50, to: 59 });
     assert.deepEqual(spanForVerse(1, 286), { from: 1, to: 10 });
+  });
+});
+
+describe("spanForPlay", () => {
+  it("opens the whole surah, including long ones", () => {
+    assert.deepEqual(spanForPlay(7), { from: 1, to: 7 });
+    assert.deepEqual(spanForPlay(286), { from: 1, to: 286 });
+  });
+});
+
+describe("spanForSetup", () => {
+  it("defaults to the whole surah and keeps a saved range", () => {
+    assert.deepEqual(spanForSetup(286), { from: 1, to: 286 });
+    assert.deepEqual(spanForSetup(286, { from: 2, to: 10 }), { from: 2, to: 10 });
+    assert.deepEqual(spanForSetup(7, { from: 1, to: 20 }), { from: 1, to: 7 });
   });
 });
 
@@ -118,6 +157,43 @@ describe("playback rate", () => {
     assert.equal(nextRate(1.25), 1.5);
     assert.equal(nextRate(1.5), 0.75);
     assert.equal(nextRate(99), 1);
+  });
+});
+
+describe("exclusive jobs", () => {
+  it("clears word reps when a verse loop takes over", () => {
+    const next = exclusiveJobPatch("verseLoop");
+    assert.equal(next.loop, null);
+    assert.equal(next.pendingLoopStart, null);
+    assert.equal(next.wordPick.start, null);
+    assert.equal(next.wordStep.active, false);
+    assert.equal("verseLoop" in next, false);
+  });
+
+  it("clears a verse loop when a word job takes over", () => {
+    const next = exclusiveJobPatch("word");
+    assert.equal(next.verseLoop, false);
+    assert.equal(next.verseLoopRange, null);
+    assert.equal("loop" in next, false);
+  });
+
+  it("clears every job when nothing is kept", () => {
+    const next = exclusiveJobPatch();
+    assert.equal(next.verseLoop, false);
+    assert.equal(next.loop, null);
+    assert.equal(next.oneshot, null);
+    assert.equal(next.focusPhrase, 0);
+  });
+});
+
+describe("exclusive layers", () => {
+  it("keeps only the layer that just opened", () => {
+    const settings = exclusiveLayer("settings");
+    assert.equal(settings.size, 1);
+    assert.equal(settings.has("settings"), true);
+    assert.equal(settings.has("repeat"), false);
+    assert.equal(settings.has("plus"), false);
+    assert.equal(exclusiveLayer(null).size, 0);
   });
 });
 

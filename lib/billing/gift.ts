@@ -95,3 +95,28 @@ export function validateGiftEmails(raw: string | string[]): { emails: string[] }
   if (!emails.every(looksLikeEmail)) return { error: "Enter a valid email address" };
   return { emails };
 }
+
+export const GIFT_RECIPIENT_MISSING =
+  "No Diras account uses that email. Ask them to sign up first, then try again.";
+export const GIFT_RECIPIENT_SELF = "That is your email. Use For me if Plus is for you.";
+
+export type GiftRecipientKind = "ok" | "missing" | "self";
+
+export function giftRecipientMessage(kind: Exclude<GiftRecipientKind, "ok">) {
+  return kind === "self" ? GIFT_RECIPIENT_SELF : GIFT_RECIPIENT_MISSING;
+}
+
+/** Recipient must already have a Diras account, and it cannot be the buyer. */
+export function classifyGiftRecipient(opts: {
+  buyerId?: string;
+  buyerEmail?: string;
+  recipientEmail: string;
+  recipientUserId: string | null;
+}): GiftRecipientKind {
+  const buyerEmail = (opts.buyerEmail || "").trim().toLowerCase();
+  const recipientEmail = opts.recipientEmail.trim().toLowerCase();
+  if (buyerEmail && recipientEmail && buyerEmail === recipientEmail) return "self";
+  if (opts.buyerId && opts.recipientUserId && opts.buyerId === opts.recipientUserId) return "self";
+  if (!opts.recipientUserId) return "missing";
+  return "ok";
+}

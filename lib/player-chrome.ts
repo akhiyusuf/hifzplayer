@@ -63,6 +63,19 @@ export function sidebarKind(style: string, mode: string): SidebarKind {
   return "mushaf";
 }
 
+export type WordTapIntent = "play" | "meaning" | "wordRep";
+
+/** Mushaf mouse click still seeks from that word. A finger tap opens meaning. */
+export function wordTapIntent(
+  style: string,
+  mode: string,
+  pointerType?: string | null,
+): WordTapIntent {
+  if (style === "focus" && mode === "word") return "wordRep";
+  if (style === "mushaf" && pointerType === "touch") return "meaning";
+  return "play";
+}
+
 export function spanForVerse(verse: number, count: number) {
   const n = Math.max(1, verse || 1);
   const total = Math.max(n, count || n);
@@ -70,6 +83,24 @@ export function spanForVerse(verse: number, count: number) {
   const to = Math.min(total, n + 9);
   const from = Math.max(1, to - 9);
   return { from, to };
+}
+
+/** Home Play loads the whole surah. Settings verse-jump still uses `spanForVerse`. */
+export function spanForPlay(versesCount: number) {
+  const total = Math.max(1, versesCount || 1);
+  return { from: 1, to: total };
+}
+
+/** Set up can reopen a saved range. Otherwise it matches Play: the whole surah. */
+export function spanForSetup(
+  versesCount: number,
+  resume?: { from: number; to: number } | null,
+) {
+  const total = Math.max(1, versesCount || 1);
+  const from = resume?.from || 0;
+  const to = resume?.to || 0;
+  if (from >= 1 && to >= from && to <= total) return { from, to };
+  return { from: 1, to: total };
 }
 
 export function indexOfVerseInPassage(
@@ -124,6 +155,47 @@ export function coversRange(verses: { number: number }[], from: number, to: numb
     if (!have.has(n)) return false;
   }
   return true;
+}
+
+export type ExclusiveJobKeep = "verseLoop" | "word" | null;
+
+/** Stop every other playback job so only one drill/loop runs. */
+export function exclusiveJobPatch(keep: ExclusiveJobKeep = null) {
+  return {
+    oneshot: null as null,
+    focusPhrase: 0,
+    ...(keep === "verseLoop"
+      ? {}
+      : { verseLoop: false as const, verseLoopRange: null as null }),
+    ...(keep === "word"
+      ? {}
+      : {
+          loop: null as null,
+          pendingLoopStart: null as null,
+          wordPick: { start: null, end: null, count: null, open: null },
+          wordStep: { active: false, w: 1, playedTimes: 0, range: null as null },
+        }),
+  };
+}
+
+export const PLAYER_LAYERS = [
+  "settings",
+  "meaning",
+  "reciter",
+  "practice",
+  "relay",
+  "phrase",
+  "twin",
+  "range",
+  "repeat",
+  "plus",
+] as const;
+
+export type PlayerLayer = (typeof PLAYER_LAYERS)[number];
+
+/** Only one sheet, pop, or gate stays open. */
+export function exclusiveLayer(keep: PlayerLayer | null): Set<PlayerLayer> {
+  return keep ? new Set([keep]) : new Set();
 }
 
 export const RELAY_ROUNDS = [

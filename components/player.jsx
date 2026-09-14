@@ -22,7 +22,7 @@ import { PlaylistBar } from "@/components/playlist-bar";
 import { WordRepBar } from "@/components/word-rep-bar";
 import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
-import { clampStopIndex, playlistHref, resolvePlaylist, stopLabel } from "@/lib/playlists";
+import { clampStopIndex, playlistHref, reciterIdForStyle, resolvePlaylist, stopLabel } from "@/lib/playlists";
 import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration, fetchTranslation } from "@/lib/api";
 import { fmtTime, segsForVerse, segForWord, toArabicDigits, wordAt } from "@/lib/audio";
 import { APP_NAME } from "@/lib/brand";
@@ -52,9 +52,11 @@ import {
   wordIsAway,
   wordRangePassComplete,
   wordRepsPlayKind,
+  wordTapIntent,
   writeRelayDraft,
+  exclusiveJobPatch,
 } from "@/lib/player-chrome";
-import { usePlus } from "@/lib/plus";
+import { PLUS_GATE_EVENT, usePlus } from "@/lib/plus";
 import { markToday, upsertSession } from "@/lib/sessions";
 import { getStore, setStore } from "@/lib/storage";
 import { tajToSpans } from "@/lib/tajweed";
@@ -230,6 +232,12 @@ class g {
       this.clearGap(),
       (this.st.playing = !1),
       this.notify());
+  }
+  yieldJobs(keep) {
+    Object.assign(this.st, exclusiveJobPatch(keep));
+  }
+  stopJobs() {
+    (this.stopAudio(), this.yieldJobs());
   }
   tick() {
     null !== this.rafId && cancelAnimationFrame(this.rafId);
@@ -539,13 +547,17 @@ class g {
       !this.requirePlus("focus")
     )
       return;
-    ((this.st.verseLoop = !this.st.verseLoop),
+    if (this.st.verseLoop) {
+      ((this.st.verseLoop = !1),
+        (this.st.verseLoopRange = null),
+        this.toast("Verse repeat off"),
+        this.notify());
+      return;
+    }
+    (this.yieldJobs("verseLoop"),
+      (this.st.verseLoop = !0),
       (this.st.verseLoopRange = null),
-      this.toast(
-        this.st.verseLoop
-          ? "Repeating this verse until you turn it off"
-          : "Verse repeat off",
-      ),
+      this.toast("Repeating this verse until you turn it off"),
       this.notify());
   }
   setVerseLoopRange(from, to) {
@@ -556,7 +568,8 @@ class g {
       this.toast("That range is not on this page");
       return;
     }
-    ((this.st.verseLoop = !0),
+    (this.yieldJobs("verseLoop"),
+      (this.st.verseLoop = !0),
       (this.st.verseLoopRange = a === b ? null : { from: a, to: b }));
     let idx = this.st.verses.findIndex((v) => v.number === a);
     this.toast(
@@ -581,17 +594,7 @@ class g {
   setMode(e) {
     if (isPaidFocusJob(e) && !this.requirePlus("focus")) return;
     (e !== this.st.mode || "relay" === e) &&
-      (this.stopAudio(),
-      (this.st.loop = null),
-      (this.st.pendingLoopStart = null),
-      (this.st.wordPick = emptyWordPick()),
-      (this.st.oneshot = null),
-      (this.st.wordStep = {
-        active: !1,
-        w: 1,
-        playedTimes: 0,
-        range: null,
-      }),
+      (this.stopJobs(),
       (this.st.mode = e),
       "masked" === e && (this.st.masked = {}),
       "relay" !== e && (this.st.relay = null),
@@ -601,32 +604,19 @@ class g {
       "relay" !== e && this.loadVerseAudio(this.st.vIdx, !1));
   }
   setStyle(e) {
-    ((this.st.style = e),
-      setStore(KEYS.style, e),
-      (this.st.focusPhrase = 0));
+    if (this.st.style === e) return;
+    (this.stopJobs(),
+      (this.st.style = e),
+      setStore(KEYS.style, e));
     if ("mushaf" === e) {
       if ("verse" !== this.st.mode) {
         ((this.st.mode = "verse"),
           (this.st.relay = null),
-          (this.st.wordStep = {
-            active: !1,
-            w: 1,
-            playedTimes: 0,
-            range: null,
-          }),
           this.loadVerseAudio(this.st.vIdx, !1));
       }
     } else if ("focus" === e && !this.plus) {
-      this.pauseAudio();
       if (isPaidFocusJob(this.st.mode)) {
-        ((this.st.mode = "verse"),
-          (this.st.relay = null),
-          (this.st.wordStep = {
-            active: !1,
-            w: 1,
-            playedTimes: 0,
-            range: null,
-          }));
+        ((this.st.mode = "verse"), (this.st.relay = null));
       }
     }
     this.notify();
@@ -965,7 +955,8 @@ class g {
   }
   setLoop(e, t, s, r, a) {
     if (isPaidRepeat(r) && !this.requirePlus("repeats")) return;
-    ((this.st.oneshot = null),
+    (this.yieldJobs("word"),
+      (this.st.oneshot = null),
       (this.st.loop = {
         vIdx: e,
         startW: t,
@@ -988,7 +979,7 @@ class g {
       end = Math.max(e, t),
       passes = null == s ? this.st.loopCount : s;
     if (isPaidRepeat(passes) && !this.requirePlus("repeats")) return;
-    ((this.st.loop = null),
+    (this.yieldJobs(),
       (this.st.wordRepeat = passes),
       (this.st.wordPick = { ...emptyWordPick(), start, end, count: passes }),
       (this.st.wordStep = {
@@ -1014,7 +1005,8 @@ class g {
     let range = sortedWordRange(e, t),
       passes = null == s ? this.st.loopCount : s;
     if (isPaidRepeat(passes) && !this.requirePlus("repeats")) return;
-    ((this.st.wordRepeat = passes),
+    (this.yieldJobs("word"),
+      (this.st.wordRepeat = passes),
       (this.st.wordPick = {
         ...emptyWordPick(),
         start: range.start,
@@ -1042,6 +1034,7 @@ class g {
       this.playFromWord(range.start));
   }
   tapWordRep(e, t) {
+    this.yieldJobs("word");
     e !== this.st.vIdx && this.loadVerseAudio(e, !1);
     let p = this.st.wordPick || emptyWordPick(),
       open = p.open === t ? null : t;
@@ -1098,6 +1091,7 @@ class g {
     ((this.st.oneshot = { vIdx: e, endW: t }), this.playFromWord(t));
   }
   loopSingleWord(e, t, s) {
+    this.yieldJobs("word");
     if (
       (e !== this.st.vIdx && this.loadVerseAudio(e, !1),
       "word" === this.st.mode)
@@ -1108,6 +1102,7 @@ class g {
     (this.setLoop(e, t, t, this.st.loopCount, s), this.playFromWord(t));
   }
   loopWordRange(e, t, s) {
+    this.yieldJobs("word");
     if (
       ((this.st.pendingLoopStart = null),
       e !== this.st.vIdx && this.loadVerseAudio(e, !1),
@@ -1126,22 +1121,23 @@ class g {
       this.playFromWord(t));
   }
   setPendingLoopStart(e, t) {
-    ((this.st.pendingLoopStart = { vIdx: e, w: t }),
+    (this.yieldJobs("word"),
+      (this.st.pendingLoopStart = { vIdx: e, w: t }),
       this.notify(),
       this.toast("Range start set — now tap the last word"));
   }
   clearPendingLoopStart() {
     ((this.st.pendingLoopStart = null), this.notify());
   }
-  async switchReciter(e, t) {
+  async switchReciter(e, t, quiet) {
     if (e === this.st.reciterId) return;
     let s = this.st.playing,
       r = this.st.curWord;
     (this.pauseAudio(),
       (this.st.reciterId = e),
-      setStore(KEYS.reciter, e),
+      setStore("focus" === this.st.style ? KEYS.focusReciter : KEYS.reciter, e),
       this.notify(),
-      this.toast("Switching to ".concat(t, "…")));
+      quiet || this.toast("Switching to ".concat(t, "\u2026")));
     try {
       var a;
       let n = await this.ensureAudio(e);
@@ -1187,7 +1183,8 @@ class g {
     }
     let n = x(this.st.verses, t, s, e, 1, this.st.reciterId || 0);
     if (!n.length) return (this.toast("No verses in that range"), !1);
-    ((this.st.mode = "relay"),
+    (this.stopJobs(),
+      (this.st.mode = "relay"),
       (this.st.relay = {
         order: e,
         vFrom: t,
@@ -1560,14 +1557,20 @@ function b(e) {
   });
 }
 function k(e) {
-  let { engine: t, state: s } = e,
+  let {
+      engine: t,
+      state: s,
+      repeatOpen,
+      setRepeatOpen,
+      transOpen,
+      setTransOpen,
+      onOccupy = () => {},
+    } = e,
     { plus: plusOn } = usePlus(),
     focusLocked = "focus" === s.style && !plusOn,
     d = s.showTranslation && "mushaf" === s.style ? s.verses[s.vIdx] : void 0,
     c = "relay" === s.mode,
     u = "word" === s.mode,
-    [transOpen, setTransOpen] = useState(!1),
-    [repeatOpen, setRepeatOpen] = useState(!1),
     p = s.wordStep.range,
     verseNums = s.verses.map((v) => v.number),
     loopFromDefault = (s.verses[s.vIdx] && s.verses[s.vIdx].number) || verseNums[0] || 1,
@@ -1609,7 +1612,13 @@ function k(e) {
         _jsxs("button", {
           type: "button",
           className: "trans-dock tap".concat(transOpen ? "" : " compact"),
-          onClick: () => setTransOpen((e) => !e),
+          onClick: () => {
+            if (transOpen) {
+              setTransOpen(!1);
+              return;
+            }
+            (onOccupy("dock"), setTransOpen(!0));
+          },
           "aria-expanded": transOpen,
           "aria-label": "Translation",
         children: [
@@ -1669,8 +1678,8 @@ function k(e) {
             onClick: () => t.prev(),
             "aria-label": u ? "Previous word" : "Previous verse",
             children: _jsx(Icon, {
-              name: u ? "chevron-right" : "skip-back",
-              size: u ? 24 : 22,
+              name: "skip-back",
+              size: 22,
             }),
           }),
           _jsx("button", {
@@ -1687,8 +1696,8 @@ function k(e) {
             onClick: () => t.next(),
             "aria-label": u ? "Next word" : "Next verse",
             children: _jsx(Icon, {
-              name: u ? "chevron-left" : "skip-forward",
-              size: u ? 24 : 22,
+              name: "skip-forward",
+              size: 22,
             }),
           }),
           _jsxs("span", {
@@ -1798,13 +1807,14 @@ function k(e) {
                     (setRepeatOpen(!1), t.toggleVerseLoop());
                     return;
                   }
-                  setRepeatOpen((e) => {
-                    if (!e) {
-                      setLoopFrom(loopFromDefault);
-                      setLoopTo(loopToDefault);
-                    }
-                    return !e;
-                  });
+                  if (repeatOpen) {
+                    setRepeatOpen(!1);
+                    return;
+                  }
+                  (onOccupy("repeat"),
+                    setLoopFrom(loopFromDefault),
+                    setLoopTo(loopToDefault),
+                    setRepeatOpen(!0));
                 },
                 children: _jsx(Icon, { name: "repeat", size: 20 }),
               }),
@@ -1898,6 +1908,7 @@ function S(e) {
       annotation: g,
       onOpenPhrase: j,
       onOpenConfusable: w,
+      mushaf: mushafLite,
     } = e,
     b = useRef(null),
     [k, N] = useState(null),
@@ -1980,7 +1991,9 @@ function S(e) {
         _jsxs("div", {
           className: "p-word",
           children: [
-            _jsx("span", { className: "ar", children: d.ar }),
+            mushafLite
+              ? null
+              : _jsx("span", { className: "ar", children: d.ar }),
             d.tr &&
               _jsx("span", { className: "tr", children: d.tr }),
             _jsx("span", {
@@ -1989,7 +2002,9 @@ function S(e) {
             }),
           ],
         }),
-        _jsxs("div", {
+        mushafLite
+          ? null
+          : _jsxs("div", {
           className: "p-repeat",
           children: [
             _jsx("span", { id: "rep-lbl", children: "Repeat" }),
@@ -2035,19 +2050,20 @@ function S(e) {
           className: "p-actions",
           children: [
             _jsxs("button", {
-              className: "sec",
+              className: "pri",
               onClick: v,
               children: [
                 _jsx(Icon, {
                   name: "volume-2",
                   size: 15,
-                  style: { color: "var(--action-primary)" },
                 }),
-                "Play this word",
+                "Play sound",
               ],
             }),
-            _jsxs("button", {
-              className: "pri",
+            mushafLite
+              ? null
+              : _jsxs("button", {
+              className: "sec",
               onClick: x,
               children: [
                 _jsx(Icon, { name: "repeat", size: 15 }),
@@ -2058,7 +2074,9 @@ function S(e) {
             }),
           ],
         }),
-        _jsxs("button", {
+        mushafLite
+          ? null
+          : _jsxs("button", {
           className: "p-tertiary",
           onClick: f,
           children: [
@@ -2872,6 +2890,7 @@ let D = memo(function (e) {
     holdTimer = useRef(null),
     held = useRef(!1),
     holdStart = useRef({ x: 0, y: 0 }),
+    lastPtr = useRef("mouse"),
     clearHold = () => {
       holdTimer.current &&
         (clearTimeout(holdTimer.current), (holdTimer.current = null));
@@ -2931,6 +2950,7 @@ let D = memo(function (e) {
           .concat(t.ar)
           .concat(t.gloss ? " — ".concat(t.gloss) : ""),
         onPointerDown: (e) => {
+          lastPtr.current = e.pointerType || "mouse";
           if (!y || ("mouse" === e.pointerType && 0 !== e.button)) return;
           ((held.current = !1),
             (holdStart.current = { x: e.clientX, y: e.clientY }));
@@ -2963,13 +2983,13 @@ let D = memo(function (e) {
             held.current = !1;
             return;
           }
-          null == m || m(s, t.pos, e.currentTarget);
+          null == m || m(s, t.pos, e.currentTarget, lastPtr.current);
         },
         onKeyDown: (e) => {
           ("Enter" === e.key || " " === e.key) &&
             (e.preventDefault(),
             e.stopPropagation(),
-            null == m || m(s, t.pos, e.currentTarget));
+            null == m || m(s, t.pos, e.currentTarget, "mouse"));
         },
         ...(x ? { dangerouslySetInnerHTML: { __html: x.html } } : {}),
         children: x ? void 0 : t.ar,
@@ -3021,7 +3041,7 @@ function FocusLines(e) {
                       inRange: !!inPin,
                       isRangeStart: start === e.pos,
                       isRangeEnd: end === e.pos,
-                      isPending: i === e.pos || (wordRep && wordRep.open === e.pos),
+                      isPending: i === e.pos,
                       mask: null,
                       interactive: d,
                       onTap: l,
@@ -3721,6 +3741,8 @@ function U(e) {
     [eg, ej] = useState(!1),
     [ew, eb] = useState(!1),
     [eTools, eSetTools] = useState(!1),
+    [eRepeat, eSetRepeat] = useState(!1),
+    [eDock, eSetDock] = useState(!1),
     [eHint, eSetHint] = useState(""),
     eHintFor = useRef(null),
     eHintTimer = useRef(null),
@@ -3747,10 +3769,20 @@ function U(e) {
       [eListId, eM, ed, eVoice],
     ),
     eStopN = eList ? clampStopIndex(eList, eStopRaw) : 0,
-    eV = !!(ek || ef || eg || ew || eW || eL || eTools),
-    eD = useCallback(() => {
-      (eN(null), ey(!1), ej(!1), eb(!1), eA(null), eE(null), eSetTools(!1));
+    eQuietUi = useCallback((keep) => {
+      keep !== "meaning" && eN(null);
+      keep !== "practice" && ey(!1);
+      keep !== "reciter" && ej(!1);
+      keep !== "relay" && eb(!1);
+      keep !== "phrase" && eA(null);
+      keep !== "twin" && eE(null);
+      keep !== "settings" && eSetTools(!1);
+      keep !== "range" && eS(null);
+      keep !== "repeat" && eSetRepeat(!1);
+      keep !== "dock" && eSetDock(!1);
     }, []),
+    eV = !!(ek || ef || eg || ew || eW || eL || eTools || eI || eRepeat),
+    eD = useCallback(() => eQuietUi(null), [eQuietUi]),
     eF = useRef(!1);
   j(eV, eD, eF);
   let eO = en.find((e) => e.id === z),
@@ -3768,6 +3800,32 @@ function U(e) {
     useEffect(() => {
       ((eu.onPlusRequired = ask), eu.setPlus(plusOn));
     }, [eu, plusOn, ask]),
+    useEffect(() => {
+      let on = () => eQuietUi(null);
+      return (
+        window.addEventListener(PLUS_GATE_EVENT, on),
+        () => window.removeEventListener(PLUS_GATE_EVENT, on)
+      );
+    }, [eQuietUi]),
+    useEffect(() => {
+      eN(null);
+      eS(null);
+      eSetRepeat(!1);
+      eA(null);
+      eE(null);
+    }, [ez.mode, ez.style]),
+    useEffect(() => {
+      if ("ready" !== ei || !eRecs.length) return;
+      if ("focus" !== ez.style && !ez.reciterId) return;
+      let want = reciterIdForStyle(
+        ez.style,
+        eRecs,
+        getStore(KEYS.reciter) ?? el,
+        getStore(KEYS.focusReciter),
+      );
+      if (!want || want === ez.reciterId) return;
+      eu.switchReciter(want, ed(want), !0);
+    }, [ez.style, ei, eRecs, el, eu, ed, ez.reciterId]),
     useEffect(() => {
       if (!eList || !eListId) {
         ((eu.onPassageEnd = null),
@@ -3837,16 +3895,17 @@ function U(e) {
       );
     }, [z, V, D, eM, ei, eu, eWantPlay, plusOn]));
   let eH = useCallback(
-      (e, t, s) => {
+      (e, t, s, pointerType) => {
         let r = eu.getSnapshot(),
           a = r.pendingLoopStart;
         if (a) {
           if (a.vIdx === e && a.w !== t) {
-            (eS({
-              vIdx: e,
-              start: Math.min(a.w, t),
-              end: Math.max(a.w, t),
-            }),
+            (eQuietUi("range"),
+              eS({
+                vIdx: e,
+                start: Math.min(a.w, t),
+                end: Math.max(a.w, t),
+              }),
               eN(null));
             return;
           }
@@ -3863,29 +3922,28 @@ function U(e) {
           }
           return;
         }
-        if ("word" === r.mode) {
-          (eS(null), eu.tapWordRep(e, t));
+        let intent = wordTapIntent(r.style, r.mode, pointerType);
+        if ("wordRep" === intent) {
+          (eQuietUi(null), eu.tapWordRep(e, t));
           return;
         }
-        if ("mushaf" === r.style) {
-          eu.playWordOneshot(e, t);
+        if ("meaning" === intent) {
+          (eS(null),
+            eQuietUi("meaning"),
+            eN({ vIdx: e, pos: t, rect: s.getBoundingClientRect() }));
           return;
         }
         eu.playWordOneshot(e, t);
       },
-      [eu, eh],
+      [eu, eh, eQuietUi],
     ),
     eHold = useCallback((e, t, s) => {
       let r = eu.getSnapshot();
-      if (
-        r.pendingLoopStart ||
-        "mushaf" === r.style ||
-        "word" === r.mode
-      )
-        return;
+      if (r.pendingLoopStart || "word" === r.mode) return;
       (eS(null),
+        eQuietUi("meaning"),
         eN({ vIdx: e, pos: t, rect: s.getBoundingClientRect() }));
-    }, [eu]),
+    }, [eu, eQuietUi]),
     eK = useMemo(() => {
       var e, t;
       return ek &&
@@ -4070,7 +4128,7 @@ function U(e) {
       return { phrases: e, confusables: t };
     }, [eC, ez.verses]),
     eQ = (e, t) => {
-      (eN(null), eA({ vIdx: e, pos: t }));
+      (eQuietUi("phrase"), eA({ vIdx: e, pos: t }));
     },
     eY = (e, t, s, r, a, n) => {
       let [i, l] = e.split(":").map(Number);
@@ -4265,7 +4323,9 @@ function U(e) {
             title: eHead,
             backLabel: eList ? "Listen" : $ ? $.split(" ")[0] : null,
             onBack: eList ? () => Y.push("/listen") : undefined,
-            onSettings: () => eSetTools(!0),
+            onSettings: () => {
+              (eQuietUi("settings"), eSetTools(!0));
+            },
             settingsOpen: eTools,
           }),
           eHint
@@ -4484,6 +4544,11 @@ function U(e) {
       _jsx(k, {
         engine: eu,
         state: ez,
+        repeatOpen: eRepeat,
+        setRepeatOpen: eSetRepeat,
+        transOpen: eDock,
+        setTransOpen: eSetDock,
+        onOccupy: eQuietUi,
       }),
       eTools &&
         _jsx(PlayerSettingsSheet, {
@@ -4507,10 +4572,11 @@ function U(e) {
             : readRelayDraft(),
           onClose: () => eSetTools(!1),
           onOpenReciter: () => {
-            (eSetTools(!1), ej(!0));
+            (eQuietUi("reciter"), ej(!0));
           },
           onPickMode: (e) => {
             (eHintFor.current = null);
+            eSetTools(!1);
             eu.setMode(e);
           },
           onRelayStart: async (order, vFrom, vTo, rounds) => {
@@ -4584,6 +4650,7 @@ function U(e) {
           target: ek,
           loopCount: ez.loopCount,
           isWordRangeMode: "word" === ez.mode,
+          mushaf: "mushaf" === ez.style,
           onSetCount: (e) => eu.setLoopCount(e),
           onPlayWord: () => {
             (eu.playWordOneshot(ek.vIdx, ek.pos), eN(null));
@@ -4631,7 +4698,7 @@ function U(e) {
                 : null === (e = t.get(ek.pos)) || void 0 === e
                   ? void 0
                   : e.confusable;
-            (eN(null), a && eE({ mark: a, vIdx: ek.vIdx }));
+            (eQuietUi("twin"), a && eE({ mark: a, vIdx: ek.vIdx }));
           },
         }),
       eW &&
@@ -4690,7 +4757,7 @@ function U(e) {
           initialMode: ez.mode,
           variant: "mode",
           onStart: (e, t, s) => {
-            (ey(!1),
+            (eQuietUi("settings"),
               eu.setMode(s),
               "relay" === eu.getSnapshot().mode && eSetTools(!0));
           },

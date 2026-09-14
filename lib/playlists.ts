@@ -117,6 +117,37 @@ export function reciterDisplayName(name: string, style?: string | null) {
   return st ? `${trimmed} · ${st}` : trimmed;
 }
 
+export function isMuallimReciter(name: string, style?: string | null) {
+  return /mual+im/i.test(`${name || ""} ${style || ""}`);
+}
+
+export function pickMuallimReciter<T extends { id: number; name: string; style?: string | null }>(
+  list: T[],
+): T | null {
+  return (
+    list.find((item) => /mual+im/i.test(item.style || "")) ||
+    list.find((item) => /mual+im/i.test(item.name || "")) ||
+    null
+  );
+}
+
+/** Mushaf keeps the listening reciter. Focus defaults to Husary Muallim. */
+export function reciterIdForStyle(
+  style: string,
+  list: { id: number; name: string; style?: string | null }[],
+  mushafId: number | null | undefined,
+  focusId: number | null | undefined,
+): number | null {
+  const has = (id: number | null | undefined) =>
+    id != null && id > 0 && list.some((item) => item.id === id);
+  if (style === "focus") {
+    if (has(focusId)) return focusId as number;
+    return pickMuallimReciter(list)?.id ?? (has(mushafId) ? (mushafId as number) : null);
+  }
+  if (has(mushafId)) return mushafId as number;
+  return list[0]?.id ?? null;
+}
+
 export function reciterMatchesQuery(
   name: string,
   style: string | null | undefined,

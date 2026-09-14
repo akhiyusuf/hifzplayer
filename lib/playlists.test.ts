@@ -7,7 +7,9 @@ import {
   clampStopIndex,
   playlistHref,
   reciterDisplayName,
+  reciterIdForStyle,
   reciterMatchesQuery,
+  pickMuallimReciter,
   resolvePlaylist,
   stopLabel,
 } from "./playlists.ts";
@@ -101,5 +103,17 @@ describe("playlist urls", () => {
     assert.equal(reciterMatchesQuery("Mahmoud Khalil Al-Husary", "Muallim", "mualim"), true);
     assert.equal(reciterMatchesQuery("Mahmoud Khalil Al-Husary", "Muallim", "husary"), true);
     assert.equal(reciterMatchesQuery("Mishari Rashid al-Afasy", "", "mualim"), false);
+  });
+
+  it("defaults Focus to the Muallim reciter and leaves Mushaf on the saved voice", () => {
+    const list = [
+      { id: 7, name: "Mishari Rashid al-Afasy", style: "Murattal" },
+      { id: 9, name: "Mohamed Siddiq al-Minshawi", style: "Murattal" },
+      { id: 12, name: "Mahmoud Khalil Al-Husary", style: "Muallim" },
+    ];
+    assert.equal(pickMuallimReciter(list)?.id, 12);
+    assert.equal(reciterIdForStyle("focus", list, 9, null), 12);
+    assert.equal(reciterIdForStyle("focus", list, 9, 7), 7);
+    assert.equal(reciterIdForStyle("mushaf", list, 9, 12), 9);
   });
 });

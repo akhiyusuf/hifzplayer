@@ -16,6 +16,7 @@ export default async function PricingSuccessPage({
     trxref?: string;
     granted?: string;
     plan?: string;
+    gift?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -35,6 +36,7 @@ export default async function PricingSuccessPage({
         reference={reference}
         granted={params.granted === "1"}
         grantedPlan={params.plan || ""}
+        gifted={params.gift === "1"}
       />
     </main>
   );

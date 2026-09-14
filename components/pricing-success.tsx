@@ -10,6 +10,7 @@ import { setStore } from "@/lib/storage";
 type ConfirmState =
   | { status: "idle" | "working" }
   | { status: "ok"; planId: string; until: string | null }
+  | { status: "gifted"; planId: string }
   | { status: "err"; message: string };
 
 async function confirmPayment(opts: { sessionId: string; reference: string }) {
@@ -23,11 +24,13 @@ async function confirmPayment(opts: { sessionId: string; reference: string }) {
     const data = (await res.json()) as {
       plus?: boolean;
       gift?: boolean;
+      sent?: boolean;
       planId?: string;
       until?: string | null;
       error?: string;
     };
-    if (res.ok && data.gift) return { ...data, gift: true as const };
+    if (res.ok && data.gift && data.sent) return { ...data, gift: true as const, sent: true as const };
+    if (res.ok && data.gift) return { ...data, gift: true as const, sent: false as const };
     if (res.ok && data.plus) return data;
     lastMessage = data.error || lastMessage;
     if (res.status !== 402 && res.status !== 502) break;
@@ -41,14 +44,17 @@ export function PricingSuccess({
   reference,
   granted,
   grantedPlan,
+  gifted,
 }: {
   sessionId: string;
   reference: string;
   granted?: boolean;
   grantedPlan?: string;
+  gifted?: boolean;
 }) {
   const [paste, setPaste] = useState("");
   const [state, setState] = useState<ConfirmState>(() => {
+    if (granted && gifted) return { status: "gifted", planId: grantedPlan || "plus" };
     if (granted) return { status: "ok", planId: grantedPlan || "plus", until: null };
     if (sessionId || reference) return { status: "working" };
     return { status: "idle" };
@@ -61,6 +67,10 @@ export function PricingSuccess({
       try {
         const data = await confirmPayment({ sessionId, reference });
         if (cancelled) return;
+        if (data.gift && data.sent) {
+          setState({ status: "gifted", planId: data.planId || "plus" });
+          return;
+        }
         if (data.gift) {
           const q = sessionId ? `session_id=${encodeURIComponent(sessionId)}` : `reference=${encodeURIComponent(reference)}`;
           window.location.assign(`/pricing/gift?${q}&paid=1`);
@@ -93,6 +103,10 @@ export function PricingSuccess({
         sessionId: looksStripe ? value : "",
         reference: looksStripe ? "" : value,
       });
+      if (data.gift && data.sent) {
+        setState({ status: "gifted", planId: data.planId || "plus" });
+        return;
+      }
       if (data.gift) {
         const q = looksStripe
           ? `session_id=${encodeURIComponent(value)}`
@@ -116,6 +130,26 @@ export function PricingSuccess({
         <span className="spinner" aria-hidden="true" />
         <h2>Confirming your payment</h2>
         <p>Checking with the payment provider. This only takes a moment.</p>
+      </div>
+    );
+  }
+
+  if (state.status === "gifted") {
+    return (
+      <div className="status-block">
+        <span className="status-medallion" style={{ color: "var(--state-success)" }}>
+          <Icon name="gift" size={28} />
+        </span>
+        <h2>Gift sent</h2>
+        <p>
+          Plus is on their Diras account. They should sign in with that email — Google is fine if it uses the same
+          address. Your account stays as it was.
+        </p>
+        <div className="status-actions">
+          <Link className="btn-primary" href="/">
+            Back to reading
+          </Link>
+        </div>
       </div>
     );
   }
@@ -188,6 +222,17 @@ export function PricingSuccess({
                 setState({ status: "working" });
                 void confirmPayment({ sessionId, reference })
                   .then((data) => {
+                    if (data.gift && data.sent) {
+                      setState({ status: "gifted", planId: data.planId || "plus" });
+                      return;
+                    }
+                    if (data.gift) {
+                      const q = sessionId
+                        ? `session_id=${encodeURIComponent(sessionId)}`
+                        : `reference=${encodeURIComponent(reference)}`;
+                      window.location.assign(`/pricing/gift?${q}&paid=1`);
+                      return;
+                    }
                     setStore(PLUS_STORAGE_KEY, { plus: true, planId: data.planId, until: data.until });
                     setState({ status: "ok", planId: data.planId || "plus", until: data.until ?? null });
                   })

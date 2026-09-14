@@ -10,6 +10,7 @@ describe("roadmap", () => {
     assert.ok(ids.includes("phrases"));
     assert.ok(ids.includes("twins"));
     assert.ok(ids.includes("best-of"));
+    assert.ok(ids.includes("voice"));
   });
 
   it("puts Ask in the featured slot as Plus", () => {
@@ -32,6 +33,16 @@ describe("roadmap", () => {
     assert.ok(listed.some((item) => /Recurring phrases/.test(item.title)));
     assert.ok(listed.some((item) => /Near-twin/.test(item.title)));
     assert.ok(!listed.some((item) => item.store));
+  });
+
+  it("parks voice recognition as Plus, without naming other apps", () => {
+    const voice = ROADMAP.find((item) => item.id === "voice");
+    assert.equal(voice?.plus, true);
+    assert.equal(listedRoadmap().some((item) => item.id === "voice"), true);
+    assert.match(voice?.title || "", /Voice recognition/);
+    assert.match(voice?.detail || "", /Diras Plus/);
+    const blob = ROADMAP.map((item) => `${item.title} ${item.blurb} ${item.detail}`).join(" ");
+    assert.doesNotMatch(blob, /tarteel/i);
   });
 
   it("parks Best of a reciter as Plus", () => {

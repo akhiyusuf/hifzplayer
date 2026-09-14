@@ -1,7 +1,7 @@
-import { assignGiftToEmail, giftHoldsForBuyer } from "@/lib/auth/gifts";
+import { assignGiftToEmail, giftHoldsForBuyer, resolveGiftRecipient } from "@/lib/auth/gifts";
 import { clerkConfigured } from "@/lib/auth/config";
 import { userHasCurrentLegal } from "@/lib/auth/legal";
-import { signedInUserId } from "@/lib/auth/session";
+import { signedInEmail, signedInUserId } from "@/lib/auth/session";
 import { appUrl } from "@/lib/billing/env";
 import {
   fulfillPaystackReference,
@@ -32,6 +32,12 @@ export async function POST(request: Request) {
 
   const parsed = validateGiftEmails(body.emails || body.email || "");
   if ("error" in parsed) return badRequest(parsed.error);
+  const looked = await resolveGiftRecipient({
+    email: parsed.emails[0],
+    buyerId: userId,
+    buyerEmail: (await signedInEmail()) || "",
+  });
+  if ("error" in looked) return badRequest(looked.error);
 
   const sessionId = (body.sessionId || "").trim();
   const reference = (body.reference || "").trim();
