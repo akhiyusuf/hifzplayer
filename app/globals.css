@@ -480,3 +480,7 @@ body:has(.scrim) .cl-avatarBox{
   visibility:hidden;
   pointer-events:none;
 }
+.gift-seats{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 2px}
+.gift-seat{min-width:36px;height:36px;padding:0 8px;border-radius:var(--radius-button);border:1px solid var(--border-default);background:var(--bg-surface);font-size:13px;font-weight:650;color:var(--text-secondary)}
+.gift-seat.on{border-color:var(--action-primary);background:var(--tint-primary-06);color:var(--action-primary)}
+.pricing-email textarea{width:100%;min-height:72px;resize:vertical;border:none;background:transparent;font:inherit;color:inherit;padding:8px 0}

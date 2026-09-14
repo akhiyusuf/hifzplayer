@@ -6,7 +6,8 @@ import { useMemo, useState } from "react";
 import { APP_NAME } from "@/lib/brand";
 import { clerkBrowserReady } from "@/lib/auth/config";
 import { PLUS_EXPLAIN } from "@/lib/billing/gates";
-import type { Catalog, PlanId } from "@/lib/billing/plans";
+import { GIFT_SEATS, parseGiftEmails } from "@/lib/billing/gift";
+import { formatMoney, type Catalog, type PlanId } from "@/lib/billing/plans";
 
 type Processors = { stripe: boolean; paystack: boolean };
 type RegionQuote = Catalog[number];
@@ -61,7 +62,8 @@ function PricingForm({
   const [planId, setPlanId] = useState<PlanId>("annual");
   const [email, setEmail] = useState("");
   const [gift, setGift] = useState(false);
-  const [giftEmail, setGiftEmail] = useState("");
+  const [giftSeats, setGiftSeats] = useState(1);
+  const [giftEmails, setGiftEmails] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(canceled ? "Checkout was canceled. Nothing was charged." : "");
 
@@ -71,6 +73,19 @@ function PricingForm({
   );
   const ready = region.processor === "paystack" ? processors.paystack : processors.stripe;
   const receiptEmail = accountEmail || email;
+  const parsedGiftEmails = parseGiftEmails(giftEmails);
+  const giftTotal = formatMoney(selected.amount * giftSeats, region.currency);
+
+  function setSeats(n: number) {
+    const seats = Math.min(GIFT_SEATS, Math.max(1, n));
+    setGiftSeats(seats);
+  }
+
+  function onGiftEmailsChange(value: string) {
+    setGiftEmails(value);
+    const n = parseGiftEmails(value).length;
+    if (n > giftSeats && n <= GIFT_SEATS) setGiftSeats(n);
+  }
 
   async function checkout() {
     setError("");
@@ -84,14 +99,14 @@ function PricingForm({
         const look = await fetch("/api/billing/gift-lookup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: giftEmail }),
+          body: JSON.stringify({ emails: giftEmails, seats: giftSeats }),
         });
         const looked = (await look.json()) as { error?: string; code?: string };
         if (looked.code === "SIGN_IN_REQUIRED" || look.status === 401) {
           window.location.assign("/sign-in?redirect_url=/pricing");
           return;
         }
-        if (!look.ok) throw new Error(looked.error || "Could not verify that email.");
+        if (!look.ok) throw new Error(looked.error || "Could not check those emails.");
       }
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
@@ -100,7 +115,7 @@ function PricingForm({
           planId,
           email: receiptEmail,
           gift,
-          ...(gift ? { recipientEmail: giftEmail } : {}),
+          ...(gift ? { recipientEmails: parsedGiftEmails, seats: giftSeats } : {}),
         }),
       });
       const data = (await res.json()) as { url?: string; error?: string; code?: string };
@@ -171,7 +186,7 @@ function PricingForm({
         ) : accountsOn && !signedIn ? (
           <p className="pricing-note">
             {gift
-              ? "Sign in first. Then we check their email against Diras accounts before you pay."
+              ? "Sign in to gift someone. Then paste their emails and pay."
               : "Sign in first so Plus is stored on your account, not only this browser."}
           </p>
         ) : (
@@ -212,26 +227,41 @@ function PricingForm({
           </button>
         </div>
         {gift && signedIn ? (
-          <label className="pricing-email">
-            <span className="label-eyebrow">Their email</span>
-            <span className="field">
-              <input
-                type="email"
-                name="gift-email"
-                autoComplete="email"
-                required
-                placeholder="them@example.com"
-                value={giftEmail}
-                onChange={(e) => setGiftEmail(e.target.value)}
-              />
-            </span>
-          </label>
+          <>
+            <div className="gift-seats" role="radiogroup" aria-label="How many people">
+              {Array.from({ length: GIFT_SEATS }, (_, i) => i + 1).map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  role="radio"
+                  aria-checked={giftSeats === n}
+                  className={`gift-seat tap${giftSeats === n ? " on" : ""}`}
+                  onClick={() => setSeats(n)}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <label className="pricing-email">
+              <span className="label-eyebrow">{giftSeats === 1 ? "Their email" : `${giftSeats} emails`}</span>
+              <span className="field">
+                <textarea
+                  name="gift-emails"
+                  rows={Math.min(6, Math.max(3, giftSeats))}
+                  required
+                  placeholder={giftSeats === 1 ? "them@example.com" : "one email per line, or commas"}
+                  value={giftEmails}
+                  onChange={(e) => onGiftEmailsChange(e.target.value)}
+                />
+              </span>
+            </label>
+          </>
         ) : null}
         {gift ? (
           <p className="pricing-note">
             {signedIn
-              ? "They must already have a Diras account on that email. We check our records, then you pay. For me still buys Plus for you."
-              : "Sign in first. Gift someone is for an existing Diras account — not for you."}
+              ? "Paste the emails first. We check who already has a Diras account — they do not need one yet. If they already have Plus, extra time stacks on top. For me still buys Plus for you."
+              : "Sign in to gift someone. You can gift an email even if they have not signed up yet."}
           </p>
         ) : null}
 
@@ -250,19 +280,19 @@ function PricingForm({
         <button
           className="btn-primary"
           type="button"
-          disabled={busy || !ready || (gift && signedIn && !giftEmail.trim())}
+          disabled={busy || !ready || (gift && signedIn && parsedGiftEmails.length !== giftSeats)}
           onClick={() => void checkout()}
         >
           {busy
             ? gift
-              ? "Checking their account…"
+              ? "Checking emails…"
               : "Opening checkout…"
             : accountsOn && !signedIn
               ? gift
-                ? `Sign in to gift · ${selected.label}`
+                ? "Sign in to gift someone"
                 : `Sign in to continue · ${selected.label}`
               : gift
-                ? `Gift · ${selected.label}`
+                ? `Gift ${giftSeats > 1 ? `${giftSeats} · ` : ""}${giftTotal}`
                 : `Continue · ${selected.label}`}
         </button>
 

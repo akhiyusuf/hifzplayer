@@ -32,11 +32,20 @@ export async function createPaystackCheckout(opts: {
   userId?: string;
   gift?: boolean;
   buyerId?: string;
+  seats?: number;
   recipientEmail?: string;
+  recipientEmails?: string[];
   recipientUserId?: string;
   callbackUrl: string;
 }) {
-  const amount = opts.region.amounts[opts.planId];
+  const unit = opts.region.amounts[opts.planId];
+  const seats = Math.max(1, opts.seats || opts.recipientEmails?.length || 1);
+  const emails = opts.recipientEmails?.length
+    ? opts.recipientEmails
+    : opts.recipientEmail
+      ? [opts.recipientEmail]
+      : [];
+  const amount = opts.gift ? unit * seats : unit;
   const meta: Record<string, unknown> = {
     planId: opts.planId,
     regionId: opts.region.id,
@@ -49,14 +58,19 @@ export async function createPaystackCheckout(opts: {
   ];
   if (opts.gift) {
     meta.gift = "1";
-    meta.seats = "1";
+    meta.seats = String(seats);
     fields.push({ display_name: "Gift", variable_name: "gift", value: "1" });
+    fields.push({ display_name: "Seats", variable_name: "seats", value: String(seats) });
     if (opts.buyerId) {
       meta.buyerId = opts.buyerId;
       fields.push({ display_name: "Buyer", variable_name: "buyerId", value: opts.buyerId });
     }
     if (opts.recipientUserId) meta.recipientUserId = opts.recipientUserId;
-    if (opts.recipientEmail) meta.recipientEmail = opts.recipientEmail;
+    if (emails[0]) meta.recipientEmail = emails[0];
+    if (emails.length) {
+      meta.recipientEmails = emails.join(",");
+      fields.push({ display_name: "Recipients", variable_name: "recipientEmails", value: emails.join(",") });
+    }
   } else if (opts.userId) {
     meta.userId = opts.userId;
     fields.push({ display_name: "Account", variable_name: "userId", value: opts.userId });
@@ -69,10 +83,10 @@ export async function createPaystackCheckout(opts: {
     callback_url: opts.callbackUrl,
     metadata: meta,
   };
-  if (opts.planId === "monthly" || opts.planId === "annual") {
+  if (!opts.gift && (opts.planId === "monthly" || opts.planId === "annual")) {
     body.plan = await ensurePaystackPlan({
       planId: opts.planId,
-      amount,
+      amount: unit,
       currency: opts.region.currency,
     });
   }

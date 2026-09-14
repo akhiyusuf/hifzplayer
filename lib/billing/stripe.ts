@@ -17,7 +17,9 @@ export async function createStripeCheckout(opts: {
   userId?: string;
   gift?: boolean;
   buyerId?: string;
+  seats?: number;
   recipientEmail?: string;
+  recipientEmails?: string[];
   recipientUserId?: string;
   successUrl: string;
   cancelUrl: string;
@@ -25,7 +27,17 @@ export async function createStripeCheckout(opts: {
   const stripe = stripeClient();
   const plan = PLANS.find((p) => p.id === opts.planId)!;
   const amount = opts.region.amounts[opts.planId];
-  const productName = opts.gift ? `${PLUS_NAME} gift — ${plan.name}` : `${PLUS_NAME} — ${plan.name}`;
+  const seats = Math.max(1, opts.seats || opts.recipientEmails?.length || 1);
+  const emails = opts.recipientEmails?.length
+    ? opts.recipientEmails
+    : opts.recipientEmail
+      ? [opts.recipientEmail]
+      : [];
+  const productName = opts.gift
+    ? seats > 1
+      ? `${PLUS_NAME} gift × ${seats} — ${plan.name}`
+      : `${PLUS_NAME} gift — ${plan.name}`
+    : `${PLUS_NAME} — ${plan.name}`;
   const meta: Record<string, string> = {
     planId: opts.planId,
     regionId: opts.region.id,
@@ -33,15 +45,17 @@ export async function createStripeCheckout(opts: {
   };
   if (opts.gift) {
     meta.gift = "1";
-    meta.seats = "1";
+    meta.seats = String(seats);
     if (opts.buyerId) meta.buyerId = opts.buyerId;
     if (opts.recipientUserId) meta.recipientUserId = opts.recipientUserId;
-    if (opts.recipientEmail) meta.recipientEmail = opts.recipientEmail;
+    if (emails[0]) meta.recipientEmail = emails[0];
+    if (emails.length) meta.recipientEmails = emails.join(",");
   } else if (opts.userId) {
     meta.userId = opts.userId;
   }
+  const giftOnce = Boolean(opts.gift);
   const session = await stripe.checkout.sessions.create({
-    mode: plan.interval ? "subscription" : "payment",
+    mode: giftOnce || !plan.interval ? "payment" : "subscription",
     customer_email: opts.email || undefined,
     client_reference_id: opts.buyerId || opts.userId || undefined,
     success_url: opts.successUrl,
@@ -50,21 +64,21 @@ export async function createStripeCheckout(opts: {
     metadata: meta,
     line_items: [
       {
-        quantity: 1,
+        quantity: giftOnce ? seats : 1,
         price_data: {
           currency: opts.region.currency.toLowerCase(),
           unit_amount: amount,
           product_data: {
             name: productName,
             description: opts.gift
-              ? "Plus gift for someone who already has a Diras account."
+              ? "Plus gift. They sign in with the gifted email — they do not need an account yet."
               : plan.blurb,
           },
-          ...(plan.interval ? { recurring: { interval: plan.interval } } : {}),
+          ...(plan.interval && !giftOnce ? { recurring: { interval: plan.interval } } : {}),
         },
       },
     ],
-    ...(plan.interval
+    ...(!giftOnce && plan.interval
       ? {
           subscription_data: {
             metadata: meta,

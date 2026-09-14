@@ -85,10 +85,11 @@ export default async function PrivacyPage({
             regions), chosen from your location — not a picker. Card numbers go to those providers, not to{" "}
             {APP_NAME}. We receive the email on the receipt, the plan you chose, and a payment reference so we can
             confirm the charge. After Plus is granted we send one confirmation email to that address (via Resend)
-            so you know the subscription actually turned on. If you gift Plus, you sign in first, enter the
-            recipient&apos;s email, and we check that address against Diras accounts before checkout. Plus is
-            granted to that existing account after you pay — not to you. For me still buys Plus for the signed-in
-            account. Paystack and Stripe still send their own receipts.
+            so           you know the subscription actually turned on. If you gift Plus, you sign in first, choose how many people,
+          and paste their emails. We check who already has a Diras account — they do not need one yet. After you pay,
+          Plus is granted to those emails, not to you. Someone without an account gets a note to sign in with that
+          same address. If they already have Plus, extra time stacks on top. For me still buys Plus for the signed-in
+          account. Paystack and Stripe still send their own receipts.
             Those payment fields stay on the server; the app never shows payment refs. Your Clerk account ID is
             shown only to you on the account page so you can quote it if something goes wrong. We log payment
             confirmation and renewal events (plan, processor, success or failure, and that same account ID — never

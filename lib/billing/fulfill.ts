@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { PLUS_NAME } from "@/lib/brand";
-import { recordGiftHold, renewGiftRecipients, assignGiftToEmail, type GiftHold } from "@/lib/auth/gifts";
+import { recordGiftHold, renewGiftRecipients, assignGiftsToEmails, type GiftHold } from "@/lib/auth/gifts";
 import { clerkConfigured } from "@/lib/auth/config";
 import { clerkUserIdByEmail, plusFromClerk } from "@/lib/auth/plus";
 import { grantPlusToAccount, signedInUserId } from "@/lib/auth/session";
 import { logBillingEvent, type BillingEvent } from "./analytics";
 import { grantFromPayment, periodEnd, publicEntitlement, type Entitlement } from "./entitlement";
 import { publicAppUrl } from "./env";
+import { parseGiftEmails } from "./gift";
 import { parseCheckoutMetadata, resolvePaidPlan, type PaidPlan } from "./match";
 import {
   paystackChargeUntil,
@@ -161,17 +162,17 @@ async function holdPaidGift(opts: {
     recipientEmail: opts.paid.recipientEmail,
     recipientUserId: opts.paid.recipientUserId,
   });
-  const email = opts.paid.recipientEmail || hold.recipientEmail;
-  if (hold.sentAt && hold.recipientUserId) {
+  const emails = parseGiftEmails(opts.paid.recipientEmails || opts.paid.recipientEmail || hold.recipientEmail || "");
+  if (hold.sentAt && hold.recipientUserId && emails.length <= 1) {
     return { ok: true, gift: true, hold, sent: true };
   }
-  if (email) {
-    const assigned = await assignGiftToEmail({
+  if (emails.length) {
+    const assigned = await assignGiftsToEmails({
       hold,
-      email,
+      emails,
       origin: publicAppUrl(),
     });
-    return { ok: true, gift: true, hold: assigned.hold, sent: true };
+    return { ok: true, gift: true, hold: assigned[assigned.length - 1]?.hold || hold, sent: true };
   }
   return { ok: true, gift: true, hold, sent: false };
 }
