@@ -3,7 +3,7 @@ import { clerkConfigured } from "@/lib/auth/config";
 import { clerkUserIdByEmail, savePlusToClerk } from "@/lib/auth/plus";
 import { logBillingEvent } from "@/lib/billing/analytics";
 import { grantFromPayment, type Entitlement } from "@/lib/billing/entitlement";
-import { openGiftClaim, sealGiftClaim, type GiftClaim } from "@/lib/billing/gift";
+import { openGiftClaim, sealGiftClaim, validateGiftEmails, classifyGiftRecipient, giftRecipientMessage, type GiftClaim } from "@/lib/billing/gift";
 import type { PlanId, Processor, RegionId } from "@/lib/billing/plans";
 
 export type GiftHold = {
@@ -199,6 +199,27 @@ async function clearPublicGift(userId: string) {
   } catch {
     /* claim already applied */
   }
+}
+
+export async function resolveGiftRecipient(opts: {
+  email: string;
+  buyerId: string;
+  buyerEmail?: string;
+}): Promise<{ userId: string; email: string } | { error: string }> {
+  const parsed = validateGiftEmails(opts.email);
+  if ("error" in parsed) return parsed;
+  const email = parsed.emails[0];
+  const userId = await clerkUserIdByEmail(email);
+  const kind = classifyGiftRecipient({
+    buyerId: opts.buyerId,
+    buyerEmail: opts.buyerEmail,
+    recipientEmail: email,
+    recipientUserId: userId,
+  });
+  if (kind !== "ok" || !userId) {
+    return { error: giftRecipientMessage(kind === "self" ? "self" : "missing") };
+  }
+  return { userId, email };
 }
 
 export async function claimGiftForUser(opts: {

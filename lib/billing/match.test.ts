@@ -21,11 +21,36 @@ describe("checkout metadata", () => {
       regionId: "ng",
       gift: "1",
       buyerId: "user_buyer",
+      recipientEmail: "friend@diras.app",
+      recipientUserId: "user_friend",
       custom_fields: [{ display_name: "Gift", variable_name: "gift", value: "1" }],
     });
     assert.equal(parsed.gift, true);
     assert.equal(parsed.buyerId, "user_buyer");
     assert.equal(parsed.userId, "");
+    assert.equal(parsed.recipientUserId, "user_friend");
+    assert.equal(parsed.recipientEmail, "friend@diras.app");
+  });
+
+  it("keeps a verified gift recipient on the paid plan", () => {
+    const paid = resolvePaidPlan({
+      amount: 1_050_000,
+      currency: "ngn",
+      metadata: {
+        planId: "annual",
+        regionId: "ng",
+        gift: "1",
+        buyerId: "user_buyer",
+        recipientUserId: "user_friend",
+        recipientEmail: "friend@diras.app",
+      },
+    });
+    assert.equal("error" in paid, false);
+    if ("error" in paid) return;
+    assert.equal(paid.gift, true);
+    assert.equal(paid.buyerId, "user_buyer");
+    assert.equal(paid.recipientUserId, "user_friend");
+    assert.equal(paid.userId, undefined);
   });
 
   it("falls back to custom_fields when keys are nested there", () => {

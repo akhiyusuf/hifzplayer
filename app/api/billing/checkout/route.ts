@@ -1,4 +1,5 @@
 import { PLUS_NAME } from "@/lib/brand";
+import { resolveGiftRecipient } from "@/lib/auth/gifts";
 import { signedInEmail, signedInUserId } from "@/lib/auth/session";
 import { clerkConfigured } from "@/lib/auth/config";
 import { logBillingEvent } from "@/lib/billing/analytics";
@@ -20,9 +21,15 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  let body: { planId?: string; regionId?: string; email?: string; gift?: boolean };
+  let body: {
+    planId?: string;
+    regionId?: string;
+    email?: string;
+    gift?: boolean;
+    recipientEmail?: string;
+  };
   try {
-    body = (await request.json()) as { planId?: string; regionId?: string; email?: string; gift?: boolean };
+    body = (await request.json()) as typeof body;
   } catch {
     return badRequest("Checkout body must be JSON");
   }
@@ -38,6 +45,17 @@ export async function POST(request: Request) {
   const gift = body.gift === true;
   if (gift && !userId) {
     return unauthorized(`Sign in to gift ${PLUS_NAME}`, { code: "SIGN_IN_REQUIRED" });
+  }
+
+  let recipient: { userId: string; email: string } | null = null;
+  if (gift && userId) {
+    const looked = await resolveGiftRecipient({
+      email: body.recipientEmail || "",
+      buyerId: userId,
+      buyerEmail: (await signedInEmail()) || "",
+    });
+    if ("error" in looked) return badRequest(looked.error);
+    recipient = looked;
   }
 
   // Region is always detected from the request. Client-supplied regionId is ignored.
@@ -81,6 +99,8 @@ export async function POST(request: Request) {
         userId: gift ? undefined : userId || undefined,
         gift,
         buyerId: gift ? userId || undefined : undefined,
+        recipientEmail: recipient?.email,
+        recipientUserId: recipient?.userId,
         callbackUrl: `${origin}/api/billing/return`,
       });
       return json({ url: checkout.url, reference: checkout.reference, processor: "paystack", gift });
@@ -92,6 +112,8 @@ export async function POST(request: Request) {
       userId: gift ? undefined : userId || undefined,
       gift,
       buyerId: gift ? userId || undefined : undefined,
+      recipientEmail: recipient?.email,
+      recipientUserId: recipient?.userId,
       successUrl: `${origin}/api/billing/return?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${origin}/pricing?canceled=1`,
     });

@@ -61,6 +61,7 @@ function PricingForm({
   const [planId, setPlanId] = useState<PlanId>("annual");
   const [email, setEmail] = useState("");
   const [gift, setGift] = useState(false);
+  const [giftEmail, setGiftEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(canceled ? "Checkout was canceled. Nothing was charged." : "");
 
@@ -79,10 +80,28 @@ function PricingForm({
     }
     setBusy(true);
     try {
+      if (gift) {
+        const look = await fetch("/api/billing/gift-lookup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: giftEmail }),
+        });
+        const looked = (await look.json()) as { error?: string; code?: string };
+        if (looked.code === "SIGN_IN_REQUIRED" || look.status === 401) {
+          window.location.assign("/sign-in?redirect_url=/pricing");
+          return;
+        }
+        if (!look.ok) throw new Error(looked.error || "Could not verify that email.");
+      }
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId, email: receiptEmail, gift }),
+        body: JSON.stringify({
+          planId,
+          email: receiptEmail,
+          gift,
+          ...(gift ? { recipientEmail: giftEmail } : {}),
+        }),
       });
       const data = (await res.json()) as { url?: string; error?: string; code?: string };
       if (data.code === "SIGN_IN_REQUIRED" || res.status === 401) {
@@ -152,7 +171,7 @@ function PricingForm({
         ) : accountsOn && !signedIn ? (
           <p className="pricing-note">
             {gift
-              ? "Sign in first so we can attach the gift after you pay."
+              ? "Sign in first. Then we check their email against Diras accounts before you pay."
               : "Sign in first so Plus is stored on your account, not only this browser."}
           </p>
         ) : (
@@ -192,10 +211,27 @@ function PricingForm({
             Gift someone
           </button>
         </div>
+        {gift && signedIn ? (
+          <label className="pricing-email">
+            <span className="label-eyebrow">Their email</span>
+            <span className="field">
+              <input
+                type="email"
+                name="gift-email"
+                autoComplete="email"
+                required
+                placeholder="them@example.com"
+                value={giftEmail}
+                onChange={(e) => setGiftEmail(e.target.value)}
+              />
+            </span>
+          </label>
+        ) : null}
         {gift ? (
           <p className="pricing-note">
-            Pay first. After checkout you add their email — we never ask for it before the charge. They get a note
-            to sign up with that address (Google is fine if it is the same email).
+            {signedIn
+              ? "They must already have a Diras account on that email. We check our records, then you pay. For me still buys Plus for you."
+              : "Sign in first. Gift someone is for an existing Diras account — not for you."}
           </p>
         ) : null}
 
@@ -211,9 +247,16 @@ function PricingForm({
           </p>
         ) : null}
 
-        <button className="btn-primary" type="button" disabled={busy || !ready} onClick={() => void checkout()}>
+        <button
+          className="btn-primary"
+          type="button"
+          disabled={busy || !ready || (gift && signedIn && !giftEmail.trim())}
+          onClick={() => void checkout()}
+        >
           {busy
-            ? "Opening checkout…"
+            ? gift
+              ? "Checking their account…"
+              : "Opening checkout…"
             : accountsOn && !signedIn
               ? gift
                 ? `Sign in to gift · ${selected.label}`
@@ -229,7 +272,8 @@ function PricingForm({
       </div>
 
       <p className="pricing-soon">
-        Recurring phrases and near-twin words are coming soon, and stay free. Ask the Quran will be {PLUS_EXPLAIN.plusTitle}.{" "}
+        Recurring phrases and near-twin words are coming soon, and stay free. Voice recognition and Ask the Quran
+        will be {PLUS_EXPLAIN.plusTitle}.{" "}
         <Link href="/roadmap">See what&apos;s coming</Link>
       </p>
     </div>

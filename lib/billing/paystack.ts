@@ -32,6 +32,8 @@ export async function createPaystackCheckout(opts: {
   userId?: string;
   gift?: boolean;
   buyerId?: string;
+  recipientEmail?: string;
+  recipientUserId?: string;
   callbackUrl: string;
 }) {
   const amount = opts.region.amounts[opts.planId];
@@ -53,6 +55,8 @@ export async function createPaystackCheckout(opts: {
       meta.buyerId = opts.buyerId;
       fields.push({ display_name: "Buyer", variable_name: "buyerId", value: opts.buyerId });
     }
+    if (opts.recipientUserId) meta.recipientUserId = opts.recipientUserId;
+    if (opts.recipientEmail) meta.recipientEmail = opts.recipientEmail;
   } else if (opts.userId) {
     meta.userId = opts.userId;
     fields.push({ display_name: "Account", variable_name: "userId", value: opts.userId });

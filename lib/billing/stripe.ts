@@ -17,6 +17,8 @@ export async function createStripeCheckout(opts: {
   userId?: string;
   gift?: boolean;
   buyerId?: string;
+  recipientEmail?: string;
+  recipientUserId?: string;
   successUrl: string;
   cancelUrl: string;
 }) {
@@ -33,6 +35,8 @@ export async function createStripeCheckout(opts: {
     meta.gift = "1";
     meta.seats = "1";
     if (opts.buyerId) meta.buyerId = opts.buyerId;
+    if (opts.recipientUserId) meta.recipientUserId = opts.recipientUserId;
+    if (opts.recipientEmail) meta.recipientEmail = opts.recipientEmail;
   } else if (opts.userId) {
     meta.userId = opts.userId;
   }
@@ -53,7 +57,7 @@ export async function createStripeCheckout(opts: {
           product_data: {
             name: productName,
             description: opts.gift
-              ? "Gifted after you pay. Add their email on the next screen."
+              ? "Plus gift for someone who already has a Diras account."
               : plan.blurb,
           },
           ...(plan.interval ? { recurring: { interval: plan.interval } } : {}),
