@@ -1,8 +1,9 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { clerkConfigured } from "@/lib/auth/config";
-import { clerkUserIdByEmail, savePlusToClerk } from "@/lib/auth/plus";
+import { clerkUserIdByEmail, plusFromClerk, savePlusToClerk } from "@/lib/auth/plus";
 import { logBillingEvent } from "@/lib/billing/analytics";
 import { grantFromPayment, type Entitlement } from "@/lib/billing/entitlement";
+import { stackGiftOnEntitlement } from "@/lib/billing/entitlement-bind";
 import { openGiftClaim, sealGiftClaim, validateGiftEmails, classifyGiftRecipient, giftRecipientMessage, type GiftClaim } from "@/lib/billing/gift";
 import type { PlanId, Processor, RegionId } from "@/lib/billing/plans";
 
@@ -60,9 +61,12 @@ async function writeHolds(buyerId: string, holds: GiftHold[]) {
 export async function recordGiftHold(hold: GiftHold): Promise<GiftHold> {
   if (!clerkConfigured()) return hold;
   const holds = await giftHoldsForBuyer(hold.buyerId);
-  const existing = holds.find((row) => row.ref === hold.ref);
+  const email = (hold.recipientEmail || "").toLowerCase();
+  const existing = holds.find(
+    (row) => row.ref === hold.ref && (row.recipientEmail || "").toLowerCase() === email,
+  );
   if (existing) return existing;
-  await writeHolds(hold.buyerId, [...holds, hold].slice(-20));
+  await writeHolds(hold.buyerId, [...holds, hold].slice(-40));
   logBillingEvent({
     type: "gift_hold",
     processor: hold.processor,
@@ -108,7 +112,14 @@ export async function markGiftAssigned(opts: {
 }): Promise<GiftHold | null> {
   if (!clerkConfigured()) return null;
   const holds = await giftHoldsForBuyer(opts.buyerId);
-  const index = holds.findIndex((row) => row.ref === opts.ref);
+  const email = opts.email.trim().toLowerCase();
+  let index = holds.findIndex(
+    (row) => row.ref === opts.ref && (row.recipientEmail || "").toLowerCase() === email,
+  );
+  if (index < 0) {
+    index = holds.findIndex((row) => row.ref === opts.ref && !row.sentAt);
+  }
+  if (index < 0) index = holds.findIndex((row) => row.ref === opts.ref);
   if (index < 0) return null;
   const next: GiftHold = {
     ...holds[index],
@@ -201,25 +212,53 @@ async function clearPublicGift(userId: string) {
   }
 }
 
+export type GiftRecipientRow = {
+  email: string;
+  userId: string | null;
+  existingAccount: boolean;
+};
+
+export async function resolveGiftRecipients(opts: {
+  emails: string | string[];
+  buyerId: string;
+  buyerEmail?: string;
+  seats?: string | number;
+}): Promise<{ recipients: GiftRecipientRow[] } | { error: string }> {
+  const parsed = validateGiftEmails(opts.emails, opts.seats);
+  if ("error" in parsed) return parsed;
+  const recipients: GiftRecipientRow[] = [];
+  for (const email of parsed.emails) {
+    const userId = await clerkUserIdByEmail(email);
+    const kind = classifyGiftRecipient({
+      buyerId: opts.buyerId,
+      buyerEmail: opts.buyerEmail,
+      recipientEmail: email,
+      recipientUserId: userId,
+    });
+    if (kind === "self") return { error: giftRecipientMessage("self") };
+    recipients.push({ email, userId, existingAccount: Boolean(userId) });
+  }
+  return { recipients };
+}
+
 export async function resolveGiftRecipient(opts: {
   email: string;
   buyerId: string;
   buyerEmail?: string;
-}): Promise<{ userId: string; email: string } | { error: string }> {
-  const parsed = validateGiftEmails(opts.email);
-  if ("error" in parsed) return parsed;
-  const email = parsed.emails[0];
-  const userId = await clerkUserIdByEmail(email);
-  const kind = classifyGiftRecipient({
+}): Promise<{ userId: string | null; email: string; existingAccount: boolean } | { error: string }> {
+  const looked = await resolveGiftRecipients({
+    emails: opts.email,
     buyerId: opts.buyerId,
     buyerEmail: opts.buyerEmail,
-    recipientEmail: email,
-    recipientUserId: userId,
+    seats: 1,
   });
-  if (kind !== "ok" || !userId) {
-    return { error: giftRecipientMessage(kind === "self" ? "self" : "missing") };
-  }
-  return { userId, email };
+  if ("error" in looked) return looked;
+  const row = looked.recipients[0];
+  return { userId: row.userId, email: row.email, existingAccount: row.existingAccount };
+}
+
+function stackedGiftEntitlement(existing: Entitlement | null, gift: Entitlement) {
+  return stackGiftOnEntitlement(existing, gift);
 }
 
 export async function claimGiftForUser(opts: {
@@ -239,7 +278,7 @@ export async function claimGiftForUser(opts: {
   if (!claim) return false;
 
   const email = emails[0];
-  const ent = grantFromPayment({
+  const gift = grantFromPayment({
     planId: claim.planId,
     regionId: claim.regionId,
     processor: claim.processor,
@@ -248,7 +287,9 @@ export async function claimGiftForUser(opts: {
     userId: opts.userId,
     email,
   });
-  await savePlusToClerk(opts.userId, ent, "granted");
+  const existing = await plusFromClerk(opts.userId);
+  const stacked = stackedGiftEntitlement(existing, gift);
+  await savePlusToClerk(opts.userId, stacked.next, stacked.alreadyPlus ? "renewed" : "granted");
   await markGiftClaimed({ buyerId: claim.buyerId, ref: claim.ref, recipientUserId: opts.userId });
   await clearPublicGift(opts.userId);
   logBillingEvent({
@@ -259,10 +300,11 @@ export async function claimGiftForUser(opts: {
     regionId: claim.regionId,
     hasUserId: true,
     accountId: opts.userId,
+    reason: stacked.stacked ? "gift_extra_time" : stacked.keptLifetime ? "gift_kept_lifetime" : undefined,
   });
   try {
     const { sendPlusWelcome } = await import("@/lib/email/send");
-    await sendPlusWelcome(ent);
+    if (!stacked.alreadyPlus) await sendPlusWelcome(stacked.next);
   } catch {
     logBillingEvent({
       type: "welcome_failed",
@@ -276,15 +318,26 @@ export async function claimGiftForUser(opts: {
   return true;
 }
 
+export type GiftAssignResult = {
+  hold: GiftHold;
+  existingAccount: boolean;
+  alreadyPlus: boolean;
+  stacked: boolean;
+  keptLifetime: boolean;
+  signUpUrl: string;
+};
+
 export async function assignGiftToEmail(opts: {
   hold: GiftHold;
   email: string;
   origin: string;
-}): Promise<{ hold: GiftHold; existingAccount: boolean; signUpUrl: string }> {
+}): Promise<GiftAssignResult> {
   const existingId = await clerkUserIdByEmail(opts.email);
   if (existingId) {
-    const ent = holdToEntitlement(opts.hold, existingId, opts.email);
-    await savePlusToClerk(existingId, ent, "granted");
+    const gift = holdToEntitlement(opts.hold, existingId, opts.email);
+    const existing = await plusFromClerk(existingId);
+    const stacked = stackedGiftEntitlement(existing, gift);
+    await savePlusToClerk(existingId, stacked.next, stacked.alreadyPlus ? "renewed" : "granted");
     const hold =
       (await markGiftAssigned({
         buyerId: opts.hold.buyerId,
@@ -300,15 +353,20 @@ export async function assignGiftToEmail(opts: {
       regionId: hold.regionId,
       hasUserId: true,
       accountId: existingId,
+      reason: stacked.stacked ? "gift_extra_time" : stacked.keptLifetime ? "gift_kept_lifetime" : undefined,
     });
     try {
       const { sendPlusWelcome, sendGiftNotice } = await import("@/lib/email/send");
       await sendGiftNotice({
         to: opts.email,
         existingAccount: true,
+        alreadyPlus: stacked.alreadyPlus,
+        stacked: stacked.stacked,
+        keptLifetime: stacked.keptLifetime,
+        planId: hold.planId,
         signUpUrl: `${opts.origin}/sign-in?redirect_url=/`,
       });
-      await sendPlusWelcome(ent);
+      if (!stacked.alreadyPlus) await sendPlusWelcome(stacked.next);
     } catch {
       logBillingEvent({
         type: "gift_failed",
@@ -319,7 +377,14 @@ export async function assignGiftToEmail(opts: {
         accountId: existingId,
       });
     }
-    return { hold, existingAccount: true, signUpUrl: `${opts.origin}/sign-in` };
+    return {
+      hold,
+      existingAccount: true,
+      alreadyPlus: stacked.alreadyPlus,
+      stacked: stacked.stacked,
+      keptLifetime: stacked.keptLifetime,
+      signUpUrl: `${opts.origin}/sign-in`,
+    };
   }
 
   const signUpUrl = await createGiftInvitation({
@@ -359,7 +424,27 @@ export async function assignGiftToEmail(opts: {
       accountId: opts.hold.buyerId,
     });
   }
-  return { hold, existingAccount: false, signUpUrl };
+  return {
+    hold,
+    existingAccount: false,
+    alreadyPlus: false,
+    stacked: false,
+    keptLifetime: false,
+    signUpUrl,
+  };
+}
+
+export async function assignGiftsToEmails(opts: {
+  hold: GiftHold;
+  emails: string[];
+  origin: string;
+}): Promise<GiftAssignResult[]> {
+  const out: GiftAssignResult[] = [];
+  for (const email of opts.emails) {
+    const hold = await recordGiftHold({ ...opts.hold, recipientEmail: email, recipientUserId: undefined, sentAt: undefined });
+    out.push(await assignGiftToEmail({ hold, email, origin: opts.origin }));
+  }
+  return out;
 }
 
 export async function renewGiftRecipients(buyerId: string, until: string | null, plus: boolean) {

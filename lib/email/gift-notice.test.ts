@@ -11,7 +11,8 @@ describe("gift notice email", () => {
     assert.equal(giftNoticeSubject(), "Someone gifted you Diras Plus");
     assert.match(text, /Assalamu alaikum/);
     assert.match(text, /gifted you Diras Plus/);
-    assert.match(text, /Create a Diras account with this same email/);
+    assert.match(text, /You have been granted Diras Plus/);
+    assert.match(text, /Sign in or create a Diras account with this same email/);
     assert.match(text, /Google is fine/);
     assert.match(text, /https:\/\/example\.test\/sign-up/);
     assert.doesNotMatch(text, /trxref|cs_live|reference/i);

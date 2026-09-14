@@ -3,8 +3,18 @@ import { billingSigningSecret } from "./env.ts";
 import type { PlanId, Processor, RegionId } from "./plans.ts";
 import { isPlanId, isRegionId } from "./plans.ts";
 
-/** One paid gift checkout covers one recipient. Gift again for someone else. */
-export const GIFT_SEATS = 1;
+export {
+  GIFT_SEATS,
+  GIFT_RECIPIENT_SELF,
+  classifyGiftRecipient,
+  giftFlag,
+  giftRecipientMessage,
+  joinGiftEmails,
+  parseGiftEmails,
+  parseGiftSeats,
+  validateGiftEmails,
+  type GiftRecipientKind,
+} from "./gift-parse.ts";
 
 export type GiftClaim = {
   v: 1;
@@ -56,67 +66,4 @@ export function openGiftClaim(token: string | undefined | null): GiftClaim | nul
   } catch {
     return null;
   }
-}
-
-export function giftFlag(value: string) {
-  const v = value.trim().toLowerCase();
-  return v === "1" || v === "true" || v === "gift";
-}
-
-export function parseGiftSeats(value: string) {
-  const n = Number.parseInt(value, 10);
-  return n === GIFT_SEATS ? GIFT_SEATS : GIFT_SEATS;
-}
-
-/** Split, trim, lowercase, drop empties. One gift checkout takes one address. */
-export function parseGiftEmails(raw: string | string[]): string[] {
-  const chunks = Array.isArray(raw) ? raw : String(raw || "").split(/[\s,;]+/);
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const chunk of chunks) {
-    const email = chunk.trim().toLowerCase();
-    if (!email || seen.has(email)) continue;
-    seen.add(email);
-    out.push(email);
-  }
-  return out;
-}
-
-function looksLikeEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 254;
-}
-
-export function validateGiftEmails(raw: string | string[]): { emails: string[] } | { error: string } {
-  const emails = parseGiftEmails(raw);
-  if (emails.length === 0) return { error: "Add the email of the person you are gifting" };
-  if (emails.length > GIFT_SEATS) {
-    return { error: "This payment covers one person. Gift again for someone else." };
-  }
-  if (!emails.every(looksLikeEmail)) return { error: "Enter a valid email address" };
-  return { emails };
-}
-
-export const GIFT_RECIPIENT_MISSING =
-  "No Diras account uses that email. Ask them to sign up first, then try again.";
-export const GIFT_RECIPIENT_SELF = "That is your email. Use For me if Plus is for you.";
-
-export type GiftRecipientKind = "ok" | "missing" | "self";
-
-export function giftRecipientMessage(kind: Exclude<GiftRecipientKind, "ok">) {
-  return kind === "self" ? GIFT_RECIPIENT_SELF : GIFT_RECIPIENT_MISSING;
-}
-
-/** Recipient must already have a Diras account, and it cannot be the buyer. */
-export function classifyGiftRecipient(opts: {
-  buyerId?: string;
-  buyerEmail?: string;
-  recipientEmail: string;
-  recipientUserId: string | null;
-}): GiftRecipientKind {
-  const buyerEmail = (opts.buyerEmail || "").trim().toLowerCase();
-  const recipientEmail = opts.recipientEmail.trim().toLowerCase();
-  if (buyerEmail && recipientEmail && buyerEmail === recipientEmail) return "self";
-  if (opts.buyerId && opts.recipientUserId && opts.buyerId === opts.recipientUserId) return "self";
-  if (!opts.recipientUserId) return "missing";
-  return "ok";
 }

@@ -1,5 +1,5 @@
 import { PLUS_NAME } from "@/lib/brand";
-import { resolveGiftRecipient } from "@/lib/auth/gifts";
+import { resolveGiftRecipients } from "@/lib/auth/gifts";
 import { signedInEmail, signedInUserId } from "@/lib/auth/session";
 import { clerkConfigured } from "@/lib/auth/config";
 import { logBillingEvent } from "@/lib/billing/analytics";
@@ -27,6 +27,8 @@ export async function POST(request: Request) {
     email?: string;
     gift?: boolean;
     recipientEmail?: string;
+    recipientEmails?: string | string[];
+    seats?: number;
   };
   try {
     body = (await request.json()) as typeof body;
@@ -47,16 +49,19 @@ export async function POST(request: Request) {
     return unauthorized(`Sign in to gift ${PLUS_NAME}`, { code: "SIGN_IN_REQUIRED" });
   }
 
-  let recipient: { userId: string; email: string } | null = null;
+  let recipients: { email: string; userId: string | null }[] = [];
   if (gift && userId) {
-    const looked = await resolveGiftRecipient({
-      email: body.recipientEmail || "",
+    const looked = await resolveGiftRecipients({
+      emails: body.recipientEmails || body.recipientEmail || "",
       buyerId: userId,
       buyerEmail: (await signedInEmail()) || "",
+      seats: body.seats,
     });
     if ("error" in looked) return badRequest(looked.error);
-    recipient = looked;
+    recipients = looked.recipients;
   }
+  const recipientEmails = recipients.map((row) => row.email);
+  const seats = Math.max(1, recipientEmails.length);
 
   // Region is always detected from the request. Client-supplied regionId is ignored.
   const regionId = checkoutRegionId(request.headers);
@@ -99,8 +104,10 @@ export async function POST(request: Request) {
         userId: gift ? undefined : userId || undefined,
         gift,
         buyerId: gift ? userId || undefined : undefined,
-        recipientEmail: recipient?.email,
-        recipientUserId: recipient?.userId,
+        seats: gift ? seats : undefined,
+        recipientEmail: recipientEmails[0],
+        recipientEmails: gift ? recipientEmails : undefined,
+        recipientUserId: recipients[0]?.userId || undefined,
         callbackUrl: `${origin}/api/billing/return`,
       });
       return json({ url: checkout.url, reference: checkout.reference, processor: "paystack", gift });
@@ -110,11 +117,13 @@ export async function POST(request: Request) {
       planId,
       email,
       userId: gift ? undefined : userId || undefined,
-      gift,
-      buyerId: gift ? userId || undefined : undefined,
-      recipientEmail: recipient?.email,
-      recipientUserId: recipient?.userId,
-      successUrl: `${origin}/api/billing/return?session_id={CHECKOUT_SESSION_ID}`,
+        gift,
+        buyerId: gift ? userId || undefined : undefined,
+        seats: gift ? seats : undefined,
+        recipientEmail: recipientEmails[0],
+        recipientEmails: gift ? recipientEmails : undefined,
+        recipientUserId: recipients[0]?.userId || undefined,
+        successUrl: `${origin}/api/billing/return?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${origin}/pricing?canceled=1`,
     });
     return json({ url: checkout.url, sessionId: checkout.id, processor: "stripe", gift });

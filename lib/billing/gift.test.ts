@@ -1,12 +1,31 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { parseGiftEmails, sealGiftClaim, openGiftClaim, validateGiftEmails, classifyGiftRecipient, giftRecipientMessage } from "./gift.ts";
+import {
+  parseGiftEmails,
+  parseGiftSeats,
+  joinGiftEmails,
+  sealGiftClaim,
+  openGiftClaim,
+  validateGiftEmails,
+  classifyGiftRecipient,
+  giftRecipientMessage,
+  GIFT_SEATS,
+} from "./gift.ts";
 
 describe("gift emails", () => {
-  it("takes one address and rejects extras", () => {
+  it("takes several addresses and drops duplicates", () => {
     assert.deepEqual(parseGiftEmails("  Yusuf@Example.com "), ["yusuf@example.com"]);
-    const many = validateGiftEmails("a@x.com, b@x.com");
-    assert.equal("error" in many, true);
+    assert.deepEqual(parseGiftEmails("a@x.com, b@x.com; A@x.com\nc@x.com"), ["a@x.com", "b@x.com", "c@x.com"]);
+    assert.equal(joinGiftEmails(["A@x.com", "b@x.com"]), "a@x.com,b@x.com");
+  });
+
+  it("lets a checkout cover up to the seat cap", () => {
+    assert.equal(parseGiftSeats(3), 3);
+    assert.equal(parseGiftSeats(99), GIFT_SEATS);
+    const many = validateGiftEmails("a@x.com, b@x.com", 2);
+    assert.equal("error" in many, false);
+    if (!("error" in many)) assert.deepEqual(many.emails, ["a@x.com", "b@x.com"]);
+    assert.equal("error" in validateGiftEmails("a@x.com", 2), true);
   });
 
   it("rejects an empty or invalid address", () => {
@@ -19,7 +38,7 @@ describe("gift emails", () => {
 });
 
 describe("gift recipient checks", () => {
-  it("requires an existing account and rejects gifting yourself", () => {
+  it("allows missing accounts and still rejects gifting yourself", () => {
     assert.equal(
       classifyGiftRecipient({
         buyerId: "user_buyer",
@@ -36,7 +55,7 @@ describe("gift recipient checks", () => {
         recipientEmail: "missing@diras.app",
         recipientUserId: null,
       }),
-      "missing",
+      "invite",
     );
     assert.equal(
       classifyGiftRecipient({
@@ -56,7 +75,6 @@ describe("gift recipient checks", () => {
       }),
       "self",
     );
-    assert.match(giftRecipientMessage("missing"), /sign up first/i);
     assert.match(giftRecipientMessage("self"), /For me/);
   });
 });

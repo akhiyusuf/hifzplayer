@@ -1,4 +1,4 @@
-import { giftFlag, GIFT_SEATS } from "./gift.ts";
+import { giftFlag, parseGiftEmails, parseGiftSeats } from "./gift-parse.ts";
 import { isPlanId, isRegionId, PLAN_IDS, quote, REGIONS, type PlanId, type RegionId } from "./plans.ts";
 
 export type PaidPlan = {
@@ -9,6 +9,7 @@ export type PaidPlan = {
   gift?: boolean;
   seats?: number;
   recipientEmail?: string;
+  recipientEmails?: string[];
   recipientUserId?: string;
 };
 
@@ -43,21 +44,27 @@ export function parseCheckoutMetadata(raw: unknown): {
   gift: boolean;
   seats: number;
   recipientEmail: string;
+  recipientEmails: string[];
   recipientUserId: string;
 } {
   const rec = asRecord(raw) || {};
   const fields = fromCustomFields(rec.custom_fields);
   const gift = giftFlag(asString(rec.gift) || asString(fields.gift));
   const buyerId = asString(rec.buyerId) || asString(fields.buyerId);
-  const seatsRaw = Number.parseInt(asString(rec.seats) || asString(fields.seats) || "", 10);
+  const seats = gift ? parseGiftSeats(asString(rec.seats) || asString(fields.seats) || "") : 1;
+  const recipientEmail = asString(rec.recipientEmail) || asString(fields.recipientEmail);
+  const recipientEmails = parseGiftEmails(
+    asString(rec.recipientEmails) || asString(fields.recipientEmails) || recipientEmail,
+  );
   return {
     planId: asString(rec.planId) || asString(fields.planId),
     regionId: asString(rec.regionId) || asString(fields.regionId),
     userId: asString(rec.userId) || asString(fields.userId),
     buyerId,
     gift,
-    seats: gift ? (seatsRaw === GIFT_SEATS ? GIFT_SEATS : GIFT_SEATS) : 1,
-    recipientEmail: asString(rec.recipientEmail) || asString(fields.recipientEmail),
+    seats: gift ? Math.max(seats, recipientEmails.length || 1) : 1,
+    recipientEmail: recipientEmails[0] || recipientEmail,
+    recipientEmails,
     recipientUserId: asString(rec.recipientUserId) || asString(fields.recipientUserId),
   };
 }
@@ -105,6 +112,7 @@ export function resolvePaidPlan(opts: {
       ...(meta.buyerId ? { buyerId: meta.buyerId } : {}),
       ...(meta.gift ? { gift: true, seats: meta.seats } : {}),
       ...(meta.recipientEmail ? { recipientEmail: meta.recipientEmail } : {}),
+      ...(meta.recipientEmails.length ? { recipientEmails: meta.recipientEmails } : {}),
       ...(meta.recipientUserId ? { recipientUserId: meta.recipientUserId } : {}),
     };
   }

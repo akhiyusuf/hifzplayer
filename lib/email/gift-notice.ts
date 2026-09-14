@@ -2,20 +2,38 @@ import { APP_NAME, CONTACT_EMAIL, PLUS_NAME } from "../brand.ts";
 
 export type GiftNoticeInput = {
   existingAccount: boolean;
+  alreadyPlus?: boolean;
+  stacked?: boolean;
+  keptLifetime?: boolean;
+  planId?: string;
   signUpUrl: string;
 };
 
-export function giftNoticeSubject() {
+function extraLabel(planId?: string) {
+  if (planId === "annual") return "an extra year";
+  if (planId === "monthly") return "an extra month";
+  return "extra time";
+}
+
+export function giftNoticeSubject(input?: Pick<GiftNoticeInput, "alreadyPlus" | "stacked" | "keptLifetime">) {
+  if (input?.alreadyPlus && input.stacked) return `Someone added extra time to your ${PLUS_NAME}`;
   return `Someone gifted you ${PLUS_NAME}`;
 }
 
 export function giftNoticeText(input: GiftNoticeInput) {
   const how = input.existingAccount
     ? `Sign in to ${APP_NAME} with this same email — Google is fine if that Google account uses this address.`
-    : `Create a ${APP_NAME} account with this same email. Google is fine if that Google account uses this address. You do not need a password if you use Google.`;
+    : `You have been granted ${PLUS_NAME}. Sign in or create a ${APP_NAME} account with this same email. Google is fine if that Google account uses this address.`;
+
+  const lead =
+    input.existingAccount && input.keptLifetime
+      ? `Assalamu alaikum — someone gifted you ${PLUS_NAME}. You already have lifetime ${PLUS_NAME} on this email, so your access stays lifetime.`
+      : input.existingAccount && input.alreadyPlus && input.stacked
+        ? `Assalamu alaikum — someone gifted you ${extraLabel(input.planId)} of ${PLUS_NAME}. You already had access on this account. This gift adds time on top of what you have — it does not replace it.`
+        : `Assalamu alaikum — someone just gifted you ${PLUS_NAME}.`;
 
   return [
-    `Assalamu alaikum — someone just gifted you ${PLUS_NAME}.`,
+    lead,
     "",
     `${PLUS_NAME} unlocks Focus (Word Reps, Masked, Relay), occasion lists, and extra word repeats. Quran reading stays free either way.`,
     "",

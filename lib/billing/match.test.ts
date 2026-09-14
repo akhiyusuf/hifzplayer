@@ -32,6 +32,26 @@ describe("checkout metadata", () => {
     assert.equal(parsed.recipientEmail, "friend@diras.app");
   });
 
+  it("scales a gift amount by seats", () => {
+    const paid = resolvePaidPlan({
+      amount: 3_150_000,
+      currency: "ngn",
+      metadata: {
+        planId: "annual",
+        regionId: "ng",
+        gift: "1",
+        seats: "3",
+        buyerId: "user_buyer",
+        recipientEmails: "a@x.com,b@x.com,c@x.com",
+      },
+    });
+    assert.equal("error" in paid, false);
+    if ("error" in paid) return;
+    assert.equal(paid.gift, true);
+    assert.equal(paid.seats, 3);
+    assert.deepEqual(paid.recipientEmails, ["a@x.com", "b@x.com", "c@x.com"]);
+  });
+
   it("keeps a verified gift recipient on the paid plan", () => {
     const paid = resolvePaidPlan({
       amount: 1_050_000,
