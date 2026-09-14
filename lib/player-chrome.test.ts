@@ -51,14 +51,11 @@ describe("sidebarKind", () => {
 });
 
 describe("wordTapIntent", () => {
-  it("keeps a mushaf mouse click as play-from-this-word", () => {
-    assert.equal(wordTapIntent("mushaf", "verse", "mouse"), "play");
-    assert.equal(wordTapIntent("mushaf", "verse", "pen"), "play");
-    assert.equal(wordTapIntent("mushaf", "verse"), "play");
-  });
-
-  it("opens meaning on a mushaf finger tap", () => {
+  it("opens the mushaf word sheet for any pointer", () => {
+    assert.equal(wordTapIntent("mushaf", "verse", "mouse"), "meaning");
+    assert.equal(wordTapIntent("mushaf", "verse", "pen"), "meaning");
     assert.equal(wordTapIntent("mushaf", "verse", "touch"), "meaning");
+    assert.equal(wordTapIntent("mushaf", "verse"), "meaning");
   });
 
   it("uses Word Reps taps for the pin bar, and plays in other Focus jobs", () => {

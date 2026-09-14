@@ -65,14 +65,14 @@ export function sidebarKind(style: string, mode: string): SidebarKind {
 
 export type WordTapIntent = "play" | "meaning" | "wordRep";
 
-/** Mushaf mouse click still seeks from that word. A finger tap opens meaning. */
+/** Mushaf opens the word sheet (Play word / Play from here). Focus Word Reps pins. */
 export function wordTapIntent(
   style: string,
   mode: string,
-  pointerType?: string | null,
+  _pointerType?: string | null,
 ): WordTapIntent {
   if (style === "focus" && mode === "word") return "wordRep";
-  if (style === "mushaf" && pointerType === "touch") return "meaning";
+  if (style === "mushaf") return "meaning";
   return "play";
 }
 
