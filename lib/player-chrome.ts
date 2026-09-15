@@ -1,4 +1,5 @@
 import { KEYS, LOOP_COUNTS, RATES } from "./constants.ts";
+import { getStore } from "./storage.ts";
 
 export function verseRatioLabel(name: string, verse: number, total: number) {
   const n = Math.max(1, verse || 1);
@@ -171,11 +172,28 @@ export function wordRangePassComplete(pass: number, passes: number) {
   return pass >= passes;
 }
 
+export function emptyWordPick() {
+  return { start: null as null, end: null as null, count: null as null, open: null as null };
+}
+
+export function wantsTranslation() {
+  const stored = getStore(KEYS.showTranslation);
+  return stored == null || stored;
+}
+
+export function scrollPlayerToVerse(idx: number) {
+  if (typeof document === "undefined" || idx < 0) return;
+  requestAnimationFrame(() => {
+    const el = document.querySelector(`.shell.player [data-vi="${idx}"]`);
+    el?.scrollIntoView({ block: "center", behavior: "smooth" });
+  });
+}
+
 export function wordRepsDoneState() {
   return {
     loop: null as null,
     playing: false,
-    wordPick: { start: null as null, end: null as null, count: null as null, open: null as null },
+    wordPick: emptyWordPick(),
     wordStep: { active: false, w: 1, playedTimes: 0, range: null as null },
   };
 }
@@ -258,6 +276,39 @@ export const RELAY_ROUNDS = [
 ] as const;
 
 export type RelaySeat = { kind: "you" } | { kind: "qari"; reciterId: number };
+
+export type RelayTurn = {
+  kind: "you" | "qari";
+  reciterId: number;
+  verseKey: string;
+};
+
+/** Walk the passage in seat order, rotating who starts each round. */
+export function buildRelayTurns(
+  verses: { number: number; key: string }[],
+  from: number,
+  to: number,
+  order: RelaySeat[],
+  startOffset: number,
+  fallbackReciterId: number,
+): RelayTurn[] {
+  const span = verses.filter((verse) => verse.number >= from && verse.number <= to);
+  if (!order.length) return [];
+  const shift = (startOffset - 1) % order.length;
+  const firstQari = order.find((seat) => seat.kind === "qari");
+  let reciterId = firstQari && firstQari.kind === "qari" ? firstQari.reciterId : fallbackReciterId;
+  const turns: RelayTurn[] = [];
+  for (let i = 0; i < span.length; i++) {
+    const seat = order[(i + shift) % order.length];
+    if (seat.kind === "qari") {
+      reciterId = seat.reciterId;
+      turns.push({ kind: "qari", reciterId: seat.reciterId, verseKey: span[i].key });
+    } else {
+      turns.push({ kind: "you", reciterId, verseKey: span[i].key });
+    }
+  }
+  return turns;
+}
 
 export type RelayDraft = {
   chapter?: number;

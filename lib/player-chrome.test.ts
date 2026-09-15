@@ -23,6 +23,9 @@ import {
   wordIsAway,
   wordRangePassComplete,
   wordRepsDoneState,
+  emptyWordPick,
+  wantsTranslation,
+  buildRelayTurns,
   wordRepsPlayKind,
   wrapRelayIndex,
   exclusiveJobPatch,
@@ -290,6 +293,43 @@ describe("word reps done state", () => {
     assert.equal(next.wordPick.end, null);
     assert.equal(next.wordStep.active, false);
     assert.equal(next.wordStep.range, null);
+    assert.deepEqual(next.wordPick, emptyWordPick());
+  });
+});
+
+describe("buildRelayTurns", () => {
+  const verses = [
+    { number: 1, key: "1:1" },
+    { number: 2, key: "1:2" },
+    { number: 3, key: "1:3" },
+  ];
+  it("walks you and qari through the span and carries the last qari onto your seat", () => {
+    const turns = buildRelayTurns(
+      verses,
+      1,
+      3,
+      [{ kind: "qari", reciterId: 7 }, { kind: "you" }],
+      1,
+      9,
+    );
+    assert.deepEqual(turns, [
+      { kind: "qari", reciterId: 7, verseKey: "1:1" },
+      { kind: "you", reciterId: 7, verseKey: "1:2" },
+      { kind: "qari", reciterId: 7, verseKey: "1:3" },
+    ]);
+  });
+
+  it("rotates the starting seat on later rounds", () => {
+    const turns = buildRelayTurns(
+      verses,
+      1,
+      2,
+      [{ kind: "qari", reciterId: 7 }, { kind: "you" }],
+      2,
+      9,
+    );
+    assert.equal(turns[0].kind, "you");
+    assert.equal(turns[1].kind, "qari");
   });
 });
 

@@ -113,9 +113,6 @@ function DrillTypePicker({
   );
 }
 
-
-
-
 export function PlayerSettingsSheet({
   engine,
   state,
@@ -136,9 +133,6 @@ export function PlayerSettingsSheet({
   onOpenReciter?: () => void;
   onTranslationId?: (id: number) => void;
   onPickMode?: (id: string) => void;
-  reciterId?: number;
-  relay?: unknown;
-  onRelayStart?: (...args: never[]) => void | Promise<void>;
 }) {
   const { chapters } = useAppData();
   const { plus: plusOn, askPlus } = usePlus();
