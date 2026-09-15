@@ -8,7 +8,7 @@ export function plusSalaamLine(plus: boolean) {
 export function listenLeadCopy(plus: boolean) {
   return plus
     ? `${PLUS_NAME} is on. Play a list.`
-    : `Occasion lists for Friday, night, morning, and the rest. Reading stays on Read. Playing a list is ${PLUS_NAME}.`;
+    : `Occasion lists for Friday, night, morning, and the rest. Reading stays on Menu. Playing a list is ${PLUS_NAME}.`;
 }
 
 export function occasionHintCopy(plus: boolean, _reciterName?: string) {

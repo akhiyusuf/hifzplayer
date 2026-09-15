@@ -4761,7 +4761,7 @@ function U(e) {
         children: [
           _jsx(N, {
             title: eHead,
-            backLabel: eList ? "Listen" : $ ? $.split(" ")[0] : null,
+            backLabel: eList ? "Playlists" : $ ? $.split(" ")[0] : null,
             onBack: eList ? () => Y.push("/listen") : undefined,
             onSettings: () => {
               (eQuietUi("settings"), eSetTools(!0));
