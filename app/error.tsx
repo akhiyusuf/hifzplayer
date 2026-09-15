@@ -25,7 +25,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
             <Icon name="rotate-cw" size={17} />
             Try again
           </button>
-          <Link className="btn-secondary" href="/">
+          <Link className="btn-secondary" href="/home">
             <Icon name="chevron-left" size={16} />
             Back to passages
           </Link>
