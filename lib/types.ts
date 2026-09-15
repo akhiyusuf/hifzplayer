@@ -19,6 +19,8 @@ export type Word = {
   tajHTML?: string | null;
   gloss: string;
   tr: string;
+  /** Relative Quran.com word-by-word clip, e.g. `wbw/001_001_001.mp3`. */
+  audio?: string | null;
 };
 
 export type Mark = {

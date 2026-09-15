@@ -101,7 +101,7 @@ export async function fetchPassage(chapter: number, from: number, to: number) {
       chapter,
       from,
       to,
-      "&language=en&words=true&word_fields=text_uthmani,text_uthmani_tajweed&fields=text_uthmani,text_uthmani_tajweed",
+      "&language=en&words=true&word_fields=text_uthmani,text_uthmani_tajweed,audio_url&fields=text_uthmani,text_uthmani_tajweed",
     ),
     fetchTranslation(chapter, translationId).catch(() => ({
       byVerse: new Map<number, string>(),
@@ -121,6 +121,7 @@ export async function fetchPassage(chapter: number, from: number, to: number) {
             taj: w.text_uthmani_tajweed || null,
             gloss: w.translation?.text || "",
             tr: w.transliteration?.text || "",
+            audio: w.audio_url || null,
           });
         } else {
           marks.push({
