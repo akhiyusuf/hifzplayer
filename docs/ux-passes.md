@@ -19,7 +19,7 @@ Child / elder friction: unlabeled icons; home sliders and player sliders mean di
 
 A cream status strip was glued onto Focus, Masked, Drill, and Relay. The four bodies still used different layouts (hero word, extra verse card, Peek banner, relay page). That was not enough.
 
-## Pass 3 — Focus holds every replay mode *(done)*
+## Pass 3 — Focus holds every replay mode *(done — View bar remounted in Step B)*
 
 **Goal:** Mushaf is the reading page. Focus is the practise page. Drill, Masked, Relay, and verse-replay all live **inside Focus** as different jobs, not different UIs.
 
@@ -35,6 +35,7 @@ A cream status strip was glued onto Focus, Masked, Drill, and Relay. The four bo
 
 **Verify:** Open Mushaf (full page). Switch Focus. Flip Drill / Masked / Relay / Verse from Listen — same stage, different status and actions. A child can tell them apart from the strip text and what tapping does, not from four layouts.
 
+See also `docs/product-notes.md` — Focus entry should stay on the mushaf half, not only in settings.
 ## Pass 4 — One home for extras + leftover bugs *(this pass)*
 
 **Goal:** Translation, Tajweed, and reciter each have one home. Copy and leftover bugs match Diras.

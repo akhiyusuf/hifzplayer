@@ -3,6 +3,8 @@ import { describe, it } from "node:test";
 import { PLUS_NAME } from "./brand.ts";
 import { SALAAM } from "./greeting.ts";
 import {
+  focusAuraCopy,
+  focusLookAroundHint,
   listenLeadCopy,
   occasionHintCopy,
   playlistBarTitle,
@@ -35,5 +37,14 @@ describe("plus presence copy", () => {
     assert.equal(playlistBarTitle("Friday", true), "Plus · Friday");
     assert.equal(playlistBarTitle("Friday", false), "Friday");
     assert.equal(plusOnLabel(), `${PLUS_NAME} is on`);
+  });
+
+  it("puts a soft Focus aura on free look-around, not a wall", () => {
+    assert.equal(focusAuraCopy(true), null);
+    assert.match(focusAuraCopy(false) || "", /Look around free/);
+    assert.match(focusAuraCopy(false) || "", /Diras Plus/);
+    assert.match(focusLookAroundHint(true), /Word Reps/);
+    assert.match(focusLookAroundHint(false), /Look around free/);
+    assert.match(focusLookAroundHint(false), /Diras Plus/);
   });
 });

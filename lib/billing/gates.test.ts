@@ -7,6 +7,7 @@ import {
   isPaidRelay,
   isPaidRepeat,
   qariCount,
+  resolveFocusEntryMode,
 } from "./gates.ts";
 
 describe("repeat gating", () => {
@@ -79,6 +80,15 @@ describe("Focus job gating", () => {
   it("leaves verse listen and the Focus view itself free to open", () => {
     assert.equal(isPaidFocusJob("verse"), false);
     assert.equal(isPaidFocusJob(""), false);
+  });
+
+  it("soft-lands paid deep links in free look-around without Plus", () => {
+    assert.equal(resolveFocusEntryMode("word", false), "verse");
+    assert.equal(resolveFocusEntryMode("masked", false), "verse");
+    assert.equal(resolveFocusEntryMode("relay", false), "verse");
+    assert.equal(resolveFocusEntryMode("word", true), "word");
+    assert.equal(resolveFocusEntryMode("verse", false), "verse");
+    assert.equal(resolveFocusEntryMode(null, false), "verse");
   });
 });
 

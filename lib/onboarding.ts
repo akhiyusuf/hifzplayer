@@ -1,3 +1,4 @@
+import { FOCUS_FALLBACK, focusPassageHref } from "./nav.ts";
 import { KEYS } from "./constants.ts";
 import { getStore, setStore } from "./storage.ts";
 
@@ -35,24 +36,39 @@ export function markOnboardingDone() {
   setStore(KEYS.onboarded, true);
 }
 
-/** First-visit pitch. Sells the free mushaf, not a feature dump or a paywall. */
+/** First-surah Focus ritual — Al-Fātiḥah, Word Reps on the page. */
+export const RITUAL_SURAH = "Al-Fātiḥah";
+export const RITUAL_ARABIC = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
+
+/** Opens Al-Fātiḥah in Focus with Word Reps — the first practise beat. */
+export function ritualFocusHref() {
+  return focusPassageHref(FOCUS_FALLBACK, { mode: "word", back: "home" });
+}
+
+/**
+ * First-visit pitch. Sells the Focus ritual on Al-Fātiḥah, not a feature dump or a paywall.
+ * Reading stays free; Focus play may ask for Plus later.
+ */
+export const ONBOARDING_LEAD =
+  "Start on Al-Fātiḥah in Focus. Tap a word, hide a line, trade a turn — practise stays on the page. Reading stays free.";
+
 export const ONBOARDING_POINTS = [
   {
-    icon: "play" as const,
-    title: "Play follows the words",
-    body: "Tap a surah. Each word lights as it is recited. Translation sits above play. Tajweed colours are a tap away.",
-  },
-  {
-    icon: "headphones" as const,
-    title: "Listen for the days you already keep",
-    body: "Friday Kahf, night verses, morning — occasion lists you can open and look around. Playing a list is Diras Plus. The mushaf is not.",
-  },
-  {
     icon: "brackets" as const,
-    title: "Practise without losing the page",
-    body: "Word Reps, Masked, and Relay live on the player when you want them. Look around free. Play is Diras Plus. Reading never goes behind a wall.",
+    title: "Word Reps on the ayah",
+    body: "Open Al-Fātiḥah. Tap a hard word and loop it — 5×, 10×, or until it sticks.",
+  },
+  {
+    icon: "eye-off" as const,
+    title: "Masked when you are ready",
+    body: "Cover the line. Peek if you blank. Reveal as you listen — still on the same page.",
+  },
+  {
+    icon: "users" as const,
+    title: "Relay with the qari",
+    body: "You take a stretch. Then the teaching reciter takes the next. Skip when you are done.",
   },
 ] as const;
 
-export const ONBOARDING_LEAD =
-  "The mushaf that keeps up with the reciter. Quran reading stays free.";
+export const ONBOARDING_PRIMARY_CTA = "Open Al-Fātiḥah in Focus";
+export const ONBOARDING_SECONDARY_CTA = "Browse the mushaf first";

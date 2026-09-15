@@ -6,8 +6,10 @@ import { PlusProvider } from "@/lib/plus";
 import { ThemeProvider, themeInitScript } from "@/lib/theme";
 import { ToastProvider } from "@/lib/toast";
 import { APP_NAME, APP_TAGLINE } from "@/lib/brand";
+import { Suspense } from "react";
 import { AuthRoot } from "@/components/auth-root";
 import { AppSidebar } from "@/components/sidebar";
+import { MobileTabBar } from "@/components/mobile-tab-bar";
 import "./globals.css";
 
 const display = Bricolage_Grotesque({
@@ -74,6 +76,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <AppDataProvider>
                   <AppSidebar />
                   {children}
+                  <Suspense fallback={null}>
+                    <MobileTabBar />
+                  </Suspense>
                   <Analytics />
                 </AppDataProvider>
               </PlusProvider>
