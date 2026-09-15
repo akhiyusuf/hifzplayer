@@ -202,6 +202,14 @@ describe("word reps play kind", () => {
     assert.equal(wordRepsPlayKind(2, 5), "span");
     assert.equal(wordRepsPlayKind(5, 2), "span");
   });
+
+  it("keeps single-word and range drivers exclusive", () => {
+    // Contract for the player engine:
+    // - steps → wbw clip (or Muallim oneshot fallback); never arms st.loop
+    // - span  → continuous Muallim st.loop only; never arms wordStep.active
+    // Arming both is what doubled passes and required two cancels.
+    assert.notEqual(wordRepsPlayKind(3, 3), wordRepsPlayKind(3, 4));
+  });
 });
 
 describe("word reps done state", () => {
