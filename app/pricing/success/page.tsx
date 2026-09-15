@@ -18,12 +18,14 @@ export default async function PricingSuccessPage({
     plan?: string;
     gift?: string;
     trial?: string;
+    until?: string;
   }>;
 }) {
   const params = await searchParams;
   const sessionId = params.session_id || "";
   const reference = params.reference || params.trxref || "";
   const trial = params.trial === "1";
+  const untilParam = params.until && Number.isFinite(Date.parse(params.until)) ? params.until : "";
 
   return (
     <main className="shell" id="main">
@@ -40,6 +42,7 @@ export default async function PricingSuccessPage({
         grantedPlan={params.plan || ""}
         gifted={params.gift === "1"}
         trial={trial}
+        trialUntil={untilParam}
       />
     </main>
   );
