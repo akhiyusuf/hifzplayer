@@ -266,7 +266,9 @@ class g {
           let r = segForWord(s, n.endW);
           r && e >= r.end - 0.03 && this.handleLoopEdge(t);
         }
-        if ("word" === i && l.active) {
+        // Word-stepping must never run alongside a loop — that double-fires
+        // passes and makes cancel need two taps (loop chip, then word chip).
+        if ("word" === i && l.active && !n) {
           let t = segForWord(s, l.w);
           t && e >= t.end - 0.02 && this.wordStepEnded();
         }
@@ -317,10 +319,12 @@ class g {
       return;
     }
     if ("word" === this.st.mode) {
+      // Range Word Reps are loop-driven; never fall through to word-step.
       if (this.st.loop && e && (this.handleLoopEdge(e), this.st.loop)) {
         this.playAudio();
         return;
       }
+      if (this.st.loop) return;
       this.st.wordStep.active
         ? this.wordStepEnded()
         : (this.clearGap(), (this.st.playing = !1), this.notify());
@@ -1021,31 +1025,57 @@ class g {
       this.notify());
   }
   clearLoop() {
+    // In Word Reps, the loop chip is the range driver — clearing it must
+    // tear down the whole drill, not leave a second wordStep chip behind.
+    if ("word" === this.st.mode) {
+      this.finishWordReps();
+      return;
+    }
     ((this.st.loop = null), this.notify());
   }
   clearDrill() {
     this.finishWordReps();
   }
+  /**
+   * Single-word Word Reps only. Prefer clean Quran.com wbw clips; fall back
+   * to a Muallim segment slice when no clip exists. Never starts a range loop.
+   */
   async startWordDrill(e, t, s) {
     let start = Math.min(e, t),
       end = Math.max(e, t),
       passes = null == s ? this.st.wordRepeat : s;
     if (isPaidRepeat(passes) && !this.requirePlus("repeats")) return;
+    // Defensive: a multi-word call must never enter the word-step path.
+    if (start !== end) {
+      this.playWordRangeSpan(start, end, passes);
+      return;
+    }
+    let token = this.bumpWordRepsToken();
     (this.yieldJobs(),
+      this.clearGap(),
+      this.stopWordClip(),
+      (this.st.loop = null),
+      (this.st.oneshot = null),
       (this.st.wordRepeat = passes),
-      (this.st.wordPick = { ...emptyWordPick(), start, end, count: passes, open: null }),
+      (this.st.wordPick = {
+        ...emptyWordPick(),
+        start,
+        end,
+        count: passes,
+        open: null,
+      }),
       (this.st.wordStep = {
-        ...this.st.wordStep,
-        range: { startW: start, endW: end, passes, pass: 0 },
+        active: !0,
         w: start,
         playedTimes: 0,
-        active: !1,
+        range: { startW: start, endW: end, passes, pass: 0 },
       }),
+      (this.st.curWord = start),
       this.notify());
+    if (this.beginWordClipReps(start)) return;
     await this.ensureMuallimForWordReps();
-    ((this.st.wordStep = { ...this.st.wordStep, active: !0 }),
-      this.notify(),
-      this.wordModePlayCurrent());
+    if (!this.wordRepsTokenLive(token)) return;
+    this.wordModePlayCurrent();
   }
   playWordReps(e, t, s) {
     if ("span" === wordRepsPlayKind(e, t)) {
@@ -1054,11 +1084,23 @@ class g {
     }
     this.startWordDrill(e, t, s);
   }
+  bumpWordRepsToken() {
+    return (this._wordRepsToken = (this._wordRepsToken || 0) + 1);
+  }
+  wordRepsTokenLive(token) {
+    return (
+      token === this._wordRepsToken &&
+      "word" === this.st.mode &&
+      null != (this.st.wordPick && this.st.wordPick.count)
+    );
+  }
   finishWordReps() {
+    this.bumpWordRepsToken();
     let w = this.st.wordStep.w || 1;
     Object.assign(this.st, wordRepsDoneState());
     this.st.wordStep = { ...this.st.wordStep, w };
     this.st.curWord = w;
+    this.clearGap();
     this.pauseAudio();
     this.stopWordClip();
     if (this._restoreAfterWordReps) {
@@ -1066,11 +1108,20 @@ class g {
     }
     this.notify();
   }
+  /**
+   * Range Word Reps: one continuous Muallim stream from start→end, looped by
+   * `this.st.loop` only. wordStep must stay inactive so tick does not also
+   * word-step (that was doubling passes and requiring two cancels).
+   */
   async playWordRangeSpan(e, t, s) {
     let range = sortedWordRange(e, t),
       passes = null == s ? this.st.wordRepeat : s;
     if (isPaidRepeat(passes) && !this.requirePlus("repeats")) return;
-    (this.yieldJobs("word"),
+    let token = this.bumpWordRepsToken();
+    (this.yieldJobs(),
+      this.clearGap(),
+      this.stopWordClip(),
+      (this.st.oneshot = null),
       (this.st.wordRepeat = passes),
       (this.st.wordPick = {
         ...emptyWordPick(),
@@ -1080,26 +1131,89 @@ class g {
         open: null,
       }),
       (this.st.wordStep = {
-        active: !0,
+        active: !1,
         w: range.start,
         playedTimes: 0,
-        range: {
-          startW: range.start,
-          endW: range.end,
-          passes,
-          pass: 0,
-        },
+        range: null,
       }),
+      (this.st.curWord = range.start),
       this.notify());
     await this.ensureMuallimForWordReps();
+    if (!this.wordRepsTokenLive(token)) return;
+    let p = this.st.wordPick;
+    if (
+      !p ||
+      p.start !== range.start ||
+      p.end !== range.end ||
+      p.count !== passes
+    )
+      return;
     (this.setLoop(
       this.st.vIdx,
       range.start,
       range.end,
       passes,
-      "words ".concat(range.start, "–").concat(range.end),
+      "Word Reps: words ".concat(range.start, "–").concat(range.end),
     ),
       this.playFromWord(range.start));
+  }
+  /** Play one wbw clip pass for single-word Word Reps. Returns false if no clip. */
+  beginWordClipReps(pos) {
+    var n, i;
+    let s = this.st.verses[this.st.vIdx],
+      r =
+        null == s
+          ? void 0
+          : null === (n = s.words) || void 0 === n
+            ? void 0
+            : n.find((w) => w.pos === pos),
+      a = resolveWordAudioUrl(null == r ? void 0 : r.audio);
+    if (!a) return !1;
+    this.clearGap();
+    try {
+      this.audio.pause();
+    } catch (e) {}
+    this.stopWordClip();
+    let clip = this.wordClip || (this.wordClip = new Audio());
+    ((clip.src = a),
+      (clip.playbackRate = this.st.rate),
+      (clip.onended = () => this.wordClipRepEnded()),
+      (this.st.playing = !0),
+      (this.st.curWord = pos),
+      this.notify(),
+      clip.play().catch(() => {
+        this.toast("Couldn’t play this word’s audio.");
+        this.finishWordReps();
+      }));
+    return !0;
+  }
+  wordClipRepEnded() {
+    if (this.wordGapTimer) return;
+    if ("word" !== this.st.mode || !this.st.wordStep.active) return;
+    // Clip reps are single-word only; a range must never land here.
+    let step = this.st.wordStep,
+      range = step.range;
+    if (!range || range.startW !== range.endW || this.st.loop) {
+      this.finishWordReps();
+      return;
+    }
+    let pass = (range.pass || 0) + 1;
+    if (!wordRangePassComplete(pass, range.passes)) {
+      ((this.st.wordStep = { ...step, range: { ...range, pass } }),
+        (this.st.playing = !0),
+        this.notify());
+      this.wordGapTimer = setTimeout(
+        () => {
+          ((this.wordGapTimer = null),
+            "word" === this.st.mode &&
+              this.st.wordStep.active &&
+              this.beginWordClipReps(range.startW));
+        },
+        380 / this.st.rate,
+      );
+      return;
+    }
+    (this.finishWordReps(), this.toast("Word Reps done"));
   }
   /** Close the floating bar without clearing a pin/count. */
   closeWordRep() {
@@ -1108,6 +1222,7 @@ class g {
   }
   /** Cancel underline + count and stop drill audio. */
   dismissWordRep() {
+    this.bumpWordRepsToken();
     (this.pauseAudio(),
       this.stopWordClip(),
       (this.st.wordPick = emptyWordPick()),
@@ -1189,6 +1304,7 @@ class g {
   setWordRepCount(n) {
     if (isPaidRepeat(n) && !this.requirePlus("repeats")) return;
     // Arm the count only — do not auto-start. Play begins from the transport.
+    this.bumpWordRepsToken();
     let p = this.st.wordPick || emptyWordPick();
     ((this.st.wordPick = { ...p, count: n }),
       (this.st.wordRepeat = n),
@@ -1566,6 +1682,7 @@ class g {
       (this.reciters = []),
       (this.wordClip = null),
       (this._restoreAfterWordReps = !1),
+      (this._wordRepsToken = 0),
       (this.doneVerses = new Set()),
       (this.subscribe = (e) => (
         this.listeners.add(e),
@@ -1793,7 +1910,8 @@ function k(e) {
                 ? " of ".concat(s.loop.passes)
                 : " \xb7 until stopped",
             ),
-          clear: () => t.clearLoop(),
+          // Word Reps range uses loop as its only driver — cancel must finish the drill.
+          clear: () => ("word" === s.mode ? t.clearDrill() : t.clearLoop()),
         }
       : p
         ? {
