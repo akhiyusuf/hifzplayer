@@ -1,72 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
+import { LandingFocusDemo } from "@/components/landing-focus-demo";
 import { LANDING } from "@/lib/landing";
 
 export const metadata: Metadata = {
   title: LANDING.metaTitle,
   description: LANDING.metaDescription,
 };
-
-function FocusStage() {
-  return (
-    <div className="landing-stage-card" aria-hidden="true">
-      <div className="landing-stage-bar">
-        <span className="landing-stage-pill">{LANDING.stageEyebrow}</span>
-        <span className="landing-stage-modes">
-          <i className="on">Word Reps</i>
-          <i>Masked</i>
-          <i>Relay</i>
-        </span>
-      </div>
-      <p className="landing-stage-ayah">
-        <span className="w dim">وَ</span>
-        <span className="w hot">ٱلْعَصْرِ</span>
-        <span className="w dim"> إِنَّ ٱلْإِنسَٰنَ لَفِى خُسْرٍ</span>
-      </p>
-      <div className="landing-stage-meta">
-        <span className="landing-rep-chip">×5</span>
-        <span>{LANDING.stageCaption}</span>
-      </div>
-      <span className="landing-glow" />
-    </div>
-  );
-}
-
-function JobSample({ kind }: { kind: "reps" | "masked" | "relay" }) {
-  if (kind === "reps") {
-    return (
-      <div className="landing-job-sample" aria-hidden="true">
-        <span className="landing-sample-ar">
-          <i className="dim">رَبَّنَا</i> <b>ءَاتِنَا</b> <i className="dim">فِى ٱلدُّنْيَا</i>
-        </span>
-        <span className="landing-rep-chip">×10</span>
-      </div>
-    );
-  }
-  if (kind === "masked") {
-    return (
-      <div className="landing-job-sample masked" aria-hidden="true">
-        <span className="landing-sample-ar">
-          <i className="dim">ٱهْدِنَا</i> <b className="blank">····</b> <i className="dim">ٱلْمُسْتَقِيمَ</i>
-        </span>
-        <span className="landing-sample-hint">Tap to reveal</span>
-      </div>
-    );
-  }
-  return (
-    <div className="landing-job-sample relay" aria-hidden="true">
-      <span className="landing-sample-ar">
-        <i className="you">أنت</i>
-        <span className="sep">→</span>
-        <i className="qari">القاري</i>
-        <span className="sep">→</span>
-        <i className="you">أنت</i>
-      </span>
-      <span className="landing-sample-hint">Your turn · then the qari</span>
-    </div>
-  );
-}
 
 export default function LandingPage() {
   return (
@@ -97,13 +38,20 @@ export default function LandingPage() {
           </div>
           <p className="landing-free">{LANDING.freeLine}</p>
         </div>
-        <FocusStage />
+
+        <div className="landing-hero-demo">
+          <p className="landing-demo-kicker">Try Focus on Al-ʿAṣr — no account</p>
+          <LandingFocusDemo />
+        </div>
       </section>
 
       <section className="landing-focus" aria-labelledby="landing-focus-title">
         <div className="landing-section-head">
           <h2 id="landing-focus-title">{LANDING.focusTitle}</h2>
-          <p>{LANDING.focusLead}</p>
+          <p>
+            {LANDING.focusLead} Use the live floor above — same Word Reps, Masked, and Relay chrome as
+            in the app.
+          </p>
         </div>
         <div className="landing-jobs">
           {LANDING.jobs.map((job) => (
@@ -115,7 +63,6 @@ export default function LandingPage() {
                 <h3>{job.title}</h3>
               </div>
               <p>{job.blurb}</p>
-              <JobSample kind={job.sample.kind} />
             </article>
           ))}
         </div>
@@ -124,13 +71,13 @@ export default function LandingPage() {
       <section className="landing-plus" aria-labelledby="landing-plus-title">
         <div className="landing-plus-inner">
           <span className="landing-plus-badge" aria-hidden="true">
-            <Icon name="sparkles" size={16} />
+            <Icon name="sparkles" size={18} />
           </span>
           <h2 id="landing-plus-title">{LANDING.plusTitle}</h2>
           <p className="landing-plus-lead">{LANDING.plusLead}</p>
           <ul>
-            {LANDING.plusPoints.map((line) => (
-              <li key={line}>{line}</li>
+            {LANDING.plusPoints.map((point) => (
+              <li key={point}>{point}</li>
             ))}
           </ul>
           <Link className="btn-primary" href={LANDING.primaryHref}>
@@ -151,7 +98,9 @@ export default function LandingPage() {
                 <span className="landing-job-icon" aria-hidden="true">
                   <Icon name={item.icon} size={18} />
                 </span>
-                {item.plus ? <span className="landing-plus-tag">Plus</span> : <span className="landing-free-tag">Free</span>}
+                <span className={item.plus ? "landing-plus-tag" : "landing-free-tag"}>
+                  {item.plus ? "Plus" : "Free"}
+                </span>
               </div>
               <h3>{item.title}</h3>
               <p>{item.blurb}</p>
@@ -168,17 +117,17 @@ export default function LandingPage() {
             {LANDING.closeCta}
           </Link>
           <Link className="btn-secondary" href="/home">
-            {LANDING.secondaryCta}
+            Open the mushaf
           </Link>
         </div>
       </section>
 
       <footer className="landing-foot">
-        <Link href="/privacy">Privacy</Link>
+        <Link href="/home">Mushaf</Link>
         <span aria-hidden="true">·</span>
-        <Link href="/credits">Credits</Link>
+        <Link href="/pricing">Pricing</Link>
         <span aria-hidden="true">·</span>
-        <Link href="/roadmap">What&apos;s coming</Link>
+        <Link href="/account">Account</Link>
       </footer>
     </main>
   );

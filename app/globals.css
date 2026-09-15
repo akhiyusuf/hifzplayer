@@ -231,6 +231,29 @@ button.listen-sheet-row{cursor:pointer}
 .landing-stage-meta{position:relative;z-index:1;display:flex;align-items:center;gap:10px;margin-top:16px;font-size:12px;color:var(--text-muted)}
 .landing-rep-chip{display:inline-flex;align-items:center;justify-content:center;min-width:36px;padding:4px 8px;border-radius:999px;background:var(--action-primary);color:var(--text-on-primary);font-family:var(--font-display);font-weight:700;font-size:12px}
 .landing-glow{position:absolute;inset:auto -15% -35% auto;width:70%;height:70%;border-radius:50%;background:radial-gradient(circle,var(--tint-primary-28),transparent 68%);filter:blur(6px);pointer-events:none}
+
+.landing-hero-demo{min-width:0;display:flex;flex-direction:column;gap:10px;animation:landing-rise .75s var(--ease-standard) .1s both}
+.landing-demo-kicker{margin:0;font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}
+.landing-demo{border-radius:22px;background:var(--bg-surface);border:1px solid var(--tint-primary-border);box-shadow:var(--shadow-md);overflow:hidden;min-width:0}
+.landing-demo-modes{display:flex;gap:6px;flex-wrap:wrap;padding:12px 12px 0}
+.landing-demo-modes button{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;border:1px solid var(--border-default);background:var(--bg-surface-alt);color:var(--text-muted);font-size:12px;font-weight:600}
+.landing-demo-modes button.on{background:var(--tint-primary-12);color:var(--action-primary);border-color:var(--tint-primary-border)}
+.landing-demo-state{padding:28px 18px;text-align:center;font-size:13.5px;color:var(--text-secondary)}
+.landing-demo-stage{min-width:0}
+.landing-demo-stage .player-body{min-height:0;display:flex;flex-direction:column}
+.landing-demo-stage .practice-strip{padding:12px 14px 10px}
+.landing-demo-stage .focus-stage{padding:14px 16px 16px;min-height:160px}
+.landing-demo-stage .focus-stage .focus-ar{font-size:clamp(26px,5vw,34px);line-height:1.8}
+.landing-demo-stage .focus-word-wrap{margin-inline:2px}
+.landing-demo-stage .w[role=button]{cursor:pointer}
+.landing-demo-verse-nav{display:flex;align-items:center;justify-content:center;gap:12px;padding:0 14px 14px;font-size:12.5px;color:var(--text-muted)}
+.landing-demo-note{margin:0;padding:0 14px 14px;font-size:12px;color:var(--text-muted);text-align:center}
+.landing-demo .relay-queue{padding:0 4px}
+@media (min-width:760px){
+  .landing-hero-demo{align-self:stretch}
+  .landing-demo-stage .focus-stage{min-height:200px}
+}
+
 .landing-focus,.landing-upcoming,.landing-close{max-width:1080px;width:100%;margin:0 auto;padding:8px 20px 40px}
 .landing-section-head{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;max-width:40rem}
 .landing-section-head h2,.landing-close h2,.landing-plus h2{margin:0;font-family:var(--font-display);font-weight:700;font-size:clamp(22px,4vw,30px);letter-spacing:-.02em}
