@@ -2164,7 +2164,7 @@ function N(e) {
       _jsx("button", {
         className: "icon-btn sm tap",
         onClick: () =>
-          onBack ? onBack() : p ? m.back() : m.push("/"),
+          onBack ? onBack() : p ? m.back() : m.push("/home"),
         "aria-label": p ? "Back to ".concat(p) : "Back to passage list",
         children: _jsx(Icon, { name: "chevron-left", size: 19 }),
       }),
@@ -4599,7 +4599,7 @@ function U(e) {
                 }),
                 _jsxs("button", {
                   className: "btn-secondary",
-                  onClick: () => Y.push("/"),
+                  onClick: () => Y.push("/home"),
                   children: [
                     _jsx(Icon, {
                       name: "chevron-left",

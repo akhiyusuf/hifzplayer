@@ -34,11 +34,13 @@ function activeTab(path: string, search: string): TabId | null {
   if (path.startsWith("/read")) {
     return readingIsFocus(path, search) ? "focus" : "read";
   }
-  if (path === "/" || path.startsWith("/roadmap")) return "read";
+  if (path === "/home" || path.startsWith("/roadmap")) return "read";
   return null;
 }
 
+/** Hide on marketing landing and auth/legal surfaces. */
 function shouldHide(path: string) {
+  if (path === "/") return true;
   return (
     path.startsWith("/sign-in") ||
     path.startsWith("/sign-up") ||
@@ -62,7 +64,7 @@ export function MobileTabBar() {
   if (shouldHide(path) || !on) return null;
 
   const tabs: { id: TabId; href: string; label: string; icon: string }[] = [
-    { id: "read", href: "/", label: "Read", icon: "book-open" },
+    { id: "read", href: "/home", label: "Read", icon: "book-open" },
     { id: "focus", href: focusHref, label: "Focus", icon: "brackets" },
     { id: "listen", href: "/listen", label: "Listen", icon: "headphones" },
     { id: "settings", href: "/settings", label: "Settings", icon: "settings" },
