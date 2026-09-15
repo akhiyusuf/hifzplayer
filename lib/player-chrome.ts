@@ -71,7 +71,8 @@ export function wordTapIntent(
   mode: string,
   _pointerType?: string | null,
 ): WordTapIntent {
-  if (style === "focus" && mode === "word") return "wordRep";
+  /* Word Reps works on Mushaf and Focus once that practice tool is on. */
+  if (mode === "word") return "wordRep";
   if (style === "mushaf") return "meaning";
   return "play";
 }

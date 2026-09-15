@@ -60,7 +60,7 @@ describe("wordTapIntent", () => {
 
   it("uses Word Reps taps for the pin bar, and plays in other Focus jobs", () => {
     assert.equal(wordTapIntent("focus", "word", "touch"), "wordRep");
-    assert.equal(wordTapIntent("focus", "word", "mouse"), "wordRep");
+    assert.equal(wordTapIntent("mushaf", "word", "touch"), "wordRep");
     assert.equal(wordTapIntent("focus", "verse", "touch"), "play");
     assert.equal(wordTapIntent("focus", "masked", "mouse"), "play");
   });
