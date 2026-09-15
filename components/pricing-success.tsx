@@ -177,7 +177,7 @@ export function PricingSuccess({
           address. Your account stays as it was.
         </p>
         <div className="status-actions">
-          <Link className="btn-primary" href="/">
+          <Link className="btn-primary" href="/home">
             Back to reading
           </Link>
         </div>
@@ -199,7 +199,7 @@ export function PricingSuccess({
           No card was charged. When the day ends, reading stays free — Focus practice and listen lists need a paid plan.
         </p>
         <div className="status-actions">
-          <Link className="btn-primary" href="/">
+          <Link className="btn-primary" href="/home">
             Start practising
           </Link>
           <Link className="btn-secondary" href="/pricing">
@@ -226,7 +226,7 @@ export function PricingSuccess({
           A {APP_NAME} confirmation email follows this — separate from the Paystack or Stripe receipt.
         </p>
         <div className="status-actions">
-          <Link className="btn-primary" href="/">
+          <Link className="btn-primary" href="/home">
             Back to reading
           </Link>
           <Link className="btn-secondary" href="/settings">
