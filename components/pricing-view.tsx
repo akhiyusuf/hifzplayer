@@ -124,9 +124,13 @@ function PricingForm({
         return;
       }
       if (!res.ok) throw new Error(data.error || "Could not start the free trial.");
+      const until =
+        typeof (data as { until?: string | null }).until === "string"
+          ? `&until=${encodeURIComponent((data as { until: string }).until)}`
+          : "";
       setTrialOn(true);
       setCanTrial(false);
-      window.location.assign("/pricing/success?trial=1");
+      window.location.assign(`/pricing/success?trial=1${until}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start the free trial.");
       setTrialBusy(false);

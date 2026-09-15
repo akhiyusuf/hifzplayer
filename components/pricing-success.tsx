@@ -47,6 +47,7 @@ export function PricingSuccess({
   grantedPlan,
   gifted,
   trial,
+  trialUntil,
 }: {
   sessionId: string;
   reference: string;
@@ -54,10 +55,11 @@ export function PricingSuccess({
   grantedPlan?: string;
   gifted?: boolean;
   trial?: boolean;
+  trialUntil?: string;
 }) {
   const [paste, setPaste] = useState("");
   const [state, setState] = useState<ConfirmState>(() => {
-    if (trial) return { status: "trial", until: null };
+    if (trial) return { status: "trial", until: trialUntil || null };
     if (granted && gifted) return { status: "gifted", planId: grantedPlan || "plus" };
     if (granted) return { status: "ok", planId: grantedPlan || "plus", until: null };
     if (sessionId || reference) return { status: "working" };
