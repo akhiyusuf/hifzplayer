@@ -17,6 +17,7 @@ import { OfflineBanner } from "@/components/offline-banner";
 import { FocusStage } from "@/components/focus-stage";
 import { PracticeSheet } from "@/components/practice-sheet";
 import { PlayerSettingsSheet } from "@/components/player-settings-sheet";
+import { PracticeTools } from "@/components/practice-tools";
 import { ReciterSheet } from "@/components/reciter-sheet";
 import { PlaylistBar } from "@/components/playlist-bar";
 import { WordRepBar } from "@/components/word-rep-bar";
@@ -195,10 +196,6 @@ class g {
     e.play && this.playAudio();
   }
   playAudio() {
-    if ("focus" === this.st.style && !this.plus) {
-      this.requirePlus("focus");
-      return;
-    }
     var e;
     this.audio.playbackRate =
       null !== (e = this.oneshotRate) && void 0 !== e ? e : this.st.rate;
@@ -605,12 +602,6 @@ class g {
     ((this.st.rate = e), (this.audio.playbackRate = e), this.notify());
   }
   toggleVerseLoop() {
-    if (
-      !this.st.verseLoop &&
-      "focus" === this.st.style &&
-      !this.requirePlus("focus")
-    )
-      return;
     if (this.st.verseLoop) {
       ((this.st.verseLoop = !1),
         (this.st.verseLoopRange = null),
@@ -625,7 +616,6 @@ class g {
       this.notify());
   }
   setVerseLoopRange(from, to) {
-    if ("focus" === this.st.style && !this.requirePlus("focus")) return;
     let a = Math.min(from, to),
       b = Math.max(from, to);
     if (!coversRange(this.st.verses, a, b)) {
@@ -656,14 +646,12 @@ class g {
     ((this.st.loop = null), this.loadVerseAudio(e, !0));
   }
   setMode(e) {
-    if (isPaidFocusJob(e) && !this.requirePlus("focus")) return;
+    if (isPaidFocusJob(e) && !this.requirePlus("practice")) return;
     (e !== this.st.mode || "relay" === e) &&
       (this.stopJobs(),
       (this.st.mode = e),
       "masked" === e && (this.st.masked = {}),
       "relay" !== e && (this.st.relay = null),
-      "verse" !== e &&
-        ((this.st.style = "focus"), setStore(KEYS.style, "focus")),
       this.notify(),
       "relay" !== e && this.loadVerseAudio(this.st.vIdx, !1));
   }
@@ -1888,7 +1876,7 @@ function k(e) {
       onOccupy = () => {},
     } = e,
     { plus: plusOn } = usePlus(),
-    focusLocked = "focus" === s.style && !plusOn,
+    focusLocked = !1,
     d = s.showTranslation && "mushaf" === s.style ? s.verses[s.vIdx] : void 0,
     c = "relay" === s.mode,
     u = "word" === s.mode,
@@ -4054,6 +4042,7 @@ function U(e) {
     et = null !== (f = J.get("match")) && void 0 !== f ? f : Q,
     es = J.get("g"),
     er = J.get("mode"),
+    eStyleQ = J.get("style"),
     ea = J.get("at"),
     eListId = J.get("list"),
     eStopRaw = Number(J.get("stop")),
@@ -4220,7 +4209,7 @@ function U(e) {
                     name: e_,
                     reciter: ed(eM),
                   }),
-                  eWantPlay && plusOn && eu.playAudio()));
+                  eWantPlay && eu.playAudio()));
             }
           })
           .catch(() => {
@@ -4302,6 +4291,11 @@ function U(e) {
       let e = ez.verses.findIndex((e) => e.number === eR.verse);
       e >= 0 && e !== ez.vIdx && eu.loadVerseAudio(e, !1);
     }, [ep, eR, ez.verses.length]),
+    useEffect(() => {
+      if ("ready" !== ep) return;
+      if (eStyleQ !== "focus" && eStyleQ !== "mushaf") return;
+      if (eStyleQ !== eu.getSnapshot().style) eu.setStyle(eStyleQ);
+    }, [ep, eStyleQ, eu]),
     useEffect(() => {
       if ("ready" !== ep || !plusReady) return;
       let e =
@@ -4666,6 +4660,43 @@ function U(e) {
             },
             settingsOpen: eTools,
           }),
+          _jsx(PlayerViewBar, {
+            style: ez.style,
+            onStyle: (next) => eu.setStyle(next),
+          }),
+          _jsx(PracticeTools, {
+            mode: ez.mode,
+            plusOn: plusOn,
+            onPick: (id) => {
+              if ("verse" === id) {
+                eu.setMode("verse");
+                return;
+              }
+              if (!plusOn) {
+                ask("practice");
+                return;
+              }
+              if ("relay" === id) {
+                let order = [
+                  {
+                    kind: "qari",
+                    reciterId:
+                      null != ez.reciterId ? ez.reciterId : eM,
+                  },
+                  { kind: "you" },
+                ];
+                let from =
+                  (ez.verses[0] && ez.verses[0].number) || V;
+                let to =
+                  (ez.verses[ez.verses.length - 1] &&
+                    ez.verses[ez.verses.length - 1].number) ||
+                  D;
+                eu.beginRelay(order, from, to, 2);
+                return;
+              }
+              eu.setMode(id);
+            },
+          }),
           eHint
             ? _jsx("p", {
                 className: "player-drill-hint",
@@ -4967,9 +4998,8 @@ function U(e) {
                 at: String(verse),
               });
             (null != ez.reciterId && n.set("reciter", String(ez.reciterId)),
-              "focus" === ez.style &&
-                "verse" !== ez.mode &&
-                n.set("mode", ez.mode),
+              "focus" === ez.style && n.set("style", "focus"),
+              "verse" !== ez.mode && n.set("mode", ez.mode),
               (eF.current = !0),
               eSetTools(!1),
               Y.replace("/read/".concat(ch, "?").concat(n.toString())));

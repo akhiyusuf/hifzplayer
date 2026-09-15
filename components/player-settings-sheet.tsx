@@ -1,23 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Icon } from "./icon";
 import { Sheet } from "./sheet";
-import { ThemePicker } from "./theme-picker";
 import { useAppData } from "@/lib/app-data";
-import { isPaidRelay, isPaidRepeat } from "@/lib/billing/gates";
-import { FOCUS_JOBS, type ModeId } from "@/lib/constants";
-import {
-  RELAY_ROUNDS,
-  readRelayDraft,
-  sidebarKind,
-  writeRelayDraft,
-  type RelayDraft,
-  type RelaySeat,
-} from "@/lib/player-chrome";
-import { usePlus } from "@/lib/plus";
-import { plusOnLabel } from "@/lib/plus-presence";
-import { useTheme } from "@/lib/theme";
 import { currentTranslationId, fetchTranslations, type TranslationOption } from "@/lib/translations";
 
 type Engine = {
@@ -51,7 +37,7 @@ function SelectRow({
   );
 }
 
-function ModeSwitch({
+function ViewSwitch({
   style,
   onStyle,
 }: {
@@ -60,7 +46,7 @@ function ModeSwitch({
 }) {
   return (
     <div className="sidebar-row sidebar-row-stack">
-      <span className="sidebar-k">Mode</span>
+      <span className="sidebar-k">View</span>
       <div className="style-toggle sidebar-seg" role="group" aria-label="Reading view">
         {(["mushaf", "focus"] as const).map((id) => (
           <button
@@ -78,387 +64,35 @@ function ModeSwitch({
   );
 }
 
-function DrillTypePicker({
-  mode,
-  plusOn,
-  compact,
-  onAskPlus,
-  onPick,
-}: {
-  mode: string;
-  plusOn: boolean;
-  compact?: boolean;
-  onAskPlus: () => void;
-  onPick: (id: ModeId) => void;
-}) {
-  const current = FOCUS_JOBS.find((job) => job.id === mode);
-  if (compact) {
-    return (
-      <SelectRow label="Drill type" value={current?.name || "None"}>
-        <select
-          aria-label="Drill type"
-          value={current?.id || "verse"}
-          onChange={(e) => {
-            const next = e.target.value as ModeId;
-            if (next === "verse") {
-              onPick("verse");
-              return;
-            }
-            if (!plusOn) {
-              onAskPlus();
-              return;
-            }
-            onPick(next);
-          }}
-        >
-          <option value="verse">None</option>
-          {FOCUS_JOBS.map((job) => (
-            <option key={job.id} value={job.id}>
-              {job.name}
-            </option>
-          ))}
-        </select>
-      </SelectRow>
-    );
-  }
-  return (
-    <section className="sidebar-jobs" aria-label="Drill type">
-      <span className="sidebar-k">Drill type</span>
-      <p className="practise-jobs-lead">
-        {current
-          ? current.desc
-          : plusOn
-            ? "Pick Word Reps, Masked, or Relay."
-            : "Look around Focus. Word Reps, Masked, and Relay are Diras Plus."}
-      </p>
-      <div className="practise-jobs" role="group" aria-label="Drill type">
-        {FOCUS_JOBS.map((job) => {
-          const on = mode === job.id;
-          const locked = !plusOn && !on;
-          return (
-            <button
-              key={job.id}
-              type="button"
-              className={`practise-job tap${on ? " on" : ""}${locked ? " locked" : ""}`}
-              aria-pressed={on}
-              onClick={() => {
-                if (on) {
-                  onPick("verse");
-                  return;
-                }
-                if (!plusOn) {
-                  onAskPlus();
-                  return;
-                }
-                onPick(job.id);
-              }}
-            >
-              <span className="practise-job-ic">
-                <Icon name={job.icon} size={18} />
-              </span>
-              <span className="st">
-                <b>{job.name}</b>
-                <span>{on ? "On · tap to go back" : job.desc}</span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
 
-function ThemeFoot() {
-  const { dark, setDark } = useTheme();
-  return (
-    <div className="player-side-foot sidebar-group">
-      <div className="sidebar-row sidebar-row-stack">
-        <span className="sidebar-k">Theme</span>
-        <div className="style-toggle sidebar-seg" role="group" aria-label="Theme">
-          <button type="button" className={dark ? "" : "on"} aria-pressed={!dark} onClick={() => setDark(false)}>
-            Light
-          </button>
-          <button type="button" className={dark ? "on" : ""} aria-pressed={dark} onClick={() => setDark(true)}>
-            Dark
-          </button>
-        </div>
-      </div>
-      <ThemePicker />
-    </div>
-  );
-}
 
-function defaultOrder(reciterId: number): RelaySeat[] {
-  return [{ kind: "qari", reciterId }, { kind: "you" }];
-}
-
-function RelaySetup({
-  chapter,
-  versesCount,
-  passageFrom,
-  passageTo,
-  reciterId,
-  initial,
-  onStart,
-}: {
-  chapter: number;
-  versesCount: number;
-  passageFrom: number;
-  passageTo: number;
-  reciterId: number;
-  initial?: RelayDraft | null;
-  onStart: (order: RelaySeat[], vFrom: number, vTo: number, rounds: number) => void | Promise<void>;
-}) {
-  const { recitations, reciterName } = useAppData();
-  const { plus: plusOn, askPlus } = usePlus();
-  const draft = initial || readRelayDraft();
-  const sameChapter = !draft?.chapter || draft.chapter === chapter;
-  const [order, setOrder] = useState<RelaySeat[]>(() =>
-    draft?.order?.length ? draft.order : defaultOrder(reciterId),
-  );
-  const [from, setFrom] = useState(() => {
-    const n = sameChapter ? draft?.vFrom || passageFrom : passageFrom;
-    return Math.min(versesCount, Math.max(1, n));
-  });
-  const [to, setTo] = useState(() => {
-    const n = sameChapter ? draft?.vTo || passageTo : passageTo;
-    return Math.min(versesCount, Math.max(1, n));
-  });
-  const [rounds, setRounds] = useState(() => draft?.rounds ?? 2);
-  const [busy, setBusy] = useState(false);
-  const skipWrite = useRef(true);
-
-  useEffect(() => {
-    if (skipWrite.current) {
-      skipWrite.current = false;
-      return;
-    }
-    writeRelayDraft({ chapter, order, vFrom: from, vTo: to, rounds, start: false });
-  }, [chapter, order, from, to, rounds]);
-
-  const move = (index: number, dir: number) => {
-    const next = index + dir;
-    if (next < 0 || next >= order.length) return;
-    const copy = order.slice();
-    const item = copy[index];
-    copy[index] = copy[next];
-    copy[next] = item;
-    setOrder(copy);
-  };
-
-  const setSeat = (index: number, value: string) => {
-    const copy = order.slice();
-    copy[index] = value === "you" ? { kind: "you" } : { kind: "qari", reciterId: Number(value.slice(1)) };
-    if (isPaidRelay(copy) && !plusOn) {
-      askPlus("relay-qaris");
-      return;
-    }
-    setOrder(copy);
-  };
-
-  return (
-    <>
-      <div className="sidebar-range">
-        {[
-          { label: "From", value: from, set: setFrom },
-          { label: "To", value: to, set: setTo },
-        ].map((field) => (
-          <label key={field.label} className="sidebar-row sidebar-row-range">
-            <span className="sidebar-k">{field.label}</span>
-            <span className="sidebar-v">
-              {chapter}:{field.value}
-            </span>
-            <Icon name="chevron-down" size={16} style={{ color: "var(--text-muted)", flex: "none" }} />
-            <select
-              aria-label={`${field.label} verse`}
-              value={field.value}
-              onChange={(e) => {
-                const n = Number(e.target.value);
-                field.set(n);
-                if (field.label === "From" && to < n) setTo(n);
-                if (field.label === "To" && n < from) setFrom(n);
-              }}
-            >
-              {Array.from({ length: versesCount }, (_, i) => i + 1).map((n) => (
-                <option key={n} value={n}>
-                  {chapter}:{n}
-                </option>
-              ))}
-            </select>
-          </label>
-        ))}
-      </div>
-      <div className="sidebar-block">
-        <span className="sidebar-k">Reciters</span>
-        <div className="sheet-list" style={{ marginTop: 6 }}>
-          {order.map((seat, index) => {
-            const name = seat.kind === "you" ? "You (paced)" : reciterName(seat.reciterId);
-            return (
-              <div key={`${seat.kind}-${index}`} className={`order-row${seat.kind === "you" ? " you" : ""}`}>
-                <Icon name="grip-vertical" size={17} style={{ color: "var(--text-muted)", flex: "none" }} />
-                <span className="order-avatar">
-                  <Icon name={seat.kind === "you" ? "user" : "mic"} size={16} />
-                </span>
-                <label className="order-name">
-                  {name}
-                  <select
-                    aria-label={`Participant ${index + 1}`}
-                    value={seat.kind === "you" ? "you" : `q${seat.reciterId}`}
-                    onChange={(e) => setSeat(index, e.target.value)}
-                  >
-                    <option value="you">You (paced)</option>
-                    <optgroup label="Qaris">
-                      {recitations.map((item) => (
-                        <option key={item.id} value={`q${item.id}`}>
-                          {item.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  </select>
-                </label>
-                <span className="order-actions">
-                <button
-                  type="button"
-                  className="tap"
-                  onClick={() => move(index, -1)}
-                  disabled={index === 0}
-                  aria-label={`Move ${name} up`}
-                  style={{ color: "var(--text-muted)", opacity: index === 0 ? 0.3 : 1 }}
-                >
-                  <Icon name="chevron-up" size={16} />
-                </button>
-                <button
-                  type="button"
-                  className="tap"
-                  onClick={() => move(index, 1)}
-                  disabled={index === order.length - 1}
-                  aria-label={`Move ${name} down`}
-                  style={{ color: "var(--text-muted)", opacity: index === order.length - 1 ? 0.3 : 1 }}
-                >
-                  <Icon name="chevron-down" size={16} />
-                </button>
-                <button
-                  type="button"
-                  className="tap"
-                  onClick={() => {
-                    if (order.length <= 1) return;
-                    setOrder(order.filter((_, i) => i !== index));
-                  }}
-                  disabled={order.length <= 1}
-                  aria-label={`Remove ${name}`}
-                  style={{ color: "var(--text-muted)", opacity: order.length <= 1 ? 0.3 : 1 }}
-                >
-                  <Icon name="x" size={16} />
-                </button>
-                </span>
-              </div>
-            );
-          })}
-        </div>
-        <button
-          type="button"
-          className={`btn-dashed${plusOn ? "" : " locked"}`}
-          style={{ marginTop: 8 }}
-          onClick={() => {
-            const next = [...order, { kind: "qari" as const, reciterId }];
-            if (isPaidRelay(next) && !plusOn) {
-              askPlus("relay-qaris");
-              return;
-            }
-            setOrder(next);
-          }}
-        >
-          <Icon name={plusOn ? "plus" : "sparkles"} size={16} />
-          {plusOn ? "Add participant" : "Add another reciter"}
-        </button>
-      </div>
-      <div className="sidebar-block">
-        <span className="sidebar-k">Rounds</span>
-        <div className="rounds-row" style={{ marginTop: 6 }} role="group" aria-label="Rounds">
-          {RELAY_ROUNDS.map((item) => {
-            const locked = isPaidRepeat(item.value) && !plusOn;
-            return (
-              <button
-                key={item.value}
-                type="button"
-                className={`${rounds === item.value ? "on" : ""}${locked ? " locked" : ""}`}
-                onClick={() => (locked ? askPlus("repeats") : setRounds(item.value))}
-                aria-pressed={rounds === item.value}
-                style={item.value === 0 ? { fontSize: 12 } : undefined}
-              >
-                {locked ? (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                    {item.label}
-                    <Icon name="sparkles" size={11} />
-                  </span>
-                ) : (
-                  item.label
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      <button
-        type="button"
-        className="btn-primary"
-        disabled={busy}
-        onClick={async () => {
-          setBusy(true);
-          try {
-            await onStart(order, from, to, rounds);
-          } finally {
-            setBusy(false);
-          }
-        }}
-      >
-        {busy ? (
-          <>
-            <span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
-            Preparing reciters…
-          </>
-        ) : (
-          <>
-            <Icon name="play" size={18} />
-            Start relay
-          </>
-        )}
-      </button>
-    </>
-  );
-}
 
 export function PlayerSettingsSheet({
   engine,
   state,
   verseNumber,
   onClose,
-  onPickMode,
   onLocate,
   qariName,
   onOpenReciter,
   onTranslationId,
-  reciterId,
-  relay,
-  onRelayStart,
 }: {
   engine: Engine;
   state: State;
   verseNumber: number;
   onClose: () => void;
-  onPickMode: (id: string) => void;
   onLocate: (chapter: number, verse: number) => void;
   qariName?: string;
   onOpenReciter?: () => void;
   onTranslationId?: (id: number) => void;
+  /** Kept for call-site compatibility; practice tools now own these. */
+  onPickMode?: (id: string) => void;
   reciterId?: number;
-  relay?: RelayDraft | null;
-  onRelayStart?: (order: RelaySeat[], vFrom: number, vTo: number, rounds: number) => void | Promise<void>;
+  relay?: unknown;
+  onRelayStart?: (...args: never[]) => void | Promise<void>;
 }) {
-  const { plus: plusOn, askPlus } = usePlus();
   const { chapters } = useAppData();
   const passage = state.passage || { chapter: 1, from: 1, to: 1, name: "" };
-  const kind = sidebarKind(state.style, state.mode);
   const chapter = chapters.find((item) => item.id === passage.chapter);
   const versesCount = chapter?.verses_count || Math.max(passage.to, passage.from, 1);
   const surahName = chapter ? `${chapter.id}. ${chapter.name_simple}` : passage.name || "Surah";
@@ -483,32 +117,19 @@ export function PlayerSettingsSheet({
   const currentTrans =
     translations.find((item) => item.id === transId) || translations.find((item) => item.id === 20);
 
-  const locate = kind !== "relay";
-  const relayOn = kind === "relay";
-  const drill = kind !== "mushaf";
-  const compactDrill = kind !== "focus";
-  const reciter = kind !== "relay";
-  const translation = kind === "mushaf";
-  const qariId = reciterId || 0;
+  const locate = true;
+  const reciter = true;
+  const translation = true;
 
   return (
     <Sheet title="Settings" side="right" onClose={onClose}>
-      <div className="player-side" data-sidebar={kind}>
+      <div className="player-side" data-sidebar="reader">
         <div className="sidebar-group">
-          <ModeSwitch style={state.style === "focus" ? "focus" : "mushaf"} onStyle={(next) => engine.setStyle(next)} />
-          {drill ? (
-            <DrillTypePicker
-              mode={state.mode}
-              plusOn={plusOn}
-              compact={compactDrill}
-              onAskPlus={() => askPlus("focus")}
-              onPick={(id) => onPickMode(id)}
-            />
-          ) : null}
+          <ViewSwitch style={state.style === "focus" ? "focus" : "mushaf"} onStyle={(next) => engine.setStyle(next)} />
         </div>
-        {locate || relayOn || translation || reciter ? (
+        {locate || translation || reciter ? (
           <div className="sidebar-group">
-            {locate || relayOn ? (
+            {locate ? (
               <SelectRow label="Surah" value={surahName}>
                 <select
                   aria-label="Surah"
@@ -537,17 +158,6 @@ export function PlayerSettingsSheet({
                   ))}
                 </select>
               </SelectRow>
-            ) : null}
-            {relayOn && onRelayStart ? (
-              <RelaySetup
-                chapter={passage.chapter}
-                versesCount={versesCount}
-                passageFrom={passage.from}
-                passageTo={passage.to}
-                reciterId={qariId}
-                initial={relay}
-                onStart={onRelayStart}
-              />
             ) : null}
             {translation ? (
               <>
@@ -600,13 +210,6 @@ export function PlayerSettingsSheet({
             ) : null}
           </div>
         ) : null}
-        {plusOn ? (
-          <p className="sidebar-plus-on">
-            <Icon name="sparkles" size={13} />
-            {plusOnLabel()}
-          </p>
-        ) : null}
-        <ThemeFoot />
       </div>
     </Sheet>
   );
