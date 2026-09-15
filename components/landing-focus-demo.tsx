@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { FocusStage } from "@/components/focus-stage";
 import { Icon } from "@/components/icon";
 import { WordRepBar } from "@/components/word-rep-bar";
@@ -14,7 +14,7 @@ import {
   sortedWordRange,
   wordRepsPlayKind,
 } from "@/lib/player-chrome";
-import { pickMuallimReciter } from "@/lib/playlists";
+import { isMuallimReciter, pickMuallimReciter } from "@/lib/playlists";
 import type { Verse, Word } from "@/lib/types";
 
 export type DemoMode = "word" | "masked" | "relay";
@@ -122,7 +122,7 @@ export function LandingFocusDemo({
         const withAudio = attachAudio(passage.verses, audio);
         if (cancelled) return;
         setVerses(withAudio);
-        setMuallimName(/muallim/i.test(muallim.name) ? "Muallim" : muallim.name.split(" ")[0] || "Muallim");
+        setMuallimName(isMuallimReciter(muallim.name, muallim.style) ? "Muallim" : muallim.name.split(" ")[0] || "Muallim");
         setStatus("ready");
       } catch {
         if (!cancelled) setStatus("error");
@@ -260,12 +260,11 @@ export function LandingFocusDemo({
         audio.onerror = () => resolve();
         void audio.play().catch(() => resolve());
       });
-      if (runToken.current === token) {
-        setPlaying(false);
-        setCurWord(0);
-        if (opts?.reveal) {
-          setMask((m) => ({ ...m, maxRev: Math.max(m.maxRev, v.words.length) }));
-        }
+      if (runToken.current !== token) return false;
+      setPlaying(false);
+      setCurWord(0);
+      if (opts?.reveal) {
+        setMask((m) => ({ ...m, maxRev: Math.max(m.maxRev, v.words.length) }));
       }
       return true;
     },
@@ -336,35 +335,41 @@ export function LandingFocusDemo({
     }, 1600);
   };
 
-  const relayTurns: RelayTurn[] = verses.map((_, idx) => ({
-    kind: idx % 2 === 0 ? "you" : "qari",
-    verseIdx: idx,
-  }));
+  const relayTurns: RelayTurn[] = useMemo(
+    () =>
+      verses.map((_, idx) => ({
+        kind: idx % 2 === 0 ? "you" : "qari",
+        verseIdx: idx,
+      })),
+    [verses],
+  );
   const relayTurn = relayTurns[relayIdx] || null;
 
-  useEffect(() => {
-    if (mode !== "relay" || status !== "ready") return;
-    const turn = relayTurns[relayIdx];
-    if (!turn || turn.kind !== "qari") return;
-    const v = verses[turn.verseIdx];
+  /**
+   * Advance past the user's seat. Qari audio must start inside this click
+   * handler — unmuted play() from a useEffect is blocked by autoplay policy.
+   */
+  const skipMyTurn = useCallback(async () => {
+    if (mode !== "relay" || !relayTurns.length) return;
+    const nextIdx = Math.min(relayIdx + 1, relayTurns.length - 1);
+    if (nextIdx === relayIdx) return;
+    stopAll();
+    const next = relayTurns[nextIdx];
+    setRelayIdx(nextIdx);
+    if (next) setVIdx(next.verseIdx);
+    if (next?.kind !== "qari") return;
+    const v = verses[next.verseIdx];
     if (!v) return;
-    setVIdx(turn.verseIdx);
-    let cancelled = false;
-    void playVerseThrough(v, { muted: false }).then(() => {
-      if (cancelled) return;
-      setRelayIdx((i) => {
-        const next = Math.min(i + 1, Math.max(0, relayTurns.length - 1));
-        const seat = relayTurns[next];
-        if (seat) setVIdx(seat.verseIdx);
-        return next;
-      });
+    const finished = await playVerseThrough(v, { muted: false });
+    if (!finished) return;
+    setRelayIdx((i) => {
+      if (i !== nextIdx) return i;
+      const after = Math.min(i + 1, relayTurns.length - 1);
+      const seat = relayTurns[after];
+      if (seat) setVIdx(seat.verseIdx);
+      return after;
     });
-    return () => {
-      cancelled = true;
-    };
-    // playVerseThrough / verses identity: only re-fire on seat changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, status, relayIdx]);
+  }, [mode, relayIdx, relayTurns, verses, stopAll, playVerseThrough]);
 
   const pinStart = wordPick.start;
   const pinEnd = wordPick.end;
@@ -435,7 +440,11 @@ export function LandingFocusDemo({
     const isYou = relayTurn.kind === "you";
     title = "Round 1";
     meta = isYou ? `Your turn · ${left} left` : `${left} ${left === 1 ? "turn" : "turns"} left`;
-    hint = isYou ? "Recite aloud — the reciter plays muted to pace you" : undefined;
+    hint = isYou
+      ? "Recite aloud. Replay paces you muted — Skip when you are done."
+      : playing
+        ? `${muallimName} is reciting…`
+        : DRILL_HINTS.relay;
     gloss = verse.translation || null;
     extra = (
       <ol className="relay-queue" aria-label="Turn order">
@@ -474,21 +483,13 @@ export function LandingFocusDemo({
           <button
             type="button"
             className="focus-act primary"
+            disabled={playing}
             onClick={() => void playVerseThrough(verse, { muted: true })}
           >
             <Icon name="volume-2" size={16} />
             Replay reciter
           </button>
-          <button
-            type="button"
-            className="focus-act"
-            onClick={() => {
-              stopAll();
-              setRelayIdx((i) => Math.min(i + 1, relayTurns.length - 1));
-              const next = relayTurns[Math.min(relayIdx + 1, relayTurns.length - 1)];
-              if (next) setVIdx(next.verseIdx);
-            }}
-          >
+          <button type="button" className="focus-act" disabled={playing} onClick={() => void skipMyTurn()}>
             <Icon name="skip-forward" size={16} />
             Skip my turn
           </button>
@@ -634,8 +635,8 @@ export function LandingFocusDemo({
           {mode === "word" && wordPick.start != null && wordPick.count != null ? (
             <p className="landing-demo-note" role="status">
               {wordRepsPlayKind(wordPick.start, wordPick.end ?? wordPick.start) === "steps"
-                ? `Word clip · ${wordPick.count === 0 ? "∞" : `${loopCountFace(wordPick.count)}×`} · wbw audio`
-                : `Range stream · ${wordPick.count === 0 ? "∞" : `${loopCountFace(wordPick.count)}×`} · teaching Muallim`}
+                ? `Looping this word · ${wordPick.count === 0 ? "∞" : `${loopCountFace(wordPick.count)}×`}`
+                : `Drilling this phrase · ${wordPick.count === 0 ? "∞" : `${loopCountFace(wordPick.count)}×`} · teaching reciter`}
             </p>
           ) : null}
         </div>
