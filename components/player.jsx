@@ -1050,6 +1050,7 @@ class g {
       this.playWordRangeSpan(start, end, passes);
       return;
     }
+    let token = this.bumpWordRepsToken();
     (this.yieldJobs(),
       this.clearGap(),
       this.stopWordClip(),
@@ -1073,6 +1074,7 @@ class g {
       this.notify());
     if (this.beginWordClipReps(start)) return;
     await this.ensureMuallimForWordReps();
+    if (!this.wordRepsTokenLive(token)) return;
     this.wordModePlayCurrent();
   }
   playWordReps(e, t, s) {
@@ -1082,7 +1084,18 @@ class g {
     }
     this.startWordDrill(e, t, s);
   }
+  bumpWordRepsToken() {
+    return (this._wordRepsToken = (this._wordRepsToken || 0) + 1);
+  }
+  wordRepsTokenLive(token) {
+    return (
+      token === this._wordRepsToken &&
+      "word" === this.st.mode &&
+      null != (this.st.wordPick && this.st.wordPick.count)
+    );
+  }
   finishWordReps() {
+    this.bumpWordRepsToken();
     let w = this.st.wordStep.w || 1;
     Object.assign(this.st, wordRepsDoneState());
     this.st.wordStep = { ...this.st.wordStep, w };
@@ -1104,6 +1117,7 @@ class g {
     let range = sortedWordRange(e, t),
       passes = null == s ? this.st.wordRepeat : s;
     if (isPaidRepeat(passes) && !this.requirePlus("repeats")) return;
+    let token = this.bumpWordRepsToken();
     (this.yieldJobs(),
       this.clearGap(),
       this.stopWordClip(),
@@ -1125,6 +1139,15 @@ class g {
       (this.st.curWord = range.start),
       this.notify());
     await this.ensureMuallimForWordReps();
+    if (!this.wordRepsTokenLive(token)) return;
+    let p = this.st.wordPick;
+    if (
+      !p ||
+      p.start !== range.start ||
+      p.end !== range.end ||
+      p.count !== passes
+    )
+      return;
     (this.setLoop(
       this.st.vIdx,
       range.start,
@@ -1199,6 +1222,7 @@ class g {
   }
   /** Cancel underline + count and stop drill audio. */
   dismissWordRep() {
+    this.bumpWordRepsToken();
     (this.pauseAudio(),
       this.stopWordClip(),
       (this.st.wordPick = emptyWordPick()),
@@ -1280,6 +1304,7 @@ class g {
   setWordRepCount(n) {
     if (isPaidRepeat(n) && !this.requirePlus("repeats")) return;
     // Arm the count only — do not auto-start. Play begins from the transport.
+    this.bumpWordRepsToken();
     let p = this.st.wordPick || emptyWordPick();
     ((this.st.wordPick = { ...p, count: n }),
       (this.st.wordRepeat = n),
@@ -1657,6 +1682,7 @@ class g {
       (this.reciters = []),
       (this.wordClip = null),
       (this._restoreAfterWordReps = !1),
+      (this._wordRepsToken = 0),
       (this.doneVerses = new Set()),
       (this.subscribe = (e) => (
         this.listeners.add(e),
