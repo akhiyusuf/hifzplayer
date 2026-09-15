@@ -110,7 +110,7 @@ export function GiftAssign({ sessionId, reference }: { sessionId: string; refere
             : "They will get an email. Sign in or create a Diras account with that same address."}
         </p>
         <div className="status-actions">
-          <Link className="btn-primary" href="/">
+          <Link className="btn-primary" href="/home">
             Back to reading
           </Link>
         </div>

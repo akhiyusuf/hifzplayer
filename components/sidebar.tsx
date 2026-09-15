@@ -9,7 +9,7 @@ import { plusOnLabel } from "@/lib/plus-presence";
 import { usePlus } from "@/lib/plus";
 
 const ITEMS = [
-  { href: "/", label: "Read", icon: "book-open", match: (p: string) => p === "/" || p.startsWith("/read") },
+  { href: "/home", label: "Read", icon: "book-open", match: (p: string) => p === "/home" || p.startsWith("/read") },
   { href: "/listen", label: "Listen", icon: "headphones", match: (p: string) => p === "/listen" },
   { href: "/roadmap", label: "What's coming", icon: "sparkles", match: (p: string) => p.startsWith("/roadmap") },
   { href: "/settings", label: "Settings", icon: "settings", match: (p: string) => p.startsWith("/settings") },
@@ -20,7 +20,7 @@ export function AppSidebar() {
   const { plus } = usePlus();
   return (
     <nav className="app-sidebar" aria-label="Main">
-      <div className="as-brand">
+      <Link href="/home" className="as-brand">
         <span className="as-mark">
           <Icon name="book-open" size={19} />
         </span>
@@ -28,7 +28,7 @@ export function AppSidebar() {
           <b>{APP_NAME}</b>
           <span>Quran study</span>
         </span>
-      </div>
+      </Link>
       <div className="as-items">
         {ITEMS.map((item) => (
           <Link key={item.href} href={item.href} className={`as-item${item.match(path) ? " on" : ""}`}>
