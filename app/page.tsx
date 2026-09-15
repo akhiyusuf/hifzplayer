@@ -40,7 +40,7 @@ export default function LandingPage() {
         </div>
 
         <div className="landing-hero-demo">
-          <p className="landing-demo-kicker">Try Focus on Al-ʿAṣr — no account</p>
+          <p className="landing-demo-kicker">{LANDING.demoKicker}</p>
           <LandingFocusDemo />
         </div>
       </section>
@@ -48,10 +48,7 @@ export default function LandingPage() {
       <section className="landing-focus" aria-labelledby="landing-focus-title">
         <div className="landing-section-head">
           <h2 id="landing-focus-title">{LANDING.focusTitle}</h2>
-          <p>
-            {LANDING.focusLead} Use the live floor above — same Word Reps, Masked, and Relay chrome as
-            in the app.
-          </p>
+          <p>{LANDING.focusLead}</p>
         </div>
         <div className="landing-jobs">
           {LANDING.jobs.map((job) => (
