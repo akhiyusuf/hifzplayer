@@ -3426,7 +3426,7 @@ function F(e) {
       s.verses.length > 1
         ? "".concat(s.vIdx + 1, " of ", s.verses.length)
         : undefined,
-    hint: "verse" === s.mode ? "Tap a word for Word Reps, or open Masked / Relay from the practice strip" : undefined,
+    hint: "verse" === s.mode ? "Tap a word for Word Reps — practise stays on this page" : undefined,
     progress:
       s.verses.length > 1
         ? {

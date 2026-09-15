@@ -13,6 +13,7 @@ import { ReciterSheet } from "@/components/reciter-sheet";
 import { useAppData } from "@/lib/app-data";
 import {
   markOnboardingDone,
+  ritualFocusHref,
   shouldShowOnboarding,
   shouldStampExistingUser,
   snapshotOnboarding,
@@ -100,7 +101,11 @@ export default function HomePage() {
   if (gate === "show") {
     return (
       <Onboarding
-        onDone={() => {
+        onFocus={() => {
+          markOnboardingDone();
+          router.push(ritualFocusHref());
+        }}
+        onBrowse={() => {
           markOnboardingDone();
           setGate("ready");
         }}

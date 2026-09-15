@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { shouldShowOnboarding, shouldStampExistingUser, ONBOARDING_LEAD, ONBOARDING_POINTS } from "./onboarding.ts";
+import {
+  ONBOARDING_LEAD,
+  ONBOARDING_POINTS,
+  ONBOARDING_PRIMARY_CTA,
+  RITUAL_SURAH,
+  ritualFocusHref,
+  shouldShowOnboarding,
+  shouldStampExistingUser,
+} from "./onboarding.ts";
 
 const fresh = { done: false, sessionCount: 0, recentCount: 0, dayCount: 0 };
 
@@ -24,12 +32,18 @@ describe("onboarding gate", () => {
     assert.equal(shouldStampExistingUser({ ...fresh, dayCount: 1 }), true);
   });
 
-  it("sells the free mushaf, not a time of day", () => {
-    assert.match(ONBOARDING_LEAD, /reading stays free/i);
+  it("sells the Al-Fatiha Focus ritual, not a store install", () => {
+    assert.match(ONBOARDING_LEAD, /Al-Fātiḥah|Focus|reading stays free/i);
     assert.doesNotMatch(ONBOARDING_LEAD, /morning|evening|Saturday/i);
+    assert.match(RITUAL_SURAH, /Fātiḥah|Fatihah/i);
+    assert.match(ONBOARDING_PRIMARY_CTA, /Fātiḥah|Fatihah/i);
+    assert.match(ritualFocusHref(), /\/read\/1\?/);
+    assert.match(ritualFocusHref(), /style=focus/);
+    assert.match(ritualFocusHref(), /mode=word/);
     const blob = ONBOARDING_POINTS.map((p) => `${p.title} ${p.body}`).join(" ");
-    assert.match(blob, /Play follows the words/);
-    assert.match(blob, /never goes behind a wall/);
+    assert.match(blob, /Word Reps/);
+    assert.match(blob, /Masked/);
+    assert.match(blob, /Relay/);
     assert.doesNotMatch(blob, /available on the App Store|Install now|Get it on Google Play/i);
   });
 });

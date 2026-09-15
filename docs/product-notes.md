@@ -25,5 +25,5 @@ Settings can stay as a secondary home. Discoverability should not depend on the 
 |------|------|--------|
 | A | Focus-first marketing landing + live Focus demo | On branch `cursor/marketing-landing-baea` |
 | B | Mobile tab bar + Focus entry on the mushaf (View bar) | This branch |
-| C | First-surah Focus ritual | Next |
+| C | First-surah Focus ritual | This branch |
 | D | Plus gate / pricing aura | Next |
