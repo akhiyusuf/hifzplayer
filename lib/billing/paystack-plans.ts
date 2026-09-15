@@ -1,7 +1,9 @@
 import { PLUS_NAME } from "../brand.ts";
-import type { PlanId } from "./plans";
+import type { PaidPlanId } from "./plans";
 
-export const PAYSTACK_INTERVAL: Record<Exclude<PlanId, "lifetime">, "monthly" | "annually"> = {
+type RecurringPlanId = Exclude<PaidPlanId, "lifetime">;
+
+export const PAYSTACK_INTERVAL: Record<RecurringPlanId, "monthly" | "annually"> = {
   monthly: "monthly",
   annual: "annually",
 };
@@ -16,7 +18,7 @@ export type PaystackPlanRow = {
   is_archived?: boolean;
 };
 
-export function paystackPlanName(planId: Exclude<PlanId, "lifetime">) {
+export function paystackPlanName(planId: RecurringPlanId) {
   return `${PLUS_NAME} — ${planId === "monthly" ? "Monthly" : "Annual"}`;
 }
 

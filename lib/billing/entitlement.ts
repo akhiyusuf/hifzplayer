@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { billingSigningSecret } from "./env";
+import { billingSigningSecret } from "./env.ts";
 import type { PlanId, Processor, RegionId } from "./plans";
 import { isPlanId, isRegionId } from "./plans";
 import { entitlementForUser, isPlusActive, pickBestEntitlement, publicEntitlement } from "./entitlement-bind";
@@ -27,7 +27,8 @@ const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
 export function periodEnd(planId: PlanId, from = new Date()): string | null {
   if (planId === "lifetime") return null;
   const d = new Date(from.getTime());
-  if (planId === "monthly") d.setUTCDate(d.getUTCDate() + 31);
+  if (planId === "trial") d.setUTCDate(d.getUTCDate() + 1);
+  else if (planId === "monthly") d.setUTCDate(d.getUTCDate() + 31);
   else d.setUTCFullYear(d.getUTCFullYear() + 1);
   return d.toISOString();
 }
@@ -66,7 +67,8 @@ export function openEntitlement(token: string | undefined | null): Entitlement |
   try {
     const raw = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as Entitlement;
     if (raw.v !== 1 || !isPlanId(raw.planId) || !isRegionId(raw.regionId)) return null;
-    if (raw.processor !== "stripe" && raw.processor !== "paystack") return null;
+    if (raw.processor !== "stripe" && raw.processor !== "paystack" && raw.processor !== "trial")
+      return null;
     return raw;
   } catch {
     return null;

@@ -7,7 +7,7 @@ import { APP_NAME } from "@/lib/brand";
 import { clerkBrowserReady } from "@/lib/auth/config";
 import { PLUS_EXPLAIN } from "@/lib/billing/gates";
 import { GIFT_SEATS, parseGiftEmails } from "@/lib/billing/gift-parse";
-import { formatMoney, type Catalog, type PlanId } from "@/lib/billing/plans";
+import { formatMoney, type Catalog, type PaidPlanId } from "@/lib/billing/plans";
 
 type Processors = { stripe: boolean; paystack: boolean };
 type RegionQuote = Catalog[number];
@@ -16,15 +16,28 @@ export function PricingView(props: {
   region: RegionQuote;
   processors: Processors;
   canceled?: boolean;
+  trialAvailable?: boolean;
+  plusOn?: boolean;
 }) {
   if (clerkBrowserReady()) return <PricingViewSigned {...props} />;
-  return <PricingForm {...props} accountsOn={false} signedIn={false} accountEmail="" />;
+  return (
+    <PricingForm
+      {...props}
+      accountsOn={false}
+      signedIn={false}
+      accountEmail=""
+      trialAvailable={Boolean(props.trialAvailable)}
+      plusOn={Boolean(props.plusOn)}
+    />
+  );
 }
 
 function PricingViewSigned(props: {
   region: RegionQuote;
   processors: Processors;
   canceled?: boolean;
+  trialAvailable?: boolean;
+  plusOn?: boolean;
 }) {
   const { isLoaded, isSignedIn, user } = useUser();
   return (
@@ -33,6 +46,8 @@ function PricingViewSigned(props: {
       accountsOn
       signedIn={Boolean(isLoaded && isSignedIn)}
       accountEmail={user?.primaryEmailAddress?.emailAddress || ""}
+      trialAvailable={Boolean(props.trialAvailable)}
+      plusOn={Boolean(props.plusOn)}
     />
   );
 }
@@ -51,6 +66,8 @@ function PricingForm({
   accountsOn,
   signedIn,
   accountEmail,
+  trialAvailable,
+  plusOn,
 }: {
   region: RegionQuote;
   processors: Processors;
@@ -58,14 +75,19 @@ function PricingForm({
   accountsOn: boolean;
   signedIn: boolean;
   accountEmail: string;
+  trialAvailable: boolean;
+  plusOn: boolean;
 }) {
-  const [planId, setPlanId] = useState<PlanId>("annual");
+  const [planId, setPlanId] = useState<PaidPlanId>("annual");
   const [email, setEmail] = useState("");
   const [gift, setGift] = useState(false);
   const [giftSeats, setGiftSeats] = useState(1);
   const [giftEmails, setGiftEmails] = useState("");
   const [busy, setBusy] = useState(false);
+  const [trialBusy, setTrialBusy] = useState(false);
   const [error, setError] = useState(canceled ? "Checkout was canceled. Nothing was charged." : "");
+  const [trialOn, setTrialOn] = useState(plusOn);
+  const [canTrial, setCanTrial] = useState(trialAvailable);
 
   const selected = useMemo(
     () => region.plans.find((p) => p.planId === planId) ?? region.plans[1],
@@ -85,6 +107,30 @@ function PricingForm({
     setGiftEmails(value);
     const n = parseGiftEmails(value).length;
     if (n > giftSeats && n <= GIFT_SEATS) setGiftSeats(n);
+  }
+
+  async function startTrial() {
+    setError("");
+    if (accountsOn && !signedIn) {
+      window.location.assign("/sign-in?redirect_url=/pricing");
+      return;
+    }
+    setTrialBusy(true);
+    try {
+      const res = await fetch("/api/billing/trial", { method: "POST" });
+      const data = (await res.json()) as { error?: string; code?: string; plus?: boolean };
+      if (data.code === "SIGN_IN_REQUIRED" || res.status === 401) {
+        window.location.assign("/sign-in?redirect_url=/pricing");
+        return;
+      }
+      if (!res.ok) throw new Error(data.error || "Could not start the free trial.");
+      setTrialOn(true);
+      setCanTrial(false);
+      window.location.assign("/pricing/success?trial=1");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start the free trial.");
+      setTrialBusy(false);
+    }
   }
 
   async function checkout() {
@@ -157,6 +203,30 @@ function PricingForm({
       </div>
 
       <div className="pricing-buy">
+        {trialOn ? (
+          <p className="pricing-note" role="status">
+            {PLUS_EXPLAIN.plusTitle} is on. Pick a plan below any time — your free trial (if any) does not renew.
+          </p>
+        ) : canTrial ? (
+          <div className="pricing-trial">
+            <b>Try free for 1 day</b>
+            <p>Full Focus practice, listen lists, and word repeats. No card required. One trial per account.</p>
+            <button
+              className="btn-primary"
+              type="button"
+              disabled={trialBusy}
+              onClick={() => void startTrial()}
+            >
+              {trialBusy
+                ? "Starting trial…"
+                : accountsOn && !signedIn
+                  ? "Sign in to start free trial"
+                  : "Start free trial"}
+            </button>
+            <p className="pricing-foot">Or choose a paid plan below.</p>
+          </div>
+        ) : null}
+
         <div className="pricing-plans" role="radiogroup" aria-label="Plan">
           {region.plans.map((plan) => {
             const on = plan.planId === planId;

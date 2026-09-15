@@ -9,6 +9,7 @@ import { grantFromPayment, periodEnd, publicEntitlement, type Entitlement } from
 import { publicAppUrl } from "./env";
 import { parseGiftEmails } from "./gift";
 import { parseCheckoutMetadata, resolvePaidPlan, type PaidPlan } from "./match";
+import { isPaidPlanId, isRegionId } from "./plans";
 import {
   paystackChargeUntil,
   paystackHasPlan,
@@ -411,24 +412,29 @@ export async function fulfillStripeSubscription(
   opts: { source: FulfillSource; setCookie: boolean; plus: boolean },
 ): Promise<FulfillResult> {
   const metadata = sub.metadata || {};
-  let resolved = resolvePaidPlan({
+  const lookedUp = resolvePaidPlan({
     amount: -1,
     currency: "",
     metadata,
     allowAmountDrift: true,
   });
-  let userId = (!("error" in resolved) && resolved.userId) || metadata.userId || "";
-  if ("error" in resolved) {
+  let userId = (!("error" in lookedUp) && lookedUp.userId) || metadata.userId || "";
+  let resolved: PaidPlan;
+  if ("error" in lookedUp) {
     const existing = userId ? await plusFromClerk(userId) : null;
-    if (!existing) return fail(400, resolved.error, { processor: "stripe", source: opts.source });
+    if (!existing || !isPaidPlanId(existing.planId) || !isRegionId(existing.regionId)) {
+      return fail(400, lookedUp.error, { processor: "stripe", source: opts.source });
+    }
     resolved = { planId: existing.planId, regionId: existing.regionId, userId };
+  } else {
+    resolved = lookedUp;
   }
   if (resolved.planId === "lifetime") return { ok: true, skipped: true };
 
   const until = opts.plus ? stripeSubscriptionUntil(sub) || periodEnd(resolved.planId) : new Date().toISOString();
   if (resolved.gift || parseCheckoutMetadata(metadata).gift) {
     return renewPaidGift(
-      { ...metadata, buyerId: (!("error" in resolved) && resolved.buyerId) || metadata.buyerId },
+      { ...metadata, buyerId: resolved.buyerId || metadata.buyerId },
       until,
       opts.plus,
     );
@@ -453,7 +459,7 @@ export async function fulfillPaystackSubscriptionEvent(
   opts: { source: FulfillSource; setCookie: boolean; plus: boolean },
 ): Promise<FulfillResult> {
   const metadata = data.metadata;
-  let resolved = resolvePaidPlan({
+  const lookedUp = resolvePaidPlan({
     amount: -1,
     currency: "",
     metadata,
@@ -461,16 +467,19 @@ export async function fulfillPaystackSubscriptionEvent(
   });
 
   let userId = "";
-  if (!("error" in resolved) && resolved.userId) userId = resolved.userId;
+  if (!("error" in lookedUp) && lookedUp.userId) userId = lookedUp.userId;
   if (!userId && data.customer?.email) {
     userId = (await clerkUserIdByEmail(data.customer.email)) || "";
   }
-  if ("error" in resolved) {
+  let resolved: PaidPlan;
+  if ("error" in lookedUp) {
     const existing = userId ? await plusFromClerk(userId) : null;
-    if (!existing) {
-      return fail(400, resolved.error, { processor: "paystack", source: opts.source });
+    if (!existing || !isPaidPlanId(existing.planId) || !isRegionId(existing.regionId)) {
+      return fail(400, lookedUp.error, { processor: "paystack", source: opts.source });
     }
     resolved = { planId: existing.planId, regionId: existing.regionId, userId };
+  } else {
+    resolved = lookedUp;
   }
   const planId = resolved.planId;
   const regionId = resolved.regionId;

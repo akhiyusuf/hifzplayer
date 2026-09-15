@@ -44,4 +44,16 @@ describe("Diras Plus welcome email", () => {
     assert.match(html, /Diras Plus/);
     assert.match(html, /<!doctype html>/i);
   });
+
+  it("describes a free trial without charging language", () => {
+    const text = plusWelcomeText({
+      planId: "trial",
+      regionId: "us",
+      processor: "trial",
+      until: "2026-09-16T12:00:00.000Z",
+    });
+    assert.match(text, /free trial/i);
+    assert.match(text, /No card was charged/);
+    assert.doesNotMatch(text, /billed through/);
+  });
 });

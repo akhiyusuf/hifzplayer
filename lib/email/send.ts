@@ -97,6 +97,18 @@ export async function sendGiftNotice(opts: {
 
 /** Never throws — Plus grant must not fail because mail is down. */
 export async function sendPlusWelcome(ent: Entitlement) {
+  if (ent.planId === "trial" || ent.processor === "trial") {
+    logBillingEvent({
+      type: "welcome_skipped",
+      processor: ent.processor,
+      planId: ent.planId,
+      regionId: ent.regionId,
+      reason: "trial",
+      hasUserId: Boolean(ent.userId),
+      accountId: ent.userId,
+    });
+    return;
+  }
   const to = await destination(ent);
   if (!to) {
     logBillingEvent({

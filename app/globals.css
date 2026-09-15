@@ -211,6 +211,11 @@ button.listen-sheet-row{cursor:pointer}
 .pricing-split-col.plus li:before{background:var(--action-primary)}
 .pricing-buy{display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:var(--radius-card);background:var(--bg-surface);border:1px solid var(--border-default);box-shadow:var(--shadow-sm)}
 [data-theme=dark] .pricing-buy{box-shadow:none}
+.pricing-trial{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:var(--radius-card);border:1px solid var(--tint-primary-border);background:var(--tint-primary-06)}
+.pricing-trial b{font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--text-primary)}
+.pricing-trial p{margin:0;font-size:13px;line-height:1.45;color:var(--text-secondary)}
+.pricing-trial .btn-primary{margin-top:2px}
+.pricing-trial .pricing-foot{margin:0}
 .pricing-plans{display:flex;flex-direction:column;gap:8px}
 .pricing-card{align-items:flex-start;text-align:left;gap:4px;min-width:0;padding:14px 16px}
 .pricing-card-top{flex-wrap:wrap;justify-content:flex-start;gap:4px 6px}

@@ -5,13 +5,13 @@ import { logBillingEvent } from "@/lib/billing/analytics";
 import { grantFromPayment, type Entitlement } from "@/lib/billing/entitlement";
 import { stackGiftOnEntitlement } from "@/lib/billing/entitlement-bind";
 import { openGiftClaim, sealGiftClaim, validateGiftEmails, classifyGiftRecipient, giftRecipientMessage, type GiftClaim } from "@/lib/billing/gift";
-import type { PlanId, Processor, RegionId } from "@/lib/billing/plans";
+import type { PaidPlanId, Processor, RegionId } from "@/lib/billing/plans";
 
 export type GiftHold = {
   ref: string;
-  planId: PlanId;
+  planId: PaidPlanId;
   regionId: RegionId;
-  processor: Processor;
+  processor: Exclude<Processor, "trial">;
   until: string | null;
   sub?: string;
   buyerId: string;
