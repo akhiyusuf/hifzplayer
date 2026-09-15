@@ -24,6 +24,7 @@ import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
 import { clampStopIndex, playlistHref, pickMuallimReciter, reciterIdForStyle, resolvePlaylist, stopLabel } from "@/lib/playlists";
 import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration, fetchTranslation } from "@/lib/api";
+import { resolveWordAudioUrl } from "@/lib/audio-url";
 import { fmtTime, segsForVerse, segForWord, toArabicDigits, wordAt } from "@/lib/audio";
 import { APP_NAME } from "@/lib/brand";
 import { isPaidFocusJob, isPaidRelay, isPaidRepeat } from "@/lib/billing/gates";
@@ -218,6 +219,7 @@ class g {
     ((this.oneshotRate = null),
       this.armed && (this.armed.play = !1),
       this.audio.pause(),
+      this.stopWordClip(),
       this.clearGap(),
       (this.st.playing = !1),
       this.notify());
@@ -232,6 +234,7 @@ class g {
       (this.audio.muted = !1),
       (this.armed = null),
       (this.pendingWordInit = !1),
+      this.stopWordClip(),
       this.clearGap(),
       (this.st.playing = !1),
       this.notify());
@@ -427,6 +430,42 @@ class g {
     let r = this.st.passage,
       a = await fetchAudio(e, r.chapter, r.from, r.to);
     return ((this.audioByReciter[t] = a), a);
+  }
+  setReciters(e) {
+    this.reciters = Array.isArray(e) ? e : [];
+  }
+  stopWordClip() {
+    if (!this.wordClip) return;
+    try {
+      (this.wordClip.pause(), (this.wordClip.src = ""));
+    } catch (e) {}
+  }
+  async ensureMuallimForWordReps() {
+    let e = pickMuallimReciter(this.reciters || []);
+    if (!e) return !1;
+    if (e.id === this.st.reciterId) {
+      this._restoreAfterWordReps = !1;
+      return !0;
+    }
+    try {
+      var n;
+      let t = await this.ensureAudio(e.id);
+      this.st.verses = attachAudio(this.st.verses, t);
+      let s = this.st.verses[this.st.vIdx],
+        r =
+          null == s
+            ? void 0
+            : null === (n = s.audio) || void 0 === n
+              ? void 0
+              : n.url;
+      return (
+        r && this.setSrc(r),
+        (this._restoreAfterWordReps = !0),
+        !0
+      );
+    } catch (t) {
+      return ((this._restoreAfterWordReps = !1), !1);
+    }
   }
   restoreMainAudio() {
     var t;
@@ -987,23 +1026,24 @@ class g {
   clearDrill() {
     this.finishWordReps();
   }
-  startWordDrill(e, t, s) {
+  async startWordDrill(e, t, s) {
     let start = Math.min(e, t),
       end = Math.max(e, t),
-      passes = null == s ? this.st.loopCount : s;
+      passes = null == s ? this.st.wordRepeat : s;
     if (isPaidRepeat(passes) && !this.requirePlus("repeats")) return;
     (this.yieldJobs(),
       (this.st.wordRepeat = passes),
-      (this.st.wordPick = { ...emptyWordPick(), start, end, count: passes }),
+      (this.st.wordPick = { ...emptyWordPick(), start, end, count: passes, open: null }),
       (this.st.wordStep = {
         ...this.st.wordStep,
-        range:
-          start === end
-            ? null
-            : { startW: start, endW: end, passes, pass: 0 },
+        range: { startW: start, endW: end, passes, pass: 0 },
         w: start,
         playedTimes: 0,
+        active: !1,
       }),
+      this.notify());
+    await this.ensureMuallimForWordReps();
+    ((this.st.wordStep = { ...this.st.wordStep, active: !0 }),
       this.notify(),
       this.wordModePlayCurrent());
   }
@@ -1020,11 +1060,15 @@ class g {
     this.st.wordStep = { ...this.st.wordStep, w };
     this.st.curWord = w;
     this.pauseAudio();
+    this.stopWordClip();
+    if (this._restoreAfterWordReps) {
+      ((this._restoreAfterWordReps = !1), this.restoreMainAudio());
+    }
     this.notify();
   }
-  playWordRangeSpan(e, t, s) {
+  async playWordRangeSpan(e, t, s) {
     let range = sortedWordRange(e, t),
-      passes = null == s ? this.st.loopCount : s;
+      passes = null == s ? this.st.wordRepeat : s;
     if (isPaidRepeat(passes) && !this.requirePlus("repeats")) return;
     (this.yieldJobs("word"),
       (this.st.wordRepeat = passes),
@@ -1033,9 +1077,10 @@ class g {
         start: range.start,
         end: range.end,
         count: passes,
+        open: null,
       }),
       (this.st.wordStep = {
-        active: !1,
+        active: !0,
         w: range.start,
         playedTimes: 0,
         range: {
@@ -1045,17 +1090,26 @@ class g {
           pass: 0,
         },
       }),
-      this.setLoop(
-        this.st.vIdx,
-        range.start,
-        range.end,
-        passes,
-        "words ".concat(range.start, "–").concat(range.end),
-      ),
+      this.notify());
+    await this.ensureMuallimForWordReps();
+    (this.setLoop(
+      this.st.vIdx,
+      range.start,
+      range.end,
+      passes,
+      "words ".concat(range.start, "–").concat(range.end),
+    ),
       this.playFromWord(range.start));
   }
+  /** Close the floating bar without clearing a pin/count. */
+  closeWordRep() {
+    let p = this.st.wordPick || emptyWordPick();
+    ((this.st.wordPick = { ...p, open: null }), this.notify());
+  }
+  /** Cancel underline + count and stop drill audio. */
   dismissWordRep() {
     (this.pauseAudio(),
+      this.stopWordClip(),
       (this.st.wordPick = emptyWordPick()),
       (this.st.wordStep = {
         ...this.st.wordStep,
@@ -1064,19 +1118,43 @@ class g {
         playedTimes: 0,
       }),
       (this.st.loop = null),
+      this._restoreAfterWordReps &&
+        ((this._restoreAfterWordReps = !1), this.restoreMainAudio()),
       this.notify());
   }
   tapWordRep(e, t) {
     this.yieldJobs("word");
     this.pauseAudio();
     e !== this.st.vIdx && this.loadVerseAudio(e, !1);
-    let p = this.st.wordPick || emptyWordPick(),
-      open = p.open === t ? null : t;
+    let p = this.st.wordPick || emptyWordPick();
+    // After the first pin, tapping another word completes the range.
+    if (null != p.start && null == p.end && t !== p.start) {
+      let span = sortedWordRange(p.start, t);
+      ((this.st.wordPick = {
+        ...p,
+        start: span.start,
+        end: span.end,
+        open: span.start,
+      }),
+        (this.st.wordStep = {
+          ...this.st.wordStep,
+          w: span.start,
+          playedTimes: 0,
+          range: null,
+          active: !1,
+        }),
+        (this.st.curWord = t),
+        this.notify());
+      return;
+    }
+    let open = p.open === t ? null : t;
     // Closing the bar without a replay count cancels the underline selection.
     ((this.st.wordPick =
-      null == open && null == p.count
+      null == open && null == p.count && null == p.start
         ? emptyWordPick()
-        : { ...p, open }),
+        : null == open && null == p.count
+          ? emptyWordPick()
+          : { ...p, open }),
       (this.st.wordStep = {
         ...this.st.wordStep,
         w: t,
@@ -1091,7 +1169,8 @@ class g {
     this.pauseAudio();
     let p = this.st.wordPick || emptyWordPick();
     if (null == p.start) {
-      this.st.wordPick = { ...p, start: t, end: null, open: t };
+      // Keep the first pin; close the pop so the next word can be tapped.
+      this.st.wordPick = { ...p, start: t, end: null, open: null };
     } else if (t === p.start && null == p.end) {
       this.st.wordPick = { ...p, start: null, open: t };
     } else if (null == p.end) {
@@ -1103,7 +1182,7 @@ class g {
         open: span.start,
       };
     } else {
-      this.st.wordPick = { ...p, start: t, end: null, open: t };
+      this.st.wordPick = { ...p, start: t, end: null, open: null };
     }
     this.notify();
   }
@@ -1144,8 +1223,38 @@ class g {
       ((this._restoreAfterMuallimOneshot = !1), this.restoreMainAudio());
     }
   }
-  async playWordMuallim(e, t, s) {
-    let r = pickMuallimReciter(s || []);
+  playWordClip(e, t) {
+    var n, i;
+    let s = this.st.verses[e],
+      r =
+        null == s
+          ? void 0
+          : null === (n = s.words) || void 0 === n
+            ? void 0
+            : n.find((w) => w.pos === t),
+      a = resolveWordAudioUrl(null == r ? void 0 : r.audio);
+    if (!a) {
+      // Fall back to a Muallim oneshot if this word has no wbw clip yet.
+      this.playWordMuallimFallback(e, t);
+      return;
+    }
+    (this.pauseAudio(),
+      (this.st.oneshot = null),
+      (this.st.loop = null),
+      this.stopWordClip());
+    let clip = this.wordClip || (this.wordClip = new Audio());
+    ((clip.src = a),
+      (clip.playbackRate = this.st.rate),
+      (clip.onended = null),
+      clip.play().catch(() => {
+        this.toast("Couldn’t play this word’s audio.");
+      }),
+      (this.st.curWord = t),
+      e !== this.st.vIdx && (this.st.vIdx = e),
+      this.notify());
+  }
+  async playWordMuallimFallback(e, t) {
+    let r = pickMuallimReciter(this.reciters || []);
     if (!r || r.id === this.st.reciterId) {
       ((this._restoreAfterMuallimOneshot = !1), this.playWordOneshot(e, t));
       return;
@@ -1161,7 +1270,7 @@ class g {
     } catch (a) {
       ((this._restoreAfterMuallimOneshot = !1),
         this.restoreMainAudio(),
-        this.toast("Couldn’t load Muallim audio for this word."),
+        this.toast("Couldn’t load teaching audio for this word."),
         this.playWordOneshot(e, t));
     }
   }
@@ -1454,6 +1563,9 @@ class g {
       (this.oneshotRate = null),
       (this.peekTimer = null),
       (this.audioByReciter = {}),
+      (this.reciters = []),
+      (this.wordClip = null),
+      (this._restoreAfterWordReps = !1),
       (this.doneVerses = new Set()),
       (this.subscribe = (e) => (
         this.listeners.add(e),
@@ -3158,6 +3270,7 @@ function FocusLines(e) {
                           onPin: wordRep.onPin,
                           onCount: wordRep.onCount,
                           onAskPlus: wordRep.onAskPlus,
+                          onClose: wordRep.onClose,
                           onDismiss: wordRep.onDismiss,
                         })
                       : null,
@@ -3790,6 +3903,7 @@ function G(e) {
         onPin: (pos) => t.pinWordRep(pos),
         onCount: (n) => t.setWordRepCount(n),
         onAskPlus: () => ask("repeats"),
+        onClose: () => t.closeWordRep(),
         onDismiss: () => t.dismissWordRep(),
       },
     }),
@@ -3917,6 +4031,9 @@ function U(e) {
       eA(null);
       eE(null);
     }, [ez.mode, ez.style]),
+    useEffect(() => {
+      eu.setReciters(eRecs);
+    }, [eu, eRecs]),
     useEffect(() => {
       if ("ready" !== ei || !eRecs.length) return;
       if ("focus" !== ez.style && !ez.reciterId) return;
@@ -4756,7 +4873,7 @@ function U(e) {
           mushaf: "mushaf" === ez.style,
           onSetCount: (e) => eu.setLoopCount(e),
           onPlayWord: () => {
-            (eu.playWordMuallim(ek.vIdx, ek.pos, eRecs), eN(null));
+            (eu.playWordClip(ek.vIdx, ek.pos), eN(null));
           },
           onPlayFromHere: () => {
             (eu.playFromHere(ek.vIdx, ek.pos), eN(null));

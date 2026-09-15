@@ -17,6 +17,7 @@ export function WordRepBar({
   onPin,
   onCount,
   onAskPlus,
+  onClose,
   onDismiss,
 }: {
   pos: number;
@@ -27,6 +28,9 @@ export function WordRepBar({
   onPin: (pos: number) => void;
   onCount: (n: number) => void;
   onAskPlus: () => void;
+  /** Close the floating bar without clearing a pin/count. */
+  onClose: () => void;
+  /** Cancel underline + count and stop drill audio. */
   onDismiss: () => void;
 }) {
   const wrapRef = useRef<HTMLSpanElement | null>(null);
@@ -72,14 +76,31 @@ export function WordRepBar({
 
   useLayoutEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onDismiss();
+      if (e.key === "Escape") onClose();
+    };
+    const onPointer = (e: PointerEvent) => {
+      const pop = popRef.current;
+      if (!pop) return;
+      if (e.target instanceof Node && pop.contains(e.target)) return;
+      // Let word taps land so pin/range selection can continue.
+      if (
+        e.target instanceof Element &&
+        e.target.closest(".w[role='button'], .w[data-w], .focus-word-wrap")
+      ) {
+        return;
+      }
+      onClose();
     };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onDismiss]);
+    document.addEventListener("pointerdown", onPointer);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointer);
+    };
+  }, [onClose]);
 
   const pop = (
-    <div className="pop-wrap word-rep-wrap" onClick={onDismiss}>
+    <div className="pop-wrap word-rep-wrap" aria-hidden="true">
       <div
         ref={popRef}
         className="popover word-rep-pop"
