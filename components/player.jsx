@@ -4054,6 +4054,7 @@ function U(e) {
     et = null !== (f = J.get("match")) && void 0 !== f ? f : Q,
     es = J.get("g"),
     er = J.get("mode"),
+    eStyleQ = J.get("style"),
     ea = J.get("at"),
     eListId = J.get("list"),
     eStopRaw = Number(J.get("stop")),
@@ -4316,6 +4317,11 @@ function U(e) {
         eu.beginRelay(draft.order, draft.vFrom, draft.vTo, draft.rounds);
       }
     }, [ep, er, plusReady, plusOn]),
+    useEffect(() => {
+      if ("ready" !== ep) return;
+      if (eStyleQ !== "focus" && eStyleQ !== "mushaf") return;
+      if (eStyleQ !== eu.getSnapshot().style) eu.setStyle(eStyleQ);
+    }, [ep, eStyleQ, eu]),
     useEffect(() => {
       if ("ready" !== ep || !ea) return;
       let e = eu
@@ -4665,6 +4671,10 @@ function U(e) {
               (eQuietUi("settings"), eSetTools(!0));
             },
             settingsOpen: eTools,
+          }),
+          _jsx(PlayerViewBar, {
+            style: ez.style,
+            onStyle: (next) => eu.setStyle(next),
           }),
           eHint
             ? _jsx("p", {
