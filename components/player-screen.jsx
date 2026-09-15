@@ -37,7 +37,7 @@ import {
 import { PlayerEngine } from "@/lib/player-engine";
 import { PLUS_GATE_EVENT, usePlus } from "@/lib/plus";
 import { markToday, upsertSession } from "@/lib/sessions";
-import { setStore } from "@/lib/storage";
+import { getStore, setStore } from "@/lib/storage";
 import { useToast } from "@/lib/toast";
 import { PlayerHead, PlayerFoot, useOverlayHistory } from "@/components/player-transport";
 import { WordStudyPop } from "@/components/word-study-pop";
