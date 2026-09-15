@@ -22,7 +22,7 @@ import { PlaylistBar } from "@/components/playlist-bar";
 import { WordRepBar } from "@/components/word-rep-bar";
 import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
-import { clampStopIndex, playlistHref, reciterIdForStyle, resolvePlaylist, stopLabel } from "@/lib/playlists";
+import { clampStopIndex, playlistHref, pickMuallimReciter, reciterIdForStyle, resolvePlaylist, stopLabel } from "@/lib/playlists";
 import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration, fetchTranslation } from "@/lib/api";
 import { fmtTime, segsForVerse, segForWord, toArabicDigits, wordAt } from "@/lib/audio";
 import { APP_NAME } from "@/lib/brand";
@@ -257,7 +257,7 @@ class g {
           let t = segForWord(s, a.endW);
           t &&
             e >= t.end - 0.02 &&
-            ((this.st.oneshot = null), this.pauseAudio());
+            this.finishOneshot();
         }
         if (n && n.vIdx === this.st.vIdx) {
           let r = segForWord(s, n.endW);
@@ -327,7 +327,7 @@ class g {
       (this.clearGap(),
       this.st.oneshot && this.st.oneshot.vIdx === this.st.vIdx)
     ) {
-      ((this.st.oneshot = null), (this.st.playing = !1), this.notify());
+      this.finishOneshot();
       return;
     }
     if (
@@ -429,9 +429,19 @@ class g {
     return ((this.audioByReciter[t] = a), a);
   }
   restoreMainAudio() {
+    var t;
     if (!this.st.passage || null == this.st.reciterId) return;
     let e = this.audioByReciter[this.audioKey(this.st.reciterId)];
-    e && (this.st.verses = attachAudio(this.st.verses, e));
+    if (!e) return;
+    this.st.verses = attachAudio(this.st.verses, e);
+    let s = this.st.verses[this.st.vIdx],
+      r =
+        null == s
+          ? void 0
+          : null === (t = s.audio) || void 0 === t
+            ? void 0
+            : t.url;
+    r && this.setSrc(r);
   }
   loadVerseAudio(e, t, s) {
     var r;
@@ -1127,6 +1137,41 @@ class g {
       return;
     }
     ((this.st.oneshot = { vIdx: e, endW: t }), this.playFromWord(t));
+  }
+  finishOneshot() {
+    ((this.st.oneshot = null), this.pauseAudio());
+    if (this._restoreAfterMuallimOneshot) {
+      ((this._restoreAfterMuallimOneshot = !1), this.restoreMainAudio());
+    }
+  }
+  async playWordMuallim(e, t, s) {
+    let r = pickMuallimReciter(s || []);
+    if (!r || r.id === this.st.reciterId) {
+      ((this._restoreAfterMuallimOneshot = !1), this.playWordOneshot(e, t));
+      return;
+    }
+    (this.pauseAudio(), (this.st.loop = null), (this.st.oneshot = null));
+    try {
+      let a = await this.ensureAudio(r.id);
+      ((this.st.verses = attachAudio(this.st.verses, a)),
+        (this._restoreAfterMuallimOneshot = !0),
+        e !== this.st.vIdx && this.loadVerseAudio(e, !1),
+        (this.st.oneshot = { vIdx: e, endW: t }),
+        this.playFromWord(t));
+    } catch (a) {
+      ((this._restoreAfterMuallimOneshot = !1),
+        this.restoreMainAudio(),
+        this.toast("Couldn’t load Muallim audio for this word."),
+        this.playWordOneshot(e, t));
+    }
+  }
+  playFromHere(e, t) {
+    ((this._restoreAfterMuallimOneshot = !1),
+      this.restoreMainAudio(),
+      (this.st.oneshot = null),
+      (this.st.loop = null),
+      e !== this.st.vIdx && this.loadVerseAudio(e, !1),
+      this.playFromWord(t));
   }
   loopSingleWord(e, t, s) {
     this.yieldJobs("word");
@@ -1949,6 +1994,7 @@ function S(e) {
       isWordRangeMode: p,
       onSetCount: m,
       onPlayWord: v,
+      onPlayFromHere: onPlayFromHere,
       onLoopWord: x,
       onStartRange: f,
       onClose: y,
@@ -2104,7 +2150,15 @@ function S(e) {
                   name: "volume-2",
                   size: 15,
                 }),
-                "Play sound",
+                "Play word",
+              ],
+            }),
+            _jsxs("button", {
+              className: "sec",
+              onClick: onPlayFromHere,
+              children: [
+                _jsx(Icon, { name: "play", size: 15 }),
+                "Play from here",
               ],
             }),
             mushafLite
@@ -4702,7 +4756,10 @@ function U(e) {
           mushaf: "mushaf" === ez.style,
           onSetCount: (e) => eu.setLoopCount(e),
           onPlayWord: () => {
-            (eu.playWordOneshot(ek.vIdx, ek.pos), eN(null));
+            (eu.playWordMuallim(ek.vIdx, ek.pos, eRecs), eN(null));
+          },
+          onPlayFromHere: () => {
+            (eu.playFromHere(ek.vIdx, ek.pos), eN(null));
           },
           onLoopWord: () => {
             (eu.loopSingleWord(

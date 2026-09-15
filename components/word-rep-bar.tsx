@@ -1,9 +1,12 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "./icon";
 import { isPaidRepeat } from "@/lib/billing/gates";
 import { WORD_REP_COUNTS, loopCountFace } from "@/lib/player-chrome";
+
+type Place = { top: number; left: number; flipped: boolean; arrowLeft: number };
 
 export function WordRepBar({
   pos,
@@ -26,67 +29,120 @@ export function WordRepBar({
   onAskPlus: () => void;
   onDismiss: () => void;
 }) {
-  const barRef = useRef<HTMLDivElement | null>(null);
+  const wrapRef = useRef<HTMLSpanElement | null>(null);
+  const popRef = useRef<HTMLDivElement | null>(null);
+  const [place, setPlace] = useState<Place | null>(null);
   const pinned = pos === start || pos === end;
   const pinOnly = start != null && end == null && pos !== start;
 
   useLayoutEffect(() => {
-    const el = barRef.current;
-    if (!el) return;
-    el.style.setProperty("--word-rep-dx", "0px");
-    const rect = el.getBoundingClientRect();
-    const pad = 8;
-    let dx = 0;
-    if (rect.left < pad) dx = pad - rect.left;
-    else if (rect.right > window.innerWidth - pad) {
-      dx = window.innerWidth - pad - rect.right;
-    }
-    el.style.setProperty("--word-rep-dx", `${dx}px`);
+    const placePop = () => {
+      const wrap = wrapRef.current?.parentElement;
+      const word = wrap?.querySelector(".w") as HTMLElement | null;
+      const pop = popRef.current;
+      if (!word || !pop) return;
+
+      const r = word.getBoundingClientRect();
+      const h = pop.offsetHeight || 56;
+      const w = pop.offsetWidth || 220;
+      const pad = 10;
+      const left = Math.min(
+        window.innerWidth - w - pad,
+        Math.max(pad, r.left + r.width / 2 - w / 2),
+      );
+      const below = r.bottom + 12;
+      const flipped = below + h > window.innerHeight - pad;
+      const top = flipped ? Math.max(pad, r.top - h - 12) : below;
+      const arrowLeft = Math.min(
+        w - 20,
+        Math.max(20, r.left + r.width / 2 - left),
+      );
+      setPlace({ top, left, flipped, arrowLeft });
+    };
+
+    placePop();
+    window.addEventListener("resize", placePop);
+    // Capture scroll from the mushaf/focus scroller so the arrow stays on the word.
+    window.addEventListener("scroll", placePop, true);
+    return () => {
+      window.removeEventListener("resize", placePop);
+      window.removeEventListener("scroll", placePop, true);
+    };
   }, [pos, start, end, count, pinOnly]);
 
-  return (
-    <div
-      ref={barRef}
-      className="word-rep-bar"
-      onClick={(e) => e.stopPropagation()}
-      role="toolbar"
-      aria-label="Word replay"
-    >
-      <button
-        type="button"
-        className={pinned ? "on" : ""}
-        aria-pressed={pinned}
-        aria-label={pinned ? "Unpin this word" : "Pin this word"}
-        onClick={() => onPin(pos)}
+  useLayoutEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onDismiss();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onDismiss]);
+
+  const pop = (
+    <div className="pop-wrap word-rep-wrap" onClick={onDismiss}>
+      <div
+        ref={popRef}
+        className="popover word-rep-pop"
+        role="toolbar"
+        aria-label="Word replay"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          top: place ? place.top : -9999,
+          left: place ? place.left : 0,
+          visibility: place ? "visible" : "hidden",
+        }}
       >
-        <Icon name="pin" size={15} />
-      </button>
-      {pinOnly
-        ? null
-        : WORD_REP_COUNTS.map((n) => {
-            const locked = isPaidRepeat(n) && !plusOn;
-            const on = count === n;
-            return (
-              <button
-                key={n}
-                type="button"
-                className={`${on ? "on" : ""}${locked ? " locked" : ""}`}
-                aria-pressed={on}
-                aria-label={n === 0 ? "Repeat until you stop" : `Replay ${n} times`}
-                onClick={() => (locked ? onAskPlus() : onCount(n))}
-              >
-                {n === 0 ? "∞" : `${loopCountFace(n)}×`}
-              </button>
-            );
-          })}
-      <button
-        type="button"
-        className="word-rep-dismiss"
-        aria-label="Cancel word replay"
-        onClick={onDismiss}
-      >
-        <Icon name="x" size={15} />
-      </button>
+        <span
+          className={`p-arrow ${place?.flipped ? "down" : "up"}`}
+          style={{ left: place?.arrowLeft ?? "50%" }}
+        />
+        <div className="word-rep-row">
+          <button
+            type="button"
+            className={pinned ? "on" : ""}
+            aria-pressed={pinned}
+            aria-label={pinned ? "Unpin this word" : "Pin this word"}
+            onClick={() => onPin(pos)}
+          >
+            <Icon name="pin" size={15} />
+          </button>
+          {pinOnly
+            ? null
+            : WORD_REP_COUNTS.map((n) => {
+                const locked = isPaidRepeat(n) && !plusOn;
+                const on = count === n;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    className={`${on ? "on" : ""}${locked ? " locked" : ""}`}
+                    aria-pressed={on}
+                    aria-label={
+                      n === 0 ? "Repeat until you stop" : `Replay ${n} times`
+                    }
+                    onClick={() => (locked ? onAskPlus() : onCount(n))}
+                  >
+                    {n === 0 ? "∞" : `${loopCountFace(n)}×`}
+                  </button>
+                );
+              })}
+          <button
+            type="button"
+            className="word-rep-dismiss"
+            aria-label="Cancel word replay"
+            onClick={onDismiss}
+          >
+            <Icon name="x" size={15} />
+          </button>
+        </div>
+      </div>
     </div>
+  );
+
+  return (
+    <>
+      <span ref={wrapRef} className="word-rep-anchor" aria-hidden="true" />
+      {typeof document !== "undefined" ? createPortal(pop, document.body) : null}
+    </>
   );
 }

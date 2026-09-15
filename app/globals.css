@@ -391,48 +391,43 @@ a.qari-inline{text-decoration:none;color:inherit}
 .player-side .order-name{isolation:isolate;position:relative}
 .player-side .player-side-foot .theme-row{display:flex;flex-direction:column;align-items:stretch;gap:10px}
 .focus-word-wrap{display:inline-block;position:relative;vertical-align:baseline}
-.word-rep-bar{
-  --word-rep-dx:0px;
-  position:absolute;
-  top:calc(100% + 4px);
-  left:50%;
-  transform:translateX(calc(-50% + var(--word-rep-dx)));
-  z-index:12;
-  margin-top:0;
-  padding:4px;
-  border-radius:var(--radius-button);
-  border:1px solid var(--border-default);
-  background:var(--bg-surface);
-  box-shadow:var(--shadow-md);
+.word-rep-anchor{display:none}
+.word-rep-wrap{z-index:45}
+.word-rep-pop{
+  width:auto;
+  min-width:0;
+  max-width:min(280px, calc(100vw - 20px));
+  padding:8px;
+}
+.word-rep-row{
   display:flex;
-  flex-wrap:wrap;
+  flex-wrap:nowrap;
+  align-items:center;
   justify-content:center;
   gap:4px;
-  max-width:min(220px, calc(100vw - 16px));
   direction:ltr;
-  pointer-events:auto;
 }
-.word-rep-bar button{
-  min-width:32px;
-  height:32px;
-  padding:0 6px;
+.word-rep-row button{
+  min-width:36px;
+  height:36px;
+  padding:0 8px;
   border-radius:var(--radius-button);
   border:1px solid var(--border-default);
   background:var(--bg-surface);
   font-family:var(--font-numeral);
-  font-size:12px;
+  font-size:13px;
   font-weight:700;
   color:var(--text-secondary);
   display:inline-flex;
   align-items:center;
   justify-content:center;
 }
-.word-rep-bar button.on{
+.word-rep-row button.on{
   border-color:var(--action-primary);
   background:var(--tint-primary-08);
   color:var(--action-primary);
 }
-.word-rep-bar button.word-rep-dismiss{
+.word-rep-row button.word-rep-dismiss{
   color:var(--text-muted);
 }
 .focus-stage .focus-ar,.focus-stage .focus-line{overflow:visible}
@@ -490,13 +485,11 @@ a.qari-inline{text-decoration:none;color:inherit}
   line-height:1.15;
   letter-spacing:.01em;
 }
-.index-row .index-setup svg{display:block;flex:none}
-body:has(.scrim) .word-rep-bar,
+.index-row .index-setup svg{display:block;flex:none},
 body:has(.scrim) .follow-back,
 body:has(.scrim) .repeat-pop,
 body:has(.scrim) .player-foot,
-body:has(.popover) .repeat-pop,
-body:has(.popover) .word-rep-bar{
+body:has(.popover) .repeat-pop{
   display:none !important;
 }
 .scrim{z-index:11000}
