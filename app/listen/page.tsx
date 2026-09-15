@@ -10,7 +10,7 @@ export default function ListenPage() {
         <Link className="icon-btn sm tap" href="/home" aria-label="Back">
           <Icon name="chevron-left" size={19} />
         </Link>
-        <h1>Listen</h1>
+        <h1>Playlists</h1>
       </nav>
       <OfflineBanner />
       <div className="picker-body" style={{ paddingTop: 12 }}>
