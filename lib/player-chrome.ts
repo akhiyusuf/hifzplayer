@@ -65,15 +65,47 @@ export function sidebarKind(style: string, mode: string): SidebarKind {
 
 export type WordTapIntent = "play" | "meaning" | "wordRep";
 
-/** Mushaf opens the word sheet (Play word / Play from here). Focus Word Reps pins. */
+export type PlayerPageKind = "mushaf" | "focus" | "word" | "masked" | "relay";
+
+/** Mushaf keeps the page of ayahs. Focus drills swap in their own stage. */
+export function playerPageKind(
+  style: string,
+  mode: string,
+  relayActive = false,
+): PlayerPageKind {
+  if (style === "mushaf") return "mushaf";
+  if (mode === "relay" && relayActive) return "relay";
+  if (mode === "masked") return "masked";
+  if (mode === "word") return "word";
+  return "focus";
+}
+
+export function mushafMaskReveal(opts: {
+  mode: string;
+  verseIdx: number;
+  currentIdx: number;
+  wordCount: number;
+  currentReveal: number;
+  verseDone: boolean;
+}) {
+  if (opts.mode !== "masked") return { masked: false, revealUpTo: 0 };
+  if (opts.verseDone || opts.verseIdx < opts.currentIdx) {
+    return { masked: true, revealUpTo: opts.wordCount };
+  }
+  if (opts.verseIdx === opts.currentIdx) {
+    return { masked: true, revealUpTo: opts.currentReveal };
+  }
+  return { masked: true, revealUpTo: 0 };
+}
+
+/** Mushaf always opens the word sheet. Focus Word Reps pins. */
 export function wordTapIntent(
   style: string,
   mode: string,
   _pointerType?: string | null,
 ): WordTapIntent {
-  /* Word Reps works on Mushaf and Focus once that practice tool is on. */
-  if (mode === "word") return "wordRep";
   if (style === "mushaf") return "meaning";
+  if (mode === "word") return "wordRep";
   return "play";
 }
 
@@ -120,7 +152,7 @@ export const DRILL_HINT_MS = 10_000;
 
 export const DRILL_HINTS = {
   word: "Tap a word. Pin a range, or pick 5×, 10×, or ∞, then play.",
-  masked: "Words are covered. Peek if you need a look.",
+  masked: "Words stay in their slots and stay invisible until their turn.",
   relay: "Recite your ayah. The reciter takes the next.",
 } as const;
 
