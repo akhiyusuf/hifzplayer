@@ -122,7 +122,7 @@ export function LandingFocusDemo({
         const withAudio = attachAudio(passage.verses, audio);
         if (cancelled) return;
         setVerses(withAudio);
-        setMuallimName(muallim.name.split(" ")[0] || "Muallim");
+        setMuallimName(/muallim/i.test(muallim.name) ? "Muallim" : muallim.name.split(" ")[0] || "Muallim");
         setStatus("ready");
       } catch {
         if (!cancelled) setStatus("error");
@@ -138,8 +138,25 @@ export function LandingFocusDemo({
     setWordPick({ start: null, end: null, count: null, open: null });
     setMask({ maxRev: 0, peeks: 3, peekRev: 0 });
     setRelayIdx(0);
-    setVIdx(0);
-  }, [mode, stopAll]);
+    if (!verses.length) {
+      setVIdx(0);
+      return;
+    }
+    if (mode === "relay") {
+      setVIdx(0);
+      return;
+    }
+    /* Prefer a multi-word ayah so range / mask demos have room to work. */
+    let best = 0;
+    let bestLen = -1;
+    verses.forEach((v, i) => {
+      if (v.words.length > bestLen) {
+        bestLen = v.words.length;
+        best = i;
+      }
+    });
+    setVIdx(best);
+  }, [mode, stopAll, verses]);
 
   useEffect(() => () => stopAll(), [stopAll]);
 
