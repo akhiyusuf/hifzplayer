@@ -9,16 +9,17 @@ describe("backHref", () => {
     assert.equal(backHref("pricing"), "/pricing");
     assert.equal(backHref("listen"), "/listen");
     assert.equal(backHref("roadmap"), "/roadmap");
-    assert.equal(backHref("nope"), "/");
-    assert.equal(backHref(undefined), "/");
+    assert.equal(backHref("nope"), "/home");
+    assert.equal(backHref(undefined), "/home");
+    assert.equal(backHref("home"), "/home");
   });
 });
 
 describe("safePath", () => {
   it("allows only same-origin relative paths", () => {
     assert.equal(safePath("/account?from=settings"), "/account?from=settings");
-    assert.equal(safePath("https://evil.example/x"), "/");
-    assert.equal(safePath("//evil.example"), "/");
-    assert.equal(safePath(undefined), "/");
+    assert.equal(safePath("https://evil.example/x"), "/home");
+    assert.equal(safePath("//evil.example"), "/home");
+    assert.equal(safePath(undefined), "/home");
   });
 });
