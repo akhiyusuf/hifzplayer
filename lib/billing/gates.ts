@@ -69,3 +69,21 @@ export function isPaidRelay(order: { kind?: string }[] | null | undefined) {
 export function isPaidFocusJob(mode: string | null | undefined) {
   return mode === "word" || mode === "masked" || mode === "relay";
 }
+
+const FOCUS_MODES = new Set(["verse", "word", "masked", "relay"]);
+
+/**
+ * Deep links may ask for Word Reps / Masked / Relay. Without Plus, land in
+ * free Focus look-around (verse) — do not slam the paywall on entry.
+ */
+export function resolveFocusEntryMode(
+  requested: string | null | undefined,
+  plus: boolean,
+): "verse" | "word" | "masked" | "relay" {
+  const mode =
+    requested && FOCUS_MODES.has(requested)
+      ? (requested as "verse" | "word" | "masked" | "relay")
+      : "verse";
+  if (!plus && isPaidFocusJob(mode)) return "verse";
+  return mode;
+}

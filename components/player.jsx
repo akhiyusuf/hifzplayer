@@ -27,7 +27,13 @@ import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration, fetchTrans
 import { resolveWordAudioUrl } from "@/lib/audio-url";
 import { fmtTime, segsForVerse, segForWord, toArabicDigits, wordAt } from "@/lib/audio";
 import { APP_NAME } from "@/lib/brand";
-import { isPaidFocusJob, isPaidRelay, isPaidRepeat } from "@/lib/billing/gates";
+import {
+  isPaidFocusJob,
+  isPaidRelay,
+  isPaidRepeat,
+  resolveFocusEntryMode,
+} from "@/lib/billing/gates";
+import { focusAuraCopy, focusLookAroundHint } from "@/lib/plus-presence";
 import {
   MUSHAF_HOT_PAD,
   MUSHAF_VIEW_PAD,
@@ -2187,28 +2193,44 @@ function N(e) {
   });
 }
 function PlayerViewBar(e) {
-  let { style: t, onStyle: s } = e;
+  let { style: t, onStyle: s, aura: aura = null, onAura: onAura = null } = e;
   return _jsxs("div", {
-    className: "player-view",
+    className: "player-view-stack",
     children: [
-      _jsx("span", { className: "player-view-label", children: "View" }),
-      _jsx("div", {
-        className: "style-toggle",
-        role: "group",
-        "aria-label": "Reading view",
-        children: ["mushaf", "focus"].map((e) =>
-          _jsx(
-            "button",
-            {
-              className: t === e ? "on" : "",
-              onClick: () => s(e),
-              "aria-pressed": t === e,
-              children: "mushaf" === e ? "Mushaf" : "Focus",
-            },
-            e,
-          ),
-        ),
+      _jsxs("div", {
+        className: "player-view",
+        children: [
+          _jsx("span", { className: "player-view-label", children: "View" }),
+          _jsx("div", {
+            className: "style-toggle",
+            role: "group",
+            "aria-label": "Reading view",
+            children: ["mushaf", "focus"].map((e) =>
+              _jsx(
+                "button",
+                {
+                  className: t === e ? "on" : "",
+                  onClick: () => s(e),
+                  "aria-pressed": t === e,
+                  children: "mushaf" === e ? "Mushaf" : "Focus",
+                },
+                e,
+              ),
+            ),
+          }),
+        ],
       }),
+      aura
+        ? _jsxs("button", {
+            type: "button",
+            className: "plus-aura tap",
+            onClick: onAura || undefined,
+            children: [
+              _jsx(Icon, { name: "sparkles", size: 14 }),
+              _jsx("span", { children: aura }),
+            ],
+          })
+        : null,
     ],
   });
 }
@@ -3413,7 +3435,7 @@ function FocusLines(e) {
   );
 }
 function F(e) {
-  let { state: s, onWordTap: a, onWordHold: n } = e,
+  let { state: s, onWordTap: a, onWordHold: n, plusOn: plusOn = !1 } = e,
     i = s.verses[s.vIdx];
   if (!i) return null;
   let u = i.words
@@ -3426,7 +3448,7 @@ function F(e) {
       s.verses.length > 1
         ? "".concat(s.vIdx + 1, " of ", s.verses.length)
         : undefined,
-    hint: "verse" === s.mode ? "Tap a word for Word Reps — practise stays on this page" : undefined,
+    hint: "verse" === s.mode ? focusLookAroundHint(plusOn) : undefined,
     progress:
       s.verses.length > 1
         ? {
@@ -4305,10 +4327,8 @@ function U(e) {
     }, [ep, eR, ez.verses.length]),
     useEffect(() => {
       if ("ready" !== ep || !plusReady) return;
-      let e =
-        er && ["word", "verse", "masked", "relay"].includes(er)
-          ? er
-          : "verse";
+      /* Soft-land paid deep links in free look-around — gate on play, not entry. */
+      let e = resolveFocusEntryMode(er, plusOn);
       if (e !== eu.getSnapshot().mode) eu.setMode(e);
       if ("relay" !== eu.getSnapshot().mode) return;
       let draft = readRelayDraft();
@@ -4644,6 +4664,7 @@ function U(e) {
       selection: eI,
       annFor: eG,
       arrived: eR,
+      plusOn: plusOn,
     },
     eZ =
       "relay" === ez.mode &&
@@ -4675,6 +4696,12 @@ function U(e) {
           _jsx(PlayerViewBar, {
             style: ez.style,
             onStyle: (next) => eu.setStyle(next),
+            aura:
+              "focus" === ez.style ? focusAuraCopy(plusOn) : null,
+            onAura:
+              "focus" === ez.style && !plusOn
+                ? () => ask("focus")
+                : undefined,
           }),
           eHint
             ? _jsx("p", {

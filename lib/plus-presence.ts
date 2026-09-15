@@ -15,6 +15,18 @@ export function occasionHintCopy(plus: boolean, _reciterName?: string) {
   return plus ? "Play a list" : `Look around · play is ${PLUS_NAME}`;
 }
 
+/** Soft strip under Focus View — look around free; play asks for Plus. */
+export function focusAuraCopy(plus: boolean) {
+  return plus ? null : `Look around free · play is ${PLUS_NAME}`;
+}
+
+/** Focus verse hint while looking around without Plus. */
+export function focusLookAroundHint(plus: boolean) {
+  return plus
+    ? "Tap a word for Word Reps — practise stays on this page"
+    : `Look around free. Play, Word Reps, Masked, and Relay are ${PLUS_NAME}.`;
+}
+
 export function plusOnLabel() {
   return `${PLUS_NAME} is on`;
 }

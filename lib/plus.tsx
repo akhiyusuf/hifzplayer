@@ -187,9 +187,9 @@ function PlusGate({
   const copy = PLUS_COPY[feature];
   return (
     <Sheet title={PLUS_NAME} onClose={onClose}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div className="plus-gate" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <span
-          className="status-medallion"
+          className="status-medallion plus-gate-mark"
           style={{ alignSelf: "center", color: "var(--action-primary)" }}
         >
           <Icon name="sparkles" size={28} />
