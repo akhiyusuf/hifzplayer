@@ -101,6 +101,9 @@
 body:has(.mobile-tab-bar) .shell{padding-bottom:calc(62px + env(safe-area-inset-bottom))}
 body:has(.mobile-tab-bar) .player-foot{padding-bottom:calc(14px + 62px + env(safe-area-inset-bottom))}
 body:has(.mobile-tab-bar) .toast-region{bottom:calc(220px + env(safe-area-inset-bottom))}
+/* First-open ritual: no chrome under the CTAs */
+body:has(.onboard) .mobile-tab-bar{display:none}
+body:has(.onboard) .shell{padding-bottom:calc(28px + env(safe-area-inset-bottom))}
 @media (min-width:1440px){
   .mobile-tab-bar{display:none}
   body:has(.mobile-tab-bar) .shell{padding-bottom:0}
