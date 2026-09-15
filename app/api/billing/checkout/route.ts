@@ -14,7 +14,7 @@ import {
   unauthorized,
 } from "@/lib/billing/http";
 import { createPaystackCheckout } from "@/lib/billing/paystack";
-import { isPlanId, REGIONS } from "@/lib/billing/plans";
+import { isPaidPlanId, REGIONS } from "@/lib/billing/plans";
 import { createStripeCheckout } from "@/lib/billing/stripe";
 
 export const runtime = "nodejs";
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   }
 
   const planId = body.planId || "";
-  if (!isPlanId(planId)) return badRequest("Choose monthly, annual, or lifetime");
+  if (!isPaidPlanId(planId)) return badRequest("Choose monthly, annual, or lifetime");
   const gift = body.gift === true;
   if (gift && !userId) {
     return unauthorized(`Sign in to gift ${PLUS_NAME}`, { code: "SIGN_IN_REQUIRED" });

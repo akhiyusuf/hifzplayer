@@ -1,7 +1,7 @@
 import { PLUS_NAME } from "@/lib/brand";
 import { paystackPlanCode, paystackSecretKey } from "./env";
 import { PAYSTACK_INTERVAL, paystackPlanName, pickPaystackPlanCode, type PaystackPlanRow } from "./paystack-plans";
-import type { PlanId, Region } from "./plans";
+import type { PaidPlanId, PlanId, Region } from "./plans";
 
 const API = "https://api.paystack.co";
 
@@ -27,7 +27,7 @@ async function paystack<T>(path: string, init?: RequestInit): Promise<T> {
 
 export async function createPaystackCheckout(opts: {
   region: Region;
-  planId: PlanId;
+  planId: PaidPlanId;
   email: string;
   userId?: string;
   gift?: boolean;
@@ -100,7 +100,7 @@ export async function createPaystackCheckout(opts: {
 const planCache = new Map<string, string>();
 
 export async function ensurePaystackPlan(opts: {
-  planId: Exclude<PlanId, "lifetime">;
+  planId: Exclude<PaidPlanId, "lifetime">;
   amount: number;
   currency: string;
 }): Promise<string> {

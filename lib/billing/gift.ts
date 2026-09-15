@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { billingSigningSecret } from "./env.ts";
-import type { PlanId, Processor, RegionId } from "./plans.ts";
-import { isPlanId, isRegionId } from "./plans.ts";
+import type { PaidPlanId, Processor, RegionId } from "./plans.ts";
+import { isPaidPlanId, isRegionId } from "./plans.ts";
 
 export {
   GIFT_SEATS,
@@ -18,9 +18,9 @@ export {
 
 export type GiftClaim = {
   v: 1;
-  planId: PlanId;
+  planId: PaidPlanId;
   regionId: RegionId;
-  processor: Processor;
+  processor: Exclude<Processor, "trial">;
   until: string | null;
   ref: string;
   buyerId: string;
@@ -59,7 +59,7 @@ export function openGiftClaim(token: string | undefined | null): GiftClaim | nul
   if (!equal(sign(payload, secret), sig)) return null;
   try {
     const raw = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as GiftClaim;
-    if (raw.v !== 1 || !isPlanId(raw.planId) || !isRegionId(raw.regionId)) return null;
+    if (raw.v !== 1 || !isPaidPlanId(raw.planId) || !isRegionId(raw.regionId)) return null;
     if (raw.processor !== "stripe" && raw.processor !== "paystack") return null;
     if (!raw.ref || !raw.buyerId) return null;
     return raw;

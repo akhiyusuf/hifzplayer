@@ -17,11 +17,13 @@ export default async function PricingSuccessPage({
     granted?: string;
     plan?: string;
     gift?: string;
+    trial?: string;
   }>;
 }) {
   const params = await searchParams;
   const sessionId = params.session_id || "";
   const reference = params.reference || params.trxref || "";
+  const trial = params.trial === "1";
 
   return (
     <main className="shell" id="main">
@@ -29,7 +31,7 @@ export default async function PricingSuccessPage({
         <Link className="icon-btn sm tap" href="/pricing" aria-label="Back to pricing">
           <Icon name="chevron-left" size={19} />
         </Link>
-        <h1>Payment</h1>
+        <h1>{trial ? "Free trial" : "Payment"}</h1>
       </nav>
       <PricingSuccess
         sessionId={sessionId}
@@ -37,6 +39,7 @@ export default async function PricingSuccessPage({
         granted={params.granted === "1"}
         grantedPlan={params.plan || ""}
         gifted={params.gift === "1"}
+        trial={trial}
       />
     </main>
   );

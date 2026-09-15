@@ -17,8 +17,10 @@ export const dynamic = "force-dynamic";
 
 function plusLabel(plus: ReturnType<typeof publicEntitlement>) {
   if (!plus.plus) return "Free reading";
-  const plan = plus.planId === "lifetime" ? "lifetime" : plus.planId || "Plus";
-  const processor = plus.processor === "paystack" ? "Paystack" : plus.processor === "stripe" ? "Stripe" : null;
+  const plan =
+    plus.planId === "lifetime" ? "lifetime" : plus.planId === "trial" ? "free trial" : plus.planId || "Plus";
+  const processor =
+    plus.processor === "paystack" ? "Paystack" : plus.processor === "stripe" ? "Stripe" : null;
   const until =
     plus.planId === "lifetime"
       ? ""

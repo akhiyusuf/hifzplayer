@@ -10,6 +10,7 @@ import { setStore } from "@/lib/storage";
 type ConfirmState =
   | { status: "idle" | "working" }
   | { status: "ok"; planId: string; until: string | null }
+  | { status: "trial"; until: string | null }
   | { status: "gifted"; planId: string }
   | { status: "err"; message: string };
 
@@ -45,15 +46,18 @@ export function PricingSuccess({
   granted,
   grantedPlan,
   gifted,
+  trial,
 }: {
   sessionId: string;
   reference: string;
   granted?: boolean;
   grantedPlan?: string;
   gifted?: boolean;
+  trial?: boolean;
 }) {
   const [paste, setPaste] = useState("");
   const [state, setState] = useState<ConfirmState>(() => {
+    if (trial) return { status: "trial", until: null };
     if (granted && gifted) return { status: "gifted", planId: grantedPlan || "plus" };
     if (granted) return { status: "ok", planId: grantedPlan || "plus", until: null };
     if (sessionId || reference) return { status: "working" };
@@ -61,7 +65,32 @@ export function PricingSuccess({
   });
 
   useEffect(() => {
-    if (!sessionId && !reference) return;
+    if (!trial) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/billing/status");
+        const data = (await res.json()) as {
+          plus?: boolean;
+          planId?: string | null;
+          until?: string | null;
+        };
+        if (cancelled) return;
+        if (data.plus) {
+          setStore(PLUS_STORAGE_KEY, { plus: true, planId: data.planId, until: data.until });
+          setState({ status: "trial", until: data.until ?? null });
+        }
+      } catch {
+        /* keep trial success UI */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [trial]);
+
+  useEffect(() => {
+    if (trial || (!sessionId && !reference)) return;
     let cancelled = false;
     (async () => {
       try {
@@ -90,7 +119,7 @@ export function PricingSuccess({
     return () => {
       cancelled = true;
     };
-  }, [sessionId, reference, granted]);
+  }, [sessionId, reference, granted, trial]);
 
   async function recover(event: FormEvent) {
     event.preventDefault();
@@ -148,6 +177,31 @@ export function PricingSuccess({
         <div className="status-actions">
           <Link className="btn-primary" href="/">
             Back to reading
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (state.status === "trial") {
+    return (
+      <div className="status-block">
+        <span className="status-medallion" style={{ color: "var(--state-success)" }}>
+          <Icon name="sparkles" size={28} />
+        </span>
+        <h2>Free trial started</h2>
+        <p>
+          {state.until
+            ? `${PLUS_NAME} is unlocked until ${new Date(state.until).toLocaleString()}.`
+            : `${PLUS_NAME} is unlocked for one day.`}{" "}
+          No card was charged. When the day ends, reading stays free — Focus practice and listen lists need a paid plan.
+        </p>
+        <div className="status-actions">
+          <Link className="btn-primary" href="/">
+            Start practising
+          </Link>
+          <Link className="btn-secondary" href="/pricing">
+            See paid plans
           </Link>
         </div>
       </div>

@@ -1,8 +1,8 @@
 import { giftFlag, parseGiftEmails, parseGiftSeats } from "./gift-parse.ts";
-import { isPlanId, isRegionId, PLAN_IDS, quote, REGIONS, type PlanId, type RegionId } from "./plans.ts";
+import { isPaidPlanId, isRegionId, quote, REGIONS, PAID_PLAN_IDS, type PaidPlanId, type RegionId } from "./plans.ts";
 
 export type PaidPlan = {
-  planId: PlanId;
+  planId: PaidPlanId;
   regionId: RegionId;
   userId?: string;
   buyerId?: string;
@@ -74,7 +74,7 @@ export function inferPlanFromAmount(amount: number, currency: string): PaidPlan 
   const matches: PaidPlan[] = [];
   for (const region of Object.values(REGIONS)) {
     if (region.currency !== code) continue;
-    for (const planId of PLAN_IDS) {
+    for (const planId of PAID_PLAN_IDS) {
       if (region.amounts[planId] === amount) matches.push({ planId, regionId: region.id });
     }
   }
@@ -91,7 +91,7 @@ export function resolvePaidPlan(opts: {
   const meta = parseCheckoutMetadata(opts.metadata);
   const currency = (opts.currency || "").trim().toUpperCase();
 
-  if (isPlanId(meta.planId) && isRegionId(meta.regionId)) {
+  if (isPaidPlanId(meta.planId) && isRegionId(meta.regionId)) {
     const expected = quote(meta.regionId, meta.planId);
     const amountKnown = Number.isFinite(opts.amount) && opts.amount >= 0;
     const drift = Boolean(opts.allowAmountDrift);

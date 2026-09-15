@@ -43,7 +43,12 @@ function PlusStatus() {
         if (cancelled) return;
         if (data.plus) {
           setActive(true);
-          const names: Record<string, string> = { monthly: "Monthly", annual: "Annual", lifetime: "Lifetime" };
+          const names: Record<string, string> = {
+            monthly: "Monthly",
+            annual: "Annual",
+            lifetime: "Lifetime",
+            trial: "Free trial",
+          };
           const plan = names[data.planId || ""] || "Plus";
           setLabel(
             data.planId === "lifetime"

@@ -37,6 +37,7 @@ const EVENT_CAP = 20;
 type ClerkPrivate = {
   hifzPlus?: StoredPlus;
   hifzPlusEvents?: StoredBillingEvent[];
+  hifzTrialUsedAt?: string;
 };
 
 export type ClerkPlusState =
@@ -54,7 +55,8 @@ async function clerkUser(userId: string) {
 function storedToEntitlement(userId: string, raw: StoredPlus): Entitlement | null {
   if (!raw.planId || !raw.regionId || !raw.processor || !raw.ref) return null;
   if (!isPlanId(raw.planId) || !isRegionId(raw.regionId)) return null;
-  if (raw.processor !== "stripe" && raw.processor !== "paystack") return null;
+  if (raw.processor !== "stripe" && raw.processor !== "paystack" && raw.processor !== "trial")
+    return null;
   const ent = grantFromPayment({
     planId: raw.planId,
     regionId: raw.regionId,
@@ -183,6 +185,35 @@ export async function markPlusWelcomeSent(userId: string, ref: string) {
   await client.users.updateUserMetadata(userId, {
     privateMetadata: {
       hifzPlus: { ...stored, welcomeSentFor: ref } satisfies StoredPlus,
+    },
+  });
+}
+
+export async function clerkTrialUsedAt(userId: string): Promise<string | null> {
+  if (!clerkConfigured()) return null;
+  try {
+    const user = await clerkUser(userId);
+    const at = (user.privateMetadata as ClerkPrivate | undefined)?.hifzTrialUsedAt;
+    return typeof at === "string" && Number.isFinite(Date.parse(at)) ? at : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function markClerkTrialUsed(userId: string, at = new Date().toISOString()) {
+  if (!clerkConfigured()) return;
+  const client = await clerkClient();
+  let previous: string | undefined;
+  try {
+    const user = await clerkUser(userId);
+    previous = (user.privateMetadata as ClerkPrivate | undefined)?.hifzTrialUsedAt;
+  } catch {
+    previous = undefined;
+  }
+  if (previous) return;
+  await client.users.updateUserMetadata(userId, {
+    privateMetadata: {
+      hifzTrialUsedAt: at,
     },
   });
 }

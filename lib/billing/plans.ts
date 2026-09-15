@@ -1,18 +1,22 @@
-export const PLAN_IDS = ["monthly", "annual", "lifetime"] as const;
+export const PLAN_IDS = ["monthly", "annual", "lifetime", "trial"] as const;
 export type PlanId = (typeof PLAN_IDS)[number];
+
+/** Plans sold at checkout — trial is granted in-app, never priced. */
+export const PAID_PLAN_IDS = ["monthly", "annual", "lifetime"] as const;
+export type PaidPlanId = (typeof PAID_PLAN_IDS)[number];
 
 export const REGION_IDS = ["ng", "my", "ae", "sa", "gb", "us"] as const;
 export type RegionId = (typeof REGION_IDS)[number];
 
-export type Processor = "paystack" | "stripe";
+export type Processor = "paystack" | "stripe" | "trial";
 
 export type Region = {
   id: RegionId;
   label: string;
   currency: string;
-  processor: Processor;
+  processor: Exclude<Processor, "trial">;
   /** Amounts in the currency's minor unit (kobo, sen, fils, pence, cents). */
-  amounts: Record<PlanId, number>;
+  amounts: Record<PaidPlanId, number>;
 };
 
 export const REGIONS: Record<RegionId, Region> = {
@@ -60,7 +64,12 @@ export const REGIONS: Record<RegionId, Region> = {
   },
 };
 
-export const PLANS: { id: PlanId; name: string; blurb: string; interval: "month" | "year" | null }[] = [
+export const PLANS: {
+  id: PaidPlanId;
+  name: string;
+  blurb: string;
+  interval: "month" | "year" | null;
+}[] = [
   { id: "monthly", name: "Monthly", blurb: "Billed every month. Cancel any time.", interval: "month" },
   { id: "annual", name: "Annual", blurb: "Two months free versus paying monthly.", interval: "year" },
   { id: "lifetime", name: "Lifetime", blurb: "One payment. Yours to keep.", interval: null },
@@ -98,11 +107,19 @@ export function isPlanId(value: string): value is PlanId {
   return (PLAN_IDS as readonly string[]).includes(value);
 }
 
+export function isPaidPlanId(value: string): value is PaidPlanId {
+  return (PAID_PLAN_IDS as readonly string[]).includes(value);
+}
+
 export function isRegionId(value: string): value is RegionId {
   return (REGION_IDS as readonly string[]).includes(value);
 }
 
-export function quote(regionId: RegionId, planId: PlanId) {
+export function isProcessor(value: string): value is Processor {
+  return value === "paystack" || value === "stripe" || value === "trial";
+}
+
+export function quote(regionId: RegionId, planId: PaidPlanId) {
   const region = REGIONS[regionId];
   const plan = PLANS.find((p) => p.id === planId)!;
   const amount = region.amounts[planId];

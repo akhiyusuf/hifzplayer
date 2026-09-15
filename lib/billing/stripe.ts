@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 import { PLUS_NAME } from "@/lib/brand";
 import { stripeSecretKey } from "./env";
-import type { PlanId, Region } from "./plans";
+import type { PaidPlanId, Region } from "./plans";
 import { PLANS } from "./plans";
 
 export function stripeClient() {
@@ -12,7 +12,7 @@ export function stripeClient() {
 
 export async function createStripeCheckout(opts: {
   region: Region;
-  planId: PlanId;
+  planId: PaidPlanId;
   email?: string;
   userId?: string;
   gift?: boolean;

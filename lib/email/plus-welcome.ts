@@ -1,5 +1,5 @@
 import { APP_NAME, CONTACT_EMAIL, PLUS_NAME } from "../brand.ts";
-import { PLANS, quote, type PlanId, type Processor, type RegionId } from "../billing/plans.ts";
+import { isPaidPlanId, PLANS, quote, type PlanId, type Processor, type RegionId } from "../billing/plans.ts";
 
 export type PlusWelcomeInput = {
   planId: PlanId;
@@ -13,8 +13,28 @@ export function plusWelcomeSubject() {
 }
 
 export function plusWelcomeText(input: PlusWelcomeInput) {
+  if (input.planId === "trial" || input.processor === "trial") {
+    const until = input.until
+      ? `Your free trial is active until ${new Date(input.until).toLocaleDateString("en-GB", { dateStyle: "long" })}.`
+      : "Your free trial is active for one day.";
+    return [
+      `Assalamu alaikum — your ${PLUS_NAME} free trial is on.`,
+      "",
+      until,
+      "No card was charged. When the day ends, Quran reading stays free; Focus practice and listen lists need a paid plan.",
+      "",
+      "Unlocked for the trial:",
+      "• Focus — Word Reps, Masked, and Relay",
+      "• Occasion lists",
+      "• 3×, 5×, 10× and unlimited word repeats",
+      "• Relay with more than one qari",
+      "",
+      `Questions: ${CONTACT_EMAIL}`,
+    ].join("\n");
+  }
+
   const plan = PLANS.find((p) => p.id === input.planId);
-  const priced = quote(input.regionId, input.planId);
+  const priced = isPaidPlanId(input.planId) ? quote(input.regionId, input.planId) : null;
   const processor = input.processor === "paystack" ? "Paystack" : "Stripe";
   const until =
     input.planId === "lifetime"
@@ -26,7 +46,7 @@ export function plusWelcomeText(input: PlusWelcomeInput) {
   return [
     `Assalamu alaikum — ${PLUS_NAME} is on.`,
     "",
-    `Thank you for supporting ${APP_NAME}. Your ${plan?.name || input.planId} plan (${priced.label}, billed through ${processor}) is confirmed.`,
+    `Thank you for supporting ${APP_NAME}. Your ${plan?.name || input.planId} plan (${priced?.label || "paid"}, billed through ${processor}) is confirmed.`,
     until,
     "",
     "Unlocked now:",

@@ -88,7 +88,8 @@ export function pickBestEntitlement<T extends PlusFields>(account: T | null, coo
 export function addPlanPeriod(planId: string, from = new Date()): string | null {
   if (planId === "lifetime") return null;
   const d = new Date(from.getTime());
-  if (planId === "monthly") d.setUTCDate(d.getUTCDate() + 31);
+  if (planId === "trial") d.setUTCDate(d.getUTCDate() + 1);
+  else if (planId === "monthly") d.setUTCDate(d.getUTCDate() + 31);
   else d.setUTCFullYear(d.getUTCFullYear() + 1);
   return d.toISOString();
 }

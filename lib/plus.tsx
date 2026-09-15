@@ -20,7 +20,10 @@ import { getStore, setStore } from "@/lib/storage";
 type PlusCtx = {
   plus: boolean;
   ready: boolean;
+  trialAvailable: boolean;
   askPlus: (feature: PlusFeature) => void;
+  startTrial: () => Promise<boolean>;
+  refreshPlus: () => Promise<void>;
 };
 
 export const PLUS_GATE_EVENT = "hifz:plus-gate";
@@ -44,10 +47,41 @@ function previewPlus() {
   }
 }
 
+type StatusPayload = {
+  plus?: boolean;
+  until?: string | null;
+  planId?: string | null;
+  trialAvailable?: boolean;
+};
+
 export function PlusProvider({ children }: { children: ReactNode }) {
   const [plus, setPlus] = useState(false);
   const [ready, setReady] = useState(false);
+  const [trialAvailable, setTrialAvailable] = useState(false);
   const [feature, setFeature] = useState<PlusFeature | null>(null);
+  const [trialBusy, setTrialBusy] = useState(false);
+  const [trialError, setTrialError] = useState("");
+
+  const applyStatus = useCallback((data: StatusPayload) => {
+    const on = previewPlus() || Boolean(data.plus);
+    setPlus(on);
+    setTrialAvailable(!on && Boolean(data.trialAvailable));
+    if (on) {
+      setStore(PLUS_STORAGE_KEY, { plus: true, until: data.until ?? null, planId: data.planId ?? null });
+    } else {
+      setStore(PLUS_STORAGE_KEY, { plus: false });
+    }
+  }, []);
+
+  const refreshPlus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/billing/status");
+      const data = (await res.json()) as StatusPayload;
+      applyStatus(data);
+    } catch {
+      /* keep cache */
+    }
+  }, [applyStatus]);
 
   useEffect(() => {
     setPlus(cachedPlus() || previewPlus());
@@ -55,11 +89,9 @@ export function PlusProvider({ children }: { children: ReactNode }) {
     (async () => {
       try {
         const res = await fetch("/api/billing/status");
-        const data = (await res.json()) as { plus?: boolean };
+        const data = (await res.json()) as StatusPayload;
         if (cancelled) return;
-        const on = previewPlus() || Boolean(data.plus);
-        setPlus(on);
-        if (!on) setStore(PLUS_STORAGE_KEY, { plus: false });
+        applyStatus(data);
       } catch {
         /* keep cache */
       } finally {
@@ -69,21 +101,64 @@ export function PlusProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [applyStatus]);
 
   const askPlus = useCallback((next: PlusFeature) => {
+    setTrialError("");
     setFeature(next);
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event(PLUS_GATE_EVENT));
     }
   }, []);
-  const dismiss = useCallback(() => setFeature(null), []);
-  const value = useMemo(() => ({ plus, ready, askPlus }), [plus, ready, askPlus]);
+
+  const startTrial = useCallback(async () => {
+    setTrialBusy(true);
+    setTrialError("");
+    try {
+      const res = await fetch("/api/billing/trial", { method: "POST" });
+      const data = (await res.json()) as StatusPayload & { error?: string; code?: string };
+      if (data.code === "SIGN_IN_REQUIRED" || res.status === 401) {
+        window.location.assign("/sign-in?redirect_url=/pricing");
+        return false;
+      }
+      if (!res.ok) {
+        setTrialError(data.error || "Could not start the free trial.");
+        return false;
+      }
+      applyStatus({ ...data, trialAvailable: false });
+      setFeature(null);
+      return true;
+    } catch {
+      setTrialError("Could not start the free trial.");
+      return false;
+    } finally {
+      setTrialBusy(false);
+    }
+  }, [applyStatus]);
+
+  const dismiss = useCallback(() => {
+    setFeature(null);
+    setTrialError("");
+  }, []);
+
+  const value = useMemo(
+    () => ({ plus, ready, trialAvailable, askPlus, startTrial, refreshPlus }),
+    [plus, ready, trialAvailable, askPlus, startTrial, refreshPlus],
+  );
 
   return (
     <Ctx.Provider value={value}>
       {children}
-      {feature ? <PlusGate feature={feature} onClose={dismiss} /> : null}
+      {feature ? (
+        <PlusGate
+          feature={feature}
+          trialAvailable={trialAvailable}
+          trialBusy={trialBusy}
+          trialError={trialError}
+          onStartTrial={() => void startTrial()}
+          onClose={dismiss}
+        />
+      ) : null}
     </Ctx.Provider>
   );
 }
@@ -94,7 +169,21 @@ export function usePlus() {
   return v;
 }
 
-function PlusGate({ feature, onClose }: { feature: PlusFeature; onClose: () => void }) {
+function PlusGate({
+  feature,
+  trialAvailable,
+  trialBusy,
+  trialError,
+  onStartTrial,
+  onClose,
+}: {
+  feature: PlusFeature;
+  trialAvailable: boolean;
+  trialBusy: boolean;
+  trialError: string;
+  onStartTrial: () => void;
+  onClose: () => void;
+}) {
   const copy = PLUS_COPY[feature];
   return (
     <Sheet title={PLUS_NAME} onClose={onClose}>
@@ -109,7 +198,21 @@ function PlusGate({ feature, onClose }: { feature: PlusFeature; onClose: () => v
           <b style={{ fontFamily: "var(--font-display)", fontSize: 18 }}>{copy.title}</b>
           <p style={{ fontSize: 13.5, lineHeight: 1.5, color: "var(--text-secondary)" }}>{copy.body}</p>
         </div>
-        <Link className="btn-primary" href="/pricing" onClick={onClose}>
+        {trialError ? (
+          <p className="pricing-error" role="alert">
+            {trialError}
+          </p>
+        ) : null}
+        {trialAvailable ? (
+          <button className="btn-primary" type="button" disabled={trialBusy} onClick={onStartTrial}>
+            {trialBusy ? "Starting trial…" : "Try free for 1 day"}
+          </button>
+        ) : null}
+        <Link
+          className={trialAvailable ? "btn-secondary" : "btn-primary"}
+          href="/pricing"
+          onClick={onClose}
+        >
           See plans
         </Link>
         <button className="btn-secondary" type="button" onClick={onClose}>
