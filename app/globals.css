@@ -648,7 +648,24 @@ body:has(.scrim) .cl-avatarBox{
 .pricing-email textarea{width:100%;min-height:72px;resize:vertical;border:none;background:transparent;font:inherit;color:inherit;padding:8px 0}
 
 .w.masked,.w.masked .tj{color:transparent!important;background:transparent!important;box-shadow:none!important}
-.popover.mushaf-word-pop{width:min(300px,calc(100vw - 20px))}
+.popover.mushaf-word-pop{
+  width:min(244px,calc(100vw - 24px));
+  padding:10px 10px 8px;
+}
+.mushaf-word-pop .p-word{gap:2px;margin-bottom:8px}
+.mushaf-word-pop .p-word .tr{font-size:12.5px}
+.mushaf-word-pop .p-word .gl{font-size:11.5px;line-height:1.3}
+.mushaf-word-pop .p-actions{gap:5px;margin-bottom:6px}
+.mushaf-word-pop .p-actions button{
+  padding:7px 6px;
+  font-size:12px;
+  gap:5px;
+  min-height:32px;
+  line-height:1.15;
+}
+.mushaf-word-pop .p-actions-row{gap:5px}
+.mushaf-word-pop .p-drill{gap:4px;margin-top:0}
+.mushaf-word-pop .p-drill button{min-height:30px;font-size:11.5px;padding:0 4px;gap:3px}
 .p-drill{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:2px}
 .p-drill button{min-height:36px;padding:0 6px;border-radius:var(--radius-button);border:1px solid var(--border-default);background:var(--bg-surface);color:var(--text-primary);font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:4px}
 .p-drill button.locked{opacity:.72}

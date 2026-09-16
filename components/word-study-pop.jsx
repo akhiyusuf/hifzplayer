@@ -40,26 +40,26 @@ export function WordStudyPop(e) {
     b = useRef(null),
     [k, N] = useState(null),
     { plus: plusOn, askPlus: ask } = usePlus(),
-    popW = mushafLite ? 300 : 262;
+    popW = mushafLite ? 244 : 262;
   (useLayoutEffect(() => {
-    var e, t;
-    let s =
-        null !==
-          (t =
-            null === (e = b.current) || void 0 === e
-              ? void 0
-              : e.offsetHeight) && void 0 !== t
-          ? t
-          : 240,
+    let node = b.current,
+      w = (null == node ? void 0 : node.offsetWidth) || popW,
+      h = (null == node ? void 0 : node.offsetHeight) || 240,
       r = c.rect,
+      gap = mushafLite ? 8 : 12,
       a = Math.min(
-        window.innerWidth - popW - 10,
-        Math.max(10, r.left + r.width / 2 - popW / 2),
+        window.innerWidth - w - 10,
+        Math.max(10, r.left + r.width / 2 - w / 2),
       ),
-      n = r.bottom + 12,
-      i = n + s > window.innerHeight - 12;
-    N({ top: i ? Math.max(10, r.top - s - 12) : n, left: a, flipped: i });
-  }, [c, popW]),
+      n = r.bottom + gap,
+      i = n + h > window.innerHeight - 12;
+    N({
+      top: i ? Math.max(10, r.top - h - gap) : n,
+      left: a,
+      flipped: i,
+      w,
+    });
+  }, [c, popW, mushafLite]),
     useEffect(() => {
       var e, t;
       let s = (e) => {
@@ -103,7 +103,9 @@ export function WordStudyPop(e) {
           ),
           style: {
             left: Math.min(
-              popW - 20,
+              (null !== (t = null == k ? void 0 : k.w) && void 0 !== t
+                ? t
+                : popW) - 20,
               Math.max(
                 20,
                 c.rect.left +
