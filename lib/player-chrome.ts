@@ -53,9 +53,10 @@ export function mushafRepSpan(
 export function mushafPinHighlight(
   vIdx: number,
   currentIdx: number,
-  pick: { start: number | null; end: number | null } | null | undefined,
+  pick: { start: number | null; end: number | null; vIdx?: number | null } | null | undefined,
 ): { start: number; end: number; pending: number } | null {
   if (vIdx !== currentIdx || !pick || pick.start == null) return null;
+  if (pick.vIdx != null && pick.vIdx !== vIdx) return null;
   if (pick.end == null) {
     return { start: pick.start, end: pick.start, pending: pick.start };
   }
@@ -203,7 +204,13 @@ export function wordRangePassComplete(pass: number, passes: number) {
 }
 
 export function emptyWordPick() {
-  return { start: null as null, end: null as null, count: null as null, open: null as null };
+  return {
+    start: null as null,
+    end: null as null,
+    count: null as null,
+    open: null as null,
+    vIdx: null as null,
+  };
 }
 
 export function wantsTranslation() {
@@ -271,7 +278,7 @@ export function exclusiveJobPatch(keep: ExclusiveJobKeep = null) {
       : {
           loop: null as null,
           pendingLoopStart: null as null,
-          wordPick: { start: null, end: null, count: null, open: null },
+          wordPick: { start: null, end: null, count: null, open: null, vIdx: null },
           wordStep: { active: false, w: 1, playedTimes: 0, range: null as null },
         }),
   };

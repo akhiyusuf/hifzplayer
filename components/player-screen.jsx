@@ -293,12 +293,14 @@ export function PlayerScreen(e) {
         }
         if ("meaning" === intent) {
           let p = r.wordPick;
+          if (e !== r.vIdx) eu.loadVerseAudio(e, !1);
           if (
             "mushaf" === r.style &&
             "word" === r.mode &&
             p &&
             null != p.start &&
             null == p.end &&
+            (null == p.vIdx || p.vIdx === e) &&
             t !== p.start
           ) {
             eu.pinWordRep(t);
@@ -1052,11 +1054,13 @@ export function PlayerScreen(e) {
           onPin: () => {
             if ("word" !== eu.getSnapshot().mode) eu.setMode("word");
             if ("word" !== eu.getSnapshot().mode) return;
+            if (ek.vIdx !== eu.getSnapshot().vIdx) eu.loadVerseAudio(ek.vIdx, !1);
             (eu.pinWordRep(ek.pos), eN(null));
           },
           onRepsCount: (n) => {
             if ("word" !== eu.getSnapshot().mode) eu.setMode("word");
             if ("word" !== eu.getSnapshot().mode) return;
+            if (ek.vIdx !== eu.getSnapshot().vIdx) eu.loadVerseAudio(ek.vIdx, !1);
             let span = mushafRepSpan(
               eu.getSnapshot().wordPick || emptyWordPick(),
               ek.pos,

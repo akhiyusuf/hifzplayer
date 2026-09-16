@@ -335,6 +335,13 @@ describe("mushafPinHighlight", () => {
       pending: 0,
     });
   });
+
+  it("ignores a pin that belongs to another ayah", () => {
+    assert.equal(
+      mushafPinHighlight(0, 0, { start: 2, end: 5, vIdx: 3 }),
+      null,
+    );
+  });
 });
 
 describe("word reps done state", () => {
