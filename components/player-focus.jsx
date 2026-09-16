@@ -3,7 +3,7 @@
 import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { FocusStage } from "@/components/focus-stage";
 import { Icon } from "@/components/icon";
-import { FocusLines, MushafVerse } from "@/components/player-verse";
+import { FocusLines, MushafVerse, MushafVerseActive } from "@/components/player-verse";
 import { useAppData } from "@/lib/app-data";
 import { emptyWordPick, wantsTranslation } from "@/lib/player-chrome";
 import { usePlus } from "@/lib/plus";
@@ -104,7 +104,11 @@ export function FocusRelayPage(e) {
     meta: h
       ? "Your turn \xb7 ".concat(u, " left")
       : "".concat(u, " ", 1 === u ? "turn" : "turns", " left"),
-    hint: h ? "Recite aloud — the reciter plays muted to pace you" : undefined,
+    hint: h
+      ? "Recite aloud — the reciter plays muted to pace you"
+      : l.waitingTap
+        ? "Tap play to begin"
+        : undefined,
     extra: _jsx("ol", {
       className: "relay-queue",
       "aria-label": "Turn order",
@@ -138,14 +142,9 @@ export function FocusRelayPage(e) {
                 ],
               }),
               !s &&
-                _jsxs("span", {
+                _jsx("span", {
                   className: "turn-text",
-                  children: [
-                    _jsx("b", { children: i }),
-                    _jsx("span", {
-                      children: e.verseKey.split(":")[1],
-                    }),
-                  ],
+                  children: _jsx("b", { children: i }),
                 }),
             ],
           },
@@ -176,17 +175,11 @@ export function FocusRelayPage(e) {
         })
       : null,
     gloss: wantsTranslation() ? c.translation || null : null,
-    context: h
-      ? undefined
-      : ""
-          .concat(n(d.reciterId), " recites verse ")
-          .concat(d.verseKey.split(":")[1])
-          .concat(l.waitingTap ? " — tap play to begin" : ""),
-    children: _jsx(MushafVerse, {
+    children: _jsx(MushafVerseActive, {
+      engine: t,
       verse: c,
       vIdx: s.vIdx,
       taj: s.taj,
-      curWord: s.curWord,
       done: !1,
       rangeStart: 0,
       rangeEnd: 0,
