@@ -617,14 +617,25 @@ a.qari-inline{text-decoration:none;color:inherit}
   line-height:1.15;
   letter-spacing:.01em;
 }
-.index-row .index-setup svg{display:block;flex:none},
+.index-row .index-setup svg{display:block;flex:none}
 body:has(.scrim) .follow-back,
 body:has(.scrim) .repeat-pop,
 body:has(.scrim) .player-foot,
+body:has(.scrim) .pop-wrap,
+body:has(.scrim) .word-rep-wrap,
 body:has(.popover) .repeat-pop{
   display:none !important;
 }
-.scrim{z-index:11000}
+.scrim{
+  z-index:11000;
+  isolation:isolate;
+}
+.scrim .sheet{
+  position:relative;
+  z-index:1;
+  background:var(--bg-surface);
+  isolation:isolate;
+}
 body:has(.scrim) .cl-userButtonBox,
 body:has(.scrim) .cl-userButtonTrigger,
 body:has(.scrim) .cl-avatarBox{

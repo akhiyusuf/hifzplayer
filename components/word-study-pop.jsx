@@ -226,7 +226,9 @@ export function WordStudyPop(e) {
                   className: "sec".concat(pinActive ? " on" : ""),
                   "aria-pressed": !!pinActive,
                   onClick: () =>
-                    plusOn ? onPinWord && onPinWord() : ask("practice"),
+                    plusOn
+                      ? onPinWord && onPinWord()
+                      : (ask("practice"), y()),
                   children: [
                     _jsx(Icon, { name: "pin", size: 14 }),
                     "Pin",
@@ -241,7 +243,7 @@ export function WordStudyPop(e) {
                       className: locked ? "locked" : "",
                       onClick: () =>
                         locked
-                          ? ask("practice")
+                          ? (ask("practice"), y())
                           : onRepsCount && onRepsCount(n),
                       "aria-label":
                         0 === n
