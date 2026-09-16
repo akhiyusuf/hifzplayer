@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { Icon } from "@/components/icon";
+import { retryAppError } from "@/lib/app-error";
 
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  const retry = () => retryAppError(reset);
+
   return (
     <main className="shell" id="main">
       <div className="status-block">
@@ -21,7 +24,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
           )}
         </div>
         <div className="status-actions">
-          <button className="btn-primary" onClick={reset}>
+          <button className="btn-primary" type="button" onClick={retry}>
             <Icon name="rotate-cw" size={17} />
             Try again
           </button>

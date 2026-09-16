@@ -20,6 +20,18 @@ export function safePath(path: string | string[] | undefined, fallback = "/home"
   return value;
 }
 
+/** After Clerk sign-in, land in the app — never another sign-in screen. */
+export function signInReturnPath(path: string | string[] | undefined, fallback = "/home") {
+  const next = safePath(path, fallback);
+  if (next === "/" || next.startsWith("/sign-in") || next.startsWith("/sign-up")) return fallback;
+  return next;
+}
+
+export function signInHref(returnPath: string | string[] | undefined, fallback = "/home") {
+  const next = signInReturnPath(returnPath, fallback);
+  return `/sign-in?redirect_url=${encodeURIComponent(next)}`;
+}
+
 export type FocusPassageTarget = {
   chapter: number;
   from: number;

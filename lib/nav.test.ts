@@ -6,6 +6,8 @@ import {
   focusPassageHref,
   isFocusReadQuery,
   safePath,
+  signInHref,
+  signInReturnPath,
 } from "./nav.ts";
 
 describe("backHref", () => {
@@ -27,6 +29,18 @@ describe("safePath", () => {
     assert.equal(safePath("https://evil.example/x"), "/home");
     assert.equal(safePath("//evil.example"), "/home");
     assert.equal(safePath(undefined), "/home");
+  });
+});
+
+describe("sign-in return", () => {
+  it("lands in the app after Clerk, not the marketing page or another auth screen", () => {
+    assert.equal(signInReturnPath(undefined), "/home");
+    assert.equal(signInReturnPath("/"), "/home");
+    assert.equal(signInReturnPath("/sign-in"), "/home");
+    assert.equal(signInReturnPath("/sign-up?redirect_url=/home"), "/home");
+    assert.equal(signInReturnPath("/settings"), "/settings");
+    assert.equal(signInReturnPath("/account?from=settings"), "/account?from=settings");
+    assert.equal(signInHref("/settings"), "/sign-in?redirect_url=%2Fsettings");
   });
 });
 

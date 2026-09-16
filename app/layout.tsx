@@ -69,9 +69,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a className="skip-link" href="#main">
           Skip to content
         </a>
-        <ThemeProvider>
-          <ToastProvider>
-            <AuthRoot>
+        <AuthRoot>
+          <ThemeProvider>
+            <ToastProvider>
               <PlusProvider>
                 <AppDataProvider>
                   <AppSidebar />
@@ -82,9 +82,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <Analytics />
                 </AppDataProvider>
               </PlusProvider>
-            </AuthRoot>
-          </ToastProvider>
-        </ThemeProvider>
+            </ToastProvider>
+          </ThemeProvider>
+        </AuthRoot>
       </body>
     </html>
   );

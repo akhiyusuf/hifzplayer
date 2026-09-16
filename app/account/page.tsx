@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { currentUser } from "@clerk/nextjs/server";
 import { clerkConfigured } from "@/lib/auth/config";
-import { resolveEntitlement } from "@/lib/auth/session";
+import { resolveEntitlement, signedInUser, signedInUserId } from "@/lib/auth/session";
 import { AccountId } from "@/components/account-id";
 import { AccountsNotConfigured, AuthShell } from "@/components/auth-shell";
 import { publicEntitlement } from "@/lib/billing/entitlement";
 import { APP_NAME, PLUS_NAME } from "@/lib/brand";
-import { backHref } from "@/lib/nav";
+import { backHref, signInHref } from "@/lib/nav";
 
 export const metadata: Metadata = {
   title: `Account — ${APP_NAME}`,
@@ -47,24 +46,24 @@ export default async function AccountPage({
     );
   }
 
-  const user = await currentUser();
-  if (!user) {
-    const next = encodeURIComponent(`/account?from=${from || "settings"}`);
+  const user = await signedInUser();
+  const userId = user?.id || (await signedInUserId());
+  if (!userId) {
     return (
       <AuthShell title="Account" backHref={back}>
         <p className="pricing-lead" style={{ textAlign: "center", maxWidth: 360 }}>
           Sign in so {PLUS_NAME} follows you, not just this browser.
         </p>
-        <Link className="btn-primary" href={`/sign-in?redirect_url=${next}`}>
+        <Link className="btn-primary" href={signInHref(`/account?from=${from || "settings"}`)}>
           Sign in
         </Link>
       </AuthShell>
     );
   }
 
-  const plus = publicEntitlement(await resolveEntitlement());
-  const email = user.primaryEmailAddress?.emailAddress;
-  const name = user.firstName || user.username || "Signed in";
+  const plus = publicEntitlement(await resolveEntitlement().catch(() => null));
+  const email = user?.primaryEmailAddress?.emailAddress;
+  const name = user?.firstName || user?.username || "Signed in";
 
   return (
     <AuthShell title="Account" backHref={back}>
@@ -72,7 +71,7 @@ export default async function AccountPage({
         <b>{name}</b>
         {email ? <span>{email}</span> : null}
         <span className="account-plus">{plusLabel(plus)}</span>
-        <AccountId id={user.id} />
+        <AccountId id={userId} />
       </div>
       <p className="pricing-note" style={{ textAlign: "center", maxWidth: 360 }}>
         Reading history stays on this device. Plus is stored on your account, so it follows you after you sign

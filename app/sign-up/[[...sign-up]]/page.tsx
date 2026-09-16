@@ -4,7 +4,7 @@ import { APP_NAME } from "@/lib/brand";
 import { clerkAppearance } from "@/lib/auth/appearance";
 import { clerkBrowserReady } from "@/lib/auth/config";
 import { AccountsNotConfigured, AuthShell } from "@/components/auth-shell";
-import { safePath } from "@/lib/nav";
+import { signInHref, signInReturnPath } from "@/lib/nav";
 
 export const metadata: Metadata = {
   title: `Create account — ${APP_NAME}`,
@@ -17,15 +17,16 @@ export default async function SignUpPage({
   searchParams: Promise<{ redirect_url?: string }>;
 }) {
   const { redirect_url } = await searchParams;
-  const next = safePath(redirect_url, "/");
+  const next = signInReturnPath(redirect_url, "/home");
   return (
-    <AuthShell title="Create account" backHref={next === "/" ? "/" : next}>
+    <AuthShell title="Create account" backHref={next}>
       {clerkBrowserReady() ? (
         <SignUp
           appearance={clerkAppearance}
           routing="path"
           path="/sign-up"
-          signInUrl="/sign-in"
+          signInUrl={signInHref(next)}
+          forceRedirectUrl={next}
           fallbackRedirectUrl={next}
         />
       ) : (
