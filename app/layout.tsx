@@ -7,6 +7,7 @@ import { ThemeProvider, themeInitScript } from "@/lib/theme";
 import { ToastProvider } from "@/lib/toast";
 import { APP_NAME, APP_TAGLINE } from "@/lib/brand";
 import { AuthRoot } from "@/components/auth-root";
+import { PostAuthGreeting } from "@/components/post-auth-greeting";
 import { Suspense } from "react";
 import { AppSidebar } from "@/components/sidebar";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
@@ -74,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <ToastProvider>
               <PlusProvider>
                 <AppDataProvider>
+                  <PostAuthGreeting />
                   <AppSidebar />
                   {children}
                   <Suspense fallback={null}>
