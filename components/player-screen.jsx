@@ -713,7 +713,7 @@ export function PlayerScreen(e) {
             },
             settingsOpen: eTools,
           }),
-          "mushaf" === ez.style
+          "mushaf" === ePage
             ? _jsx(MushafJobBar, { engine: eu, state: ez })
             : null,
           eHint
@@ -934,7 +934,10 @@ export function PlayerScreen(e) {
             }),
           ],
         }),
-      _jsx(MushafFollowButton, { engine: eu, style: ez.style }),
+      _jsx(MushafFollowButton, {
+        engine: eu,
+        style: "mushaf" === ePage ? "mushaf" : "focus",
+      }),
       _jsx(PlayerFoot, {
         engine: eu,
         state: ez,

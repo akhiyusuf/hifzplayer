@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
   useCallback,
   useEffect,
@@ -10,7 +10,6 @@ import {
 } from "react";
 import { Icon } from "@/components/icon";
 import { PracticeStrip } from "@/components/practice-strip";
-import { useAppData } from "@/lib/app-data";
 import {
   MUSHAF_HOT_PAD,
   MUSHAF_VIEW_PAD,
@@ -28,74 +27,30 @@ import {
 } from "@/components/player-verse";
 
 export function MushafJobBar(e) {
-  let { engine: t, state: s } = e,
-    { reciterName: n } = useAppData();
-  if ("masked" === s.mode) {
-    let verse = s.verses[s.vIdx];
-    if (!verse) return null;
-    let i = t.maskStateFor(verse),
-      l = verse.words.length,
-      c = i.maxRev >= l;
-    return _jsx(PracticeStrip, {
-      title: "Revealed ".concat(i.maxRev, " of ", l),
-      meta: verse.key,
-      actions: _jsxs("button", {
-        className: "focus-act primary",
-        onClick: () => t.peek(),
-        disabled: i.peeks <= 0 || c,
-        children: [
-          _jsx(Icon, { name: "eye", size: 16 }),
-          c
-            ? "Verse revealed"
-            : i.peeking
-              ? "Peeking"
-              : "Peek \xb7 ".concat(i.peeks, " left"),
-        ],
-      }),
-    });
-  }
-  if ("relay" !== s.mode || !s.relay || !s.relay.active) return null;
-  let l = s.relay,
-    d = l.turns[l.idx];
-  if (!d) return null;
-  let h = "you" === d.kind,
-    u = l.turns.length - l.idx,
-    p =
-      0 === l.rounds
-        ? "Round ".concat(l.round)
-        : "Round ".concat(l.round, " of ").concat(l.rounds);
+  let { engine: t, state: s } = e;
+  useSyncExternalStore(t.subscribeWord, t.getWordSnap, t.getWordSnap);
+  if ("masked" !== s.mode) return null;
+  let verse = s.verses[s.vIdx];
+  if (!verse) return null;
+  let i = t.maskStateFor(verse),
+    l = verse.words.length,
+    c = i.maxRev >= l;
   return _jsx(PracticeStrip, {
-    title: p,
-    meta: h
-      ? "Your turn \xb7 ".concat(u, " left")
-      : "".concat(n(d.reciterId).split(" ")[0], " \xb7 verse ").concat(
-          d.verseKey.split(":")[1],
-        ),
-    hint: h
-      ? "Recite aloud — the reciter plays muted to pace you"
-      : undefined,
-    actions: h
-      ? _jsxs(_Fragment, {
-          children: [
-            _jsxs("button", {
-              className: "focus-act primary",
-              onClick: () => t.startRelayTurn(!0),
-              children: [
-                _jsx(Icon, { name: "volume-2", size: 16 }),
-                "Replay reciter",
-              ],
-            }),
-            _jsxs("button", {
-              className: "focus-act",
-              onClick: () => t.advanceRelay(),
-              children: [
-                _jsx(Icon, { name: "skip-forward", size: 16 }),
-                "Skip my turn",
-              ],
-            }),
-          ],
-        })
-      : null,
+    title: "Revealed ".concat(i.maxRev, " of ", l),
+    meta: verse.key,
+    actions: _jsxs("button", {
+      className: "focus-act primary",
+      onClick: () => t.peek(),
+      disabled: i.peeks <= 0 || c,
+      children: [
+        _jsx(Icon, { name: "eye", size: 16 }),
+        c
+          ? "Verse revealed"
+          : i.peeking
+            ? "Peeking"
+            : "Peek \xb7 ".concat(i.peeks, " left"),
+      ],
+    }),
   });
 }
 
