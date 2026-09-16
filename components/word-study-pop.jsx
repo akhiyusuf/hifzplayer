@@ -35,6 +35,7 @@ export function WordStudyPop(e) {
       mushaf: mushafLite,
       onPin: onPinWord,
       onRepsCount: onRepsCount,
+      pinActive: pinActive,
     } = e,
     b = useRef(null),
     [k, N] = useState(null),
@@ -217,7 +218,8 @@ export function WordStudyPop(e) {
               children: [
                 _jsxs("button", {
                   type: "button",
-                  className: "sec",
+                  className: "sec".concat(pinActive ? " on" : ""),
+                  "aria-pressed": !!pinActive,
                   onClick: () =>
                     plusOn ? onPinWord && onPinWord() : ask("practice"),
                   children: [

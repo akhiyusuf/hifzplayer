@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { WordRepBar } from "@/components/word-rep-bar";
+import { mushafPinHighlight } from "@/lib/player-chrome";
 import { tajToSpans } from "@/lib/tajweed";
 import { toArabicDigits } from "@/lib/audio";
 import { isWaqfBreak, phrasesOf, visibleMarksAfter } from "@/lib/waqf";
@@ -333,6 +334,7 @@ export let MushafVerse = memo(function (e) {
 });
 export function verseWordRange(e, t, s) {
   var r;
+  let pin = mushafPinHighlight(e, t.vIdx, t.wordPick);
   return s && s.vIdx === e
     ? { start: s.start, end: s.end, pending: s.end }
     : t.loop && t.loop.vIdx === e
@@ -343,16 +345,18 @@ export function verseWordRange(e, t, s) {
             end: t.wordStep.range.endW,
             pending: 0,
           }
-        : {
-            start: 0,
-            end: 0,
-            pending:
-              (null === (r = t.pendingLoopStart) || void 0 === r
-                ? void 0
-                : r.vIdx) === e
-                ? t.pendingLoopStart.w
-                : 0,
-          };
+        : pin
+          ? pin
+          : {
+              start: 0,
+              end: 0,
+              pending:
+                (null === (r = t.pendingLoopStart) || void 0 === r
+                  ? void 0
+                  : r.vIdx) === e
+                  ? t.pendingLoopStart.w
+                  : 0,
+            };
 }
 function escHtml(e) {
   return String(e ?? "").replace(

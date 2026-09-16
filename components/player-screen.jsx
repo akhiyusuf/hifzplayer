@@ -33,6 +33,8 @@ import {
   writeRelayDraft,
   playerPageKind,
   scrollPlayerToVerse,
+  mushafRepSpan,
+  emptyWordPick,
 } from "@/lib/player-chrome";
 import { PlayerEngine } from "@/lib/player-engine";
 import { PLUS_GATE_EVENT, usePlus } from "@/lib/plus";
@@ -290,6 +292,17 @@ export function PlayerScreen(e) {
           return;
         }
         if ("meaning" === intent) {
+          let p = r.wordPick;
+          if (
+            "mushaf" === r.style &&
+            "word" === r.mode &&
+            p &&
+            null != p.start &&
+            null == p.end &&
+            t !== p.start
+          ) {
+            eu.pinWordRep(t);
+          }
           (eS(null),
             eQuietUi("meaning"),
             eN({ vIdx: e, pos: t, rect: s.getBoundingClientRect() }));
@@ -850,19 +863,25 @@ export function PlayerScreen(e) {
               })
             : null;
         })(),
-      ez.pendingLoopStart &&
-        !eI &&
-        _jsxs("div", {
-          className: "range-banner",
-          children: [
-            _jsx(Icon, {
-              name: "brackets",
-              size: 17,
-              style: { color: "var(--action-primary)", flex: "none" },
-            }),
-            "Start word set — tap the last word of the range",
-          ],
-        }),
+      (ez.pendingLoopStart && !eI) ||
+      ("word" === ez.mode &&
+        ez.wordPick &&
+        null != ez.wordPick.start &&
+        null == ez.wordPick.end)
+        ? _jsxs("div", {
+            className: "range-banner",
+            children: [
+              _jsx(Icon, {
+                name: ez.pendingLoopStart ? "brackets" : "pin",
+                size: 17,
+                style: { color: "var(--action-primary)", flex: "none" },
+              }),
+              ez.pendingLoopStart
+                ? "Start word set — tap the last word of the range"
+                : "Pinned — tap the last word of the range",
+            ],
+          })
+        : null,
       eZ,
       eI &&
         _jsxs("div", {
@@ -1009,6 +1028,9 @@ export function PlayerScreen(e) {
           loopCount: ez.loopCount,
           isWordRangeMode: "word" === ez.mode,
           mushaf: "mushaf" === ez.style,
+          pinActive:
+            !!ez.wordPick &&
+            (ez.wordPick.start === ek.pos || ez.wordPick.end === ek.pos),
           onSetCount: (e) => eu.setLoopCount(e),
           onPlayWord: () => {
             (eu.playWordClip(ek.vIdx, ek.pos), eN(null));
@@ -1030,12 +1052,16 @@ export function PlayerScreen(e) {
           onPin: () => {
             if ("word" !== eu.getSnapshot().mode) eu.setMode("word");
             if ("word" !== eu.getSnapshot().mode) return;
-            (eu.setPendingLoopStart(ek.vIdx, ek.pos), eN(null));
+            (eu.pinWordRep(ek.pos), eN(null));
           },
           onRepsCount: (n) => {
             if ("word" !== eu.getSnapshot().mode) eu.setMode("word");
             if ("word" !== eu.getSnapshot().mode) return;
-            (eu.startWordDrill(ek.pos, ek.pos, n), eN(null));
+            let span = mushafRepSpan(
+              eu.getSnapshot().wordPick || emptyWordPick(),
+              ek.pos,
+            );
+            (eu.playWordReps(span.start, span.end, n), eN(null));
           },
           onClose: () => eN(null),
           annotation:

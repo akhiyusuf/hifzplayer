@@ -27,6 +27,8 @@ import {
   wantsTranslation,
   buildRelayTurns,
   wordRepsPlayKind,
+  mushafRepSpan,
+  mushafPinHighlight,
   wrapRelayIndex,
   exclusiveJobPatch,
   exclusiveLayer,
@@ -281,6 +283,57 @@ describe("word reps play kind", () => {
     // - span  → continuous Muallim st.loop only; never arms wordStep.active
     // Arming both is what doubled passes and required two cancels.
     assert.notEqual(wordRepsPlayKind(3, 3), wordRepsPlayKind(3, 4));
+  });
+});
+
+describe("mushafRepSpan", () => {
+  it("replays the tapped word when nothing is pinned", () => {
+    assert.deepEqual(mushafRepSpan(emptyWordPick(), 4), { start: 4, end: 4 });
+    assert.deepEqual(mushafRepSpan(null, 1), { start: 1, end: 1 });
+  });
+
+  it("closes an open pin onto the word that gets 5× / 10× / ∞", () => {
+    assert.deepEqual(
+      mushafRepSpan({ start: 2, end: null }, 6),
+      { start: 2, end: 6 },
+    );
+    assert.deepEqual(
+      mushafRepSpan({ start: 6, end: null }, 2),
+      { start: 2, end: 6 },
+    );
+  });
+
+  it("keeps a completed pin even if another word is open", () => {
+    assert.deepEqual(
+      mushafRepSpan({ start: 2, end: 5 }, 9),
+      { start: 2, end: 5 },
+    );
+  });
+
+  it("treats pin-start on this same word as a single-word drill", () => {
+    assert.deepEqual(
+      mushafRepSpan({ start: 3, end: null }, 3),
+      { start: 3, end: 3 },
+    );
+  });
+});
+
+describe("mushafPinHighlight", () => {
+  it("underlines the first pin as pending on the current ayah", () => {
+    assert.deepEqual(mushafPinHighlight(0, 0, { start: 4, end: null }), {
+      start: 4,
+      end: 4,
+      pending: 4,
+    });
+    assert.equal(mushafPinHighlight(1, 0, { start: 4, end: null }), null);
+  });
+
+  it("underlines a completed pin as a range", () => {
+    assert.deepEqual(mushafPinHighlight(0, 0, { start: 2, end: 5 }), {
+      start: 2,
+      end: 5,
+      pending: 0,
+    });
   });
 });
 

@@ -32,6 +32,36 @@ export function wordRepsPlayKind(start: number, end: number) {
   return start === end ? "steps" : "span";
 }
 
+export type WordPick = {
+  start: number | null;
+  end: number | null;
+  count: number | null;
+  open: number | null;
+};
+
+/** Mushaf 5× / 10× / ∞: a completed pin, else pin-start→this word, else this word. */
+export function mushafRepSpan(
+  pick: { start: number | null; end: number | null } | null | undefined,
+  pos: number,
+) {
+  if (!pick || pick.start == null) return { start: pos, end: pos };
+  if (pick.end != null) return sortedWordRange(pick.start, pick.end);
+  return sortedWordRange(pick.start, pos);
+}
+
+/** Underline a Mushaf pin before / during Word Reps. */
+export function mushafPinHighlight(
+  vIdx: number,
+  currentIdx: number,
+  pick: { start: number | null; end: number | null } | null | undefined,
+): { start: number; end: number; pending: number } | null {
+  if (vIdx !== currentIdx || !pick || pick.start == null) return null;
+  if (pick.end == null) {
+    return { start: pick.start, end: pick.start, pending: pick.start };
+  }
+  return { start: pick.start, end: pick.end, pending: 0 };
+}
+
 export function wordNeedsFollow(
   wordTop: number,
   wordBottom: number,
