@@ -79,6 +79,16 @@ export async function resolveEntitlement(): Promise<Entitlement | null> {
   return plan.ent as Entitlement | null;
 }
 
+/** Same as resolveEntitlement, but a page render never becomes the error screen. */
+export async function resolveEntitlementSafe(): Promise<Entitlement | null> {
+  try {
+    return await resolveEntitlement();
+  } catch (err) {
+    unstable_rethrow(err);
+    return null;
+  }
+}
+
 export async function grantPlusToAccount(
   ent: Entitlement,
   userId: string | null,

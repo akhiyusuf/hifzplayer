@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { clerkConfigured } from "@/lib/auth/config";
-import { resolveEntitlement, signedInUser, signedInUserId } from "@/lib/auth/session";
+import { resolveEntitlementSafe, signedInUser, signedInUserId } from "@/lib/auth/session";
 import { AccountId } from "@/components/account-id";
 import { AccountsNotConfigured, AuthShell } from "@/components/auth-shell";
 import { publicEntitlement } from "@/lib/billing/entitlement";
@@ -61,7 +61,7 @@ export default async function AccountPage({
     );
   }
 
-  const plus = publicEntitlement(await resolveEntitlement().catch(() => null));
+  const plus = publicEntitlement(await resolveEntitlementSafe());
   const email = user?.primaryEmailAddress?.emailAddress;
   const name = user?.firstName || user?.username || "Signed in";
 

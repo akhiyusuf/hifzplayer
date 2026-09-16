@@ -6,7 +6,7 @@ import { Icon } from "@/components/icon";
 import { PLUS_NAME } from "@/lib/brand";
 import { clerkConfigured } from "@/lib/auth/config";
 import { clerkTrialUsedAt } from "@/lib/auth/plus";
-import { resolveEntitlement, signedInUserId } from "@/lib/auth/session";
+import { resolveEntitlementSafe, signedInUserId } from "@/lib/auth/session";
 import { countryFromHeaders } from "@/lib/billing/country";
 import { processorsReady } from "@/lib/billing/env";
 import { catalog, regionForCountry } from "@/lib/billing/plans";
@@ -25,7 +25,7 @@ export default async function PricingPage({
   const params = await searchParams;
   const regionId = regionForCountry(countryFromHeaders(headerList));
   const region = catalog().find((r) => r.id === regionId) ?? catalog()[0];
-  const ent = await resolveEntitlement().catch(() => null);
+  const ent = await resolveEntitlementSafe();
   const accountsOn = clerkConfigured();
   const userId = accountsOn ? await signedInUserId() : null;
   const { cookies } = await import("next/headers");
