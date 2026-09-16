@@ -188,15 +188,6 @@ export function freshMaskForVerse(peeks = 3): VerseMaskState {
   return { maxRev: 0, peeks, peekRev: 0 };
 }
 
-/** Play from here in Masked: show up to the tapped word, hide the rest. */
-export function maskStateFromWord(pos: number, peeks = 3): VerseMaskState {
-  return {
-    maxRev: Math.max(0, pos - 1),
-    peeks,
-    peekRev: 0,
-  };
-}
-
 /**
  * After skip, dest ayah is current, not done, reveal from the start.
  * Mode stays `masked`.
@@ -220,14 +211,9 @@ export function maskedSkipReveal(
   };
 }
 
-/** Mushaf word slots stay tappable in every mode, including Masked. */
-export function mushafWordsInteractive(_mode?: string) {
-  return true;
-}
-
-/** Word-sheet transport actions stay available on Mushaf, including Masked. */
-export function mushafStudyPlayActions(_mode?: string) {
-  return { playWord: true, playFromHere: true };
+/** Mushaf word slots are tappable except in Masked. */
+export function mushafWordsInteractive(mode?: string) {
+  return mode !== "masked";
 }
 
 /** Mushaf always opens the word sheet. Focus Word Reps pins. */

@@ -13,10 +13,8 @@ import {
   sortedWordRange,
   destIndexInPassage,
   freshMaskForVerse,
-  maskStateFromWord,
   maskedSkipReveal,
   mushafWordsInteractive,
-  mushafStudyPlayActions,
   wordTapIntent,
   playerPageKind,
   mushafMaskReveal,
@@ -72,7 +70,6 @@ describe("wordTapIntent", () => {
     assert.equal(wordTapIntent("mushaf", "verse", "touch"), "meaning");
     assert.equal(wordTapIntent("mushaf", "verse"), "meaning");
     assert.equal(wordTapIntent("mushaf", "word", "touch"), "meaning");
-    assert.equal(wordTapIntent("mushaf", "masked", "mouse"), "meaning");
   });
 
   it("uses Word Reps taps for the pin bar, and plays in other Focus jobs", () => {
@@ -217,51 +214,11 @@ describe("masked skip", () => {
 });
 
 describe("masked mushaf word tap", () => {
-  it("still opens the study sheet with Play word and Play from here", () => {
-    assert.equal(wordTapIntent("mushaf", "masked", "touch"), "meaning");
-    assert.equal(mushafWordsInteractive("masked"), true);
+  it("does not make words tappable or open the study sheet", () => {
+    assert.equal(mushafWordsInteractive("masked"), false);
     assert.equal(mushafWordsInteractive("verse"), true);
-    assert.deepEqual(mushafStudyPlayActions("masked"), {
-      playWord: true,
-      playFromHere: true,
-    });
-  });
-
-  it("play from here continues masked from the tapped word", () => {
-    const at = maskStateFromWord(4, 3);
-    assert.deepEqual(at, { maxRev: 3, peeks: 3, peekRev: 0 });
-    assert.deepEqual(
-      mushafMaskReveal({
-        mode: "masked",
-        verseIdx: 0,
-        currentIdx: 0,
-        wordCount: 8,
-        currentReveal: at.maxRev,
-        verseDone: false,
-        curWord: 4,
-      }),
-      { masked: true, revealUpTo: 4 },
-    );
-  });
-
-  it("play word once leaves later words masked after it stops", () => {
-    assert.deepEqual(maskStateFromWord(1), {
-      maxRev: 0,
-      peeks: 3,
-      peekRev: 0,
-    });
-    assert.deepEqual(
-      mushafMaskReveal({
-        mode: "masked",
-        verseIdx: 0,
-        currentIdx: 0,
-        wordCount: 8,
-        currentReveal: 2,
-        verseDone: false,
-        curWord: 2,
-      }),
-      { masked: true, revealUpTo: 2 },
-    );
+    assert.equal(mushafWordsInteractive("word"), true);
+    assert.equal(mushafWordsInteractive("relay"), true);
   });
 });
 
