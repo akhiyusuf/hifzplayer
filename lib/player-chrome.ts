@@ -170,6 +170,66 @@ export function mushafMaskReveal(opts: {
   return { masked: true, revealUpTo: 0 };
 }
 
+/** Prev/next dest inside the loaded passage, or null at either end. */
+export function destIndexInPassage(vIdx: number, len: number, delta: number) {
+  const dest = vIdx + delta;
+  if (dest < 0 || dest >= len) return null;
+  return dest;
+}
+
+export type VerseMaskState = {
+  maxRev: number;
+  peeks: number;
+  peekRev: number;
+};
+
+/** Start Masked on an ayah from its first word. Keeps leftover peek count. */
+export function freshMaskForVerse(peeks = 3): VerseMaskState {
+  return { maxRev: 0, peeks, peekRev: 0 };
+}
+
+/** Play from here in Masked: show up to the tapped word, hide the rest. */
+export function maskStateFromWord(pos: number, peeks = 3): VerseMaskState {
+  return {
+    maxRev: Math.max(0, pos - 1),
+    peeks,
+    peekRev: 0,
+  };
+}
+
+/**
+ * After skip, dest ayah is current, not done, reveal from the start.
+ * Mode stays `masked`.
+ */
+export function maskedSkipReveal(
+  destIdx: number,
+  wordCount: number,
+  curWord = 0,
+) {
+  return {
+    mode: "masked" as const,
+    ...mushafMaskReveal({
+      mode: "masked",
+      verseIdx: destIdx,
+      currentIdx: destIdx,
+      wordCount,
+      currentReveal: 0,
+      verseDone: false,
+      curWord,
+    }),
+  };
+}
+
+/** Mushaf word slots stay tappable in every mode, including Masked. */
+export function mushafWordsInteractive(_mode?: string) {
+  return true;
+}
+
+/** Word-sheet transport actions stay available on Mushaf, including Masked. */
+export function mushafStudyPlayActions(_mode?: string) {
+  return { playWord: true, playFromHere: true };
+}
+
 /** Mushaf always opens the word sheet. Focus Word Reps pins. */
 export function wordTapIntent(
   style: string,

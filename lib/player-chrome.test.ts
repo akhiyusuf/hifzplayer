@@ -11,6 +11,12 @@ import {
   rateFace,
   sidebarKind,
   sortedWordRange,
+  destIndexInPassage,
+  freshMaskForVerse,
+  maskStateFromWord,
+  maskedSkipReveal,
+  mushafWordsInteractive,
+  mushafStudyPlayActions,
   wordTapIntent,
   playerPageKind,
   mushafMaskReveal,
@@ -166,6 +172,95 @@ describe("mushafMaskReveal", () => {
         verseDone: false,
       }),
       { masked: true, revealUpTo: 4 },
+    );
+  });
+});
+
+describe("masked skip", () => {
+  it("keeps mode masked and starts dest ayah reveal from the beginning", () => {
+    assert.equal(destIndexInPassage(2, 7, -1), 1);
+    assert.equal(destIndexInPassage(2, 7, 1), 3);
+    assert.equal(destIndexInPassage(0, 5, -1), null);
+    assert.equal(destIndexInPassage(4, 5, 1), null);
+    assert.deepEqual(freshMaskForVerse(2), { maxRev: 0, peeks: 2, peekRev: 0 });
+    assert.deepEqual(maskedSkipReveal(1, 5), {
+      mode: "masked",
+      masked: true,
+      revealUpTo: 0,
+    });
+    assert.deepEqual(maskedSkipReveal(3, 6, 1), {
+      mode: "masked",
+      masked: true,
+      revealUpTo: 1,
+    });
+  });
+
+  it("does not treat a previously finished dest ayah as already revealed", () => {
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "masked",
+        verseIdx: 0,
+        currentIdx: 0,
+        wordCount: 4,
+        currentReveal: 4,
+        verseDone: true,
+        curWord: 0,
+      }),
+      { masked: true, revealUpTo: 4 },
+    );
+    assert.deepEqual(maskedSkipReveal(0, 4), {
+      mode: "masked",
+      masked: true,
+      revealUpTo: 0,
+    });
+  });
+});
+
+describe("masked mushaf word tap", () => {
+  it("still opens the study sheet with Play word and Play from here", () => {
+    assert.equal(wordTapIntent("mushaf", "masked", "touch"), "meaning");
+    assert.equal(mushafWordsInteractive("masked"), true);
+    assert.equal(mushafWordsInteractive("verse"), true);
+    assert.deepEqual(mushafStudyPlayActions("masked"), {
+      playWord: true,
+      playFromHere: true,
+    });
+  });
+
+  it("play from here continues masked from the tapped word", () => {
+    const at = maskStateFromWord(4, 3);
+    assert.deepEqual(at, { maxRev: 3, peeks: 3, peekRev: 0 });
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "masked",
+        verseIdx: 0,
+        currentIdx: 0,
+        wordCount: 8,
+        currentReveal: at.maxRev,
+        verseDone: false,
+        curWord: 4,
+      }),
+      { masked: true, revealUpTo: 4 },
+    );
+  });
+
+  it("play word once leaves later words masked after it stops", () => {
+    assert.deepEqual(maskStateFromWord(1), {
+      maxRev: 0,
+      peeks: 3,
+      peekRev: 0,
+    });
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "masked",
+        verseIdx: 0,
+        currentIdx: 0,
+        wordCount: 8,
+        currentReveal: 2,
+        verseDone: false,
+        curWord: 2,
+      }),
+      { masked: true, revealUpTo: 2 },
     );
   });
 });

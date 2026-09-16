@@ -17,7 +17,7 @@ import {
   rangeAround,
   viewFromVisible,
 } from "@/lib/mushaf-window";
-import { mushafMaskReveal, mushafRepSpan, wordNeedsFollow, wordIsAway, emptyWordPick } from "@/lib/player-chrome";
+import { mushafMaskReveal, mushafRepSpan, mushafWordsInteractive, wordNeedsFollow, wordIsAway, emptyWordPick } from "@/lib/player-chrome";
 import { usePlus } from "@/lib/plus";
 import {
   ColdVerse,
@@ -271,7 +271,7 @@ export function MushafPage(e) {
                 onMarkTap: h,
                 revealUpTo: mask.revealUpTo,
                 masked: mask.masked,
-                interactive: !mask.masked,
+                interactive: mushafWordsInteractive(s.mode),
                 wordRep: a === s.vIdx ? wordRep : null,
               };
             return a === s.vIdx
