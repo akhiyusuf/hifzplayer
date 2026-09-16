@@ -271,7 +271,10 @@ export let MushafVerse = memo(function (e) {
           {
             children: [
               _jsxs("span", {
-                className: "mushaf-word-wrap",
+                className:
+                  wordRep && wordRep.open === e.pos
+                    ? "focus-word-wrap"
+                    : "mushaf-word-wrap",
                 children: [
                   _jsx(PlayerWord, {
                     word: e,
