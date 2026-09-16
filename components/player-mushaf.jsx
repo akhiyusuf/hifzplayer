@@ -18,7 +18,8 @@ import {
   rangeAround,
   viewFromVisible,
 } from "@/lib/mushaf-window";
-import { mushafMaskReveal, wordNeedsFollow, wordIsAway } from "@/lib/player-chrome";
+import { mushafMaskReveal, mushafRepSpan, wordNeedsFollow, wordIsAway, emptyWordPick } from "@/lib/player-chrome";
+import { usePlus } from "@/lib/plus";
 import {
   ColdVerse,
   MushafVerse,
@@ -190,6 +191,7 @@ export function MushafPage(e) {
       annFor: l,
       arrived: o,
     } = e,
+    { plus: plusOn, askPlus: ask } = usePlus(),
     d = useRef(null),
     c = s.verses.length,
     h = useCallback((e) => t.jumpToVerse(e), [t]),
@@ -241,7 +243,28 @@ export function MushafPage(e) {
         t.scrollIntoView({ block: "center", behavior: "smooth" });
     }, [o, s.verses]));
   let y = s.passage,
-    b = !!y && 1 === y.from && 1 !== y.chapter && 9 !== y.chapter;
+    b = !!y && 1 === y.from && 1 !== y.chapter && 9 !== y.chapter,
+    pick = s.wordPick || emptyWordPick(),
+    wordRep =
+      null != pick.open
+        ? {
+            open: pick.open,
+            start: pick.start,
+            end: pick.end,
+            count: pick.count,
+            plusOn,
+            nudge: !!pick.nudge,
+            onPin: (pos) => t.pinWordRep(pos),
+            onCount: (n) => {
+              let p = t.getSnapshot().wordPick || emptyWordPick(),
+                span = mushafRepSpan(p, p.open || p.start || 1);
+              t.playWordReps(span.start, span.end, n);
+            },
+            onAskPlus: () => ask("practice"),
+            onClose: () => t.closeWordRep(),
+            onDismiss: () => t.dismissWordRep(),
+          }
+        : null;
   return _jsx("div", {
     ref: d,
     className: "player-body",
@@ -294,6 +317,7 @@ export function MushafPage(e) {
                 revealUpTo: mask.revealUpTo,
                 masked: mask.masked,
                 interactive: !mask.masked,
+                wordRep: a === s.vIdx ? wordRep : null,
               };
             return a === s.vIdx
               ? _jsx(MushafVerseActive, { engine: t, ...c }, e.key)

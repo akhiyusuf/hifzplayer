@@ -177,23 +177,28 @@ export function WordStudyPop(e) {
         _jsxs("div", {
           className: "p-actions",
           children: [
-            _jsxs("button", {
-              className: "pri",
-              onClick: v,
+            _jsxs("div", {
+              className: "p-actions-row",
               children: [
-                _jsx(Icon, {
-                  name: "volume-2",
-                  size: 15,
+                _jsxs("button", {
+                  className: "pri",
+                  onClick: v,
+                  children: [
+                    _jsx(Icon, {
+                      name: "volume-2",
+                      size: 15,
+                    }),
+                    "Play word",
+                  ],
                 }),
-                "Play word",
-              ],
-            }),
-            _jsxs("button", {
-              className: "sec",
-              onClick: onPlayFromHere,
-              children: [
-                _jsx(Icon, { name: "play", size: 15 }),
-                "Play from here",
+                _jsxs("button", {
+                  className: "sec",
+                  onClick: onPlayFromHere,
+                  children: [
+                    _jsx(Icon, { name: "play", size: 15 }),
+                    "Play from here",
+                  ],
+                }),
               ],
             }),
             mushafLite

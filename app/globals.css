@@ -642,4 +642,17 @@ body:has(.scrim) .cl-avatarBox{
 .p-drill button{min-height:36px;padding:0 6px;border-radius:var(--radius-button);border:1px solid var(--border-default);background:var(--bg-surface);color:var(--text-primary);font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:4px}
 .p-drill button.locked{opacity:.72}
 .p-drill button.on{border-color:var(--action-primary);background:var(--tint-primary-08);color:var(--action-primary)}
+.p-actions-row{display:flex;flex-direction:row;flex-wrap:nowrap;gap:6px}
+.p-actions-row button{flex:1 1 0;min-width:0}
+.mushaf-word-wrap{display:contents}
+@keyframes word-rep-nudge{
+  0%,100%{transform:translateY(0) scale(1)}
+  35%{transform:translateY(-4px) scale(1.1)}
+}
+.word-rep-row button.word-rep-nudge{
+  animation:word-rep-nudge .55s var(--ease-spring) 3;
+}
+.word-rep-row button.word-rep-nudge:nth-child(2){animation-delay:.08s}
+.word-rep-row button.word-rep-nudge:nth-child(3){animation-delay:.16s}
+.word-rep-row button.word-rep-nudge:nth-child(4){animation-delay:.24s}
 .player-chrome .practice-strip{padding:10px 14px 8px}

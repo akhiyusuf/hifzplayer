@@ -30,6 +30,7 @@ import {
   indexOfVerseInPassage,
   verseRatioLabel,
   wordTapIntent,
+  mushafWordTapKind,
   writeRelayDraft,
   playerPageKind,
   scrollPlayerToVerse,
@@ -294,16 +295,14 @@ export function PlayerScreen(e) {
         if ("meaning" === intent) {
           let p = r.wordPick;
           if (e !== r.vIdx) eu.loadVerseAudio(e, !1);
-          if (
-            "mushaf" === r.style &&
-            "word" === r.mode &&
-            p &&
-            null != p.start &&
-            null == p.end &&
-            (null == p.vIdx || p.vIdx === e) &&
-            t !== p.start
-          ) {
-            eu.pinWordRep(t);
+          let kind = mushafWordTapKind(p, t, e);
+          if ("offerEnd" === kind) {
+            (eN(null), eu.offerWordRepEnd(t));
+            return;
+          }
+          if ("keepBar" === kind) {
+            eN(null);
+            return;
           }
           (eS(null),
             eQuietUi("meaning"),

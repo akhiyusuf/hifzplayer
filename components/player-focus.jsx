@@ -227,6 +227,7 @@ export function FocusWordPage(e) {
         end: pick.end,
         count: pick.count,
         plusOn,
+        nudge: !!pick.nudge,
         onPin: (pos) => t.pinWordRep(pos),
         onCount: (n) => t.setWordRepCount(n),
         onAskPlus: () => ask("repeats"),

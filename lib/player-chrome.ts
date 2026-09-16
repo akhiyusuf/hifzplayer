@@ -37,7 +37,42 @@ export type WordPick = {
   end: number | null;
   count: number | null;
   open: number | null;
+  vIdx?: number | null;
+  /** Pulse the 5× / 10× / ∞ row after the end of a range is pinned. */
+  nudge?: boolean;
 };
+
+export type MushafWordTapKind = "meaning" | "offerEnd" | "keepBar";
+
+/** Mushaf: last-word Pin+X, then keep the first-word multiplier bar. */
+export function mushafWordTapKind(
+  pick: WordPick | null | undefined,
+  pos: number,
+  verseIdx: number,
+): MushafWordTapKind {
+  if (!pick || pick.start == null) return "meaning";
+  if (pick.vIdx != null && pick.vIdx !== verseIdx) return "meaning";
+  if (pick.open != null && pick.open === pos) return "keepBar";
+  if (pick.end == null && pos !== pick.start) return "offerEnd";
+  return "meaning";
+}
+
+/** After Word Reps, resume recitation at the last word that played. */
+export function wordRepsResumeWord(st: {
+  loop?: { endW?: number } | null;
+  wordPick?: { end?: number | null; start?: number | null } | null;
+  wordStep?: { range?: { endW?: number } | null; w?: number };
+  curWord?: number;
+}) {
+  return (
+    (st.loop && st.loop.endW) ||
+    (st.wordPick && st.wordPick.end) ||
+    (st.wordStep && st.wordStep.range && st.wordStep.range.endW) ||
+    (st.wordStep && st.wordStep.w) ||
+    st.curWord ||
+    1
+  );
+}
 
 /** Mushaf 5× / 10× / ∞: a completed pin, else pin-start→this word, else this word. */
 export function mushafRepSpan(
@@ -228,6 +263,7 @@ export function scrollPlayerToVerse(idx: number) {
 
 export function wordRepsDoneState() {
   return {
+    mode: "verse" as const,
     loop: null as null,
     playing: false,
     wordPick: emptyWordPick(),

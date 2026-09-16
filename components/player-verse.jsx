@@ -201,6 +201,7 @@ export function FocusLines(e) {
                           onAskPlus: wordRep.onAskPlus,
                           onClose: wordRep.onClose,
                           onDismiss: wordRep.onDismiss,
+                          nudge: !!wordRep.nudge,
                         })
                       : null,
                   ],
@@ -244,6 +245,7 @@ export let MushafVerse = memo(function (e) {
       onWordHold: b,
       onMarkTap: g,
       breakWaqf: k = !1,
+      wordRep: wordRep = null,
     } = e,
     j = new Map();
   for (let e of t.marks) {
@@ -268,21 +270,41 @@ export let MushafVerse = memo(function (e) {
           _Fragment,
           {
             children: [
-              _jsx(PlayerWord, {
-                word: e,
-                vIdx: s,
-                taj: n,
-                isCur: e.pos === i,
-                inRange: l,
-                isRangeStart: l && e.pos === o,
-                isRangeEnd: l && e.pos === d,
-                isPending: c === e.pos,
-                mask: f,
-                interactive: p,
-                isArrived: v > 0 && e.pos >= v && e.pos <= x,
-                annotation: null == m ? void 0 : m.get(e.pos),
-                onTap: y,
-                onHold: b,
+              _jsxs("span", {
+                className: "mushaf-word-wrap",
+                children: [
+                  _jsx(PlayerWord, {
+                    word: e,
+                    vIdx: s,
+                    taj: n,
+                    isCur: e.pos === i,
+                    inRange: l,
+                    isRangeStart: l && e.pos === o,
+                    isRangeEnd: l && e.pos === d,
+                    isPending: c === e.pos,
+                    mask: f,
+                    interactive: p,
+                    isArrived: v > 0 && e.pos >= v && e.pos <= x,
+                    annotation: null == m ? void 0 : m.get(e.pos),
+                    onTap: y,
+                    onHold: b,
+                  }),
+                  wordRep && wordRep.open === e.pos
+                    ? _jsx(WordRepBar, {
+                        pos: e.pos,
+                        start: wordRep.start,
+                        end: wordRep.end,
+                        count: wordRep.count,
+                        plusOn: wordRep.plusOn,
+                        onPin: wordRep.onPin,
+                        onCount: wordRep.onCount,
+                        onAskPlus: wordRep.onAskPlus,
+                        onClose: wordRep.onClose,
+                        onDismiss: wordRep.onDismiss,
+                        nudge: !!wordRep.nudge,
+                      })
+                    : null,
+                ],
               }),
               null === (t = j.get(e.pos)) || void 0 === t
                 ? void 0
@@ -418,6 +440,7 @@ export function MushafVerseActive(e) {
     arrivedTo: e.arrivedTo,
     onWordTap: e.onWordTap,
     onMarkTap: e.onMarkTap,
+    wordRep: e.wordRep,
   });
 }
 

@@ -29,6 +29,8 @@ import {
   wordRepsPlayKind,
   mushafRepSpan,
   mushafPinHighlight,
+  mushafWordTapKind,
+  wordRepsResumeWord,
   wrapRelayIndex,
   exclusiveJobPatch,
   exclusiveLayer,
@@ -347,6 +349,7 @@ describe("mushafPinHighlight", () => {
 describe("word reps done state", () => {
   it("clears the pin, loop, and word step so underlines do not stick", () => {
     const next = wordRepsDoneState();
+    assert.equal(next.mode, "verse");
     assert.equal(next.loop, null);
     assert.equal(next.playing, false);
     assert.equal(next.wordPick.start, null);
@@ -354,6 +357,62 @@ describe("word reps done state", () => {
     assert.equal(next.wordStep.active, false);
     assert.equal(next.wordStep.range, null);
     assert.deepEqual(next.wordPick, emptyWordPick());
+  });
+});
+
+describe("mushafWordTapKind", () => {
+  it("opens meaning until a start pin is waiting for an end", () => {
+    assert.equal(mushafWordTapKind(emptyWordPick(), 4, 0), "meaning");
+    assert.equal(
+      mushafWordTapKind({ start: 2, end: null, open: null, vIdx: 0 }, 2, 0),
+      "meaning",
+    );
+    assert.equal(
+      mushafWordTapKind({ start: 2, end: null, open: null, vIdx: 0 }, 6, 0),
+      "offerEnd",
+    );
+  });
+
+  it("keeps the Pin+X or multiplier bar on the word it is already open on", () => {
+    assert.equal(
+      mushafWordTapKind({ start: 2, end: null, open: 6, vIdx: 0 }, 6, 0),
+      "keepBar",
+    );
+    assert.equal(
+      mushafWordTapKind({ start: 2, end: 6, open: 2, vIdx: 0 }, 2, 0),
+      "keepBar",
+    );
+  });
+
+  it("ignores a pin that belongs to another ayah", () => {
+    assert.equal(
+      mushafWordTapKind({ start: 2, end: null, open: null, vIdx: 3 }, 6, 0),
+      "meaning",
+    );
+  });
+});
+
+describe("wordRepsResumeWord", () => {
+  it("resumes at the last word of a range, then the current word", () => {
+    assert.equal(
+      wordRepsResumeWord({
+        loop: { endW: 8 },
+        wordPick: { start: 2, end: 8 },
+        wordStep: { w: 2, range: { endW: 8 } },
+        curWord: 2,
+      }),
+      8,
+    );
+    assert.equal(
+      wordRepsResumeWord({
+        loop: null,
+        wordPick: emptyWordPick(),
+        wordStep: { w: 4, range: null },
+        curWord: 3,
+      }),
+      4,
+    );
+    assert.equal(wordRepsResumeWord({ curWord: 5 }), 5);
   });
 });
 
