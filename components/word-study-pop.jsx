@@ -40,7 +40,7 @@ export function WordStudyPop(e) {
     b = useRef(null),
     [k, N] = useState(null),
     { plus: plusOn, askPlus: ask } = usePlus(),
-    popW = mushafLite ? 244 : 262;
+    popW = mushafLite ? 268 : 262;
   (useLayoutEffect(() => {
     let node = b.current,
       w = (null == node ? void 0 : node.offsetWidth) || popW,
@@ -238,32 +238,35 @@ export function WordStudyPop(e) {
                 }),
                 WORD_REP_COUNTS.map((n) => {
                   let locked = !plusOn;
+                  let inf = 0 === n;
                   return _jsx(
                     "button",
                     {
                       type: "button",
-                      className: locked ? "locked" : "",
+                      className: ""
+                        .concat(locked ? "locked" : "")
+                        .concat(inf ? " inf" : ""),
                       onClick: () =>
                         locked
                           ? (ask("practice"), y())
                           : onRepsCount && onRepsCount(n),
-                      "aria-label":
-                        0 === n
-                          ? "Repeat until you stop"
-                          : "Replay ".concat(n, " times"),
+                      "aria-label": inf
+                        ? "Repeat until you stop"
+                        : "Replay ".concat(n, " times"),
                       children: locked
                         ? _jsxs("span", {
+                            className: inf ? "p-drill-inf" : "",
                             style: {
                               display: "inline-flex",
                               alignItems: "center",
                               gap: 3,
                             },
                             children: [
-                              0 === n ? "∞" : "".concat(loopCountFace(n), "×"),
+                              inf ? "∞" : "".concat(loopCountFace(n), "×"),
                               _jsx(Icon, { name: "sparkles", size: 11 }),
                             ],
                           })
-                        : 0 === n
+                        : inf
                           ? "∞"
                           : "".concat(loopCountFace(n), "×"),
                     },

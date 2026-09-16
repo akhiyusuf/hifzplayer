@@ -649,7 +649,7 @@ body:has(.scrim) .cl-avatarBox{
 
 .w.masked,.w.masked .tj{color:transparent!important;background:transparent!important;box-shadow:none!important}
 .popover.mushaf-word-pop{
-  width:min(244px,calc(100vw - 24px));
+  width:min(268px,calc(100vw - 24px));
   padding:10px 10px 8px;
 }
 .mushaf-word-pop .p-word{gap:2px;margin-bottom:8px}
@@ -664,8 +664,18 @@ body:has(.scrim) .cl-avatarBox{
   line-height:1.15;
 }
 .mushaf-word-pop .p-actions-row{gap:5px}
+.mushaf-word-pop .p-actions-row button{white-space:nowrap}
+.mushaf-word-pop .p-actions-row .pri{flex:0 1 auto;padding-inline:6px 7px}
+.mushaf-word-pop .p-actions-row .sec{flex:1 1 auto}
 .mushaf-word-pop .p-drill{gap:4px;margin-top:0}
 .mushaf-word-pop .p-drill button{min-height:30px;font-size:11.5px;padding:0 4px;gap:3px}
+.mushaf-word-pop .p-drill button.inf,
+.mushaf-word-pop .p-drill button.inf .p-drill-inf{
+  font-family:var(--font-body);
+  font-size:16px;
+  font-weight:700;
+  line-height:1;
+}
 .p-drill{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:2px}
 .p-drill button{min-height:36px;padding:0 6px;border-radius:var(--radius-button);border:1px solid var(--border-default);background:var(--bg-surface);color:var(--text-primary);font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:4px}
 .p-drill button.locked{opacity:.72}
