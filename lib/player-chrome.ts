@@ -134,14 +134,14 @@ export type WordTapIntent = "play" | "meaning" | "wordRep";
 
 export type PlayerPageKind = "mushaf" | "focus" | "word" | "masked" | "relay";
 
-/** Mushaf keeps the page of ayahs. Focus drills swap in their own stage. */
+/** Mushaf keeps the page of ayahs. Relay (both views) and Focus drills swap in a dedicated stage. */
 export function playerPageKind(
   style: string,
   mode: string,
   relayActive = false,
 ): PlayerPageKind {
-  if (style === "mushaf") return "mushaf";
   if (mode === "relay" && relayActive) return "relay";
+  if (style === "mushaf") return "mushaf";
   if (mode === "masked") return "masked";
   if (mode === "word") return "word";
   return "focus";
@@ -154,13 +154,18 @@ export function mushafMaskReveal(opts: {
   wordCount: number;
   currentReveal: number;
   verseDone: boolean;
+  /** Live playing word — reveal it even if `currentReveal` is a stale snapshot. */
+  curWord?: number;
 }) {
   if (opts.mode !== "masked") return { masked: false, revealUpTo: 0 };
   if (opts.verseDone || opts.verseIdx < opts.currentIdx) {
     return { masked: true, revealUpTo: opts.wordCount };
   }
   if (opts.verseIdx === opts.currentIdx) {
-    return { masked: true, revealUpTo: opts.currentReveal };
+    return {
+      masked: true,
+      revealUpTo: Math.max(opts.currentReveal, opts.curWord || 0),
+    };
   }
   return { masked: true, revealUpTo: 0 };
 }

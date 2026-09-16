@@ -9,7 +9,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { WordRepBar } from "@/components/word-rep-bar";
-import { mushafPinHighlight } from "@/lib/player-chrome";
+import { mushafMaskReveal, mushafPinHighlight } from "@/lib/player-chrome";
 import { tajToSpans } from "@/lib/tajweed";
 import { toArabicDigits } from "@/lib/audio";
 import { isWaqfBreak, phrasesOf, visibleMarksAfter } from "@/lib/waqf";
@@ -425,7 +425,19 @@ export function MushafVerseActive(e) {
       e.engine.getWordSnap,
       e.engine.getWordSnap,
     ),
-    s = t.vIdx === e.vIdx ? t.curWord : 0;
+    s = t.vIdx === e.vIdx ? t.curWord : 0,
+    n = e.revealUpTo || 0;
+  if (e.masked) {
+    n = mushafMaskReveal({
+      mode: "masked",
+      verseIdx: e.vIdx,
+      currentIdx: t.vIdx,
+      wordCount: e.verse.words.length,
+      currentReveal: Math.max(n, e.engine.maskStateFor(e.verse).reveal),
+      verseDone: e.done,
+      curWord: s,
+    }).revealUpTo;
+  }
   return _jsx(MushafVerse, {
     verse: e.verse,
     vIdx: e.vIdx,
@@ -435,7 +447,7 @@ export function MushafVerseActive(e) {
     rangeStart: e.rangeStart,
     rangeEnd: e.rangeEnd,
     pendingPos: e.pendingPos,
-    revealUpTo: e.revealUpTo || 0,
+    revealUpTo: n,
     masked: !!e.masked,
     interactive: !1 !== e.interactive,
     annotations: e.annotations,
@@ -444,6 +456,7 @@ export function MushafVerseActive(e) {
     onWordTap: e.onWordTap,
     onMarkTap: e.onMarkTap,
     wordRep: e.wordRep,
+    breakWaqf: !!e.breakWaqf,
   });
 }
 

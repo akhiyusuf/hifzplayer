@@ -77,11 +77,12 @@ describe("wordTapIntent", () => {
 });
 
 describe("playerPageKind", () => {
-  it("keeps Mushaf on screen for every drill", () => {
+  it("keeps Mushaf on screen except Relay, which uses a dedicated stage", () => {
     assert.equal(playerPageKind("mushaf", "verse"), "mushaf");
     assert.equal(playerPageKind("mushaf", "word"), "mushaf");
     assert.equal(playerPageKind("mushaf", "masked"), "mushaf");
-    assert.equal(playerPageKind("mushaf", "relay", true), "mushaf");
+    assert.equal(playerPageKind("mushaf", "relay", true), "relay");
+    assert.equal(playerPageKind("mushaf", "relay", false), "mushaf");
   });
 
   it("uses Focus stages only in Focus view", () => {
@@ -138,6 +139,33 @@ describe("mushafMaskReveal", () => {
         verseDone: false,
       }),
       { masked: true, revealUpTo: 0 },
+    );
+  });
+
+  it("reveals the current word even when the snapshot lags behind playback", () => {
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "masked",
+        verseIdx: 1,
+        currentIdx: 1,
+        wordCount: 5,
+        currentReveal: 0,
+        curWord: 3,
+        verseDone: false,
+      }),
+      { masked: true, revealUpTo: 3 },
+    );
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "masked",
+        verseIdx: 1,
+        currentIdx: 1,
+        wordCount: 5,
+        currentReveal: 4,
+        curWord: 2,
+        verseDone: false,
+      }),
+      { masked: true, revealUpTo: 4 },
     );
   });
 });
