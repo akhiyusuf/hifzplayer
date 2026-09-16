@@ -25,7 +25,7 @@ export default async function PricingPage({
   const params = await searchParams;
   const regionId = regionForCountry(countryFromHeaders(headerList));
   const region = catalog().find((r) => r.id === regionId) ?? catalog()[0];
-  const ent = await resolveEntitlement();
+  const ent = await resolveEntitlement().catch(() => null);
   const accountsOn = clerkConfigured();
   const userId = accountsOn ? await signedInUserId() : null;
   const { cookies } = await import("next/headers");
