@@ -4,8 +4,6 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Icon } from "./icon";
 import { Sheet } from "./sheet";
 import { useAppData } from "@/lib/app-data";
-import { FOCUS_JOBS, type ModeId } from "@/lib/constants";
-import { usePlus } from "@/lib/plus";
 import { currentTranslationId, fetchTranslations, type TranslationOption } from "@/lib/translations";
 
 type Engine = {
@@ -14,7 +12,6 @@ type Engine = {
 };
 
 type State = {
-  mode: string;
   style: string;
   showTranslation?: boolean;
   passage?: { chapter: number; from: number; to: number; name: string };
@@ -66,53 +63,6 @@ function ViewSwitch({
   );
 }
 
-function DrillTypePicker({
-  mode,
-  plusOn,
-  onAskPlus,
-  onPick,
-}: {
-  mode: string;
-  plusOn: boolean;
-  onAskPlus: () => void;
-  onPick: (id: ModeId) => void;
-}) {
-  return (
-    <div className="sidebar-jobs">
-      <span className="sidebar-k">Practice</span>
-      <div className="practise-jobs">
-        {FOCUS_JOBS.map((job) => {
-          const on = mode === job.id;
-          const locked = !plusOn && !on;
-          return (
-            <button
-              key={job.id}
-              type="button"
-              className={`practise-job tap${on ? " on" : ""}${locked ? " locked" : ""}`}
-              aria-pressed={on}
-              onClick={() => {
-                if (locked) {
-                  onAskPlus();
-                  return;
-                }
-                onPick(on ? "verse" : job.id);
-              }}
-            >
-              <span className="practise-job-ic">
-                <Icon name={job.icon} size={16} />
-              </span>
-              <span className="st">
-                <b>{job.name}</b>
-                <span>{job.desc}</span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 export function PlayerSettingsSheet({
   engine,
   state,
@@ -122,7 +72,6 @@ export function PlayerSettingsSheet({
   qariName,
   onOpenReciter,
   onTranslationId,
-  onPickMode,
 }: {
   engine: Engine;
   state: State;
@@ -132,10 +81,8 @@ export function PlayerSettingsSheet({
   qariName?: string;
   onOpenReciter?: () => void;
   onTranslationId?: (id: number) => void;
-  onPickMode?: (id: string) => void;
 }) {
   const { chapters } = useAppData();
-  const { plus: plusOn, askPlus } = usePlus();
   const passage = state.passage || { chapter: 1, from: 1, to: 1, name: "" };
   const chapter = chapters.find((item) => item.id === passage.chapter);
   const versesCount = chapter?.verses_count || Math.max(passage.to, passage.from, 1);
@@ -170,14 +117,6 @@ export function PlayerSettingsSheet({
       <div className="player-side" data-sidebar="reader">
         <div className="sidebar-group">
           <ViewSwitch style={state.style === "focus" ? "focus" : "mushaf"} onStyle={(next) => engine.setStyle(next)} />
-          {onPickMode ? (
-            <DrillTypePicker
-              mode={state.mode}
-              plusOn={plusOn}
-              onAskPlus={() => askPlus("practice")}
-              onPick={(id) => onPickMode(id)}
-            />
-          ) : null}
         </div>
         {locate || translation || reciter ? (
           <div className="sidebar-group">

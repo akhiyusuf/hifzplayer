@@ -988,7 +988,6 @@ export function PlayerScreen(e) {
           onOpenReciter: () => {
             (eQuietUi("reciter"), ej(!0));
           },
-          onPickMode: ePickMode,
           onLocate: (ch, verse) => {
             let count =
                 (en.find((item) => item.id === ch) &&

@@ -158,17 +158,6 @@ a.listen-sheet-row{text-decoration:none;color:inherit}
 .listen-sheet-row .val{display:inline-flex;align-items:center;gap:5px}
 .listen-menu-btn[aria-pressed="true"],.listen-menu-btn.on{border-color:var(--action-primary);background:var(--tint-primary-08);color:var(--action-primary)}
 .listen-menu-btn:disabled{opacity:.45}
-.practise-jobs{display:flex;flex-direction:column;gap:8px}
-.practise-jobs-lead{margin:0 2px 2px;font-size:12.5px;line-height:1.4;color:var(--text-muted)}
-.practise-job{display:flex;align-items:flex-start;gap:12px;width:100%;padding:12px 14px;border-radius:var(--radius-card);border:1px solid var(--border-default);background:var(--bg-surface);text-align:left;color:inherit}
-.practise-job-ic{width:36px;height:36px;border-radius:10px;background:var(--bg-surface-alt);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;flex:none}
-.practise-job .st{display:flex;flex-direction:column;gap:2px;min-width:0}
-.practise-job .st b{font-family:var(--font-display);font-weight:600;font-size:15px}
-.practise-job .st span{font-size:12.5px;line-height:1.4;color:var(--text-muted)}
-.practise-job.on{border-color:var(--action-primary);background:var(--tint-primary-08)}
-.practise-job.on .practise-job-ic{background:var(--action-primary);color:var(--text-on-primary)}
-.practise-job.on .st b{color:var(--action-primary)}
-.practise-job.on .st span{color:var(--text-secondary)}
 .focus-stage{align-items:stretch;min-width:0;width:100%}
 .focus-stage .focus-phrase{width:100%;min-width:0;align-items:stretch}
 .focus-stage .focus-ar{width:100%;max-width:100%;text-align:center;overflow-wrap:break-word}
@@ -362,7 +351,6 @@ body:has(.landing) .shell{margin-left:0}
   .pricing-card{padding:18px 16px 16px}
   .pricing-price{font-size:24px}
 }
-.practise-job.locked{opacity:.72}
 .mode-opt.locked{opacity:.72}
 .play-btn.locked{box-shadow:none;opacity:.72}
 .lists-lead{margin:0 0 4px;font-size:13.5px;line-height:1.45;color:var(--text-secondary)}
@@ -478,7 +466,7 @@ a.qari-inline{text-decoration:none;color:inherit}
 .player-side{display:flex;flex-direction:column;gap:14px;flex:1;min-height:0;overflow:auto}
 .player-side .sidebar-group{display:flex;flex-direction:column;border:1px solid var(--border-default);border-radius:var(--radius-card);background:var(--bg-surface);overflow:hidden}
 .player-side .sidebar-row{position:relative;display:flex;align-items:center;gap:10px;width:100%;margin:0;padding:12px 14px;border:none;border-radius:0;background:transparent;text-align:left;color:inherit;min-height:48px}
-.player-side .sidebar-row+.sidebar-row,.player-side .sidebar-jobs,.player-side .sidebar-block{border-top:1px solid var(--border-default)}
+.player-side .sidebar-row+.sidebar-row,.player-side .sidebar-block{border-top:1px solid var(--border-default)}
 .player-side .sidebar-k{font-size:13px;font-weight:600;color:var(--text-secondary);flex:none}
 .player-side .sidebar-v{flex:1 1;min-width:0;text-align:right;font-size:14px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player-side .sidebar-v-wrap{white-space:normal;overflow:visible;text-overflow:unset;line-height:1.25}
@@ -489,10 +477,6 @@ a.qari-inline{text-decoration:none;color:inherit}
 .player-side .sidebar-row-stack{flex-wrap:wrap;align-items:flex-start}
 .player-side .sidebar-seg{width:100%;display:flex}
 .player-side .sidebar-seg button{flex:1;min-height:36px}
-.player-side .sidebar-jobs{display:flex;flex-direction:column;gap:8px;padding:12px 14px}
-.player-side .sidebar-jobs .sidebar-k{margin:0}
-.player-side .sidebar-jobs .practise-jobs{gap:8px}
-.player-side .sidebar-jobs .practise-job{padding:11px 12px}
 .player-side .sidebar-block{display:flex;flex-direction:column;gap:8px;padding:12px 14px}
 .player-side .sidebar-block .sidebar-k{margin:0}
 .player-side .sidebar-range{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--border-default)}
@@ -524,8 +508,6 @@ a.qari-inline{text-decoration:none;color:inherit}
 }
 .player-side .sidebar-row-stack .style-toggle button,
 .player-side .sidebar-row-stack .sidebar-seg button{flex:1;justify-content:center}
-.player-side .sidebar-jobs .practise-job{min-width:0}
-.player-side .sidebar-jobs .practise-job .st{flex:1 1;min-width:0;overflow:visible}
 .player-side .order-name{isolation:isolate;position:relative}
 .player-side .player-side-foot .theme-row{display:flex;flex-direction:column;align-items:stretch;gap:10px}
 .focus-word-wrap{display:inline-block;position:relative;vertical-align:baseline}
