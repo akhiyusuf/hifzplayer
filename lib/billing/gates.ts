@@ -22,7 +22,7 @@ export const PLUS_COPY: Record<PlusFeature, { title: string; body: string }> = {
   },
   playlists: {
     title: "Playlists are Diras Plus",
-    body: "You can open Playlists and look around for free. Playing an occasion list is Diras Plus. Mushaf reading stays free.",
+    body: "Playing an occasion list is Diras Plus. Mushaf reading stays free.",
   },
 };
 
