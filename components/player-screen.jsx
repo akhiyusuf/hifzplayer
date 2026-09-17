@@ -36,6 +36,7 @@ import {
   scrollPlayerToVerse,
   mushafRepSpan,
   emptyWordPick,
+  wordPopActions,
 } from "@/lib/player-chrome";
 import { PlayerEngine } from "@/lib/player-engine";
 import { PLUS_GATE_EVENT, usePlus } from "@/lib/plus";
@@ -108,6 +109,7 @@ export function PlayerScreen(e) {
     [eHint, eSetHint] = useState(""),
     eHintFor = useRef(null),
     eHintTimer = useRef(null),
+    eRelayUrlAsked = useRef(!1),
     [ek, eN] = useState(null),
     [eI, eS] = useState(null),
     [eC, eT] = useState(null),
@@ -293,17 +295,19 @@ export function PlayerScreen(e) {
           return;
         }
         if ("meaning" === intent) {
-          let p = r.wordPick;
-          if (e !== r.vIdx) eu.loadVerseAudio(e, !1);
-          let kind = mushafWordTapKind(p, t, e);
-          if ("offerEnd" === kind) {
-            (eN(null), eu.offerWordRepEnd(t));
-            return;
-          }
-          if ("keepBar" === kind) {
-            eN(null);
-            return;
-          }
+          if ("word" === r.mode) {
+            let p = r.wordPick;
+            if (e !== r.vIdx) eu.loadVerseAudio(e, !1);
+            let kind = mushafWordTapKind(p, t, e);
+            if ("offerEnd" === kind) {
+              (eN(null), eu.offerWordRepEnd(t));
+              return;
+            }
+            if ("keepBar" === kind) {
+              eN(null);
+              return;
+            }
+          } else if (e !== r.vIdx) eu.loadVerseAudio(e, !1);
           (eS(null),
             eQuietUi("meaning"),
             eN({ vIdx: e, pos: t, rect: s.getBoundingClientRect() }));
@@ -351,14 +355,26 @@ export function PlayerScreen(e) {
         er && ["word", "verse", "masked", "relay"].includes(er)
           ? er
           : "verse";
-      if (e !== eu.getSnapshot().mode) eu.setMode(e);
-      if ("relay" !== eu.getSnapshot().mode) return;
-      let draft = readRelayDraft();
-      if (draft && draft.start) {
-        writeRelayDraft({ ...draft, start: !1 });
-        eu.beginRelay(draft.order, draft.vFrom, draft.vTo, draft.rounds);
+      if (e === "relay") {
+        let relay = eu.getSnapshot().relay;
+        if (relay && relay.active) return;
+        let draft = readRelayDraft();
+        if (draft && draft.start) {
+          writeRelayDraft({ ...draft, start: !1 });
+          eu.beginRelay(draft.order, draft.vFrom, draft.vTo, draft.rounds);
+          return;
+        }
+        if (!plusOn) {
+          ask("practice");
+          return;
+        }
+        if (eRelayUrlAsked.current) return;
+        eRelayUrlAsked.current = !0;
+        (eQuietUi("relay"), eb(!0));
+        return;
       }
-    }, [ep, er, plusReady, plusOn]),
+      if (e !== eu.getSnapshot().mode) eu.setMode(e);
+    }, [ep, er, plusReady, plusOn, ask, eQuietUi, eu]),
     useEffect(() => {
       if ("ready" !== ep || !ea) return;
       let e = eu
@@ -694,19 +710,11 @@ export function PlayerScreen(e) {
         return;
       }
       if ("relay" === e) {
-        let order = [
-          {
-            kind: "qari",
-            reciterId: null != ez.reciterId ? ez.reciterId : eM,
-          },
-          { kind: "you" },
-        ];
-        let from = (ez.verses[0] && ez.verses[0].number) || V;
-        let to =
-          (ez.verses[ez.verses.length - 1] &&
-            ez.verses[ez.verses.length - 1].number) ||
-          D;
-        eu.beginRelay(order, from, to, 2);
+        if (!plusOn) {
+          ask("practice");
+          return;
+        }
+        (eQuietUi("relay"), eb(!0));
         return;
       }
       eu.setMode(e);
@@ -1035,6 +1043,8 @@ export function PlayerScreen(e) {
           loopCount: ez.loopCount,
           isWordRangeMode: "word" === ez.mode,
           mushaf: "mushaf" === ez.style,
+          showPlay: wordPopActions(ez.style, ez.mode).play,
+          showReps: wordPopActions(ez.style, ez.mode).reps,
           pinActive:
             !!ez.wordPick &&
             (ez.wordPick.start === ek.pos || ez.wordPick.end === ek.pos),

@@ -8,8 +8,13 @@ import {
 import { Icon } from "@/components/icon";
 import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
-import { isPaidRepeat } from "@/lib/billing/gates";
+import { isPaidRelay, isPaidRepeat } from "@/lib/billing/gates";
 import { fetchTransliteration } from "@/lib/api";
+import {
+  defaultRelaySetup,
+  orderStartingWith,
+  relayStartsWith,
+} from "@/lib/player-chrome";
 import { usePlus } from "@/lib/plus";
 
 let R = {
@@ -375,21 +380,22 @@ export function RelaySheet(e) {
             : s.number) && void 0 !== l
         ? l
         : 1,
+    defaults = defaultRelaySetup(m, j, w),
     [b, k] = useState(
       null !== (d = null == v ? void 0 : v.order) && void 0 !== d
         ? d
-        : [{ kind: "qari", reciterId: m }, { kind: "you" }],
+        : defaults.order,
     ),
     [N, I] = useState(
-      null !== (c = null == v ? void 0 : v.vFrom) && void 0 !== c ? c : j,
+      null !== (c = null == v ? void 0 : v.vFrom) && void 0 !== c ? c : defaults.vFrom,
     ),
     [S, T] = useState(
-      null !== (h = null == v ? void 0 : v.vTo) && void 0 !== h ? h : w,
+      null !== (h = null == v ? void 0 : v.vTo) && void 0 !== h ? h : defaults.vTo,
     ),
     [R, P] = useState(
       null !== (u = null == v ? void 0 : v.rounds) && void 0 !== u
         ? u
-        : 2,
+        : defaults.rounds,
     ),
     [W, A] = useState(!1),
     { plus: plusOn, askPlus: ask } = usePlus(),
@@ -405,6 +411,32 @@ export function RelaySheet(e) {
     onClose: f,
     maxHeight: "86dvh",
     children: [
+      _jsx("span", {
+        className: "label-eyebrow",
+        children: "Who starts",
+      }),
+      _jsx("div", {
+        className: "rounds-row",
+        style: { marginTop: 6, marginBottom: 4 },
+        role: "group",
+        "aria-label": "Who starts",
+        children: [
+          { id: "you", label: "You" },
+          { id: "qari", label: "Reciter" },
+        ].map((e) =>
+          _jsx(
+            "button",
+            {
+              type: "button",
+              className: relayStartsWith(b) === e.id ? "on" : "",
+              "aria-pressed": relayStartsWith(b) === e.id,
+              onClick: () => k(orderStartingWith(b, e.id, m)),
+              children: e.label,
+            },
+            e.id,
+          ),
+        ),
+      }),
       _jsx("span", {
         className: "label-eyebrow",
         children: "Turn order",
