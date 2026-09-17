@@ -21,6 +21,7 @@ import { clampStopIndex, playlistHref, reciterIdForStyle, resolvePlaylist, stopL
 import { fetchPassage, fetchTranslation } from "@/lib/api";
 import { APP_NAME } from "@/lib/brand";
 import { KEYS } from "@/lib/constants";
+import { dropReadModeParam } from "@/lib/nav";
 import {
   coversRange,
   drillHint,
@@ -703,10 +704,15 @@ export function PlayerScreen(e) {
       ez.mode,
       !!(null === (t = ez.relay) || void 0 === t ? void 0 : t.active),
     ),
+    eDropModeQuery = () => {
+      if (!er) return;
+      let p = dropReadModeParam(J.toString());
+      Y.replace("/read/".concat(z).concat(p ? "?".concat(p) : ""));
+    },
     ePickMode = (e) => {
       (eHintFor.current = null, ey(!1), eSetTools(!1));
       if ("verse" === e) {
-        eu.setMode("verse");
+        (eu.leavePractice(), eDropModeQuery());
         return;
       }
       if ("relay" === e) {
@@ -1207,7 +1213,7 @@ export function PlayerScreen(e) {
             (eb(!1),
               (null === (e = ez.relay) || void 0 === e
                 ? void 0
-                : e.active) || eu.setMode("verse"));
+                : e.active) || (eu.leavePractice(), eDropModeQuery()));
           },
         }),
     ],

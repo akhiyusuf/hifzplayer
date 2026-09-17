@@ -39,6 +39,10 @@ import {
   mushafPinHighlight,
   mushafWordTapKind,
   wordRepsResumeWord,
+  leavePracticeHow,
+  practiceSheetJobs,
+  practiceSheetPickMode,
+  practiceSheetShowsExit,
   wrapRelayIndex,
   exclusiveJobPatch,
   exclusiveLayer,
@@ -644,6 +648,36 @@ describe("relay skip", () => {
     assert.equal(wrapRelayIndex(3, 4, 1), 0);
     assert.equal(wrapRelayIndex(0, 4, -1), 3);
     assert.equal(wrapRelayIndex(2, 4, -1), 1);
+  });
+});
+
+describe("leave practice", () => {
+  it("exiting masked returns to verse listen", () => {
+    assert.equal(leavePracticeHow("masked"), "set-verse");
+    assert.equal(practiceSheetPickMode("masked", "verse"), "verse");
+    assert.equal(practiceSheetPickMode("masked", "masked"), "verse");
+  });
+
+  it("exiting relay returns to verse listen", () => {
+    assert.equal(leavePracticeHow("relay"), "exit-relay");
+    assert.equal(practiceSheetPickMode("relay", "verse"), "verse");
+    assert.equal(practiceSheetPickMode("relay", "relay"), "verse");
+  });
+
+  it("shows an exit on the Practice sheet when a drill is active", () => {
+    assert.equal(practiceSheetShowsExit("masked"), true);
+    assert.equal(practiceSheetShowsExit("relay"), true);
+    assert.equal(practiceSheetShowsExit("word"), true);
+    assert.equal(practiceSheetShowsExit("verse"), false);
+    assert.equal(
+      practiceSheetJobs("masked").some((job) => job.id === "verse"),
+      true,
+    );
+    assert.equal(
+      practiceSheetJobs("verse").some((job) => job.id === "verse"),
+      false,
+    );
+    assert.equal(leavePracticeHow("word"), "finish-word-reps");
   });
 });
 

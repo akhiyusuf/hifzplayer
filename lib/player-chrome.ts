@@ -1,4 +1,4 @@
-import { KEYS, LOOP_COUNTS, RATES } from "./constants.ts";
+import { FOCUS_JOBS, KEYS, LOOP_COUNTS, MODES, RATES } from "./constants.ts";
 import { getStore } from "./storage.ts";
 
 export function verseRatioLabel(name: string, verse: number, total: number) {
@@ -357,6 +357,42 @@ export function wordRepsDoneState() {
     wordPick: emptyWordPick(),
     wordStep: { active: false, w: 1, playedTimes: 0, range: null as null },
   };
+}
+
+export function isPracticeDrill(mode: string) {
+  return mode === "word" || mode === "masked" || mode === "relay";
+}
+
+/** Verse / Listen — the Practice sheet's way back to the ayah. */
+export function practiceListenOption() {
+  return MODES.find((m) => m.id === "verse") || MODES[0];
+}
+
+/** Masked (and the other drills) must show an off switch, not only the jobs. */
+export function practiceSheetShowsExit(mode: string) {
+  return isPracticeDrill(mode);
+}
+
+export function practiceSheetJobs(mode: string) {
+  return practiceSheetShowsExit(mode)
+    ? [practiceListenOption(), ...FOCUS_JOBS]
+    : [...FOCUS_JOBS];
+}
+
+export type LeavePracticeHow = "finish-word-reps" | "exit-relay" | "set-verse" | null;
+
+export function leavePracticeHow(mode: string): LeavePracticeHow {
+  if (mode === "word") return "finish-word-reps";
+  if (mode === "relay") return "exit-relay";
+  if (mode === "masked") return "set-verse";
+  return null;
+}
+
+/** Tapping Verse, or the current drill, returns to listen. */
+export function practiceSheetPickMode(current: string, picked: string) {
+  if (picked === "verse") return "verse";
+  if (picked === current && isPracticeDrill(current)) return "verse";
+  return picked;
 }
 
 /** Skip to another Relay seat without wrapping into a new round. */

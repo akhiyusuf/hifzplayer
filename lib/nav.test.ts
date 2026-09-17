@@ -5,6 +5,7 @@ import {
   backHref,
   focusPassageHref,
   isFocusReadQuery,
+  dropReadModeParam,
   safePath,
   signInHref,
   signInReturnPath,
@@ -65,5 +66,13 @@ describe("isFocusReadQuery", () => {
     assert.equal(isFocusReadQuery("style=focus"), true);
     assert.equal(isFocusReadQuery("?mode=word"), true);
     assert.equal(isFocusReadQuery("from=1&to=7"), false);
+  });
+});
+
+describe("dropReadModeParam", () => {
+  it("strips mode so leaving a drill is not undone by the URL", () => {
+    assert.equal(dropReadModeParam("from=1&to=7&style=focus&mode=masked"), "from=1&to=7&style=focus");
+    assert.equal(dropReadModeParam("?mode=relay&from=1"), "from=1");
+    assert.equal(dropReadModeParam("from=1&to=7"), "from=1&to=7");
   });
 });

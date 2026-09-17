@@ -66,3 +66,10 @@ export function isFocusReadQuery(search: string) {
   const mode = q.get("mode");
   return mode === "word" || mode === "masked" || mode === "relay";
 }
+
+/** Drop `mode` so leaving a drill is not undone by the URL. */
+export function dropReadModeParam(search: string) {
+  const q = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+  q.delete("mode");
+  return q.toString();
+}
