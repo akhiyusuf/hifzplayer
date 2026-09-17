@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import { clerkConfigured } from "@/lib/auth/config";
 import { clerkTrialUsedAt, markClerkTrialUsed } from "@/lib/auth/plus";
 import { grantPlusToAccount, resolveEntitlement, signedInEmail, signedInUserId } from "@/lib/auth/session";
 import { logBillingEvent } from "@/lib/billing/analytics";
 import { countryFromHeaders } from "@/lib/billing/country";
 import { publicEntitlement } from "@/lib/billing/entitlement";
-import { badRequest, json, unauthorized } from "@/lib/billing/http";
+import { badRequest, unauthorized } from "@/lib/billing/http";
 import { regionForCountry } from "@/lib/billing/plans";
 import {
   grantTrial,
@@ -27,14 +26,13 @@ async function readTrialUsedCookie() {
 }
 
 export async function POST(request: Request) {
-  const accountsOn = clerkConfigured();
-  const userId = accountsOn ? await signedInUserId() : null;
-  if (accountsOn && !userId) {
+  const userId = await signedInUserId();
+  if (!userId) {
     return unauthorized(`Sign in to start your ${PLUS_NAME} trial`, { code: "SIGN_IN_REQUIRED" });
   }
 
   const entitlement = await resolveEntitlement();
-  const clerkUsed = userId ? Boolean(await clerkTrialUsedAt(userId)) : false;
+  const clerkUsed = Boolean(await clerkTrialUsedAt(userId));
   const cookieUsed = Boolean(await readTrialUsedCookie());
   const used = clerkUsed || cookieUsed;
 
@@ -44,25 +42,23 @@ export async function POST(request: Request) {
   }
 
   const regionId = regionForCountry(countryFromHeaders(request.headers));
-  const email = userId ? (await signedInEmail()) || undefined : undefined;
-  const ent = grantTrial({ regionId, userId: userId || undefined, email });
+  const email = (await signedInEmail()) || undefined;
+  const ent = grantTrial({ regionId, userId, email });
   await grantPlusToAccount(ent, userId, { setCookie: true, kind: "granted" });
 
   const usedAt = new Date().toISOString();
-  if (userId) {
-    try {
-      await markClerkTrialUsed(userId, usedAt);
-    } catch {
-      logBillingEvent({
-        type: "clerk_save_failed",
-        processor: "trial",
-        planId: "trial",
-        regionId,
-        hasUserId: true,
-        accountId: userId,
-        reason: "trial_used_mark_failed",
-      });
-    }
+  try {
+    await markClerkTrialUsed(userId, usedAt);
+  } catch {
+    logBillingEvent({
+      type: "clerk_save_failed",
+      processor: "trial",
+      planId: "trial",
+      regionId,
+      hasUserId: true,
+      accountId: userId,
+      reason: "trial_used_mark_failed",
+    });
   }
 
   const sealed = sealTrialUsed(usedAt);
@@ -82,8 +78,8 @@ export async function POST(request: Request) {
     planId: "trial",
     regionId,
     source: "confirm",
-    hasUserId: Boolean(userId),
-    accountId: userId || undefined,
+    hasUserId: true,
+    accountId: userId,
   });
 
   return res;

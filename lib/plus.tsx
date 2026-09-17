@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
 import {
   createContext,
   useCallback,
@@ -12,9 +13,11 @@ import {
 } from "react";
 import { Icon } from "@/components/icon";
 import { Sheet } from "@/components/sheet";
+import { clerkBrowserReady } from "@/lib/auth/config";
 import { PLUS_NAME } from "@/lib/brand";
 import { PLUS_COPY, type PlusFeature } from "@/lib/billing/gates";
 import { PLUS_STORAGE_KEY } from "@/lib/billing/keys";
+import { trialSignInHref, trialSignUpHref } from "@/lib/billing/trial-path";
 import { getStore, setStore } from "@/lib/storage";
 
 type PlusCtx = {
@@ -55,6 +58,30 @@ type StatusPayload = {
 };
 
 export function PlusProvider({ children }: { children: ReactNode }) {
+  if (clerkBrowserReady()) return <PlusProviderSigned>{children}</PlusProviderSigned>;
+  return <PlusProviderInner accountsOn={false} clerkLoaded signedIn={false}>{children}</PlusProviderInner>;
+}
+
+function PlusProviderSigned({ children }: { children: ReactNode }) {
+  const { isLoaded, isSignedIn } = useUser();
+  return (
+    <PlusProviderInner accountsOn clerkLoaded={isLoaded} signedIn={Boolean(isLoaded && isSignedIn)}>
+      {children}
+    </PlusProviderInner>
+  );
+}
+
+function PlusProviderInner({
+  children,
+  accountsOn,
+  clerkLoaded,
+  signedIn,
+}: {
+  children: ReactNode;
+  accountsOn: boolean;
+  clerkLoaded: boolean;
+  signedIn: boolean;
+}) {
   const [plus, setPlus] = useState(false);
   const [ready, setReady] = useState(false);
   const [trialAvailable, setTrialAvailable] = useState(false);
@@ -112,13 +139,18 @@ export function PlusProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const startTrial = useCallback(async () => {
+    if (accountsOn && !clerkLoaded) return false;
+    if (!signedIn) {
+      window.location.assign(trialSignInHref());
+      return false;
+    }
     setTrialBusy(true);
     setTrialError("");
     try {
       const res = await fetch("/api/billing/trial", { method: "POST" });
       const data = (await res.json()) as StatusPayload & { error?: string; code?: string };
       if (data.code === "SIGN_IN_REQUIRED" || res.status === 401) {
-        window.location.assign("/sign-in?redirect_url=/pricing");
+        window.location.assign(trialSignInHref());
         return false;
       }
       if (!res.ok) {
@@ -134,7 +166,7 @@ export function PlusProvider({ children }: { children: ReactNode }) {
     } finally {
       setTrialBusy(false);
     }
-  }, [applyStatus]);
+  }, [accountsOn, applyStatus, clerkLoaded, signedIn]);
 
   const dismiss = useCallback(() => {
     setFeature(null);
@@ -155,6 +187,9 @@ export function PlusProvider({ children }: { children: ReactNode }) {
           trialAvailable={trialAvailable}
           trialBusy={trialBusy}
           trialError={trialError}
+          signedIn={signedIn}
+          clerkLoaded={clerkLoaded}
+          accountsOn={accountsOn}
           onStartTrial={() => void startTrial()}
           onClose={dismiss}
         />
@@ -174,6 +209,9 @@ function PlusGate({
   trialAvailable,
   trialBusy,
   trialError,
+  signedIn,
+  clerkLoaded,
+  accountsOn,
   onStartTrial,
   onClose,
 }: {
@@ -181,10 +219,14 @@ function PlusGate({
   trialAvailable: boolean;
   trialBusy: boolean;
   trialError: string;
+  signedIn: boolean;
+  clerkLoaded: boolean;
+  accountsOn: boolean;
   onStartTrial: () => void;
   onClose: () => void;
 }) {
   const copy = PLUS_COPY[feature];
+  const showTrial = trialAvailable && (!accountsOn || clerkLoaded);
   return (
     <Sheet title={PLUS_NAME} onClose={onClose}>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -203,10 +245,25 @@ function PlusGate({
             {trialError}
           </p>
         ) : null}
-        {trialAvailable ? (
-          <button className="btn-primary" type="button" disabled={trialBusy} onClick={onStartTrial}>
-            {trialBusy ? "Starting trial…" : "Try free for 1 day"}
-          </button>
+        {showTrial ? (
+          signedIn ? (
+            <button className="btn-primary" type="button" disabled={trialBusy} onClick={onStartTrial}>
+              {trialBusy ? "Starting trial…" : "Try free for 1 day"}
+            </button>
+          ) : (
+            <>
+              <Link className="btn-primary" href={trialSignInHref()} onClick={onClose}>
+                Sign in to try free for 1 day
+              </Link>
+              <p style={{ textAlign: "center", fontSize: 13, color: "var(--text-secondary)", margin: 0, lineHeight: 1.45 }}>
+                New here?{" "}
+                <Link href={trialSignUpHref()} onClick={onClose} style={{ color: "inherit", fontWeight: 600 }}>
+                  Create an account
+                </Link>
+                . No card required. One trial per account.
+              </p>
+            </>
+          )
         ) : null}
         <Link
           className={trialAvailable ? "btn-secondary" : "btn-primary"}

@@ -11,6 +11,7 @@ import { countryFromHeaders } from "@/lib/billing/country";
 import { processorsReady } from "@/lib/billing/env";
 import { catalog, regionForCountry } from "@/lib/billing/plans";
 import { openTrialUsed, trialAvailable, TRIAL_USED_COOKIE } from "@/lib/billing/trial";
+import { wantsStartTrial } from "@/lib/billing/trial-path";
 import { backHref } from "@/lib/nav";
 
 export const metadata: Metadata = { title: `${PLUS_NAME} — pricing` };
@@ -19,7 +20,7 @@ export const dynamic = "force-dynamic";
 export default async function PricingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ canceled?: string; from?: string }>;
+  searchParams: Promise<{ canceled?: string; from?: string; start_trial?: string }>;
 }) {
   const headerList = await headers();
   const params = await searchParams;
@@ -51,6 +52,7 @@ export default async function PricingPage({
         canceled={params.canceled === "1"}
         trialAvailable={canTrial}
         plusOn={Boolean(ent)}
+        startTrial={wantsStartTrial(params.start_trial)}
       />
     </main>
   );

@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { APP_NAME } from "@/lib/brand";
 import { clerkBrowserReady } from "@/lib/auth/config";
 import { PLUS_EXPLAIN } from "@/lib/billing/gates";
 import { GIFT_SEATS, parseGiftEmails } from "@/lib/billing/gift-parse";
 import { formatMoney, type Catalog, type PaidPlanId } from "@/lib/billing/plans";
+import { trialSignInHref, trialSignUpHref } from "@/lib/billing/trial-path";
 
 type Processors = { stripe: boolean; paystack: boolean };
 type RegionQuote = Catalog[number];
@@ -18,16 +19,19 @@ export function PricingView(props: {
   canceled?: boolean;
   trialAvailable?: boolean;
   plusOn?: boolean;
+  startTrial?: boolean;
 }) {
   if (clerkBrowserReady()) return <PricingViewSigned {...props} />;
   return (
     <PricingForm
       {...props}
       accountsOn={false}
+      clerkLoaded
       signedIn={false}
       accountEmail=""
       trialAvailable={Boolean(props.trialAvailable)}
       plusOn={Boolean(props.plusOn)}
+      startTrial={Boolean(props.startTrial)}
     />
   );
 }
@@ -38,16 +42,19 @@ function PricingViewSigned(props: {
   canceled?: boolean;
   trialAvailable?: boolean;
   plusOn?: boolean;
+  startTrial?: boolean;
 }) {
   const { isLoaded, isSignedIn, user } = useUser();
   return (
     <PricingForm
       {...props}
       accountsOn
+      clerkLoaded={isLoaded}
       signedIn={Boolean(isLoaded && isSignedIn)}
       accountEmail={user?.primaryEmailAddress?.emailAddress || ""}
       trialAvailable={Boolean(props.trialAvailable)}
       plusOn={Boolean(props.plusOn)}
+      startTrial={Boolean(props.startTrial)}
     />
   );
 }
@@ -64,19 +71,23 @@ function PricingForm({
   processors,
   canceled,
   accountsOn,
+  clerkLoaded,
   signedIn,
   accountEmail,
   trialAvailable,
   plusOn,
+  startTrial: startTrialOnLoad,
 }: {
   region: RegionQuote;
   processors: Processors;
   canceled?: boolean;
   accountsOn: boolean;
+  clerkLoaded: boolean;
   signedIn: boolean;
   accountEmail: string;
   trialAvailable: boolean;
   plusOn: boolean;
+  startTrial?: boolean;
 }) {
   const [planId, setPlanId] = useState<PaidPlanId>("annual");
   const [email, setEmail] = useState("");
@@ -88,6 +99,7 @@ function PricingForm({
   const [error, setError] = useState(canceled ? "Checkout was canceled. Nothing was charged." : "");
   const [trialOn, setTrialOn] = useState(plusOn);
   const [canTrial, setCanTrial] = useState(trialAvailable);
+  const autoStarted = useRef(false);
 
   const selected = useMemo(
     () => region.plans.find((p) => p.planId === planId) ?? region.plans[1],
@@ -109,10 +121,22 @@ function PricingForm({
     if (n > giftSeats && n <= GIFT_SEATS) setGiftSeats(n);
   }
 
+  useEffect(() => {
+    if (!startTrialOnLoad || autoStarted.current || trialOn || !canTrial) return;
+    if (accountsOn && !clerkLoaded) return;
+    autoStarted.current = true;
+    if (!signedIn) {
+      window.location.assign(trialSignInHref());
+      return;
+    }
+    void startTrial();
+  }, [accountsOn, canTrial, clerkLoaded, signedIn, startTrialOnLoad, trialOn]);
+
   async function startTrial() {
     setError("");
-    if (accountsOn && !signedIn) {
-      window.location.assign("/sign-in?redirect_url=/pricing");
+    if (accountsOn && !clerkLoaded) return;
+    if (!signedIn) {
+      window.location.assign(trialSignInHref());
       return;
     }
     setTrialBusy(true);
@@ -120,7 +144,7 @@ function PricingForm({
       const res = await fetch("/api/billing/trial", { method: "POST" });
       const data = (await res.json()) as { error?: string; code?: string; plus?: boolean };
       if (data.code === "SIGN_IN_REQUIRED" || res.status === 401) {
-        window.location.assign("/sign-in?redirect_url=/pricing");
+        window.location.assign(trialSignInHref());
         return;
       }
       if (!res.ok) throw new Error(data.error || "Could not start the free trial.");
@@ -214,16 +238,19 @@ function PricingForm({
         ) : canTrial ? (
           <div className="pricing-trial">
             <b>Try free for 1 day</b>
-            <p>Full Focus practice, listen lists, and word repeats. No card required. One trial per account.</p>
+            <p>
+              Full Focus practice, listen lists, and word repeats. No card required. Sign in or{" "}
+              <Link href={trialSignUpHref()}>create an account</Link> first — one trial per account.
+            </p>
             <button
               className="btn-primary"
               type="button"
-              disabled={trialBusy}
+              disabled={trialBusy || (accountsOn && !clerkLoaded)}
               onClick={() => void startTrial()}
             >
               {trialBusy
                 ? "Starting trial…"
-                : accountsOn && !signedIn
+                : !signedIn
                   ? "Sign in to start free trial"
                   : "Start free trial"}
             </button>

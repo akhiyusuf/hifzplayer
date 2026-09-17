@@ -25,7 +25,7 @@ export default async function SignUpPage({
           appearance={clerkAppearance}
           routing="path"
           path="/sign-up"
-          signInUrl="/sign-in"
+          signInUrl={`/sign-in?redirect_url=${encodeURIComponent(next)}`}
           fallbackRedirectUrl={next}
         />
       ) : (
