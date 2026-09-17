@@ -189,8 +189,8 @@ export function freshMaskForVerse(peeks = 3): VerseMaskState {
 }
 
 /**
- * After skip, dest ayah is current, not done, reveal from the start.
- * Mode stays `masked`.
+ * After skip or an ayah-number jump, dest ayah is current, not done,
+ * reveal from the start. Mode stays `masked`.
  */
 export function maskedSkipReveal(
   destIdx: number,
@@ -209,6 +209,19 @@ export function maskedSkipReveal(
       curWord,
     }),
   };
+}
+
+/** Settings verse jump and mushaf ayah-number taps use the same dest restart as skip. */
+export function maskedJumpReveal(
+  destIdx: number,
+  wordCount: number,
+  curWord = 0,
+) {
+  return maskedSkipReveal(destIdx, wordCount, curWord);
+}
+
+export function shouldRestartMaskOnJump(mode: string) {
+  return mode === "masked";
 }
 
 /** Mushaf word slots are tappable except in Masked. */

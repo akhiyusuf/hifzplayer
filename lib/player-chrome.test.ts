@@ -13,7 +13,9 @@ import {
   sortedWordRange,
   destIndexInPassage,
   freshMaskForVerse,
+  maskedJumpReveal,
   maskedSkipReveal,
+  shouldRestartMaskOnJump,
   mushafWordsInteractive,
   wordTapIntent,
   playerPageKind,
@@ -206,6 +208,46 @@ describe("masked skip", () => {
       { masked: true, revealUpTo: 4 },
     );
     assert.deepEqual(maskedSkipReveal(0, 4), {
+      mode: "masked",
+      masked: true,
+      revealUpTo: 0,
+    });
+  });
+});
+
+describe("masked ayah jump", () => {
+  it("restarts dest the same way skip does and keeps words untappable", () => {
+    assert.equal(shouldRestartMaskOnJump("masked"), true);
+    assert.equal(shouldRestartMaskOnJump("verse"), false);
+    assert.equal(shouldRestartMaskOnJump("word"), false);
+    assert.deepEqual(maskedJumpReveal(2, 7), maskedSkipReveal(2, 7));
+    assert.deepEqual(maskedJumpReveal(0, 4), {
+      mode: "masked",
+      masked: true,
+      revealUpTo: 0,
+    });
+    assert.deepEqual(maskedJumpReveal(3, 6, 1), {
+      mode: "masked",
+      masked: true,
+      revealUpTo: 1,
+    });
+    assert.equal(mushafWordsInteractive("masked"), false);
+  });
+
+  it("does not treat a previously finished dest ayah as already revealed", () => {
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "masked",
+        verseIdx: 4,
+        currentIdx: 4,
+        wordCount: 5,
+        currentReveal: 5,
+        verseDone: true,
+        curWord: 0,
+      }),
+      { masked: true, revealUpTo: 5 },
+    );
+    assert.deepEqual(maskedJumpReveal(4, 5), {
       mode: "masked",
       masked: true,
       revealUpTo: 0,

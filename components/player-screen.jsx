@@ -999,7 +999,7 @@ export function PlayerScreen(e) {
                 verse,
               );
             if (idx >= 0) {
-              (eu.loadVerseAudio(idx, !1),
+              (eu.jumpToVerse(idx, !1),
                 eSetTools(!1),
                 scrollPlayerToVerse(idx));
               return;
