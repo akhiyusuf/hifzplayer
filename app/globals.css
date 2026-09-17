@@ -363,6 +363,7 @@ body:has(.landing) .shell{margin-left:0}
   .pricing-price{font-size:24px}
 }
 .practise-job.locked{opacity:.72}
+.mode-opt.locked{opacity:.72}
 .play-btn.locked{box-shadow:none;opacity:.72}
 .lists-lead{margin:0 0 4px;font-size:13.5px;line-height:1.45;color:var(--text-secondary)}
 .lists-hint{font-size:12px;font-weight:600;color:var(--text-muted);max-width:48%;text-align:right;line-height:1.3}

@@ -22,7 +22,6 @@ export function FocusVersePage(e) {
       s.verses.length > 1
         ? "".concat(s.vIdx + 1, " of ", s.verses.length)
         : undefined,
-    hint: "verse" === s.mode ? "Look around, or pick a job in Settings" : undefined,
     progress:
       s.verses.length > 1
         ? {

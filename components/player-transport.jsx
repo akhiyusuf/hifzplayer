@@ -419,6 +419,8 @@ export function PlayerHead(e) {
       title: t,
       backLabel: p = null,
       onBack: onBack = null,
+      onPractice: onPractice = null,
+      practiceOpen: practiceOpen = !1,
       onSettings: onSettings = null,
       settingsOpen: settingsOpen = !1,
     } = e,
@@ -437,6 +439,22 @@ export function PlayerHead(e) {
         className: "ttl",
         children: _jsx("h1", { children: t }),
       }),
+      onPractice
+        ? _jsxs("button", {
+            type: "button",
+            className: "icon-btn sm labelled tap".concat(
+              practiceOpen ? " on" : "",
+            ),
+            "aria-label": "Practice",
+            "aria-expanded": !!practiceOpen,
+            "aria-haspopup": "dialog",
+            onClick: onPractice,
+            children: [
+              _jsx(Icon, { name: "brackets", size: 16 }),
+              "Practice",
+            ],
+          })
+        : null,
       onSettings
         ? _jsx("button", {
             type: "button",

@@ -687,6 +687,30 @@ export function PlayerScreen(e) {
       ez.mode,
       !!(null === (t = ez.relay) || void 0 === t ? void 0 : t.active),
     ),
+    ePickMode = (e) => {
+      (eHintFor.current = null, ey(!1), eSetTools(!1));
+      if ("verse" === e) {
+        eu.setMode("verse");
+        return;
+      }
+      if ("relay" === e) {
+        let order = [
+          {
+            kind: "qari",
+            reciterId: null != ez.reciterId ? ez.reciterId : eM,
+          },
+          { kind: "you" },
+        ];
+        let from = (ez.verses[0] && ez.verses[0].number) || V;
+        let to =
+          (ez.verses[ez.verses.length - 1] &&
+            ez.verses[ez.verses.length - 1].number) ||
+          D;
+        eu.beginRelay(order, from, to, 2);
+        return;
+      }
+      eu.setMode(e);
+    },
     eZ =
       "relay" === ePage
         ? _jsx(FocusRelayPage, { ...eX })
@@ -712,6 +736,10 @@ export function PlayerScreen(e) {
               (eQuietUi("settings"), eSetTools(!0));
             },
             settingsOpen: eTools,
+            onPractice: () => {
+              (eQuietUi("practice"), ey(!0));
+            },
+            practiceOpen: ef,
           }),
           "mushaf" === ePage
             ? _jsx(MushafJobBar, { engine: eu, state: ez })
@@ -960,31 +988,7 @@ export function PlayerScreen(e) {
           onOpenReciter: () => {
             (eQuietUi("reciter"), ej(!0));
           },
-          onPickMode: (e) => {
-            (eHintFor.current = null);
-            eSetTools(!1);
-            if ("verse" === e) {
-              eu.setMode("verse");
-              return;
-            }
-            if ("relay" === e) {
-              let order = [
-                {
-                  kind: "qari",
-                  reciterId: null != ez.reciterId ? ez.reciterId : eM,
-                },
-                { kind: "you" },
-              ];
-              let from = (ez.verses[0] && ez.verses[0].number) || V;
-              let to =
-                (ez.verses[ez.verses.length - 1] &&
-                  ez.verses[ez.verses.length - 1].number) ||
-                D;
-              eu.beginRelay(order, from, to, 2);
-              return;
-            }
-            eu.setMode(e);
-          },
+          onPickMode: ePickMode,
           onLocate: (ch, verse) => {
             let count =
                 (en.find((item) => item.id === ch) &&
@@ -1160,9 +1164,7 @@ export function PlayerScreen(e) {
           initialMode: ez.mode,
           variant: "mode",
           onStart: (e, t, s) => {
-            (eQuietUi("settings"),
-              eu.setMode(s),
-              "relay" === eu.getSnapshot().mode && eSetTools(!0));
+            ePickMode(s);
           },
           onClose: () => ey(!1),
         }),
