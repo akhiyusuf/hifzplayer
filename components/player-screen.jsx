@@ -752,7 +752,7 @@ export function PlayerScreen(e) {
           "mushaf" === ePage
             ? _jsx(MushafJobBar, { engine: eu, state: ez })
             : null,
-          eHint
+          eHint && !("mushaf" === ez.style && "relay" === ez.mode)
             ? _jsx("p", {
                 className: "player-drill-hint",
                 role: "status",
