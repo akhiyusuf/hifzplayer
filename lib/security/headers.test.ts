@@ -24,12 +24,14 @@ describe("security headers", () => {
     assert.match(CONTENT_SECURITY_POLICY, /object-src 'none'/);
   });
 
-  it("allows Quran audio and the v4 API only as remote connect/media", () => {
+  it("allows Quran audio, the v4 API, and Turnstile as remote connect/script", () => {
     assert.match(CONTENT_SECURITY_POLICY, /api\.quran\.com/);
     assert.match(CONTENT_SECURITY_POLICY, /verses\.quran\.com/);
     assert.match(CONTENT_SECURITY_POLICY, /mirrors\.quranicaudio\.com/);
     assert.match(CONTENT_SECURITY_POLICY, /va\.vercel-scripts\.com/);
     assert.match(CONTENT_SECURITY_POLICY, /vitals\.vercel-insights\.com/);
+    assert.match(CONTENT_SECURITY_POLICY, /challenges\.cloudflare\.com/);
+    assert.match(CONTENT_SECURITY_POLICY, /frame-src https:\/\/challenges\.cloudflare\.com/);
     assert.doesNotMatch(CONTENT_SECURITY_POLICY, /\*/);
   });
 

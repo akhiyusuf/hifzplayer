@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import { SignIn } from "@clerk/nextjs";
 import { APP_NAME } from "@/lib/brand";
-import { clerkAppearance } from "@/lib/auth/appearance";
-import { clerkBrowserReady } from "@/lib/auth/config";
+import { accountsBrowserReady, accountsConfigured } from "@/lib/auth/config";
 import { AccountsNotConfigured, AuthShell } from "@/components/auth-shell";
+import { EmailAuthForm } from "@/components/email-auth-form";
 import { safePath } from "@/lib/nav";
 
 export const metadata: Metadata = {
   title: `Sign in — ${APP_NAME}`,
   robots: { index: false, follow: false },
 };
+export const dynamic = "force-dynamic";
 
 export default async function SignInPage({
   searchParams,
@@ -18,19 +18,10 @@ export default async function SignInPage({
 }) {
   const { redirect_url } = await searchParams;
   const next = safePath(redirect_url, "/");
+  const ready = accountsConfigured() && accountsBrowserReady();
   return (
     <AuthShell title="Sign in" backHref={next === "/" ? "/" : next}>
-      {clerkBrowserReady() ? (
-        <SignIn
-          appearance={clerkAppearance}
-          routing="path"
-          path="/sign-in"
-          signUpUrl="/sign-up"
-          fallbackRedirectUrl={next}
-        />
-      ) : (
-        <AccountsNotConfigured />
-      )}
+      {ready ? <EmailAuthForm mode="sign-in" redirectTo={next} /> : <AccountsNotConfigured />}
     </AuthShell>
   );
 }

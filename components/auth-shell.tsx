@@ -29,8 +29,10 @@ export function AccountsNotConfigured() {
   return (
     <>
       <p className="pricing-lead" style={{ textAlign: "center", maxWidth: 360 }}>
-        Sign-in is two keys. Add the Clerk integration on this Vercel project (or paste the publishable and
-        secret keys), redeploy, and this page becomes a real sign-in form.
+        Sign-in is Neon plus Cloudflare Turnstile. Add <code>DATABASE_URL</code>,{" "}
+        <code>AUTH_SECRET</code> (or <code>BILLING_SIGNING_SECRET</code>),{" "}
+        <code>NEXT_PUBLIC_TURNSTILE_SITE_KEY</code>, and <code>TURNSTILE_SECRET_KEY</code>, then this page
+        becomes an email-code form.
       </p>
       <p className="pricing-note" style={{ textAlign: "center", maxWidth: 360 }}>
         Quran reading stays open either way. Accounts lock {PLUS_NAME} to you, not to a shared browser cookie.

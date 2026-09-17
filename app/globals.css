@@ -25,7 +25,11 @@
 .seg button.locked,.rep-seg button.locked,.rounds-row button.locked,.style-toggle button.locked,.tr-btn.locked{opacity:.7}
 .btn-dashed.locked{color:var(--action-primary);border-color:var(--tint-primary-border)}
 .auth-shell{flex:1;padding:28px 20px 40px;display:flex;flex-direction:column;align-items:center;gap:16px}
-.auth-shell .cl-rootBox,.auth-shell .cl-cardBox{width:100%;max-width:400px}
+.auth-form{width:100%;max-width:400px;display:flex;flex-direction:column;gap:12px}
+.auth-form .auth-code{letter-spacing:.28em;text-align:center;font-family:var(--font-numeral);font-size:20px}
+.turnstile-slot{min-height:65px;display:flex;justify-content:center}
+.auth-switch{font-size:13px;line-height:1.5;color:var(--text-secondary);text-align:center}
+.auth-switch a{color:var(--action-primary);font-weight:600;text-decoration:none}
 .account-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:4px;padding:18px 16px;border-radius:var(--radius-card);background:var(--bg-surface);border:1px solid var(--border-default);text-align:center}
 .account-card b{font-family:var(--font-display);font-weight:700;font-size:18px}
 .account-card>span{font-size:13.5px;color:var(--text-secondary)}

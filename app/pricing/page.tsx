@@ -4,8 +4,8 @@ import Link from "next/link";
 import { PricingView } from "@/components/pricing-view";
 import { Icon } from "@/components/icon";
 import { PLUS_NAME } from "@/lib/brand";
-import { clerkConfigured } from "@/lib/auth/config";
-import { clerkTrialUsedAt } from "@/lib/auth/plus";
+import { accountsConfigured } from "@/lib/auth/config";
+import { trialUsedAt } from "@/lib/auth/plus";
 import { resolveEntitlement, signedInUserId } from "@/lib/auth/session";
 import { countryFromHeaders } from "@/lib/billing/country";
 import { processorsReady } from "@/lib/billing/env";
@@ -26,15 +26,15 @@ export default async function PricingPage({
   const regionId = regionForCountry(countryFromHeaders(headerList));
   const region = catalog().find((r) => r.id === regionId) ?? catalog()[0];
   const ent = await resolveEntitlement();
-  const accountsOn = clerkConfigured();
+  const accountsOn = accountsConfigured();
   const userId = accountsOn ? await signedInUserId() : null;
   const { cookies } = await import("next/headers");
   const jar = await cookies();
   const cookieUsed = Boolean(openTrialUsed(jar.get(TRIAL_USED_COOKIE)?.value));
-  const clerkUsed = userId ? Boolean(await clerkTrialUsedAt(userId)) : false;
+  const accountUsed = userId ? Boolean(await trialUsedAt(userId)) : false;
   const canTrial = trialAvailable({
     entitlement: ent,
-    trialUsed: cookieUsed || clerkUsed,
+    trialUsed: cookieUsed || accountUsed,
   });
 
   return (
@@ -51,6 +51,7 @@ export default async function PricingPage({
         canceled={params.canceled === "1"}
         trialAvailable={canTrial}
         plusOn={Boolean(ent)}
+        accountsOn={accountsOn}
       />
     </main>
   );

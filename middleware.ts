@@ -1,17 +1,11 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse, type NextFetchEvent, type NextMiddleware, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { PLUS_NAME } from "@/lib/brand";
-import { clerkConfigured } from "@/lib/auth/config";
-import { clerkAuthorizedParties } from "@/lib/auth/parties";
-import { clerkFrontendApiProxyEnabled, clerkProxyUrl } from "@/lib/auth/proxy";
+import { accountsConfigured, SESSION_COOKIE } from "@/lib/auth/config";
 import {
   applyContentSecurityPolicy,
   applySecurityHeaders,
-  clerkCspExtras,
   isPaymentReturnPath,
 } from "@/lib/security/headers";
-
-const isCheckout = createRouteMatcher(["/api/billing/checkout"]);
 
 function secure(res: NextResponse, req: NextRequest) {
   const embeddable = isPaymentReturnPath(req.nextUrl.pathname);
@@ -20,47 +14,20 @@ function secure(res: NextResponse, req: NextRequest) {
   return res;
 }
 
-function publicSecurity(req: NextRequest) {
-  const res = NextResponse.next();
+export default function middleware(req: NextRequest) {
   const embeddable = isPaymentReturnPath(req.nextUrl.pathname);
+  if (accountsConfigured() && req.nextUrl.pathname === "/api/billing/checkout") {
+    if (!req.cookies.get(SESSION_COOKIE)?.value) {
+      return secure(
+        NextResponse.json({ error: `Sign in to buy ${PLUS_NAME}`, code: "SIGN_IN_REQUIRED" }, { status: 401 }),
+        req,
+      );
+    }
+  }
+  const res = NextResponse.next();
   applySecurityHeaders(res.headers, { embeddable });
   applyContentSecurityPolicy(res.headers, { embeddable });
-  return res;
-}
-
-let clerkHandler: NextMiddleware | undefined;
-
-function getClerkHandler() {
-  const parties = clerkAuthorizedParties();
-  const proxyUrl = clerkProxyUrl();
-  clerkHandler ??= clerkMiddleware(
-    async (auth, req) => {
-      if (isCheckout(req)) {
-        const { userId } = await auth();
-        if (!userId) {
-          return secure(
-            NextResponse.json({ error: `Sign in to buy ${PLUS_NAME}`, code: "SIGN_IN_REQUIRED" }, { status: 401 }),
-            req,
-          );
-        }
-      }
-      return secure(NextResponse.next(), req);
-    },
-    {
-      contentSecurityPolicy: { directives: clerkCspExtras() },
-      frontendApiProxy: { enabled: clerkFrontendApiProxyEnabled },
-      ...(parties ? { authorizedParties: parties } : {}),
-      ...(proxyUrl ? { proxyUrl } : {}),
-    },
-  );
-  return clerkHandler;
-}
-
-export default async function middleware(req: NextRequest, event: NextFetchEvent) {
-  const embeddable = isPaymentReturnPath(req.nextUrl.pathname);
-  const raw = clerkConfigured() ? getClerkHandler()(req, event) : publicSecurity(req);
-  const res = await raw;
-  if (embeddable && res) {
+  if (embeddable) {
     res.headers.delete("X-Frame-Options");
     res.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
   }
@@ -71,6 +38,5 @@ export const config = {
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|.*\\.webmanifest).*)",
     "/(api|trpc)(.*)",
-    "/__clerk/(.*)",
   ],
 };

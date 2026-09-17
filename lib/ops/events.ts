@@ -4,7 +4,7 @@ export type OpsEventType = "user_created" | "user_signed_in" | "incident";
 
 export type OpsEvent = {
   type: OpsEventType;
-  /** Clerk user id. Same value shown on /account. */
+  /** Account id. Same value shown on /account. */
   accountId?: string;
   reason?: string;
   ok?: boolean;

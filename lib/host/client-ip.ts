@@ -1,5 +1,5 @@
 /**
- * Client IP for rate limits and Clerk's Frontend API proxy.
+ * Client IP for rate limits and Turnstile siteverify.
  * Cloudflare's CF-Connecting-IP is the edge-seen address. Do not trust the
  * leftmost X-Forwarded-For — a client can set that.
  */

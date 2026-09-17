@@ -1,23 +1,42 @@
-import { clerkProxyUrl } from "./proxy.ts";
+export const SESSION_COOKIE = "diras_sid";
+export const SESSION_MAX_AGE = 60 * 60 * 24 * 30;
+export const OTP_TTL_MS = 10 * 60 * 1000;
+export const OTP_MAX_ATTEMPTS = 5;
+export const OTP_PER_EMAIL_PER_HOUR = 5;
 
-export function clerkPublishableKey() {
-  return process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || "";
+export function authSecret() {
+  return process.env.AUTH_SECRET || process.env.BILLING_SIGNING_SECRET || "";
 }
 
-export function clerkSecretKey() {
-  return process.env.CLERK_SECRET_KEY || "";
+export function turnstileSiteKey() {
+  return process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 }
 
-/** Both keys must be present before we treat accounts as live. */
-export function clerkConfigured() {
-  return Boolean(clerkPublishableKey() && clerkSecretKey());
+export function turnstileSecretKey() {
+  return process.env.TURNSTILE_SECRET_KEY || "";
 }
 
-export function clerkBrowserReady() {
-  return Boolean(clerkPublishableKey());
+/** Neon + signing secret. Webhooks and grants can run with this even before Turnstile is on. */
+export function accountsConfigured() {
+  const db = process.env.DATABASE_URL || process.env.NEON_DATABASE_URL || "";
+  return Boolean(db) && Boolean(authSecret());
 }
 
-/** Absolute same-origin Clerk Frontend API proxy, or empty. */
-export function clerkClientProxyUrl() {
-  return clerkProxyUrl();
+/** Public signal that the email-code form can render (Turnstile site key). */
+export function accountsBrowserReady() {
+  return Boolean(turnstileSiteKey());
+}
+
+export function sessionCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: SESSION_MAX_AGE,
+  };
+}
+
+export function clearSessionCookieOptions() {
+  return { ...sessionCookieOptions(), maxAge: 0 };
 }

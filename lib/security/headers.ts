@@ -1,7 +1,7 @@
 import { AUDIO_MIRROR_ORIGIN } from "../constants.ts";
 import { r2PublicOrigin } from "../files/r2.ts";
 
-/** Browser security headers. CSP is applied in middleware so Clerk can merge its own directives. */
+/** Browser security headers. CSP is applied in middleware so Turnstile can load. */
 
 export const SECURITY_HEADERS: { key: string; value: string }[] = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -31,6 +31,7 @@ function cspBase() {
     AUDIO_MIRROR_ORIGIN,
     "https://va.vercel-scripts.com",
     "https://vitals.vercel-insights.com",
+    "https://challenges.cloudflare.com",
     extra,
   ]
     .filter(Boolean)
@@ -43,12 +44,13 @@ function cspBase() {
     "base-uri 'self'",
     "form-action 'self'",
     "object-src 'none'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://challenges.cloudflare.com",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self' data:",
     `connect-src ${connect}`,
     `media-src ${media}`,
+    "frame-src https://challenges.cloudflare.com",
     "worker-src 'self' blob:",
     "upgrade-insecure-requests",
   ];
@@ -65,33 +67,7 @@ export function contentSecurityPolicy(embeddable: boolean) {
   return [...cspBase(), frame].join("; ");
 }
 
-/** Used when Clerk is not on this deployment. Clerk middleware supplies a compatible CSP when accounts are enabled. */
 export const CONTENT_SECURITY_POLICY = contentSecurityPolicy(false);
-
-export function clerkCspExtras() {
-  return {
-    "connect-src": [
-      "https://api.quran.com",
-      "https://verses.quran.com",
-      AUDIO_MIRROR_ORIGIN,
-      "https://va.vercel-scripts.com",
-      "https://vitals.vercel-insights.com",
-      ...extraCdnOrigins(),
-    ],
-    "script-src": ["https://va.vercel-scripts.com"],
-    "media-src": ["'self'", "https://verses.quran.com", AUDIO_MIRROR_ORIGIN, ...extraCdnOrigins(), "blob:"],
-    "frame-ancestors": [
-      "'self'",
-      "https://checkout.paystack.com",
-      "https://standard.paystack.co",
-      "https://paystack.com",
-    ],
-    "object-src": ["'none'"],
-  };
-}
-
-/** @deprecated Use clerkCspExtras() so R2 origins are read at request time. */
-export const CLERK_CSP_EXTRAS = clerkCspExtras();
 
 export function applySecurityHeaders(headers: Headers, opts?: { embeddable?: boolean }) {
   for (const h of SECURITY_HEADERS) headers.set(h.key, h.value);

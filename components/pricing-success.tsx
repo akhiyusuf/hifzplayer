@@ -173,8 +173,8 @@ export function PricingSuccess({
         </span>
         <h2>Gift sent</h2>
         <p>
-          Plus is on their Diras account. They should sign in with that email — Google is fine if it uses the same
-          address. Your account stays as it was.
+          Plus is on their Diras account. They should sign in with that email — we will email them a 6-digit
+          code. Your account stays as it was.
         </p>
         <div className="status-actions">
           <Link className="btn-primary" href="/">

@@ -1,36 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { Show, UserButton } from "@clerk/nextjs";
 import { Icon } from "@/components/icon";
-import { clerkBrowserReady } from "@/lib/auth/config";
+import { useAuth } from "@/components/auth-root";
 
 export function AccountEntry({ compact = false }: { compact?: boolean }) {
-  if (!clerkBrowserReady()) {
-    return (
-      <Link className="icon-btn tap" href="/account" aria-label="Account">
-        <Icon name="user" size={18} />
-      </Link>
-    );
-  }
+  const { loaded, accountsReady, signedIn } = useAuth();
+  const href = !loaded || !accountsReady ? "/account" : signedIn ? "/account" : "/sign-in";
+  const label = signedIn ? "Account" : "Sign in";
   return (
-    <>
-      <Show when="signed-out">
-        <Link className="icon-btn tap" href="/sign-in" aria-label="Sign in">
-          <Icon name="user" size={18} />
-        </Link>
-      </Show>
-      <Show when="signed-in">
-        <span className={compact ? "account-btn" : undefined}>
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: { width: 32, height: 32 },
-              },
-            }}
-          />
-        </span>
-      </Show>
-    </>
+    <Link className={compact ? "icon-btn tap account-btn" : "icon-btn tap"} href={href} aria-label={label}>
+      <Icon name="user" size={18} />
+    </Link>
   );
 }
