@@ -8,6 +8,7 @@ import {
   trialAvailable,
   trialUntil,
 } from "./trial.ts";
+import { trialSignInHref, trialSignUpHref, wantsStartTrial } from "./trial-path.ts";
 
 describe("trial helpers", () => {
   it("treats trial as a plan id but never a paid checkout plan", () => {
@@ -25,7 +26,9 @@ describe("trial helpers", () => {
     assert.equal(ent.planId, "trial");
     assert.equal(ent.processor, "trial");
     assert.equal(ent.regionId, "us");
+    assert.equal(ent.userId, "user_1");
     assert.equal(ent.ref, "trial:test");
+    assert.match(grantTrial({ regionId: "us", userId: "user_9" }).ref || "", /^trial:user_9:/);
     assert.ok(ent.until);
     assert.ok(Date.parse(ent.until!) > Date.now());
   });
@@ -50,6 +53,15 @@ describe("trial helpers", () => {
       }),
       true,
     );
+  });
+
+  it("sends unsigned readers to sign-in so the trial binds to an account", () => {
+    assert.equal(trialSignInHref(), "/sign-in?redirect_url=%2Fpricing%3Fstart_trial%3D1");
+    assert.equal(trialSignUpHref(), "/sign-up?redirect_url=%2Fpricing%3Fstart_trial%3D1");
+    assert.equal(wantsStartTrial("1"), true);
+    assert.equal(wantsStartTrial(["1"]), true);
+    assert.equal(wantsStartTrial("0"), false);
+    assert.equal(wantsStartTrial(undefined), false);
   });
 
   it("seals and opens the trial-used cookie marker", () => {

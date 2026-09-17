@@ -10,6 +10,7 @@ import {
 } from "@/lib/security/headers";
 
 const isCheckout = createRouteMatcher(["/api/billing/checkout"]);
+const isTrial = createRouteMatcher(["/api/billing/trial"]);
 
 function secure(res: NextResponse, req: NextRequest) {
   const embeddable = isPaymentReturnPath(req.nextUrl.pathname);
@@ -31,13 +32,13 @@ let clerkHandler: NextMiddleware | undefined;
 function getClerkHandler() {
   clerkHandler ??= clerkMiddleware(
     async (auth, req) => {
-      if (isCheckout(req)) {
+      if (isCheckout(req) || isTrial(req)) {
         const { userId } = await auth();
         if (!userId) {
-          return secure(
-            NextResponse.json({ error: `Sign in to buy ${PLUS_NAME}`, code: "SIGN_IN_REQUIRED" }, { status: 401 }),
-            req,
-          );
+          const error = isTrial(req)
+            ? `Sign in to start your ${PLUS_NAME} trial`
+            : `Sign in to buy ${PLUS_NAME}`;
+          return secure(NextResponse.json({ error, code: "SIGN_IN_REQUIRED" }, { status: 401 }), req);
         }
       }
       return secure(NextResponse.next(), req);

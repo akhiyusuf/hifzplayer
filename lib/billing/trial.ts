@@ -14,11 +14,11 @@ export function trialUntil(from = new Date()): string {
 
 export function grantTrial(opts: {
   regionId: RegionId;
-  userId?: string;
+  userId: string;
   email?: string;
   ref?: string;
 }): Entitlement {
-  const ref = opts.ref || `trial:${opts.userId || "anon"}:${Date.now()}`;
+  const ref = opts.ref || `trial:${opts.userId}:${Date.now()}`;
   return {
     v: 1,
     plus: true,
