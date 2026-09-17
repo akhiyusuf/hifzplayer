@@ -112,9 +112,6 @@ export default function HomePage() {
       <div className="read-head">
         <HomeHello />
         <div className="rh-actions">
-          <Link className="icon-btn tap" href="/roadmap?from=home" aria-label="What's coming">
-            <Icon name="sparkles" size={18} />
-          </Link>
           <button
             className="icon-btn tap"
             onClick={() => setSearchOpen((v) => !v)}

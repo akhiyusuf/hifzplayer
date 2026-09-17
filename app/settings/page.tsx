@@ -256,8 +256,6 @@ export default function SettingsPage() {
           <Link href="/credits?from=settings">Data & attributions</Link>
           <span aria-hidden="true">·</span>
           <Link href="/privacy?from=settings">Privacy</Link>
-          <span aria-hidden="true">·</span>
-          <span>v0.1.0</span>
         </div>
       </div>
     </main>
