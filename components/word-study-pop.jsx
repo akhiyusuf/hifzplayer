@@ -67,7 +67,6 @@ export function WordStudyPop(e) {
         () => document.removeEventListener("keydown", s)
       );
     }, [y]));
-  let S = p ? "Word Reps" : "Loop";
   return _jsx("div", {
     className: "pop-wrap",
     onClick: y,
