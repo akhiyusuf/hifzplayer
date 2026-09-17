@@ -6,6 +6,8 @@ import {
   listenLeadCopy,
   occasionHintCopy,
   playlistBarTitle,
+  playlistsLocked,
+  playlistsLockedPitch,
   plusOnLabel,
   plusSalaamLine,
 } from "./plus-presence.ts";
@@ -22,13 +24,25 @@ describe("plus presence copy", () => {
     assert.doesNotMatch(listenLeadCopy(true), /Playing a list is/);
     assert.doesNotMatch(listenLeadCopy(true), /reciter/i);
     assert.match(listenLeadCopy(false), /Diras Plus/);
-    assert.match(listenLeadCopy(false), /Reading stays on Menu/);
+    assert.match(listenLeadCopy(false), /Reading stays free on Menu/);
+    assert.doesNotMatch(listenLeadCopy(false), /Look around/);
   });
 
   it("does not repeat the reciter on occasion rows", () => {
     assert.equal(occasionHintCopy(true, "Minshawi"), "Play a list");
-    assert.match(occasionHintCopy(false, "Minshawi"), /Look around/);
+    assert.equal(occasionHintCopy(false, "Minshawi"), `${PLUS_NAME} extra`);
+    assert.doesNotMatch(occasionHintCopy(false, "Minshawi"), /Look around/);
     assert.doesNotMatch(occasionHintCopy(true, "Minshawi"), /Minshawi/);
+  });
+
+  it("shows one locked Plus pitch instead of eight sparkle cards", () => {
+    assert.equal(playlistsLocked(false), true);
+    assert.equal(playlistsLocked(true), false);
+    const pitch = playlistsLockedPitch();
+    assert.match(pitch.title, new RegExp(PLUS_NAME));
+    assert.match(pitch.body, /occasion lists/i);
+    assert.doesNotMatch(pitch.body, /Look around/);
+    assert.equal(pitch.cta, "See plans");
   });
 
   it("marks a playing list as Plus", () => {

@@ -5,7 +5,10 @@ import {
   backHref,
   focusPassageHref,
   isFocusReadQuery,
+  dropReadModeParam,
   safePath,
+  signInHref,
+  signInReturnPath,
 } from "./nav.ts";
 
 describe("backHref", () => {
@@ -30,6 +33,18 @@ describe("safePath", () => {
   });
 });
 
+describe("sign-in return", () => {
+  it("lands in the app after Clerk, not the marketing page or another auth screen", () => {
+    assert.equal(signInReturnPath(undefined), "/home");
+    assert.equal(signInReturnPath("/"), "/home");
+    assert.equal(signInReturnPath("/sign-in"), "/home");
+    assert.equal(signInReturnPath("/sign-up?redirect_url=/home"), "/home");
+    assert.equal(signInReturnPath("/settings"), "/settings");
+    assert.equal(signInReturnPath("/account?from=settings"), "/account?from=settings");
+    assert.equal(signInHref("/settings"), "/sign-in?redirect_url=%2Fsettings");
+  });
+});
+
 describe("focusPassageHref", () => {
   it("defaults to Al-Fatiha in Focus", () => {
     assert.equal(
@@ -51,5 +66,13 @@ describe("isFocusReadQuery", () => {
     assert.equal(isFocusReadQuery("style=focus"), true);
     assert.equal(isFocusReadQuery("?mode=word"), true);
     assert.equal(isFocusReadQuery("from=1&to=7"), false);
+  });
+});
+
+describe("dropReadModeParam", () => {
+  it("strips mode so leaving a drill is not undone by the URL", () => {
+    assert.equal(dropReadModeParam("from=1&to=7&style=focus&mode=masked"), "from=1&to=7&style=focus");
+    assert.equal(dropReadModeParam("?mode=relay&from=1"), "from=1");
+    assert.equal(dropReadModeParam("from=1&to=7"), "from=1&to=7");
   });
 });

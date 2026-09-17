@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { FOCUS_JOBS } from "@/lib/constants";
+import {
+  practiceSheetJobs,
+  practiceSheetPickMode,
+  practiceSheetShowsExit,
+} from "@/lib/player-chrome";
+import { usePlus } from "@/lib/plus";
 import { Icon } from "./icon";
 import { PassageRange } from "./passage-range";
 import { Sheet } from "./sheet";
@@ -28,37 +33,54 @@ export function PracticeSheet({
   const [from, setFrom] = useState(Math.min(initialFrom, versesCount));
   const [to, setTo] = useState(Math.min(initialTo, versesCount));
   const [mode, setMode] = useState(initialMode);
+  const { plus: plusOn, askPlus, ready } = usePlus();
   const modeOnly = variant === "mode";
+  const jobs = modeOnly ? practiceSheetJobs(mode) : [];
+  const showExit = modeOnly && practiceSheetShowsExit(mode);
 
   return (
-    <Sheet title={modeOnly ? "Practise" : `Set up ${surahName}`} onClose={onClose}>
+    <Sheet title={modeOnly ? "Practice" : `Set up ${surahName}`} onClose={onClose}>
       {!modeOnly && (
         <PassageRange versesCount={versesCount} from={from} to={to} onFrom={setFrom} onTo={setTo} />
       )}
       {modeOnly ? (
         <div className="sheet-list">
-          {FOCUS_JOBS.map((m) => (
-            <button
-              key={m.id}
-              className={`mode-opt${mode === m.id ? " on" : ""}`}
-              onClick={() => {
-                setMode(m.id);
-                onStart(from, to, m.id);
-              }}
-              aria-pressed={mode === m.id}
-            >
-              <span className="mo-ic">
-                <Icon name={m.icon} size={19} />
-              </span>
-              <span className="mo-t">
-                <b>{m.name}</b>
-                <span>{m.desc}</span>
-              </span>
-              <span className="radio-dot">
-                <Icon name="check" size={13} />
-              </span>
-            </button>
-          ))}
+          {jobs.map((m) => {
+            const on = mode === m.id;
+            const listen = m.id === "verse";
+            const locked = !plusOn && !on && !listen;
+            return (
+              <button
+                key={m.id}
+                className={`mode-opt${on ? " on" : ""}${locked ? " locked" : ""}`}
+                data-practice-exit={listen && showExit ? "true" : undefined}
+                aria-label={listen && showExit ? "Stop practice" : undefined}
+                onClick={() => {
+                  const next = practiceSheetPickMode(mode, m.id);
+                  const leaving = next === "verse";
+                  if (!leaving && !ready) return;
+                  if (locked) {
+                    askPlus("practice");
+                    return;
+                  }
+                  setMode(next);
+                  onStart(from, to, next);
+                }}
+                aria-pressed={on}
+              >
+                <span className="mo-ic">
+                  <Icon name={m.icon} size={19} />
+                </span>
+                <span className="mo-t">
+                  <b>{listen && showExit ? "Listen" : m.name}</b>
+                  <span>{listen && showExit ? "Stop practice — listen to this ayah" : m.desc}</span>
+                </span>
+                <span className="radio-dot">
+                  <Icon name="check" size={13} />
+                </span>
+              </button>
+            );
+          })}
         </div>
       ) : (
         <button className="btn-primary" onClick={() => onStart(from, to, "verse")}>

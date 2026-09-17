@@ -1,11 +1,12 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { unstable_rethrow } from "next/navigation";
 import { clerkConfigured } from "@/lib/auth/config";
 import { clerkPlusState, savePlusToClerk } from "@/lib/auth/plus";
 import {
   type Entitlement,
   clearEntitlementCookie,
   entitlementForUser,
-  pickBestEntitlement,
+  planSignedInEntitlement,
   readEntitlement,
   writeEntitlement,
 } from "@/lib/billing/entitlement";
@@ -15,7 +16,18 @@ export async function signedInUserId(): Promise<string | null> {
   try {
     const { userId } = await auth();
     return userId;
-  } catch {
+  } catch (err) {
+    unstable_rethrow(err);
+    return null;
+  }
+}
+
+export async function signedInUser() {
+  if (!clerkConfigured()) return null;
+  try {
+    return await currentUser();
+  } catch (err) {
+    unstable_rethrow(err);
     return null;
   }
 }
@@ -23,44 +35,58 @@ export async function signedInUserId(): Promise<string | null> {
 export async function signedInEmail(): Promise<string | null> {
   if (!clerkConfigured()) return null;
   try {
-    const user = await currentUser();
+    const user = await signedInUser();
     return user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() || null;
-  } catch {
+  } catch (err) {
+    unstable_rethrow(err);
     return null;
+  }
+}
+
+/** pages cannot cookies().set(); swallow that without hiding Next redirects. */
+export async function tryMutateCookies(run: () => Promise<void>) {
+  try {
+    await run();
+  } catch (err) {
+    unstable_rethrow(err);
   }
 }
 
 export async function resolveEntitlement(): Promise<Entitlement | null> {
   const accountsOn = clerkConfigured();
   const userId = await signedInUserId();
-  const cookie = entitlementForUser(await readEntitlement(), userId, accountsOn);
+  const rawCookie = await readEntitlement();
 
-  if (userId) {
-    const state = await clerkPlusState(userId);
-    if (state.status === "revoked") {
-      await clearEntitlementCookie();
-      return null;
-    }
-    if (state.status === "ok") {
-      const best = pickBestEntitlement(state.ent, cookie);
-      if (best) {
-        const bound = { ...best, userId };
-        await writeEntitlement(bound);
-        return bound;
-      }
-    }
-    if (cookie) {
-      const bound = { ...cookie, userId };
-      if (!cookie.userId) {
-        await writeEntitlement(bound);
-        await savePlusToClerk(userId, bound, "granted");
-      }
-      return bound;
-    }
-    return null;
+  if (!userId) {
+    return entitlementForUser(rawCookie, userId, accountsOn);
   }
 
-  return cookie;
+  const state = await clerkPlusState(userId);
+  const plan = planSignedInEntitlement(state, rawCookie, userId, accountsOn);
+  if (plan.persist === "clear") {
+    await tryMutateCookies(() => clearEntitlementCookie());
+  }
+  if (plan.persist === "write" && plan.ent) {
+    await tryMutateCookies(() => writeEntitlement(plan.ent as Entitlement));
+  }
+  if (plan.saveToClerk && plan.ent) {
+    try {
+      await savePlusToClerk(userId, plan.ent as Entitlement, "granted");
+    } catch {
+      /* resolved Plus still applies if Clerk metadata cannot be updated */
+    }
+  }
+  return plan.ent as Entitlement | null;
+}
+
+/** Same as resolveEntitlement, but a page render never becomes the error screen. */
+export async function resolveEntitlementSafe(): Promise<Entitlement | null> {
+  try {
+    return await resolveEntitlement();
+  } catch (err) {
+    unstable_rethrow(err);
+    return null;
+  }
 }
 
 export async function grantPlusToAccount(

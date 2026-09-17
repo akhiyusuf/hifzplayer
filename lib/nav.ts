@@ -20,6 +20,18 @@ export function safePath(path: string | string[] | undefined, fallback = "/home"
   return value;
 }
 
+/** After Clerk sign-in, land in the app — never another sign-in screen. */
+export function signInReturnPath(path: string | string[] | undefined, fallback = "/home") {
+  const next = safePath(path, fallback);
+  if (next === "/" || next.startsWith("/sign-in") || next.startsWith("/sign-up")) return fallback;
+  return next;
+}
+
+export function signInHref(returnPath: string | string[] | undefined, fallback = "/home") {
+  const next = signInReturnPath(returnPath, fallback);
+  return `/sign-in?redirect_url=${encodeURIComponent(next)}`;
+}
+
 export type FocusPassageTarget = {
   chapter: number;
   from: number;
@@ -53,4 +65,11 @@ export function isFocusReadQuery(search: string) {
   if (style === "focus") return true;
   const mode = q.get("mode");
   return mode === "word" || mode === "masked" || mode === "relay";
+}
+
+/** Drop `mode` so leaving a drill is not undone by the URL. */
+export function dropReadModeParam(search: string) {
+  const q = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+  q.delete("mode");
+  return q.toString();
 }

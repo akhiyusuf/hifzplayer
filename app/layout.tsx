@@ -7,6 +7,7 @@ import { ThemeProvider, themeInitScript } from "@/lib/theme";
 import { ToastProvider } from "@/lib/toast";
 import { APP_NAME, APP_TAGLINE } from "@/lib/brand";
 import { AuthRoot } from "@/components/auth-root";
+import { PostAuthGreeting } from "@/components/post-auth-greeting";
 import { Suspense } from "react";
 import { AppSidebar } from "@/components/sidebar";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
@@ -69,11 +70,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a className="skip-link" href="#main">
           Skip to content
         </a>
-        <ThemeProvider>
-          <ToastProvider>
-            <AuthRoot>
+        <AuthRoot>
+          <ThemeProvider>
+            <ToastProvider>
               <PlusProvider>
                 <AppDataProvider>
+                  <PostAuthGreeting />
                   <AppSidebar />
                   {children}
                   <Suspense fallback={null}>
@@ -82,9 +84,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <Analytics />
                 </AppDataProvider>
               </PlusProvider>
-            </AuthRoot>
-          </ToastProvider>
-        </ThemeProvider>
+            </ToastProvider>
+          </ThemeProvider>
+        </AuthRoot>
       </body>
     </html>
   );

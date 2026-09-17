@@ -219,11 +219,6 @@ function PlusGate({
         >
           See plans
         </Link>
-        <button className="btn-secondary" type="button" onClick={onClose}>
-          {feature === "playlists" || feature === "practice" || feature === "focus"
-            ? "Keep looking around"
-            : "Keep using free"}
-        </button>
       </div>
     </Sheet>
   );
