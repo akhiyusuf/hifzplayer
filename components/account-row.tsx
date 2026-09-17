@@ -36,5 +36,6 @@ function AccountRowCopy() {
 
 function AccountRowCopyClerk() {
   const { isLoaded, isSignedIn } = useUser();
-  return accountRowCopy(Boolean(isLoaded && isSignedIn));
+  if (!isLoaded) return accountRowCopy(null);
+  return accountRowCopy(Boolean(isSignedIn));
 }

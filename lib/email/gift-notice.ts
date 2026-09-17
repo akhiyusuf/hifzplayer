@@ -35,7 +35,7 @@ export function giftNoticeText(input: GiftNoticeInput) {
   return [
     lead,
     "",
-    `${PLUS_NAME} unlocks Focus (Word Reps, Masked, Relay), occasion lists, and extra word repeats. Quran reading stays free either way.`,
+    `${PLUS_NAME} unlocks Word Reps, Masked, Relay, occasion lists, and extra word repeats. Quran reading stays free either way.`,
     "",
     how,
     "",

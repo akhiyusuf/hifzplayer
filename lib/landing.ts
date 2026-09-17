@@ -15,7 +15,7 @@ export const LANDING = {
   secondaryCta: "Open the mushaf",
   secondaryHref: "/home",
   demoKicker: "Live Focus · Al-ʿAṣr · no account",
-  freeLine: "Reading and word-sync audio stay free. Plus unlocks Focus in the app.",
+  freeLine: "Reading and word-sync audio stay free. Plus unlocks Word Reps, Masked, Relay, and playlists.",
   focusTitle: "Three jobs. One floor.",
   focusLead: "Same Word Reps, Masked, and Relay as in the app — try them above, then keep going in the mushaf.",
   jobs: [

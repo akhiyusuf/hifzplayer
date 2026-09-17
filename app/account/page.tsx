@@ -75,12 +75,12 @@ export default async function AccountPage({
         <span className="account-plus">{plusLabel(plus)}</span>
         <AccountId id={userId} />
       </div>
+      <AccountSignOut />
       <p className="pricing-note" style={{ textAlign: "center", maxWidth: 360 }}>
         Reading history stays on this device. Plus is stored on your account, so it follows you after you sign
         in on another browser. Quote your account ID if something goes wrong — it is the same id in our logs.
         Paystack and Stripe hold the payment ledger; this account shows the plan that was granted.
       </p>
-      <AccountSignOut />
     </AuthShell>
   );
 }

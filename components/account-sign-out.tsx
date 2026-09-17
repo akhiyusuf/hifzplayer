@@ -13,8 +13,8 @@ function AccountSignOutClerk() {
   return (
     <button
       type="button"
-      className="btn-secondary"
-      style={{ width: "100%", maxWidth: 400 }}
+      className="btn-secondary account-sign-out"
+      aria-label="Sign out"
       onClick={() => signOut({ redirectUrl: "/" })}
     >
       Sign out

@@ -15,5 +15,7 @@ describe("account row copy", () => {
     assert.doesNotMatch(accountSignedInCopy(), /Sign in so/);
     assert.equal(accountRowCopy(true), accountSignedInCopy());
     assert.notEqual(accountRowCopy(true), accountRowCopy(false));
+    assert.equal(accountRowCopy(null), "");
+    assert.notEqual(accountRowCopy(null), accountGuestCopy());
   });
 });

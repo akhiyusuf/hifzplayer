@@ -10,6 +10,8 @@ export function accountSignedInCopy() {
   return "Plan, account ID, and sign out";
 }
 
-export function accountRowCopy(signedIn: boolean) {
+/** `null` while Clerk is still loading — never flash the guest line at a signed-in reader. */
+export function accountRowCopy(signedIn: boolean | null) {
+  if (signedIn == null) return "";
   return signedIn ? accountSignedInCopy() : accountGuestCopy();
 }
