@@ -67,19 +67,8 @@ function MushafRelayBar(e) {
   if (!d) return null;
   let h = "you" === relayWhoseTurn(d),
     who = relayTurnName(h ? "you" : "qari", n(d.reciterId)),
-    u = l.turns.length - l.idx;
-  return _jsx("div", {
-    className: "mushaf-relay-bar",
-    "data-relay-turn": h ? "you" : "qari",
-    children: _jsx(PracticeStrip, {
-    title: h ? "Your turn" : who,
-    meta: relayRoundLabel(l.round, l.rounds),
-    hint: h
-      ? "Recite aloud — the reciter plays muted to pace you"
-      : l.waitingTap
-        ? "Tap play to begin"
-        : undefined,
-    extra: _jsxs("span", {
+    u = l.turns.length - l.idx,
+    extra = _jsxs("span", {
       className: "turn-chip now mushaf-relay-chip",
       "aria-current": "step",
       children: [
@@ -103,7 +92,7 @@ function MushafRelayBar(e) {
         }),
       ],
     }),
-    actions: h
+    actions = h
       ? _jsxs(_Fragment, {
           children: [
             _jsxs("button", {
@@ -124,7 +113,20 @@ function MushafRelayBar(e) {
             }),
           ],
         })
-      : null,
+      : null;
+  return _jsx("div", {
+    className: "mushaf-relay-bar",
+    "data-relay-turn": h ? "you" : "qari",
+    children: _jsx(PracticeStrip, {
+      title: h ? "Your turn" : who,
+      meta: relayRoundLabel(l.round, l.rounds),
+      hint: h
+        ? "Recite aloud — the reciter plays muted to pace you"
+        : l.waitingTap
+          ? "Tap play to begin"
+          : undefined,
+      extra,
+      actions,
     }),
   });
 }
