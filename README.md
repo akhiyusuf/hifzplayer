@@ -29,7 +29,7 @@ Sign-in is two Clerk keys. Add Clerk on the Vercel project (Marketplace), or pas
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
 - `CLERK_SECRET_KEY`
 
-Optional: `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in` and `NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up`.
+Optional: `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in` and `NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up`. On a Cloudflare production instance, also set `NEXT_PUBLIC_APP_URL`, an absolute `NEXT_PUBLIC_CLERK_PROXY_URL` (`https://diras.app/__clerk`), and `CLERK_AUTHORIZED_PARTIES` for any extra origin.
 
 Reading stays public. When Clerk is on, buying Diras Plus requires sign-in, and Plus is stored on that account (not only a browser cookie). Without the keys, `/sign-in` and `/account` show setup copy instead of a fake signed-in state.
 
@@ -80,6 +80,10 @@ To gift Plus, sign in, choose **Gift someone** on `/pricing`, enter an email tha
 In Clerk, turn on the **Welcome** email template if you also want a signup note. That is not the payment confirmation — Diras sends that itself after Plus is granted.
 
 Rename the Paystack page/product and the Stripe product to **Diras Plus** in those dashboards. New checkouts already send that name.
+
+## Hosting (Cloudflare + Neon + R2)
+
+The app still builds with `next build` / `next start`. Cloudflare is a second compile (`npm run preview` / `npm run deploy`) via OpenNext. Sign-in stays **Clerk** on the Worker — not Cloudflare Access. Cutover steps, proxy URL, Neon, and R2: [docs/hosting-cloudflare.md](docs/hosting-cloudflare.md).
 
 ## Security
 

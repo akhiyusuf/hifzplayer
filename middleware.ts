@@ -2,10 +2,12 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type NextFetchEvent, type NextMiddleware, type NextRequest } from "next/server";
 import { PLUS_NAME } from "@/lib/brand";
 import { clerkConfigured } from "@/lib/auth/config";
+import { clerkAuthorizedParties } from "@/lib/auth/parties";
+import { clerkFrontendApiProxyEnabled, clerkProxyUrl } from "@/lib/auth/proxy";
 import {
   applyContentSecurityPolicy,
   applySecurityHeaders,
-  CLERK_CSP_EXTRAS,
+  clerkCspExtras,
   isPaymentReturnPath,
 } from "@/lib/security/headers";
 
@@ -29,6 +31,8 @@ function publicSecurity(req: NextRequest) {
 let clerkHandler: NextMiddleware | undefined;
 
 function getClerkHandler() {
+  const parties = clerkAuthorizedParties();
+  const proxyUrl = clerkProxyUrl();
   clerkHandler ??= clerkMiddleware(
     async (auth, req) => {
       if (isCheckout(req)) {
@@ -43,7 +47,10 @@ function getClerkHandler() {
       return secure(NextResponse.next(), req);
     },
     {
-      contentSecurityPolicy: { directives: CLERK_CSP_EXTRAS },
+      contentSecurityPolicy: { directives: clerkCspExtras() },
+      frontendApiProxy: { enabled: clerkFrontendApiProxyEnabled },
+      ...(parties ? { authorizedParties: parties } : {}),
+      ...(proxyUrl ? { proxyUrl } : {}),
     },
   );
   return clerkHandler;
@@ -64,5 +71,6 @@ export const config = {
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|.*\\.webmanifest).*)",
     "/(api|trpc)(.*)",
+    "/__clerk/(.*)",
   ],
 };

@@ -33,6 +33,16 @@ describe("security headers", () => {
     assert.doesNotMatch(CONTENT_SECURITY_POLICY, /\*/);
   });
 
+  it("allows the R2 public origin when configured", () => {
+    const prev = process.env.R2_PUBLIC_BASE_URL;
+    process.env.R2_PUBLIC_BASE_URL = "https://files.diras.app/audio";
+    try {
+      assert.match(contentSecurityPolicy(false), /files\.diras\.app/);
+    } finally {
+      process.env.R2_PUBLIC_BASE_URL = prev;
+    }
+  });
+
   it("lets Paystack load the payment return pages", () => {
     assert.equal(isPaymentReturnPath("/pricing/success"), true);
     assert.equal(isPaymentReturnPath("/api/billing/return"), true);

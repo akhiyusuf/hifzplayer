@@ -1,3 +1,5 @@
+import { clerkProxyUrl } from "./proxy.ts";
+
 export function clerkPublishableKey() {
   return process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || "";
 }
@@ -13,4 +15,9 @@ export function clerkConfigured() {
 
 export function clerkBrowserReady() {
   return Boolean(clerkPublishableKey());
+}
+
+/** Absolute same-origin Clerk Frontend API proxy, or empty. */
+export function clerkClientProxyUrl() {
+  return clerkProxyUrl();
 }

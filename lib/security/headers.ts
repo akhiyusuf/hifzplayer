@@ -1,4 +1,5 @@
 import { AUDIO_MIRROR_ORIGIN } from "../constants.ts";
+import { r2PublicOrigin } from "../files/r2.ts";
 
 /** Browser security headers. CSP is applied in middleware so Clerk can merge its own directives. */
 
@@ -16,20 +17,42 @@ export const SECURITY_HEADERS: { key: string; value: string }[] = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
 ];
 
-const CSP_BASE = [
-  "default-src 'self'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "object-src 'none'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
-  "font-src 'self' data:",
-  `connect-src 'self' https://api.quran.com https://verses.quran.com ${AUDIO_MIRROR_ORIGIN} https://va.vercel-scripts.com https://vitals.vercel-insights.com`,
-  `media-src 'self' https://verses.quran.com ${AUDIO_MIRROR_ORIGIN} blob:`,
-  "worker-src 'self' blob:",
-  "upgrade-insecure-requests",
-];
+function extraCdnOrigins() {
+  const origin = r2PublicOrigin();
+  return origin ? [origin] : [];
+}
+
+function cspBase() {
+  const extra = extraCdnOrigins().join(" ");
+  const connect = [
+    "'self'",
+    "https://api.quran.com",
+    "https://verses.quran.com",
+    AUDIO_MIRROR_ORIGIN,
+    "https://va.vercel-scripts.com",
+    "https://vitals.vercel-insights.com",
+    extra,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const media = ["'self'", "https://verses.quran.com", AUDIO_MIRROR_ORIGIN, extra, "blob:"]
+    .filter(Boolean)
+    .join(" ");
+  return [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self' data:",
+    `connect-src ${connect}`,
+    `media-src ${media}`,
+    "worker-src 'self' blob:",
+    "upgrade-insecure-requests",
+  ];
+}
 
 export function isPaymentReturnPath(pathname: string) {
   return pathname === "/pricing/success" || pathname === "/api/billing/return";
@@ -39,25 +62,36 @@ export function contentSecurityPolicy(embeddable: boolean) {
   const frame = embeddable
     ? "frame-ancestors 'self' https://checkout.paystack.com https://standard.paystack.co https://paystack.com"
     : "frame-ancestors 'none'";
-  return [...CSP_BASE, frame].join("; ");
+  return [...cspBase(), frame].join("; ");
 }
 
 /** Used when Clerk is not on this deployment. Clerk middleware supplies a compatible CSP when accounts are enabled. */
 export const CONTENT_SECURITY_POLICY = contentSecurityPolicy(false);
 
-export const CLERK_CSP_EXTRAS = {
-  "connect-src": [
-    "https://api.quran.com",
-    "https://verses.quran.com",
-    AUDIO_MIRROR_ORIGIN,
-    "https://va.vercel-scripts.com",
-    "https://vitals.vercel-insights.com",
-  ],
-  "script-src": ["https://va.vercel-scripts.com"],
-  "media-src": ["'self'", "https://verses.quran.com", AUDIO_MIRROR_ORIGIN, "blob:"],
-  "frame-ancestors": ["'self'", "https://checkout.paystack.com", "https://standard.paystack.co", "https://paystack.com"],
-  "object-src": ["'none'"],
-};
+export function clerkCspExtras() {
+  return {
+    "connect-src": [
+      "https://api.quran.com",
+      "https://verses.quran.com",
+      AUDIO_MIRROR_ORIGIN,
+      "https://va.vercel-scripts.com",
+      "https://vitals.vercel-insights.com",
+      ...extraCdnOrigins(),
+    ],
+    "script-src": ["https://va.vercel-scripts.com"],
+    "media-src": ["'self'", "https://verses.quran.com", AUDIO_MIRROR_ORIGIN, ...extraCdnOrigins(), "blob:"],
+    "frame-ancestors": [
+      "'self'",
+      "https://checkout.paystack.com",
+      "https://standard.paystack.co",
+      "https://paystack.com",
+    ],
+    "object-src": ["'none'"],
+  };
+}
+
+/** @deprecated Use clerkCspExtras() so R2 origins are read at request time. */
+export const CLERK_CSP_EXTRAS = clerkCspExtras();
 
 export function applySecurityHeaders(headers: Headers, opts?: { embeddable?: boolean }) {
   for (const h of SECURITY_HEADERS) headers.set(h.key, h.value);
