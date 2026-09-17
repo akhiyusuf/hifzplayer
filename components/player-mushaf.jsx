@@ -1,6 +1,6 @@
 "use client";
 
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import {
   useCallback,
   useEffect,
@@ -17,7 +17,8 @@ import {
   rangeAround,
   viewFromVisible,
 } from "@/lib/mushaf-window";
-import { mushafMaskReveal, mushafRepSpan, mushafWordsInteractive, wordNeedsFollow, wordIsAway, emptyWordPick } from "@/lib/player-chrome";
+import { mushafMaskReveal, mushafRepSpan, mushafWordsInteractive, wordNeedsFollow, wordIsAway, emptyWordPick, wordRepChromeVisible, relayRoundLabel, relayWhoseTurn, relayTurnName } from "@/lib/player-chrome";
+import { useAppData } from "@/lib/app-data";
 import { usePlus } from "@/lib/plus";
 import {
   ColdVerse,
@@ -29,6 +30,9 @@ import {
 export function MushafJobBar(e) {
   let { engine: t, state: s } = e;
   useSyncExternalStore(t.subscribeWord, t.getWordSnap, t.getWordSnap);
+  if ("relay" === s.mode && s.relay && s.relay.active) {
+    return _jsx(MushafRelayBar, { engine: t, state: s });
+  }
   if ("masked" !== s.mode) return null;
   let verse = s.verses[s.vIdx];
   if (!verse) return null;
@@ -50,6 +54,77 @@ export function MushafJobBar(e) {
             ? "Peeking"
             : "Peek \xb7 ".concat(i.peeks, " left"),
       ],
+    }),
+  });
+}
+
+function MushafRelayBar(e) {
+  let { engine: t, state: s } = e,
+    { reciterName: n } = useAppData(),
+    l = s.relay;
+  if (!l || !l.active) return null;
+  let d = l.turns[l.idx];
+  if (!d) return null;
+  let h = "you" === relayWhoseTurn(d),
+    who = relayTurnName(h ? "you" : "qari", n(d.reciterId)),
+    u = l.turns.length - l.idx;
+  return _jsx("div", {
+    className: "mushaf-relay-bar",
+    "data-relay-turn": h ? "you" : "qari",
+    children: _jsx(PracticeStrip, {
+    title: h ? "Your turn" : who,
+    meta: relayRoundLabel(l.round, l.rounds),
+    hint: h
+      ? "Recite aloud — the reciter plays muted to pace you"
+      : l.waitingTap
+        ? "Tap play to begin"
+        : undefined,
+    extra: _jsxs("span", {
+      className: "turn-chip now mushaf-relay-chip",
+      "aria-current": "step",
+      children: [
+        _jsx("span", {
+          className: "turn-avatar",
+          children: _jsx(Icon, {
+            name: h ? "user" : "mic",
+            size: 14,
+          }),
+        }),
+        _jsxs("span", {
+          className: "turn-text",
+          children: [
+            _jsx("b", { children: who }),
+            _jsx("span", {
+              children: h
+                ? "".concat(u, " left")
+                : "".concat(u, " ", 1 === u ? "turn" : "turns", " left"),
+            }),
+          ],
+        }),
+      ],
+    }),
+    actions: h
+      ? _jsxs(_Fragment, {
+          children: [
+            _jsxs("button", {
+              className: "focus-act primary",
+              onClick: () => t.startRelayTurn(!0),
+              children: [
+                _jsx(Icon, { name: "volume-2", size: 16 }),
+                "Replay reciter",
+              ],
+            }),
+            _jsxs("button", {
+              className: "focus-act",
+              onClick: () => t.advanceRelay(),
+              children: [
+                _jsx(Icon, { name: "skip-forward", size: 16 }),
+                "Skip my turn",
+              ],
+            }),
+          ],
+        })
+      : null,
     }),
   });
 }
@@ -201,7 +276,7 @@ export function MushafPage(e) {
     b = !!y && 1 === y.from && 1 !== y.chapter && 9 !== y.chapter,
     pick = s.wordPick || emptyWordPick(),
     wordRep =
-      null != pick.open
+      wordRepChromeVisible(s.mode) && null != pick.open
         ? {
             open: pick.open,
             start: pick.start,
@@ -225,7 +300,7 @@ export function MushafPage(e) {
     className: "player-body",
     style: { padding: "16px 20px 6px" },
     children: _jsxs("div", {
-      className: "mushaf-wrap",
+            className: "mushaf-wrap".concat("relay" === s.mode ? " relay-on" : ""),
       children: [
         b &&
           _jsx("div", {

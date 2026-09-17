@@ -120,6 +120,8 @@ body:has(.onboard) .shell{padding-bottom:calc(28px + env(safe-area-inset-bottom)
 .practice-strip-actions .skip{background:transparent;border:1px solid var(--border-default);color:var(--text-secondary)}
 .practice-strip .relay-queue{padding:0}
 .practice-strip .rep-seg{align-self:flex-start}
+.mushaf-relay-bar{display:contents}
+.mushaf-relay-bar .mushaf-relay-chip{align-self:flex-start}
 .practice-canvas{flex:1 1;min-height:0;overflow-y:auto;display:flex;flex-direction:column}
 .focus-body.practice-canvas{padding:18px 26px 12px}
 .practice-canvas .your-turn{margin-top:12px}
@@ -657,6 +659,7 @@ body:has(.scrim) .cl-avatarBox{
 .mushaf-word-pop .p-actions-row .pri{flex:0 1 auto;padding-inline:6px 7px}
 .mushaf-word-pop .p-actions-row .sec{flex:1 1 auto}
 .mushaf-word-pop .p-drill{gap:4px;margin-top:0}
+.mushaf-word-pop .p-actions:last-child{margin-bottom:0}
 .mushaf-word-pop .p-drill button{min-height:30px;font-size:11.5px;padding:0 4px;gap:3px}
 .mushaf-word-pop .p-drill button.inf,
 .mushaf-word-pop .p-drill button.inf .p-drill-inf{

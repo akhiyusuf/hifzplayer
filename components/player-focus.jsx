@@ -5,7 +5,7 @@ import { FocusStage } from "@/components/focus-stage";
 import { Icon } from "@/components/icon";
 import { FocusLines, MushafVerse, MushafVerseActive } from "@/components/player-verse";
 import { useAppData } from "@/lib/app-data";
-import { emptyWordPick, wantsTranslation } from "@/lib/player-chrome";
+import { emptyWordPick, wantsTranslation, relayRoundLabel, relayTurnName } from "@/lib/player-chrome";
 import { usePlus } from "@/lib/plus";
 
 export function FocusVersePage(e) {
@@ -94,10 +94,7 @@ export function FocusRelayPage(e) {
   if (!d || !c) return null;
   let h = "you" === d.kind,
     u = l.turns.length - l.idx,
-    p =
-      0 === l.rounds
-        ? "Round ".concat(l.round)
-        : "Round ".concat(l.round, " of ").concat(l.rounds);
+    p = relayRoundLabel(l.round, l.rounds);
   return _jsx(FocusStage, {
     title: p,
     meta: h
@@ -114,7 +111,7 @@ export function FocusRelayPage(e) {
       children: l.turns.map((e, t) => {
         let s = t < l.idx,
           a = t === l.idx,
-          i = "you" === e.kind ? "You" : n(e.reciterId).split(" ")[0];
+          i = relayTurnName("you" === e.kind ? "you" : "qari", n(e.reciterId));
         return _jsxs(
           "li",
           {
