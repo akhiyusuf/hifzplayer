@@ -617,19 +617,47 @@ body:has(.scrim) .word-rep-wrap,
 body:has(.popover) .repeat-pop{
   display:none !important;
 }
+/* Dim the page on a sibling layer so the sheet never inherits an opacity animation. */
 .scrim{
   z-index:11000;
   isolation:isolate;
+  background:transparent;
+  animation:none;
+}
+.scrim::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:0;
+  background:var(--scrim);
+  pointer-events:none;
+  animation:fade var(--dur) var(--ease-standard);
+}
+.scrim .sheet,
+.popover,
+.popover .p-arrow,
+.repeat-pop{
+  background-color:var(--color-white);
+  background-color:var(--bg-surface);
+  background-image:none;
+  opacity:1;
 }
 .scrim .sheet{
   position:relative;
   z-index:1;
-  background:var(--bg-surface);
   isolation:isolate;
 }
+.pop-wrap{
+  z-index:9000;
+}
+.word-rep-wrap{z-index:9000}
+@keyframes sheetup{0%{transform:translateY(28px)}to{transform:none}}
+@keyframes dialogin{0%{transform:scale(.97)}to{transform:none}}
+@keyframes pop{0%{transform:scale(.94) translateY(4px)}to{transform:none}}
 body:has(.scrim) .cl-userButtonBox,
 body:has(.scrim) .cl-userButtonTrigger,
-body:has(.scrim) .cl-avatarBox{
+body:has(.scrim) .cl-avatarBox,
+body:has(.scrim) [class*="cl-userButton"]{
   visibility:hidden;
   pointer-events:none;
 }

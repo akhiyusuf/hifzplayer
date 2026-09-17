@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "@/components/icon";
 import { WORD_REP_COUNTS, loopCountFace } from "@/lib/player-chrome";
 import { usePlus } from "@/lib/plus";
@@ -32,13 +33,14 @@ export function WordStudyPop(e) {
     b = useRef(null),
     [k, N] = useState(null),
     { plus: plusOn, askPlus: ask } = usePlus(),
-    popW = mushafLite ? 268 : 262;
+    compactPlay = !!showPlay,
+    popW = mushafLite || compactPlay ? 268 : 262;
   (useLayoutEffect(() => {
     let node = b.current,
       w = (null == node ? void 0 : node.offsetWidth) || popW,
       h = (null == node ? void 0 : node.offsetHeight) || 240,
       r = c.rect,
-      gap = mushafLite ? 8 : 12,
+      gap = mushafLite || compactPlay ? 8 : 12,
       a = Math.min(
         window.innerWidth - w - 10,
         Math.max(10, r.left + r.width / 2 - w / 2),
@@ -51,7 +53,7 @@ export function WordStudyPop(e) {
       flipped: i,
       w,
     });
-  }, [c, popW, mushafLite]),
+  }, [c, popW, mushafLite, compactPlay]),
     useEffect(() => {
       var e, t;
       let s = (e) => {
@@ -67,11 +69,13 @@ export function WordStudyPop(e) {
         () => document.removeEventListener("keydown", s)
       );
     }, [y]));
-  return _jsx("div", {
+  let pop = _jsx("div", {
     className: "pop-wrap",
     onClick: y,
     children: _jsxs("div", {
-      className: "popover".concat(mushafLite ? " mushaf-word-pop" : ""),
+      className: "popover".concat(
+        mushafLite || compactPlay ? " mushaf-word-pop" : "",
+      ),
       ref: b,
       role: "dialog",
       "aria-label": "Study ".concat(d.ar),
@@ -114,7 +118,7 @@ export function WordStudyPop(e) {
         _jsxs("div", {
           className: "p-word",
           children: [
-            mushafLite
+            mushafLite || compactPlay
               ? null
               : _jsx("span", { className: "ar", children: d.ar }),
             d.tr &&
@@ -219,5 +223,7 @@ export function WordStudyPop(e) {
       ],
     }),
   });
+  if (typeof document === "undefined") return pop;
+  return createPortal(pop, document.body);
 }
 
