@@ -134,17 +134,38 @@ export type WordTapIntent = "play" | "meaning" | "wordRep";
 
 export type PlayerPageKind = "mushaf" | "focus" | "word" | "masked" | "relay";
 
-/** Mushaf keeps the page of ayahs. Relay (both views) and Focus drills swap in a dedicated stage. */
+/**
+ * Mushaf always keeps the page of ayahs, including Relay.
+ * Focus drills (Word Reps, Masked, Relay) swap in a dedicated stage.
+ */
 export function playerPageKind(
   style: string,
   mode: string,
   relayActive = false,
 ): PlayerPageKind {
-  if (mode === "relay" && relayActive) return "relay";
   if (style === "mushaf") return "mushaf";
+  if (mode === "relay" && relayActive) return "relay";
   if (mode === "masked") return "masked";
   if (mode === "word") return "word";
   return "focus";
+}
+
+export type WordPopActions = { play: boolean; reps: boolean };
+
+/**
+ * Verse (base): Play word + Play from here.
+ * Word Reps: Pin + 5× / 10× / ∞.
+ * Same rules on mushaf and Focus. Masked / other drills show neither.
+ */
+export function wordPopActions(_style: string, mode: string): WordPopActions {
+  if (mode === "word") return { play: false, reps: true };
+  if (mode === "verse") return { play: true, reps: false };
+  return { play: false, reps: false };
+}
+
+/** Pin / multiplier chrome belongs on Word Reps only. */
+export function wordRepChromeVisible(mode: string) {
+  return mode === "word";
 }
 
 export function mushafMaskReveal(opts: {
@@ -229,7 +250,10 @@ export function mushafWordsInteractive(mode?: string) {
   return mode !== "masked";
 }
 
-/** Mushaf always opens the word sheet. Focus Word Reps pins. */
+/**
+ * Mushaf always opens the word sheet (play actions in verse, pin/reps in Word Reps).
+ * Focus verse opens that same sheet. Focus Word Reps uses the pin bar.
+ */
 export function wordTapIntent(
   style: string,
   mode: string,
@@ -237,7 +261,7 @@ export function wordTapIntent(
 ): WordTapIntent {
   if (style === "mushaf") return "meaning";
   if (mode === "word") return "wordRep";
-  return "play";
+  return "meaning";
 }
 
 export function spanForVerse(verse: number, count: number) {
@@ -419,6 +443,67 @@ export type RelayTurn = {
   reciterId: number;
   verseKey: string;
 };
+
+export const DEFAULT_RELAY_ROUNDS = 2;
+
+/** Reciter starts, then you — the setup sheet's empty state. */
+export function defaultRelayOrder(reciterId: number): RelaySeat[] {
+  return [{ kind: "qari", reciterId }, { kind: "you" }];
+}
+
+export function defaultRelaySetup(
+  reciterId: number,
+  vFrom: number,
+  vTo: number,
+  rounds = DEFAULT_RELAY_ROUNDS,
+): RelayDraft {
+  return {
+    order: defaultRelayOrder(reciterId),
+    vFrom,
+    vTo,
+    rounds,
+  };
+}
+
+export function relayStartsWith(order: RelaySeat[] | null | undefined): "you" | "qari" {
+  return order?.[0]?.kind === "you" ? "you" : "qari";
+}
+
+/** Move an existing You/reciter seat to the front, or insert one. */
+export function orderStartingWith(
+  order: RelaySeat[],
+  start: "you" | "qari",
+  reciterId: number,
+): RelaySeat[] {
+  const copy = order.slice();
+  const idx = copy.findIndex((seat) => seat.kind === start);
+  if (idx === 0) return copy;
+  if (idx > 0) {
+    const [seat] = copy.splice(idx, 1);
+    copy.unshift(seat);
+    return copy;
+  }
+  copy.unshift(start === "you" ? { kind: "you" } : { kind: "qari", reciterId });
+  return copy;
+}
+
+export function relayRoundLabel(round: number, rounds: number) {
+  if (!rounds) return `Round ${round}`;
+  return `Round ${round} of ${rounds}`;
+}
+
+export function relayWhoseTurn(turn: { kind?: string } | null | undefined): "you" | "qari" {
+  return turn?.kind === "you" ? "you" : "qari";
+}
+
+export function relayTurnName(
+  kind: "you" | "qari",
+  reciterName: string,
+) {
+  if (kind === "you") return "You";
+  const first = (reciterName || "Reciter").trim().split(/\s+/)[0];
+  return first || "Reciter";
+}
 
 /** Walk the passage in seat order, rotating who starts each round. */
 export function buildRelayTurns(

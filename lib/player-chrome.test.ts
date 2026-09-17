@@ -18,6 +18,8 @@ import {
   shouldRestartMaskOnJump,
   mushafWordsInteractive,
   wordTapIntent,
+  wordPopActions,
+  wordRepChromeVisible,
   playerPageKind,
   mushafMaskReveal,
   spanForVerse,
@@ -40,6 +42,14 @@ import {
   wrapRelayIndex,
   exclusiveJobPatch,
   exclusiveLayer,
+  defaultRelayOrder,
+  defaultRelaySetup,
+  DEFAULT_RELAY_ROUNDS,
+  relayStartsWith,
+  orderStartingWith,
+  relayRoundLabel,
+  relayWhoseTurn,
+  relayTurnName,
 } from "./player-chrome.ts";
 
 describe("verseRatioLabel", () => {
@@ -74,19 +84,39 @@ describe("wordTapIntent", () => {
     assert.equal(wordTapIntent("mushaf", "word", "touch"), "meaning");
   });
 
-  it("uses Word Reps taps for the pin bar, and plays in other Focus jobs", () => {
+  it("opens the study pop in Focus verse and pins on Focus Word Reps", () => {
     assert.equal(wordTapIntent("focus", "word", "touch"), "wordRep");
-    assert.equal(wordTapIntent("focus", "verse", "touch"), "play");
-    assert.equal(wordTapIntent("focus", "masked", "mouse"), "play");
+    assert.equal(wordTapIntent("focus", "verse", "touch"), "meaning");
+    assert.equal(wordTapIntent("focus", "verse", "mouse"), "meaning");
+    assert.equal(wordTapIntent("focus", "masked", "mouse"), "meaning");
+  });
+});
+
+describe("wordPopActions", () => {
+  it("shows play actions only in mushaf and Focus verse", () => {
+    assert.deepEqual(wordPopActions("mushaf", "verse"), { play: true, reps: false });
+    assert.deepEqual(wordPopActions("focus", "verse"), { play: true, reps: false });
+  });
+
+  it("shows pin and multipliers only in Word Reps on both views", () => {
+    assert.deepEqual(wordPopActions("mushaf", "word"), { play: false, reps: true });
+    assert.deepEqual(wordPopActions("focus", "word"), { play: false, reps: true });
+    assert.equal(wordRepChromeVisible("word"), true);
+    assert.equal(wordRepChromeVisible("verse"), false);
+  });
+
+  it("hides both tool rows in Masked and Relay", () => {
+    assert.deepEqual(wordPopActions("mushaf", "masked"), { play: false, reps: false });
+    assert.deepEqual(wordPopActions("focus", "relay"), { play: false, reps: false });
   });
 });
 
 describe("playerPageKind", () => {
-  it("keeps Mushaf on screen except Relay, which uses a dedicated stage", () => {
+  it("keeps Mushaf on screen during Relay instead of cloning the Focus stage", () => {
     assert.equal(playerPageKind("mushaf", "verse"), "mushaf");
     assert.equal(playerPageKind("mushaf", "word"), "mushaf");
     assert.equal(playerPageKind("mushaf", "masked"), "mushaf");
-    assert.equal(playerPageKind("mushaf", "relay", true), "relay");
+    assert.equal(playerPageKind("mushaf", "relay", true), "mushaf");
     assert.equal(playerPageKind("mushaf", "relay", false), "mushaf");
   });
 
@@ -535,6 +565,40 @@ describe("wordRepsResumeWord", () => {
       4,
     );
     assert.equal(wordRepsResumeWord({ curWord: 5 }), 5);
+  });
+});
+
+describe("relay setup defaults", () => {
+  it("starts with the reciter, then you, for two rounds", () => {
+    const draft = defaultRelaySetup(7, 1, 7);
+    assert.deepEqual(draft.order, defaultRelayOrder(7));
+    assert.deepEqual(draft.order, [
+      { kind: "qari", reciterId: 7 },
+      { kind: "you" },
+    ]);
+    assert.equal(draft.vFrom, 1);
+    assert.equal(draft.vTo, 7);
+    assert.equal(draft.rounds, DEFAULT_RELAY_ROUNDS);
+    assert.equal(draft.rounds, 2);
+    assert.equal(relayStartsWith(draft.order), "qari");
+  });
+
+  it("moves You or the reciter to the front without dropping the other seat", () => {
+    const order = defaultRelayOrder(7);
+    const youFirst = orderStartingWith(order, "you", 7);
+    assert.equal(relayStartsWith(youFirst), "you");
+    assert.equal(youFirst[1].kind, "qari");
+    assert.equal(relayStartsWith(orderStartingWith(youFirst, "qari", 7)), "qari");
+    assert.equal(relayStartsWith(orderStartingWith(order, "qari", 7)), "qari");
+  });
+
+  it("labels whose turn it is without a verse number", () => {
+    assert.equal(relayWhoseTurn({ kind: "you" }), "you");
+    assert.equal(relayWhoseTurn({ kind: "qari" }), "qari");
+    assert.equal(relayTurnName("you", "Mahmoud Khalil Al-Husary"), "You");
+    assert.equal(relayTurnName("qari", "Mahmoud Khalil Al-Husary"), "Mahmoud");
+    assert.equal(relayRoundLabel(1, 2), "Round 1 of 2");
+    assert.equal(relayRoundLabel(3, 0), "Round 3");
   });
 });
 

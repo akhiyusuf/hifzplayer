@@ -8,26 +8,16 @@ import {
   useState,
 } from "react";
 import { Icon } from "@/components/icon";
-import { isPaidRepeat } from "@/lib/billing/gates";
-import { LOOP_COUNTS } from "@/lib/constants";
 import { WORD_REP_COUNTS, loopCountFace } from "@/lib/player-chrome";
 import { usePlus } from "@/lib/plus";
 
-function loopFace(e) {
-  return 0 === e ? "∞" : "\xd7".concat(e);
-}
 export function WordStudyPop(e) {
   var t, s, n, i, l;
   let {
       word: d,
       target: c,
-      loopCount: u,
-      isWordRangeMode: p,
-      onSetCount: m,
       onPlayWord: v,
       onPlayFromHere: onPlayFromHere,
-      onLoopWord: x,
-      onStartRange: f,
       onClose: y,
       annotation: g,
       onOpenPhrase: j,
@@ -36,6 +26,8 @@ export function WordStudyPop(e) {
       onPin: onPinWord,
       onRepsCount: onRepsCount,
       pinActive: pinActive,
+      showPlay: showPlay = true,
+      showReps: showReps = false,
     } = e,
     b = useRef(null),
     [k, N] = useState(null),
@@ -84,6 +76,8 @@ export function WordStudyPop(e) {
       ref: b,
       role: "dialog",
       "aria-label": "Study ".concat(d.ar),
+      "data-pop-play": showPlay ? "1" : "0",
+      "data-pop-reps": showReps ? "1" : "0",
       onClick: (e) => e.stopPropagation(),
       style: {
         top:
@@ -132,51 +126,8 @@ export function WordStudyPop(e) {
             }),
           ],
         }),
-        mushafLite
-          ? null
-          : _jsxs("div", {
-          className: "p-repeat",
-          children: [
-            _jsx("span", { id: "rep-lbl", children: "Repeat" }),
-            _jsx("div", {
-              className: "seg",
-              role: "group",
-              "aria-labelledby": "rep-lbl",
-              children: LOOP_COUNTS.map((e) => {
-                let locked = isPaidRepeat(e) && !plusOn;
-                return _jsx(
-                  "button",
-                  {
-                    className: ""
-                      .concat(u === e ? "on" : "")
-                      .concat(locked ? " locked" : ""),
-                    onClick: () => (locked ? ask("repeats") : m(e)),
-                    "aria-pressed": u === e,
-                    style:
-                      0 === e
-                        ? { fontFamily: "var(--font-body)", fontSize: 14 }
-                        : void 0,
-                    children: locked
-                      ? _jsxs("span", {
-                          style: {
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 3,
-                          },
-                          children: [
-                            loopFace(e),
-                            _jsx(Icon, { name: "sparkles", size: 11 }),
-                          ],
-                        })
-                      : loopFace(e),
-                  },
-                  e,
-                );
-              }),
-            }),
-          ],
-        }),
-        _jsxs("div", {
+        showPlay
+          ? _jsxs("div", {
           className: "p-actions",
           children: [
             _jsxs("div", {
@@ -203,21 +154,10 @@ export function WordStudyPop(e) {
                 }),
               ],
             }),
-            mushafLite
-              ? null
-              : _jsxs("button", {
-              className: "sec",
-              onClick: x,
-              children: [
-                _jsx(Icon, { name: "repeat", size: 15 }),
-                S,
-                " this word ",
-                loopFace(u),
-              ],
-            }),
           ],
-        }),
-        mushafLite
+        })
+          : null,
+        showReps
           ? _jsxs("div", {
               className: "p-drill",
               role: "group",
@@ -275,16 +215,7 @@ export function WordStudyPop(e) {
                 }),
               ],
             })
-          : _jsxs("button", {
-          className: "p-tertiary",
-          onClick: f,
-          children: [
-            _jsx(Icon, { name: "brackets", size: 14 }),
-            "Start ",
-            S.toLowerCase(),
-            " range here",
-          ],
-        }),
+          : null,
         /* Recurring phrases and near-twins are coming soon. */
       ],
     }),
