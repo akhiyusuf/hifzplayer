@@ -3,6 +3,7 @@
 import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { FocusStage } from "@/components/focus-stage";
 import { Icon } from "@/components/icon";
+import { MaskedCutoffChip } from "@/components/masked-cutoff";
 import { FocusLines, MushafVerse, MushafVerseActive } from "@/components/player-verse";
 import { useAppData } from "@/lib/app-data";
 import { emptyWordPick, wantsTranslation, relayRoundLabel, relayTurnName } from "@/lib/player-chrome";
@@ -42,7 +43,7 @@ export function FocusVersePage(e) {
   });
 }
 export function FocusMaskedPage(e) {
-  let { engine: t, state: s, annFor: a } = e,
+  let { engine: t, state: s, annFor: a, onLeavePractice: leave } = e,
     n = s.verses[s.vIdx];
   if (!n) return null;
   let i = t.maskStateFor(n),
@@ -52,6 +53,7 @@ export function FocusMaskedPage(e) {
     title: "Revealed ".concat(i.maxRev, " of ", l),
     meta: n.key,
     hint: undefined,
+    extra: leave ? _jsx(MaskedCutoffChip, { onLeave: leave }) : null,
     progress: {
       now: i.maxRev,
       max: l,

@@ -123,6 +123,7 @@ body:has(.onboard) .shell{padding-bottom:calc(28px + env(safe-area-inset-bottom)
 .practice-strip .rep-seg{align-self:flex-start}
 .mushaf-relay-bar{display:contents}
 .mushaf-relay-bar .mushaf-relay-chip{align-self:flex-start}
+.practice-strip .masked-cutoff{align-self:flex-start;cursor:pointer}
 .practice-canvas{flex:1 1;min-height:0;overflow-y:auto;display:flex;flex-direction:column}
 .focus-body.practice-canvas{padding:18px 26px 12px}
 .practice-canvas .your-turn{margin-top:12px}

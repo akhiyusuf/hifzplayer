@@ -40,6 +40,9 @@ import {
   mushafWordTapKind,
   wordRepsResumeWord,
   leavePracticeHow,
+  MASKED_CUTOFF,
+  maskedCutoffLeavesTo,
+  maskedCutoffVisible,
   practiceSheetJobs,
   practiceSheetPickMode,
   practiceSheetShowsExit,
@@ -678,6 +681,35 @@ describe("leave practice", () => {
       false,
     );
     assert.equal(leavePracticeHow("word"), "finish-word-reps");
+  });
+
+  it("shows a Masked cutoff only while Masked is on", () => {
+    assert.equal(maskedCutoffVisible("masked"), true);
+    assert.equal(maskedCutoffVisible("verse"), false);
+    assert.equal(maskedCutoffVisible("word"), false);
+    assert.equal(maskedCutoffVisible("relay"), false);
+    assert.equal(MASKED_CUTOFF.label, "Unmask");
+  });
+
+  it("invoking the Masked cutoff returns to verse listen", () => {
+    assert.equal(maskedCutoffLeavesTo("masked"), "verse");
+    assert.equal(leavePracticeHow("masked"), "set-verse");
+    assert.equal(practiceSheetPickMode("masked", "verse"), "verse");
+    assert.equal(maskedCutoffLeavesTo("verse"), null);
+    assert.equal(maskedCutoffLeavesTo("word"), null);
+    assert.equal(maskedCutoffLeavesTo("relay"), null);
+  });
+
+  it("keeps Practice Listen on every drill after adding the Masked cutoff", () => {
+    assert.equal(practiceSheetShowsExit("masked"), true);
+    assert.equal(practiceSheetShowsExit("word"), true);
+    assert.equal(practiceSheetShowsExit("relay"), true);
+    for (const mode of ["word", "masked", "relay"] as const) {
+      assert.equal(
+        practiceSheetJobs(mode).some((job) => job.id === "verse"),
+        true,
+      );
+    }
   });
 });
 

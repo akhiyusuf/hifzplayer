@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { Icon } from "@/components/icon";
+import { MaskedCutoffChip } from "@/components/masked-cutoff";
 import { PracticeStrip } from "@/components/practice-strip";
 import {
   MUSHAF_HOT_PAD,
@@ -28,7 +29,7 @@ import {
 } from "@/components/player-verse";
 
 export function MushafJobBar(e) {
-  let { engine: t, state: s } = e;
+  let { engine: t, state: s, onLeavePractice: leave } = e;
   useSyncExternalStore(t.subscribeWord, t.getWordSnap, t.getWordSnap);
   if ("relay" === s.mode && s.relay && s.relay.active) {
     return _jsx(MushafRelayBar, { engine: t, state: s });
@@ -42,6 +43,7 @@ export function MushafJobBar(e) {
   return _jsx(PracticeStrip, {
     title: "Revealed ".concat(i.maxRev, " of ", l),
     meta: verse.key,
+    extra: leave ? _jsx(MaskedCutoffChip, { onLeave: leave }) : null,
     actions: _jsxs("button", {
       className: "focus-act primary",
       onClick: () => t.peek(),

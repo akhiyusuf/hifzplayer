@@ -395,6 +395,23 @@ export function practiceSheetPickMode(current: string, picked: string) {
   return picked;
 }
 
+/** Mini cutoff on the page — only while Masked is on. */
+export function maskedCutoffVisible(mode: string) {
+  return mode === "masked";
+}
+
+export const MASKED_CUTOFF = {
+  label: "Unmask",
+  detail: "Listen",
+  aria: "Stop mask — listen to this ayah",
+} as const;
+
+/** Same destination as Practice Listen / leavePractice. */
+export function maskedCutoffLeavesTo(mode: string) {
+  if (!maskedCutoffVisible(mode)) return null;
+  return "verse" as const;
+}
+
 /** Skip to another Relay seat without wrapping into a new round. */
 export function wrapRelayIndex(idx: number, len: number, delta: number) {
   if (len <= 0) return 0;

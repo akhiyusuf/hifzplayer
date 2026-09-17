@@ -725,11 +725,12 @@ export function PlayerScreen(e) {
       }
       eu.setMode(e);
     },
+    eLeavePractice = () => ePickMode("verse"),
     eZ =
       "relay" === ePage
         ? _jsx(FocusRelayPage, { ...eX })
         : "masked" === ePage
-          ? _jsx(FocusMaskedPage, { ...eX })
+          ? _jsx(FocusMaskedPage, { ...eX, onLeavePractice: eLeavePractice })
           : "word" === ePage
             ? _jsx(FocusWordPage, { ...eX })
             : "focus" === ePage
@@ -756,7 +757,11 @@ export function PlayerScreen(e) {
             practiceOpen: ef,
           }),
           "mushaf" === ePage
-            ? _jsx(MushafJobBar, { engine: eu, state: ez })
+            ? _jsx(MushafJobBar, {
+                engine: eu,
+                state: ez,
+                onLeavePractice: eLeavePractice,
+              })
             : null,
           eHint && !("mushaf" === ez.style && "relay" === ez.mode)
             ? _jsx("p", {
