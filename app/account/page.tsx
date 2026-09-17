@@ -3,7 +3,9 @@ import Link from "next/link";
 import { clerkConfigured } from "@/lib/auth/config";
 import { resolveEntitlementSafe, signedInUser, signedInUserId } from "@/lib/auth/session";
 import { AccountId } from "@/components/account-id";
+import { AccountSignOut } from "@/components/account-sign-out";
 import { AccountsNotConfigured, AuthShell } from "@/components/auth-shell";
+import { accountGuestCopy } from "@/lib/account";
 import { publicEntitlement } from "@/lib/billing/entitlement";
 import { APP_NAME, PLUS_NAME } from "@/lib/brand";
 import { backHref, signInHref } from "@/lib/nav";
@@ -52,7 +54,7 @@ export default async function AccountPage({
     return (
       <AuthShell title="Account" backHref={back}>
         <p className="pricing-lead" style={{ textAlign: "center", maxWidth: 360 }}>
-          Sign in so {PLUS_NAME} follows you, not just this browser.
+          {accountGuestCopy()}.
         </p>
         <Link className="btn-primary" href={signInHref(`/account?from=${from || "settings"}`)}>
           Sign in
@@ -78,6 +80,7 @@ export default async function AccountPage({
         in on another browser. Quote your account ID if something goes wrong — it is the same id in our logs.
         Paystack and Stripe hold the payment ledger; this account shows the plan that was granted.
       </p>
+      <AccountSignOut />
     </AuthShell>
   );
 }

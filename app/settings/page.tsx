@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { AccountRow } from "@/components/account-row";
 import { Icon } from "@/components/icon";
 import { ThemePicker } from "@/components/theme-picker";
 import { PLUS_EXPLAIN } from "@/lib/billing/gates";
@@ -168,22 +169,7 @@ export default function SettingsPage() {
         }}
       >
         <span className="label-eyebrow">You</span>
-        <Link
-          href="/account?from=settings"
-          className="settings-row"
-          style={{
-            background: "var(--bg-surface)",
-            border: "1px solid var(--border-default)",
-            textDecoration: "none",
-            color: "inherit",
-          }}
-        >
-          <span className="st">
-            <b>Account</b>
-            <span>Sign in so {PLUS_NAME} follows you, not just this browser</span>
-          </span>
-          <Icon name="user" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
-        </Link>
+        <AccountRow />
         <PlusStatus />
         <span className="label-eyebrow" style={gap}>
           Reading
