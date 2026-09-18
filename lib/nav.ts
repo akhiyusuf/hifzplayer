@@ -11,7 +11,7 @@ export function backHref(from: string | string[] | undefined): string {
 }
 
 /** Allow only same-origin relative paths. */
-export function safePath(path: string | string[] | undefined, fallback = "/") {
+export function safePath(path: string | string[] | undefined | null, fallback = "/") {
   const value = Array.isArray(path) ? path[0] : path;
   if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("://")) return fallback;
   return value;

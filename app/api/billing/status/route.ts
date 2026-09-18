@@ -1,5 +1,5 @@
-import { clerkConfigured } from "@/lib/auth/config";
-import { clerkTrialUsedAt } from "@/lib/auth/plus";
+import { accountsConfigured } from "@/lib/auth/config";
+import { trialUsedAt } from "@/lib/auth/plus";
 import { resolveEntitlement, signedInUserId } from "@/lib/auth/session";
 import { publicEntitlement } from "@/lib/billing/entitlement";
 import { processorsReady } from "@/lib/billing/env";
@@ -11,18 +11,18 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const ent = await resolveEntitlement();
-  const accountsOn = clerkConfigured();
+  const accountsOn = accountsConfigured();
   const userId = accountsOn ? await signedInUserId() : null;
   const { cookies } = await import("next/headers");
   const jar = await cookies();
   const cookieUsed = Boolean(openTrialUsed(jar.get(TRIAL_USED_COOKIE)?.value));
-  const clerkUsed = userId ? Boolean(await clerkTrialUsedAt(userId)) : false;
+  const accountUsed = userId ? Boolean(await trialUsedAt(userId)) : false;
   return json({
     ...publicEntitlement(ent),
     processors: processorsReady(),
     trialAvailable: trialAvailable({
       entitlement: ent,
-      trialUsed: cookieUsed || clerkUsed,
+      trialUsed: cookieUsed || accountUsed,
     }),
   });
 }

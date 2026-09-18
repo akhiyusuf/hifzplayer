@@ -74,7 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <AppDataProvider>
                   <AppSidebar />
                   {children}
-                  <Analytics />
+                  {process.env.VERCEL ? <Analytics /> : null}
                 </AppDataProvider>
               </PlusProvider>
             </AuthRoot>

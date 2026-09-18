@@ -24,13 +24,25 @@ describe("security headers", () => {
     assert.match(CONTENT_SECURITY_POLICY, /object-src 'none'/);
   });
 
-  it("allows Quran audio and the v4 API only as remote connect/media", () => {
+  it("allows Quran audio, the v4 API, and Turnstile as remote connect/script", () => {
     assert.match(CONTENT_SECURITY_POLICY, /api\.quran\.com/);
     assert.match(CONTENT_SECURITY_POLICY, /verses\.quran\.com/);
     assert.match(CONTENT_SECURITY_POLICY, /mirrors\.quranicaudio\.com/);
     assert.match(CONTENT_SECURITY_POLICY, /va\.vercel-scripts\.com/);
     assert.match(CONTENT_SECURITY_POLICY, /vitals\.vercel-insights\.com/);
+    assert.match(CONTENT_SECURITY_POLICY, /challenges\.cloudflare\.com/);
+    assert.match(CONTENT_SECURITY_POLICY, /frame-src https:\/\/challenges\.cloudflare\.com/);
     assert.doesNotMatch(CONTENT_SECURITY_POLICY, /\*/);
+  });
+
+  it("allows the R2 public origin when configured", () => {
+    const prev = process.env.R2_PUBLIC_BASE_URL;
+    process.env.R2_PUBLIC_BASE_URL = "https://files.diras.app/audio";
+    try {
+      assert.match(contentSecurityPolicy(false), /files\.diras\.app/);
+    } finally {
+      process.env.R2_PUBLIC_BASE_URL = prev;
+    }
   });
 
   it("lets Paystack load the payment return pages", () => {

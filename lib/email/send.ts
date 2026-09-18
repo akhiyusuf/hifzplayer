@@ -1,8 +1,9 @@
-import { clerkEmailForUser, markPlusWelcomeSent, plusWelcomeAlreadySent } from "@/lib/auth/plus";
+import { emailForUser, markPlusWelcomeSent, plusWelcomeAlreadySent } from "@/lib/auth/plus";
 import { logBillingEvent } from "@/lib/billing/analytics";
 import type { Entitlement } from "@/lib/billing/entitlement";
 import { APP_NAME } from "@/lib/brand";
 import { giftNoticeHtml, giftNoticeSubject, giftNoticeText } from "./gift-notice";
+import { otpEmailHtml, otpEmailSubject, otpEmailText } from "./otp";
 import { plusWelcomeHtml, plusWelcomeSubject, plusWelcomeText } from "./plus-welcome";
 
 function resendApiKey() {
@@ -20,7 +21,7 @@ function looksLikeEmail(value: string) {
 async function destination(ent: Entitlement): Promise<string | null> {
   const direct = (ent.email || "").trim().toLowerCase();
   if (looksLikeEmail(direct)) return direct;
-  if (ent.userId) return clerkEmailForUser(ent.userId);
+  if (ent.userId) return emailForUser(ent.userId);
   return null;
 }
 
@@ -93,6 +94,30 @@ export async function sendGiftNotice(opts: {
   });
   if (!res.ok) throw new Error(`Resend HTTP ${res.status}`);
   logBillingEvent({ type: "welcome_sent", reason: "gift_notice", ok: true });
+}
+
+export async function sendOtpCode(to: string, code: string) {
+  const address = to.trim().toLowerCase();
+  if (!looksLikeEmail(address)) throw new Error("Invalid email");
+  const key = resendApiKey();
+  if (!key) throw new Error("Email is not configured");
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${key}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "User-Agent": "DirasBilling/1.0",
+    },
+    body: JSON.stringify({
+      from: emailFrom(),
+      to: [address],
+      subject: otpEmailSubject(),
+      text: otpEmailText(code),
+      html: otpEmailHtml(code),
+    }),
+  });
+  if (!res.ok) throw new Error(`Resend HTTP ${res.status}`);
 }
 
 /** Never throws — Plus grant must not fail because mail is down. */

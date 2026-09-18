@@ -31,9 +31,10 @@ export default async function PrivacyPage({
         }}
       >
         <p style={{ fontSize: 14.5, lineHeight: 1.55, color: "var(--text-primary)" }}>
-          Quran reading in {APP_NAME} stays free. Reading position, recents, streak, reciter, colour theme, night
-          theme, settings, and whether you have seen the welcome stay on your device. If you sign in, Clerk holds
-          your account (name and email). If you buy {PLUS_NAME}{" "}
+          Quran reading in {APP_NAME} stays free. Reading position, recents, streak, reciter, colour
+          theme, night theme, settings, and whether you have seen the welcome stay on your device. If you sign
+          in, we hold your account (name and email) in our database (Neon). Cloudflare Turnstile checks that a
+          sign-in is from a person, not a bot. If you buy {PLUS_NAME}{" "}
           while signed in, Plus is stored on that account so it follows you to another browser. Without an
           account, Plus stays in a cookie on this browser only.
         </p>
@@ -73,9 +74,10 @@ export default async function PrivacyPage({
           </h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
             No advertising or fingerprinting. After a {PLUS_NAME} payment, this site sets one httpOnly cookie so we
-            can remember that the plan is active. If you are signed in, Plus is also stored on your Clerk account.
-            The cookie is not used to track you across other sites. Sign-in pages and account details are not
-            indexed.
+            can remember that the plan is active. If you are signed in, Plus is also stored on your account.
+            Sign-in sets a second httpOnly session cookie. Cloudflare Turnstile may set a cookie on their challenge
+            domain while you complete the human check. Those cookies are not used to track you across other sites.
+            Sign-in pages and account details are not indexed.
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -90,20 +92,21 @@ export default async function PrivacyPage({
           Plus is granted to those emails, not to you. Someone without an account gets a note to sign in with that
           same address. If they already have Plus, extra time stacks on top. For me still buys Plus for the signed-in
           account. Paystack and Stripe still send their own receipts.
-            Those payment fields stay on the server; the app never shows payment refs. Your Clerk account ID is
+            Those payment fields stay on the server; the app never shows payment refs. Your account ID is
             shown only to you on the account page so you can quote it if something goes wrong. We log payment
             confirmation and renewal events (plan, processor, success or failure, and that same account ID — never
             your email) so a paid subscription can be fulfilled and later invoices keep Plus on. If you dispute
             or charge back a Plus payment, we turn Plus off on the signed-in account. Paystack and Stripe
             dashboards are the payment ledger. Their privacy policies apply to the checkout pages. Sign-in is
-            handled by Clerk.
+            email and a password, or Google. A code by email is only for password reset. Cloudflare Turnstile
+            is the bot check on the password form.
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Analytics</h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
             Vercel Web Analytics records page views so we can see how many people open {APP_NAME}. It does not
-            use advertising cookies. When you create an account or sign in, we log the Clerk account ID (not your
+            use advertising cookies. When you create an account or sign in, we log the account ID (not your
             email) so a broken grant or a failed renewal can be found in the same place. Those logs are for
             fixing problems, not for ads.
           </p>

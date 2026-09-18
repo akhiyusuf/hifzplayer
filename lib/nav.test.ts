@@ -20,5 +20,6 @@ describe("safePath", () => {
     assert.equal(safePath("https://evil.example/x"), "/");
     assert.equal(safePath("//evil.example"), "/");
     assert.equal(safePath(undefined), "/");
+    assert.equal(safePath(null), "/");
   });
 });
