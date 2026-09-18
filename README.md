@@ -29,7 +29,7 @@ Sign-in is **email + password** or **Continue with Google**, stored in Neon. The
 - `DATABASE_URL` (Neon pooled connection string). Tables are created on first query — you do not paste SQL.
 - `AUTH_SECRET` (or `BILLING_SIGNING_SECRET`)
 - `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` for password sign-in
-- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` for Google (redirect `{APP_URL}/api/auth/google/callback`)
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` for Google (redirect `{APP_URL}/api/auth/google/callback`). In Google Cloud, set the OAuth consent screen **App name** to **Diras** — that is the name on “Allow ____ to access your Google Account”, not Cloudflare or Neon.
 - `RESEND_API_KEY` (Plus confirmation mail and password-reset codes)
 
 Reading stays public. When accounts are on, buying Diras Plus requires sign-in, and Plus is stored on that account (not only a browser cookie). Without the keys, `/sign-in` and `/account` show setup copy instead of a fake signed-in state.

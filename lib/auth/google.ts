@@ -17,6 +17,7 @@ function callbackUrl(request: Request) {
 }
 
 export function googleRedirectUrl(request: Request, state: string) {
+  // App name on Google's consent page is not a URL parameter. Set it to Diras in Google Cloud.
   const params = new URLSearchParams({
     client_id: googleClientId(),
     redirect_uri: callbackUrl(request),

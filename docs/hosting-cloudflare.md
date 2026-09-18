@@ -55,9 +55,20 @@ Idle compute scales to zero. The first query after ~5 minutes can be slow.
 
 ## Google Cloud (optional)
 
-1. APIs & Services → Credentials → OAuth client, type **Web application**.
-2. Authorized redirect URIs: `https://diras.app/api/auth/google/callback` and `http://localhost:3000/api/auth/google/callback`.
-3. Put `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` on the Worker. Google sign-in is not a Cloudflare product.
+Google’s second page (after they click their email on the account picker) shows the **OAuth consent screen App name**. It is not Cloudflare, not Neon, and not the Worker. Set that App name to **Diras**.
+
+Typical copy: **“Diras wants to access your Google Account”**, then email and profile. If App name is left as the Google Cloud project name, they will see that project name instead.
+
+1. Google Cloud Console → **APIs & Services → OAuth consent screen** (or **Google Auth platform → Branding**).
+2. App name: `Diras` (exactly that).
+3. User support email: `contact@brotheryusuf.com`.
+4. App domain / authorized domains: `diras.app`. Privacy: `https://diras.app/privacy`.
+5. Scopes: `openid`, `email`, `profile` (non-sensitive). Do not request extra Google scopes.
+6. Then **Credentials → Create OAuth client**, type **Web application**. The client’s internal name (e.g. “Diras web”) is not shown to users.
+7. Authorized redirect URIs: `https://diras.app/api/auth/google/callback` and `http://localhost:3000/api/auth/google/callback`.
+8. Put `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` on the Worker. Google sign-in is not a Cloudflare product.
+
+Until Google verifies the app, they may also see an “unverified app” warning. The product name on that page is still the App name you set — keep it **Diras**.
 
 ## R2
 
