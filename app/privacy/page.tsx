@@ -98,7 +98,8 @@ export default async function PrivacyPage({
             your email) so a paid subscription can be fulfilled and later invoices keep Plus on. If you dispute
             or charge back a Plus payment, we turn Plus off on the signed-in account. Paystack and Stripe
             dashboards are the payment ledger. Their privacy policies apply to the checkout pages. Sign-in is
-            an email code we send you; Cloudflare Turnstile is the bot check.
+            email and a password, or Google. A code by email is only for password reset. Cloudflare Turnstile
+            is the bot check on the password form.
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>

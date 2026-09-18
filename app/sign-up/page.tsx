@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { APP_NAME } from "@/lib/brand";
-import { accountsBrowserReady, accountsConfigured } from "@/lib/auth/config";
+import { accountsBrowserReady, accountsConfigured, googleConfigured } from "@/lib/auth/config";
 import { AccountsNotConfigured, AuthShell } from "@/components/auth-shell";
 import { EmailAuthForm } from "@/components/email-auth-form";
 import { safePath } from "@/lib/nav";
@@ -18,10 +18,19 @@ export default async function SignUpPage({
 }) {
   const { redirect_url } = await searchParams;
   const next = safePath(redirect_url, "/");
-  const ready = accountsConfigured() && accountsBrowserReady();
+  const ready = accountsConfigured() && (accountsBrowserReady() || googleConfigured());
   return (
     <AuthShell title="Create account" backHref={next === "/" ? "/" : next}>
-      {ready ? <EmailAuthForm mode="sign-up" redirectTo={next} /> : <AccountsNotConfigured />}
+      {ready ? (
+        <EmailAuthForm
+          mode="sign-up"
+          redirectTo={next}
+          googleOn={googleConfigured()}
+          passwordOn={accountsBrowserReady()}
+        />
+      ) : (
+        <AccountsNotConfigured />
+      )}
     </AuthShell>
   );
 }

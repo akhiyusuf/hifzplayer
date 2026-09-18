@@ -20,18 +20,43 @@ function displayName(email: string, stored?: string | null) {
   return cleaned ? cleaned.split(/\s+/)[0] : "Reader";
 }
 
-export async function findOrCreateUser(email: string): Promise<AccountUser> {
+export async function findOrCreateUser(
+  email: string,
+  extra: { name?: string | null; googleSub?: string | null } = {},
+): Promise<AccountUser> {
   const address = email.trim().toLowerCase();
-  const existing = await sql()`select id, email, name from users where email = ${address} limit 1`;
-  const row = existing[0] as { id: string; email: string; name?: string | null } | undefined;
+  const existing = await sql()`select id, email, name, google_sub from users where email = ${address} limit 1`;
+  const row = existing[0] as
+    | { id: string; email: string; name?: string | null; google_sub?: string | null }
+    | undefined;
   if (row) {
-    return { id: row.id, email: row.email, name: displayName(row.email, row.name) };
+    if (extra.googleSub && !row.google_sub) {
+      await sql()`update users set google_sub = ${extra.googleSub} where id = ${row.id} and google_sub is null`;
+    }
+    if (extra.name && !row.name) {
+      await sql()`update users set name = ${extra.name} where id = ${row.id}`;
+    }
+    return { id: row.id, email: row.email, name: displayName(row.email, extra.name || row.name) };
   }
   const id = randomId("usr");
-  const name = displayName(address);
-  await sql()`insert into users (id, email, name) values (${id}, ${address}, ${name})`;
+  const name = displayName(address, extra.name);
+  await sql()`
+    insert into users (id, email, name, google_sub)
+    values (${id}, ${address}, ${name}, ${extra.googleSub || null})
+  `;
   logOpsEvent({ type: "user_created", accountId: id, ok: true });
   return { id, email: address, name, created: true };
+}
+
+export async function completeSignIn(user: AccountUser) {
+  await createSession(user.id);
+  logOpsEvent({ type: "user_signed_in", accountId: user.id, ok: true });
+  try {
+    await claimGiftForUser({ userId: user.id, emails: [user.email] });
+  } catch {
+    /* sign-in still succeeds */
+  }
+  return user;
 }
 
 export async function createSession(userId: string) {
@@ -118,7 +143,7 @@ export async function startEmailOtp(email: string) {
   return { ok: true as const, code, throttled: false };
 }
 
-export async function verifyEmailOtp(email: string, code: string): Promise<AccountUser | null> {
+export async function consumeEmailOtp(email: string, code: string): Promise<boolean> {
   const address = email.trim().toLowerCase();
   const digits = code.replace(/\s/g, "");
   const rows = await sql()`
@@ -131,22 +156,22 @@ export async function verifyEmailOtp(email: string, code: string): Promise<Accou
   const row = rows[0] as
     | { id: string; code_hash: string; attempts: number; expires_at: string | Date }
     | undefined;
-  if (!row) return null;
-  if (new Date(row.expires_at).getTime() <= Date.now()) return null;
-  if (row.attempts >= OTP_MAX_ATTEMPTS) return null;
+  if (!row) return false;
+  if (new Date(row.expires_at).getTime() <= Date.now()) return false;
+  if (row.attempts >= OTP_MAX_ATTEMPTS) return false;
   const expected = hashSecretValue(`${address}:${digits}`);
   if (!hashesEqual(row.code_hash, expected)) {
     await sql()`update otp_challenges set attempts = attempts + 1 where id = ${row.id}`;
-    return null;
+    return false;
   }
   await sql()`delete from otp_challenges where email = ${address}`;
+  return true;
+}
+
+export async function verifyEmailOtp(email: string, code: string): Promise<AccountUser | null> {
+  const address = email.trim().toLowerCase();
+  if (!(await consumeEmailOtp(address, code))) return null;
   const user = await findOrCreateUser(address);
-  await createSession(user.id);
-  logOpsEvent({ type: "user_signed_in", accountId: user.id, ok: true });
-  try {
-    await claimGiftForUser({ userId: user.id, emails: [address] });
-  } catch {
-    /* sign-in still succeeds */
-  }
+  await completeSignIn(user);
   return user;
 }

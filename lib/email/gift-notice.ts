@@ -22,8 +22,8 @@ export function giftNoticeSubject(input?: Pick<GiftNoticeInput, "alreadyPlus" | 
 
 export function giftNoticeText(input: GiftNoticeInput) {
   const how = input.existingAccount
-    ? `Sign in to ${APP_NAME} with this same email — we will email you a 6-digit code.`
-    : `You have been granted ${PLUS_NAME}. Sign in or create a ${APP_NAME} account with this same email. We will email you a 6-digit code.`;
+    ? `Sign in to ${APP_NAME} with this same email — password or Google.`
+    : `You have been granted ${PLUS_NAME}. Sign in or create a ${APP_NAME} account with this same email — password or Google.`;
 
   const lead =
     input.existingAccount && input.keptLifetime

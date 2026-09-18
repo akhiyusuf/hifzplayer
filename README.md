@@ -24,12 +24,13 @@ Nothing is stored on a server for reading. Position, recents, streak, reciter, a
 
 ## Accounts
 
-Sign-in is an email code stored in Neon, with Cloudflare Turnstile as the bot check. Add:
+Sign-in is **email + password** or **Continue with Google**, stored in Neon. The APIs run on the Cloudflare Worker. Cloudflare **Turnstile** is the bot check on the password form (not Google). Add:
 
-- `DATABASE_URL` (Neon pooled connection string)
+- `DATABASE_URL` (Neon pooled connection string). Tables are created on first query — you do not paste SQL.
 - `AUTH_SECRET` (or `BILLING_SIGNING_SECRET`)
-- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`
-- `RESEND_API_KEY` (the same key that sends Plus confirmation mail)
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` for password sign-in
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` for Google (redirect `{APP_URL}/api/auth/google/callback`)
+- `RESEND_API_KEY` (Plus confirmation mail and password-reset codes)
 
 Reading stays public. When accounts are on, buying Diras Plus requires sign-in, and Plus is stored on that account (not only a browser cookie). Without the keys, `/sign-in` and `/account` show setup copy instead of a fake signed-in state.
 
@@ -55,7 +56,7 @@ Copy `.env.example` and add keys in the Vercel project (or a local `.env.local`)
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
 - `PAYSTACK_SECRET_KEY`, optional `PAYSTACK_PLAN_MONTHLY` / `PAYSTACK_PLAN_ANNUAL` (created automatically if empty)
 - `BILLING_SIGNING_SECRET` (recommended)
-- `RESEND_API_KEY` and `EMAIL_FROM` (Diras Plus confirmation email after a grant, and sign-in codes)
+- `RESEND_API_KEY` and `EMAIL_FROM` (Diras Plus confirmation email after a grant, and password-reset codes)
 - Account keys above, so Plus is bound to the signed-in user
 
 Turn on **Vercel Web Analytics** on the project so page views show up. Server logs (`diras.billing`, `diras.ops`) include account IDs (never emails) so a failed renewal can be found immediately. The same ID is on `/account`.
@@ -79,7 +80,7 @@ Rename the Paystack page/product and the Stripe product to **Diras Plus** in tho
 
 ## Hosting (Cloudflare + Neon + R2)
 
-The app still builds with `next build` / `next start`. Cloudflare is a second compile (`npm run preview` / `npm run deploy`) via OpenNext. Sign-in is **email OTP in Neon + Turnstile** on the Worker — not Cloudflare Access. Cutover steps, Neon, and R2: [docs/hosting-cloudflare.md](docs/hosting-cloudflare.md).
+The app still builds with `next build` / `next start`. Cloudflare is a second compile (`npm run preview` / `npm run deploy`) via OpenNext. Sign-in is **password or Google in Neon + Turnstile** on the Worker — not Cloudflare Access. Cutover steps, Neon, and R2: [docs/hosting-cloudflare.md](docs/hosting-cloudflare.md).
 
 ## Security
 

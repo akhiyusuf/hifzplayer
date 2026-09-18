@@ -14,6 +14,7 @@ export type AuthSnapshot = {
   loaded: boolean;
   accountsOn: boolean;
   accountsReady: boolean;
+  googleOn: boolean;
   signedIn: boolean;
   userId: string | null;
   email: string;
@@ -24,6 +25,7 @@ const empty: AuthSnapshot = {
   loaded: false,
   accountsOn: false,
   accountsReady: false,
+  googleOn: false,
   signedIn: false,
   userId: null,
   email: "",
@@ -56,6 +58,7 @@ export function AuthRoot({ children }: { children: ReactNode }) {
         loaded: true,
         accountsOn: Boolean(data.accountsOn),
         accountsReady: Boolean(data.accountsReady),
+        googleOn: Boolean(data.googleOn),
         signedIn: Boolean(data.signedIn),
         userId: data.userId || null,
         email: data.email || "",

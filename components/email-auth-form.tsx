@@ -11,21 +11,31 @@ function authError(data: { error?: string; code?: string }, fallback: string) {
   return data.error || fallback;
 }
 
+type Step = "password" | "forgot" | "code";
+
 export function EmailAuthForm({
   mode,
   redirectTo,
+  googleOn = false,
+  passwordOn = true,
+  startError = "",
 }: {
   mode: "sign-in" | "sign-up";
   redirectTo: string;
+  googleOn?: boolean;
+  passwordOn?: boolean;
+  startError?: string;
 }) {
   const { loaded, signedIn, refresh } = useAuth();
+  const [step, setStep] = useState<Step>("password");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [code, setCode] = useState("");
   const [token, setToken] = useState("");
   const [resetKey, setResetKey] = useState(0);
-  const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(startError);
 
   useEffect(() => {
     if (loaded && signedIn) window.location.replace(redirectTo);
@@ -36,7 +46,32 @@ export function EmailAuthForm({
     setResetKey((n) => n + 1);
   }
 
-  async function sendCode() {
+  async function submitPassword() {
+    setError("");
+    if (mode === "sign-up" && password !== confirm) {
+      setError("Those passwords do not match.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch(mode === "sign-up" ? "/api/auth/register" : "/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ email, password, turnstileToken: token }),
+      });
+      const data = (await res.json()) as { error?: string; code?: string };
+      if (!res.ok) throw new Error(authError(data, "Could not sign in."));
+      await refresh();
+      window.location.assign(redirectTo);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not sign in.");
+      resetChallenge();
+      setBusy(false);
+    }
+  }
+
+  async function sendResetCode() {
     setError("");
     setBusy(true);
     try {
@@ -48,8 +83,9 @@ export function EmailAuthForm({
       });
       const data = (await res.json()) as { error?: string; code?: string };
       if (!res.ok) throw new Error(authError(data, "Could not send the code."));
-      setSent(true);
+      setStep("code");
       setCode("");
+      setPassword("");
       resetChallenge();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send the code.");
@@ -59,52 +95,84 @@ export function EmailAuthForm({
     }
   }
 
-  async function verifyCode() {
+  async function submitNewPassword() {
     setError("");
     setBusy(true);
     try {
-      const res = await fetch("/api/auth/verify", {
+      const res = await fetch("/api/auth/password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify({ email, code, turnstileToken: token || undefined }),
+        body: JSON.stringify({ email, code, password, turnstileToken: token || undefined }),
       });
       const data = (await res.json()) as { error?: string; code?: string };
-      if (!res.ok) throw new Error(authError(data, "That code is wrong or expired."));
+      if (!res.ok) throw new Error(authError(data, "Could not reset that password."));
       await refresh();
       window.location.assign(redirectTo);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "That code is wrong or expired.");
+      setError(err instanceof Error ? err.message : "Could not reset that password.");
       setBusy(false);
     }
   }
 
   const otherHref = mode === "sign-in" ? "/sign-up" : "/sign-in";
   const otherLabel = mode === "sign-in" ? "Create an account" : "Sign in instead";
-  const submitLabel = sent
-    ? busy
-      ? "Checking…"
-      : "Continue"
-    : busy
-      ? "Sending code…"
-      : "Email me a code";
+  const googleHref = `/api/auth/google?redirect_url=${encodeURIComponent(redirectTo)}`;
 
   return (
     <form
       className="auth-form"
       onSubmit={(event) => {
         event.preventDefault();
-        if (sent) void verifyCode();
-        else void sendCode();
+        if (step === "forgot") void sendResetCode();
+        else if (step === "code") void submitNewPassword();
+        else void submitPassword();
       }}
     >
       <p className="pricing-lead" style={{ textAlign: "center" }}>
-        {sent
-          ? `We sent a 6-digit code to ${email}. It expires in 10 minutes.`
-          : "Enter your email. We send a 6-digit code — no password."}
+        {step === "code"
+          ? `We sent a 6-digit code to ${email}. Choose a new password.`
+          : step === "forgot"
+            ? "Enter your email. We send a code so you can set a new password."
+            : passwordOn && googleOn
+              ? mode === "sign-up"
+                ? "Create an account with email and a password, or continue with Google."
+                : "Sign in with email and password, or continue with Google."
+              : googleOn
+                ? "Continue with Google."
+                : mode === "sign-up"
+                  ? "Create an account with email and a password."
+                  : "Sign in with email and password."}
       </p>
 
-      {sent ? (
+      {googleOn && step === "password" ? (
+        <>
+          <a className="btn-secondary" href={googleHref}>
+            Continue with Google
+          </a>
+          {passwordOn ? <p className="auth-or">or</p> : null}
+        </>
+      ) : null}
+
+      {passwordOn || step !== "password" ? (
+      <label className="pricing-email">
+        <span className="label-eyebrow">Email</span>
+        <span className="field">
+          <input
+            type="email"
+            name="email"
+            autoComplete="email"
+            required
+            autoFocus={step !== "code"}
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </span>
+      </label>
+      ) : null}
+
+      {step === "code" ? (
         <label className="pricing-email">
           <span className="label-eyebrow">Code</span>
           <span className="field">
@@ -123,25 +191,45 @@ export function EmailAuthForm({
             />
           </span>
         </label>
-      ) : (
+      ) : null}
+
+      {step === "code" || (passwordOn && step === "password") ? (
         <label className="pricing-email">
-          <span className="label-eyebrow">Email</span>
+          <span className="label-eyebrow">{step === "code" ? "New password" : "Password"}</span>
           <span className="field">
             <input
-              type="email"
-              name="email"
-              autoComplete="email"
+              type="password"
+              name="password"
+              autoComplete={mode === "sign-up" || step === "code" ? "new-password" : "current-password"}
               required
-              autoFocus
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              minLength={8}
+              maxLength={128}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
           </span>
         </label>
-      )}
+      ) : null}
 
-      {sent ? null : <TurnstileWidget onToken={setToken} resetKey={resetKey} />}
+      {passwordOn && mode === "sign-up" && step === "password" ? (
+        <label className="pricing-email">
+          <span className="label-eyebrow">Confirm password</span>
+          <span className="field">
+            <input
+              type="password"
+              name="confirm"
+              autoComplete="new-password"
+              required
+              minLength={8}
+              maxLength={128}
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+            />
+          </span>
+        </label>
+      ) : null}
+
+      {step === "code" || !passwordOn ? null : <TurnstileWidget onToken={setToken} resetKey={resetKey} />}
 
       {error ? (
         <p className="pricing-error" role="alert">
@@ -149,23 +237,52 @@ export function EmailAuthForm({
         </p>
       ) : null}
 
-      <button className="btn-primary" type="submit" disabled={busy || (!sent && !token) || (sent && code.length !== 6)}>
-        {submitLabel}
+      {passwordOn || step !== "password" ? (
+      <button
+        className="btn-primary"
+        type="submit"
+        disabled={busy || (step !== "code" && !token) || (step === "code" && code.length !== 6)}
+      >
+        {busy
+          ? "Please wait…"
+          : step === "forgot"
+            ? "Email me a code"
+            : step === "code"
+              ? "Save password"
+              : mode === "sign-up"
+                ? "Create account"
+                : "Sign in"}
       </button>
+      ) : null}
 
-      {sent ? (
+      {step === "password" && mode === "sign-in" && passwordOn ? (
         <button
           className="btn-secondary"
           type="button"
           disabled={busy}
           onClick={() => {
-            setSent(false);
+            setStep("forgot");
+            setError("");
+            resetChallenge();
+          }}
+        >
+          Forgot password
+        </button>
+      ) : null}
+
+      {step !== "password" ? (
+        <button
+          className="btn-secondary"
+          type="button"
+          disabled={busy}
+          onClick={() => {
+            setStep("password");
             setCode("");
             setError("");
             resetChallenge();
           }}
         >
-          Use a different email
+          Back to password
         </button>
       ) : (
         <p className="auth-switch">

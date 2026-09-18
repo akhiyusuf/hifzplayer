@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { hashesEqual, hashSecretValue, sixDigitCode } from "./crypto.ts";
+import { hashesEqual, hashPassword, hashSecretValue, sixDigitCode, verifyPassword } from "./crypto.ts";
 
 describe("auth crypto", () => {
   it("hashes with the signing secret and compares in constant time", () => {
@@ -18,5 +18,13 @@ describe("auth crypto", () => {
 
   it("issues a six-digit code", () => {
     assert.match(sixDigitCode(), /^\d{6}$/);
+  });
+
+  it("hashes passwords with scrypt and rejects a wrong password", async () => {
+    const stored = await hashPassword("correct horse");
+    assert.match(stored, /^scrypt:[0-9a-f]+:[0-9a-f]+$/);
+    assert.equal(await verifyPassword("correct horse", stored), true);
+    assert.equal(await verifyPassword("wrong", stored), false);
+    assert.equal(await verifyPassword("correct horse", "not-a-hash"), false);
   });
 });

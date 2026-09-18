@@ -1,4 +1,4 @@
-import { accountsConfigured, accountsBrowserReady } from "@/lib/auth/config";
+import { accountsConfigured, accountsBrowserReady, googleConfigured } from "@/lib/auth/config";
 import { signedInUser } from "@/lib/auth/session";
 import { json } from "@/lib/billing/http";
 
@@ -10,6 +10,7 @@ export async function GET() {
   return json({
     accountsOn: accountsConfigured(),
     accountsReady: accountsBrowserReady(),
+    googleOn: googleConfigured(),
     signedIn: Boolean(user),
     userId: user?.id || null,
     email: user?.email || "",

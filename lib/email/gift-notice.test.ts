@@ -13,7 +13,7 @@ describe("gift notice email", () => {
     assert.match(text, /gifted you Diras Plus/);
     assert.match(text, /You have been granted Diras Plus/);
     assert.match(text, /Sign in or create a Diras account with this same email/);
-    assert.match(text, /6-digit code/);
+    assert.match(text, /password or Google/);
     assert.match(text, /https:\/\/example\.test\/sign-up/);
     assert.doesNotMatch(text, /trxref|cs_live|reference/i);
     assert.doesNotMatch(text, /user_/);

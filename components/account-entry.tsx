@@ -5,8 +5,8 @@ import { Icon } from "@/components/icon";
 import { useAuth } from "@/components/auth-root";
 
 export function AccountEntry({ compact = false }: { compact?: boolean }) {
-  const { loaded, accountsReady, signedIn } = useAuth();
-  const href = !loaded || !accountsReady ? "/account" : signedIn ? "/account" : "/sign-in";
+  const { loaded, accountsOn, signedIn } = useAuth();
+  const href = !loaded ? "/account" : signedIn ? "/account" : accountsOn ? "/sign-in" : "/account";
   const label = signedIn ? "Account" : "Sign in";
   return (
     <Link className={compact ? "icon-btn tap account-btn" : "icon-btn tap"} href={href} aria-label={label}>

@@ -1,5 +1,8 @@
-import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, scrypt, timingSafeEqual } from "node:crypto";
+import { promisify } from "node:util";
 import { authSecret } from "./config.ts";
+
+const scryptAsync = promisify(scrypt);
 
 export function sha256(value: string) {
   return createHash("sha256").update(value).digest("hex");
@@ -26,4 +29,19 @@ export function hashesEqual(left: string, right: string) {
   const b = Buffer.from(right);
   if (a.length !== b.length) return false;
   return timingSafeEqual(a, b);
+}
+
+export async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const key = (await scryptAsync(password, salt, 32)) as Buffer;
+  return `scrypt:${salt}:${key.toString("hex")}`;
+}
+
+export async function verifyPassword(password: string, stored: string) {
+  const [kind, salt, hash] = stored.split(":");
+  if (kind !== "scrypt" || !salt || !hash) return false;
+  const key = (await scryptAsync(password, salt, 32)) as Buffer;
+  const expected = Buffer.from(hash, "hex");
+  if (expected.length !== key.length) return false;
+  return timingSafeEqual(expected, key);
 }

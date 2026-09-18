@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { otpEmailHtml, otpEmailSubject, otpEmailText } from "./otp.ts";
 
-describe("sign-in OTP email", () => {
+describe("password-reset OTP email", () => {
   it("names Diras and the code without sounding like a receipt", () => {
     const text = otpEmailText("482917");
-    assert.equal(otpEmailSubject(), "Your Diras sign-in code");
+    assert.equal(otpEmailSubject(), "Your Diras password code");
     assert.match(text, /482917/);
     assert.match(text, /10 minutes/);
     assert.doesNotMatch(text, /trxref|cs_live|reference/i);
