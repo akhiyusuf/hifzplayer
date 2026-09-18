@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const origin = appUrl(request);
-  const next = safePath(new URL(request.url).searchParams.get("redirect_url"), "/");
+  const next = safePath(new URL(request.url).searchParams.get("redirect_url") || undefined, "/");
   if (!accountsConfigured() || !googleConfigured()) {
     return NextResponse.redirect(new URL(`/sign-in?redirect_url=${encodeURIComponent(next)}`, origin));
   }

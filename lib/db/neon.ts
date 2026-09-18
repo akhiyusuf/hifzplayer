@@ -31,11 +31,12 @@ async function applySchema(url: string) {
   }
 }
 
-/** HTTP neon client — works from Node and Cloudflare Workers. Applies schema first. */
+/** HTTP neon client — works from Node and Cloudflare Workers. */
 export function sql() {
   const url = databaseUrl();
   if (!url) throw new Error("DATABASE_URL is not set");
   const client = neon(url);
-  return ((strings: TemplateStringsArray, ...values: unknown[]) =>
-    ensureSchema().then(() => client(strings, ...values))) as ReturnType<typeof neon>;
+  const wrapped = (strings: TemplateStringsArray, ...values: never[]) =>
+    ensureSchema().then(() => client(strings, ...values));
+  return Object.assign(wrapped, client) as typeof client;
 }
