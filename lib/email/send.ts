@@ -2,16 +2,15 @@ import { emailForUser, markPlusWelcomeSent, plusWelcomeAlreadySent } from "@/lib
 import { logBillingEvent } from "@/lib/billing/analytics";
 import type { Entitlement } from "@/lib/billing/entitlement";
 import { APP_NAME } from "@/lib/brand";
+import { mailchannelsProvider } from "./providers/mailchannels";
+import { resendProvider, resendDefaultFrom } from "./providers/resend";
+import type { EmailMessage, EmailProvider, EmailSendResult } from "./providers/types";
 import { giftNoticeHtml, giftNoticeSubject, giftNoticeText } from "./gift-notice";
 import { otpEmailHtml, otpEmailSubject, otpEmailText } from "./otp";
 import { plusWelcomeHtml, plusWelcomeSubject, plusWelcomeText } from "./plus-welcome";
 
-function resendApiKey() {
-  return process.env.RESEND_API_KEY || "";
-}
-
 function emailFrom() {
-  return process.env.EMAIL_FROM || process.env.RESEND_FROM || `${APP_NAME} <beth.t@example.com>`;
+  return process.env.EMAIL_FROM || resendDefaultFrom() || `${APP_NAME} <hello@diras.app>`;
 }
 
 function looksLikeEmail(value: string) {
@@ -25,31 +24,57 @@ async function destination(ent: Entitlement): Promise<string | null> {
   return null;
 }
 
-async function deliver(to: string, ent: Entitlement) {
-  const key = resendApiKey();
+/**
+ * Providers tried in order. Resend is preferred (better dashboard, deliverability
+ * analytics). MailChannels is the uncapped fallback — free for Cloudflare Workers,
+ * no daily limit. If neither is configured, the router logs and skips.
+ */
+const providers: EmailProvider[] = [resendProvider, mailchannelsProvider];
+
+/**
+ * Try each configured provider in order. Returns the first successful result,
+ * or the last failure if all providers fail.
+ */
+async function deliverWithFallback(msg: EmailMessage): Promise<EmailSendResult> {
+  const attempts: EmailSendResult[] = [];
+  for (const provider of providers) {
+    if (!provider.configured()) continue;
+    const result = await provider.send(msg);
+    attempts.push(result);
+    if (result.ok) return result;
+    // Log the failure so we can see which provider failed and why
+    console.warn(
+      JSON.stringify({
+        event: "diras.email",
+        provider: result.provider,
+        status: result.status,
+        reason: result.error || "unknown",
+        next:
+          attempts.length < providers.filter((p) => p.configured()).length ? "fallback" : "exhausted",
+      }),
+    );
+  }
+  if (attempts.length === 0) {
+    return { ok: false, provider: "resend", error: "no provider configured" };
+  }
+  return attempts[attempts.length - 1];
+}
+
+/** Send the Diras Plus welcome email. */
+async function deliver(to: string, ent: Entitlement): Promise<EmailSendResult> {
   const input = {
     planId: ent.planId,
     regionId: ent.regionId,
     processor: ent.processor,
     until: ent.until,
   };
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      "User-Agent": "DirasBilling/1.0",
-    },
-    body: JSON.stringify({
-      from: emailFrom(),
-      to: [to],
-      subject: plusWelcomeSubject(),
-      text: plusWelcomeText(input),
-      html: plusWelcomeHtml(input),
-    }),
+  return deliverWithFallback({
+    from: emailFrom(),
+    to,
+    subject: plusWelcomeSubject(),
+    text: plusWelcomeText(input),
+    html: plusWelcomeHtml(input),
   });
-  if (!res.ok) throw new Error(`Resend HTTP ${res.status}`);
 }
 
 export async function sendGiftNotice(opts: {
@@ -63,8 +88,7 @@ export async function sendGiftNotice(opts: {
 }) {
   const to = opts.to.trim().toLowerCase();
   if (!looksLikeEmail(to)) return;
-  const key = resendApiKey();
-  if (!key) {
+  if (!providers.some((p) => p.configured())) {
     logBillingEvent({ type: "gift_failed", reason: "no_provider" });
     return;
   }
@@ -76,48 +100,34 @@ export async function sendGiftNotice(opts: {
     planId: opts.planId,
     signUpUrl: opts.signUpUrl,
   };
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      "User-Agent": "DirasBilling/1.0",
-    },
-    body: JSON.stringify({
-      from: emailFrom(),
-      to: [to],
-      subject: giftNoticeSubject(input),
-      text: giftNoticeText(input),
-      html: giftNoticeHtml(input),
-    }),
+  const result = await deliverWithFallback({
+    from: emailFrom(),
+    to,
+    subject: giftNoticeSubject(input),
+    text: giftNoticeText(input),
+    html: giftNoticeHtml(input),
   });
-  if (!res.ok) throw new Error(`Resend HTTP ${res.status}`);
-  logBillingEvent({ type: "welcome_sent", reason: "gift_notice", ok: true });
+  if (!result.ok) {
+    logBillingEvent({ type: "gift_failed", reason: result.error || "send_failed" });
+    return;
+  }
+  logBillingEvent({ type: "welcome_sent", reason: `gift_notice:${result.provider}`, ok: true });
 }
 
 export async function sendOtpCode(to: string, code: string) {
   const address = to.trim().toLowerCase();
   if (!looksLikeEmail(address)) throw new Error("Invalid email");
-  const key = resendApiKey();
-  if (!key) throw new Error("Email is not configured");
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      "User-Agent": "DirasBilling/1.0",
-    },
-    body: JSON.stringify({
-      from: emailFrom(),
-      to: [address],
-      subject: otpEmailSubject(),
-      text: otpEmailText(code),
-      html: otpEmailHtml(code),
-    }),
+  if (!providers.some((p) => p.configured())) throw new Error("Email is not configured");
+  const result = await deliverWithFallback({
+    from: emailFrom(),
+    to: address,
+    subject: otpEmailSubject(),
+    text: otpEmailText(code),
+    html: otpEmailHtml(code),
   });
-  if (!res.ok) throw new Error(`Resend HTTP ${res.status}`);
+  if (!result.ok) {
+    throw new Error(`Email send failed (${result.provider}): ${result.error}`);
+  }
 }
 
 /** Never throws — Plus grant must not fail because mail is down. */
@@ -159,7 +169,7 @@ export async function sendPlusWelcome(ent: Entitlement) {
     });
     return;
   }
-  if (!resendApiKey()) {
+  if (!providers.some((p) => p.configured())) {
     logBillingEvent({
       type: "welcome_skipped",
       processor: ent.processor,
@@ -172,17 +182,31 @@ export async function sendPlusWelcome(ent: Entitlement) {
     return;
   }
   try {
-    await deliver(to, ent);
-    if (ent.userId) await markPlusWelcomeSent(ent.userId, ent.ref);
-    logBillingEvent({
-      type: "welcome_sent",
-      ok: true,
-      processor: ent.processor,
-      planId: ent.planId,
-      regionId: ent.regionId,
-      hasUserId: Boolean(ent.userId),
-      accountId: ent.userId,
-    });
+    const result = await deliver(to, ent);
+    if (result.ok) {
+      if (ent.userId) await markPlusWelcomeSent(ent.userId, ent.ref);
+      logBillingEvent({
+        type: "welcome_sent",
+        ok: true,
+        processor: ent.processor,
+        planId: ent.planId,
+        regionId: ent.regionId,
+        hasUserId: Boolean(ent.userId),
+        accountId: ent.userId,
+        reason: `provider:${result.provider}`,
+      });
+    } else {
+      logBillingEvent({
+        type: "welcome_failed",
+        ok: false,
+        processor: ent.processor,
+        planId: ent.planId,
+        regionId: ent.regionId,
+        hasUserId: Boolean(ent.userId),
+        accountId: ent.userId,
+        reason: result.error,
+      });
+    }
   } catch {
     logBillingEvent({
       type: "welcome_failed",
