@@ -8,6 +8,7 @@ import type { EmailMessage, EmailProvider, EmailSendResult } from "./providers/t
 import { giftNoticeHtml, giftNoticeSubject, giftNoticeText } from "./gift-notice";
 import { otpEmailHtml, otpEmailSubject, otpEmailText } from "./otp";
 import { plusWelcomeHtml, plusWelcomeSubject, plusWelcomeText } from "./plus-welcome";
+import { signUpWelcomeHtml, signUpWelcomeSubject, signUpWelcomeText } from "./sign-up-welcome";
 
 function emailFrom() {
   return process.env.EMAIL_FROM || resendDefaultFrom() || `${APP_NAME} <hello@diras.app>`;
@@ -128,6 +129,47 @@ export async function sendOtpCode(to: string, code: string) {
   });
   if (!result.ok) {
     throw new Error(`Email send failed (${result.provider}): ${result.error}`);
+  }
+}
+
+/**
+ * Sign-up welcome email. Never throws — account creation must not fail because
+ * mail is down. Logs a billing event with reason `sign_up_welcome` so we can
+ * see delivery failures in the Worker logs.
+ */
+export async function sendSignUpWelcome(opts: { to: string; name?: string | null }) {
+  const to = opts.to.trim().toLowerCase();
+  if (!looksLikeEmail(to)) return;
+  if (!providers.some((p) => p.configured())) {
+    console.warn(JSON.stringify({ event: "diras.email", reason: "sign_up_welcome_skipped", cause: "no_provider" }));
+    return;
+  }
+  const input = { name: opts.name };
+  try {
+    const result = await deliverWithFallback({
+      from: emailFrom(),
+      to,
+      subject: signUpWelcomeSubject(),
+      text: signUpWelcomeText(input),
+      html: signUpWelcomeHtml(input),
+    });
+    console.info(
+      JSON.stringify({
+        event: "diras.email",
+        reason: "sign_up_welcome",
+        ok: result.ok,
+        provider: result.provider,
+        error: result.error,
+      }),
+    );
+  } catch (err) {
+    console.warn(
+      JSON.stringify({
+        event: "diras.email",
+        reason: "sign_up_welcome_failed",
+        error: err instanceof Error ? err.message : String(err),
+      }),
+    );
   }
 }
 
