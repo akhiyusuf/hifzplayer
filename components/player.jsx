@@ -17,6 +17,7 @@ import { OfflineBanner } from "@/components/offline-banner";
 import { FocusStage } from "@/components/focus-stage";
 import { PracticeSheet } from "@/components/practice-sheet";
 import { PlayerSettingsSheet } from "@/components/player-settings-sheet";
+import { PracticeStrip } from "@/components/practice-strip";
 import { ReciterSheet } from "@/components/reciter-sheet";
 import { PlaylistBar } from "@/components/playlist-bar";
 import { WordRepBar } from "@/components/word-rep-bar";
@@ -58,6 +59,10 @@ import {
   wordTapIntent,
   writeRelayDraft,
   exclusiveJobPatch,
+  WORD_REP_COUNTS,
+  loopCountFace,
+  playerPageKind,
+  mushafMaskReveal,
 } from "@/lib/player-chrome";
 import { PLUS_GATE_EVENT, usePlus } from "@/lib/plus";
 import { markToday, upsertSession } from "@/lib/sessions";
@@ -195,10 +200,6 @@ class g {
     e.play && this.playAudio();
   }
   playAudio() {
-    if ("focus" === this.st.style && !this.plus) {
-      this.requirePlus("focus");
-      return;
-    }
     var e;
     this.audio.playbackRate =
       null !== (e = this.oneshotRate) && void 0 !== e ? e : this.st.rate;
@@ -605,12 +606,6 @@ class g {
     ((this.st.rate = e), (this.audio.playbackRate = e), this.notify());
   }
   toggleVerseLoop() {
-    if (
-      !this.st.verseLoop &&
-      "focus" === this.st.style &&
-      !this.requirePlus("focus")
-    )
-      return;
     if (this.st.verseLoop) {
       ((this.st.verseLoop = !1),
         (this.st.verseLoopRange = null),
@@ -625,7 +620,6 @@ class g {
       this.notify());
   }
   setVerseLoopRange(from, to) {
-    if ("focus" === this.st.style && !this.requirePlus("focus")) return;
     let a = Math.min(from, to),
       b = Math.max(from, to);
     if (!coversRange(this.st.verses, a, b)) {
@@ -656,32 +650,22 @@ class g {
     ((this.st.loop = null), this.loadVerseAudio(e, !0));
   }
   setMode(e) {
-    if (isPaidFocusJob(e) && !this.requirePlus("focus")) return;
+    if (isPaidFocusJob(e) && !this.requirePlus("practice")) return;
     (e !== this.st.mode || "relay" === e) &&
       (this.stopJobs(),
       (this.st.mode = e),
       "masked" === e && (this.st.masked = {}),
       "relay" !== e && (this.st.relay = null),
-      "verse" !== e &&
-        ((this.st.style = "focus"), setStore(KEYS.style, "focus")),
       this.notify(),
       "relay" !== e && this.loadVerseAudio(this.st.vIdx, !1));
   }
   setStyle(e) {
     if (this.st.style === e) return;
-    (this.stopJobs(),
-      (this.st.style = e),
-      setStore(KEYS.style, e));
-    if ("mushaf" === e) {
-      if ("verse" !== this.st.mode) {
-        ((this.st.mode = "verse"),
-          (this.st.relay = null),
-          this.loadVerseAudio(this.st.vIdx, !1));
-      }
-    } else if ("focus" === e && !this.plus) {
-      if (isPaidFocusJob(this.st.mode)) {
-        ((this.st.mode = "verse"), (this.st.relay = null));
-      }
+    ((this.st.style = e), setStore(KEYS.style, e));
+    if (!this.plus && isPaidFocusJob(this.st.mode)) {
+      (this.stopJobs(),
+        (this.st.mode = "verse"),
+        (this.st.relay = null));
     }
     this.notify();
   }
@@ -1888,7 +1872,7 @@ function k(e) {
       onOccupy = () => {},
     } = e,
     { plus: plusOn } = usePlus(),
-    focusLocked = "focus" === s.style && !plusOn,
+    focusLocked = !1,
     d = s.showTranslation && "mushaf" === s.style ? s.verses[s.vIdx] : void 0,
     c = "relay" === s.mode,
     u = "word" === s.mode,
@@ -2164,7 +2148,7 @@ function N(e) {
       _jsx("button", {
         className: "icon-btn sm tap",
         onClick: () =>
-          onBack ? onBack() : p ? m.back() : m.push("/"),
+          onBack ? onBack() : p ? m.back() : m.push("/home"),
         "aria-label": p ? "Back to ".concat(p) : "Back to passage list",
         children: _jsx(Icon, { name: "chevron-left", size: 19 }),
       }),
@@ -2186,30 +2170,75 @@ function N(e) {
     ],
   });
 }
-function PlayerViewBar(e) {
-  let { style: t, onStyle: s } = e;
-  return _jsxs("div", {
-    className: "player-view",
-    children: [
-      _jsx("span", { className: "player-view-label", children: "View" }),
-      _jsx("div", {
-        className: "style-toggle",
-        role: "group",
-        "aria-label": "Reading view",
-        children: ["mushaf", "focus"].map((e) =>
-          _jsx(
-            "button",
-            {
-              className: t === e ? "on" : "",
-              onClick: () => s(e),
-              "aria-pressed": t === e,
-              children: "mushaf" === e ? "Mushaf" : "Focus",
-            },
-            e,
-          ),
-        ),
+function MushafJobBar(e) {
+  let { engine: t, state: s } = e,
+    { reciterName: n } = useAppData();
+  if ("masked" === s.mode) {
+    let verse = s.verses[s.vIdx];
+    if (!verse) return null;
+    let i = t.maskStateFor(verse),
+      l = verse.words.length,
+      c = i.maxRev >= l;
+    return _jsx(PracticeStrip, {
+      title: "Revealed ".concat(i.maxRev, " of ", l),
+      meta: verse.key,
+      actions: _jsxs("button", {
+        className: "focus-act primary",
+        onClick: () => t.peek(),
+        disabled: i.peeks <= 0 || c,
+        children: [
+          _jsx(Icon, { name: "eye", size: 16 }),
+          c
+            ? "Verse revealed"
+            : i.peeking
+              ? "Peeking"
+              : "Peek \xb7 ".concat(i.peeks, " left"),
+        ],
       }),
-    ],
+    });
+  }
+  if ("relay" !== s.mode || !s.relay || !s.relay.active) return null;
+  let l = s.relay,
+    d = l.turns[l.idx];
+  if (!d) return null;
+  let h = "you" === d.kind,
+    u = l.turns.length - l.idx,
+    p =
+      0 === l.rounds
+        ? "Round ".concat(l.round)
+        : "Round ".concat(l.round, " of ").concat(l.rounds);
+  return _jsx(PracticeStrip, {
+    title: p,
+    meta: h
+      ? "Your turn \xb7 ".concat(u, " left")
+      : "".concat(n(d.reciterId).split(" ")[0], " \xb7 verse ").concat(
+          d.verseKey.split(":")[1],
+        ),
+    hint: h
+      ? "Recite aloud — the reciter plays muted to pace you"
+      : undefined,
+    actions: h
+      ? _jsxs(_Fragment, {
+          children: [
+            _jsxs("button", {
+              className: "focus-act primary",
+              onClick: () => t.startRelayTurn(!0),
+              children: [
+                _jsx(Icon, { name: "volume-2", size: 16 }),
+                "Replay reciter",
+              ],
+            }),
+            _jsxs("button", {
+              className: "focus-act",
+              onClick: () => t.advanceRelay(),
+              children: [
+                _jsx(Icon, { name: "skip-forward", size: 16 }),
+                "Skip my turn",
+              ],
+            }),
+          ],
+        })
+      : null,
   });
 }
 function I(e) {
@@ -2232,10 +2261,13 @@ function S(e) {
       onOpenPhrase: j,
       onOpenConfusable: w,
       mushaf: mushafLite,
+      onPin: onPinWord,
+      onRepsCount: onRepsCount,
     } = e,
     b = useRef(null),
     [k, N] = useState(null),
-    { plus: plusOn, askPlus: ask } = usePlus();
+    { plus: plusOn, askPlus: ask } = usePlus(),
+    popW = mushafLite ? 300 : 262;
   (useLayoutEffect(() => {
     var e, t;
     let s =
@@ -2248,13 +2280,13 @@ function S(e) {
           : 240,
       r = c.rect,
       a = Math.min(
-        window.innerWidth - 262 - 10,
-        Math.max(10, r.left + r.width / 2 - 131),
+        window.innerWidth - popW - 10,
+        Math.max(10, r.left + r.width / 2 - popW / 2),
       ),
       n = r.bottom + 12,
       i = n + s > window.innerHeight - 12;
     N({ top: i ? Math.max(10, r.top - s - 12) : n, left: a, flipped: i });
-  }, [c]),
+  }, [c, popW]),
     useEffect(() => {
       var e, t;
       let s = (e) => {
@@ -2275,7 +2307,7 @@ function S(e) {
     className: "pop-wrap",
     onClick: y,
     children: _jsxs("div", {
-      className: "popover",
+      className: "popover".concat(mushafLite ? " mushaf-word-pop" : ""),
       ref: b,
       role: "dialog",
       "aria-label": "Study ".concat(d.ar),
@@ -2298,7 +2330,7 @@ function S(e) {
           ),
           style: {
             left: Math.min(
-              242,
+              popW - 20,
               Math.max(
                 20,
                 c.rect.left +
@@ -2406,7 +2438,57 @@ function S(e) {
           ],
         }),
         mushafLite
-          ? null
+          ? _jsxs("div", {
+              className: "p-drill",
+              role: "group",
+              "aria-label": "Word Reps",
+              children: [
+                _jsxs("button", {
+                  type: "button",
+                  className: "sec",
+                  onClick: () =>
+                    plusOn ? onPinWord && onPinWord() : ask("practice"),
+                  children: [
+                    _jsx(Icon, { name: "pin", size: 14 }),
+                    "Pin",
+                  ],
+                }),
+                WORD_REP_COUNTS.map((n) => {
+                  let locked = !plusOn;
+                  return _jsx(
+                    "button",
+                    {
+                      type: "button",
+                      className: locked ? "locked" : "",
+                      onClick: () =>
+                        locked
+                          ? ask("practice")
+                          : onRepsCount && onRepsCount(n),
+                      "aria-label":
+                        0 === n
+                          ? "Repeat until you stop"
+                          : "Replay ".concat(n, " times"),
+                      children: locked
+                        ? _jsxs("span", {
+                            style: {
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 3,
+                            },
+                            children: [
+                              0 === n ? "∞" : "".concat(loopCountFace(n), "×"),
+                              _jsx(Icon, { name: "sparkles", size: 11 }),
+                            ],
+                          })
+                        : 0 === n
+                          ? "∞"
+                          : "".concat(loopCountFace(n), "×"),
+                    },
+                    n,
+                  );
+                }),
+              ],
+            })
           : _jsxs("button", {
           className: "p-tertiary",
           onClick: f,
@@ -3251,9 +3333,7 @@ let D = memo(function (e) {
       "hidden" !== c &&
       v.push("confusable"));
   let x =
-      "hidden" === c
-        ? null
-        : (function (e, t) {
+      (function (e, t) {
             if (!t) return null;
             if (void 0 === e._tj) {
               var s;
@@ -3672,9 +3752,9 @@ function MushafVerseActive(e) {
     rangeStart: e.rangeStart,
     rangeEnd: e.rangeEnd,
     pendingPos: e.pendingPos,
-    revealUpTo: 0,
-    masked: !1,
-    interactive: !0,
+    revealUpTo: e.revealUpTo || 0,
+    masked: !!e.masked,
+    interactive: !1 !== e.interactive,
     annotations: e.annotations,
     arrivedFrom: e.arrivedFrom,
     arrivedTo: e.arrivedTo,
@@ -3841,8 +3921,17 @@ function H(e) {
         _jsx("div", {
           className: "mushaf",
           children: s.verses.map((e, a) => {
-            let r = t.isVerseDone(a);
-            if (!isHotVerse(a, u, p))
+            let r = t.isVerseDone(a),
+              mask = mushafMaskReveal({
+                mode: s.mode,
+                verseIdx: a,
+                currentIdx: s.vIdx,
+                wordCount: e.words.length,
+                currentReveal:
+                  "masked" === s.mode ? t.maskStateFor(e).reveal : 0,
+                verseDone: r,
+              });
+            if (!isHotVerse(a, u, p) && !mask.masked)
               return _jsx(
                 ColdVerse,
                 { verse: e, vIdx: a, done: r, onMarkTap: h },
@@ -3866,10 +3955,13 @@ function H(e) {
                   (null == o ? void 0 : o.verse) === e.number ? o.to : 0,
                 onWordTap: n,
                 onMarkTap: h,
+                revealUpTo: mask.revealUpTo,
+                masked: mask.masked,
+                interactive: !mask.masked,
               };
             return a === s.vIdx
               ? _jsx(MushafVerseActive, { engine: t, ...c }, e.key)
-              : _jsx(O, { ...c, curWord: 0, revealUpTo: 0, masked: !1, interactive: !0 }, e.key);
+              : _jsx(O, { ...c, curWord: 0 }, e.key);
           }),
         }),
       ],
@@ -4054,6 +4146,7 @@ function U(e) {
     et = null !== (f = J.get("match")) && void 0 !== f ? f : Q,
     es = J.get("g"),
     er = J.get("mode"),
+    eStyleQ = J.get("style"),
     ea = J.get("at"),
     eListId = J.get("list"),
     eStopRaw = Number(J.get("stop")),
@@ -4220,7 +4313,7 @@ function U(e) {
                     name: e_,
                     reciter: ed(eM),
                   }),
-                  eWantPlay && plusOn && eu.playAudio()));
+                  eWantPlay && eu.playAudio()));
             }
           })
           .catch(() => {
@@ -4302,6 +4395,11 @@ function U(e) {
       let e = ez.verses.findIndex((e) => e.number === eR.verse);
       e >= 0 && e !== ez.vIdx && eu.loadVerseAudio(e, !1);
     }, [ep, eR, ez.verses.length]),
+    useEffect(() => {
+      if ("ready" !== ep) return;
+      if (eStyleQ !== "focus" && eStyleQ !== "mushaf") return;
+      if (eStyleQ !== eu.getSnapshot().style) eu.setStyle(eStyleQ);
+    }, [ep, eStyleQ, eu]),
     useEffect(() => {
       if ("ready" !== ep || !plusReady) return;
       let e =
@@ -4593,7 +4691,7 @@ function U(e) {
                 }),
                 _jsxs("button", {
                   className: "btn-secondary",
-                  onClick: () => Y.push("/"),
+                  onClick: () => Y.push("/home"),
                   children: [
                     _jsx(Icon, {
                       name: "chevron-left",
@@ -4639,15 +4737,19 @@ function U(e) {
       annFor: eG,
       arrived: eR,
     },
+    ePage = playerPageKind(
+      ez.style,
+      ez.mode,
+      !!(null === (t = ez.relay) || void 0 === t ? void 0 : t.active),
+    ),
     eZ =
-      "relay" === ez.mode &&
-      (null === (t = ez.relay) || void 0 === t ? void 0 : t.active)
+      "relay" === ePage
         ? _jsx(K, { ...eX })
-        : "masked" === ez.mode
+        : "masked" === ePage
           ? _jsx(_, { ...eX })
-          : "word" === ez.mode
+          : "word" === ePage
             ? _jsx(G, { ...eX })
-            : "focus" === ez.style
+            : "focus" === ePage
               ? _jsx(F, { ...eX })
               : _jsx(H, { ...eX });
   return _jsxs("main", {
@@ -4659,13 +4761,16 @@ function U(e) {
         children: [
           _jsx(N, {
             title: eHead,
-            backLabel: eList ? "Listen" : $ ? $.split(" ")[0] : null,
+            backLabel: eList ? "Playlists" : $ ? $.split(" ")[0] : null,
             onBack: eList ? () => Y.push("/listen") : undefined,
             onSettings: () => {
               (eQuietUi("settings"), eSetTools(!0));
             },
             settingsOpen: eTools,
           }),
+          "mushaf" === ez.style
+            ? _jsx(MushafJobBar, { engine: eu, state: ez })
+            : null,
           eHint
             ? _jsx("p", {
                 className: "player-drill-hint",
@@ -4915,6 +5020,26 @@ function U(e) {
           onPickMode: (e) => {
             (eHintFor.current = null);
             eSetTools(!1);
+            if ("verse" === e) {
+              eu.setMode("verse");
+              return;
+            }
+            if ("relay" === e) {
+              let order = [
+                {
+                  kind: "qari",
+                  reciterId: null != ez.reciterId ? ez.reciterId : eM,
+                },
+                { kind: "you" },
+              ];
+              let from = (ez.verses[0] && ez.verses[0].number) || V;
+              let to =
+                (ez.verses[ez.verses.length - 1] &&
+                  ez.verses[ez.verses.length - 1].number) ||
+                D;
+              eu.beginRelay(order, from, to, 2);
+              return;
+            }
             eu.setMode(e);
           },
           onRelayStart: async (order, vFrom, vTo, rounds) => {
@@ -4967,9 +5092,8 @@ function U(e) {
                 at: String(verse),
               });
             (null != ez.reciterId && n.set("reciter", String(ez.reciterId)),
-              "focus" === ez.style &&
-                "verse" !== ez.mode &&
-                n.set("mode", ez.mode),
+              "focus" === ez.style && n.set("style", "focus"),
+              "verse" !== ez.mode && n.set("mode", ez.mode),
               (eF.current = !0),
               eSetTools(!1),
               Y.replace("/read/".concat(ch, "?").concat(n.toString())));
@@ -5006,6 +5130,16 @@ function U(e) {
           },
           onStartRange: () => {
             (eu.setPendingLoopStart(ek.vIdx, ek.pos), eN(null));
+          },
+          onPin: () => {
+            if ("word" !== eu.getSnapshot().mode) eu.setMode("word");
+            if ("word" !== eu.getSnapshot().mode) return;
+            (eu.setPendingLoopStart(ek.vIdx, ek.pos), eN(null));
+          },
+          onRepsCount: (n) => {
+            if ("word" !== eu.getSnapshot().mode) eu.setMode("word");
+            if ("word" !== eu.getSnapshot().mode) return;
+            (eu.startWordDrill(ek.pos, ek.pos, n), eN(null));
           },
           onClose: () => eN(null),
           annotation:

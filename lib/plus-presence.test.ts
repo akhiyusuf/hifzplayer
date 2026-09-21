@@ -22,7 +22,7 @@ describe("plus presence copy", () => {
     assert.doesNotMatch(listenLeadCopy(true), /Playing a list is/);
     assert.doesNotMatch(listenLeadCopy(true), /reciter/i);
     assert.match(listenLeadCopy(false), /Diras Plus/);
-    assert.match(listenLeadCopy(false), /Playing a list is/);
+    assert.match(listenLeadCopy(false), /Reading stays on Menu/);
   });
 
   it("does not repeat the reciter on occasion rows", () => {

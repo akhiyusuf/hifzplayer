@@ -5,7 +5,7 @@ import { PLUS_NAME } from "@/lib/brand";
 
 export function AuthShell({
   title,
-  backHref = "/",
+  backHref = "/home",
   children,
 }: {
   title: string;

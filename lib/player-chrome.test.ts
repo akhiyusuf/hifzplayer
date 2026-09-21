@@ -12,6 +12,8 @@ import {
   sidebarKind,
   sortedWordRange,
   wordTapIntent,
+  playerPageKind,
+  mushafMaskReveal,
   spanForVerse,
   spanForPlay,
   spanForSetup,
@@ -51,18 +53,85 @@ describe("sidebarKind", () => {
 });
 
 describe("wordTapIntent", () => {
-  it("opens the mushaf word sheet for any pointer", () => {
+  it("opens the mushaf word sheet for any pointer, including Word Reps", () => {
     assert.equal(wordTapIntent("mushaf", "verse", "mouse"), "meaning");
     assert.equal(wordTapIntent("mushaf", "verse", "pen"), "meaning");
     assert.equal(wordTapIntent("mushaf", "verse", "touch"), "meaning");
     assert.equal(wordTapIntent("mushaf", "verse"), "meaning");
+    assert.equal(wordTapIntent("mushaf", "word", "touch"), "meaning");
+    assert.equal(wordTapIntent("mushaf", "masked", "mouse"), "meaning");
   });
 
   it("uses Word Reps taps for the pin bar, and plays in other Focus jobs", () => {
     assert.equal(wordTapIntent("focus", "word", "touch"), "wordRep");
-    assert.equal(wordTapIntent("focus", "word", "mouse"), "wordRep");
     assert.equal(wordTapIntent("focus", "verse", "touch"), "play");
     assert.equal(wordTapIntent("focus", "masked", "mouse"), "play");
+  });
+});
+
+describe("playerPageKind", () => {
+  it("keeps Mushaf on screen for every drill", () => {
+    assert.equal(playerPageKind("mushaf", "verse"), "mushaf");
+    assert.equal(playerPageKind("mushaf", "word"), "mushaf");
+    assert.equal(playerPageKind("mushaf", "masked"), "mushaf");
+    assert.equal(playerPageKind("mushaf", "relay", true), "mushaf");
+  });
+
+  it("uses Focus stages only in Focus view", () => {
+    assert.equal(playerPageKind("focus", "verse"), "focus");
+    assert.equal(playerPageKind("focus", "word"), "word");
+    assert.equal(playerPageKind("focus", "masked"), "masked");
+    assert.equal(playerPageKind("focus", "relay", true), "relay");
+    assert.equal(playerPageKind("focus", "relay", false), "focus");
+  });
+});
+
+describe("mushafMaskReveal", () => {
+  it("hides upcoming words and keeps past ayahs visible", () => {
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "verse",
+        verseIdx: 0,
+        currentIdx: 0,
+        wordCount: 4,
+        currentReveal: 1,
+        verseDone: false,
+      }),
+      { masked: false, revealUpTo: 0 },
+    );
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "masked",
+        verseIdx: 1,
+        currentIdx: 1,
+        wordCount: 5,
+        currentReveal: 2,
+        verseDone: false,
+      }),
+      { masked: true, revealUpTo: 2 },
+    );
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "masked",
+        verseIdx: 0,
+        currentIdx: 1,
+        wordCount: 4,
+        currentReveal: 0,
+        verseDone: false,
+      }),
+      { masked: true, revealUpTo: 4 },
+    );
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "masked",
+        verseIdx: 2,
+        currentIdx: 1,
+        wordCount: 3,
+        currentReveal: 1,
+        verseDone: false,
+      }),
+      { masked: true, revealUpTo: 0 },
+    );
   });
 });
 
@@ -104,7 +173,7 @@ describe("indexOfVerseInPassage", () => {
 describe("drillHint", () => {
   it("returns one line per drill type and nothing otherwise", () => {
     assert.equal(drillHint("word"), "Tap a word. Pin a range, or pick 5×, 10×, or ∞, then play.");
-    assert.equal(drillHint("masked"), "Words are covered. Peek if you need a look.");
+    assert.equal(drillHint("masked"), "Words stay in their slots and stay invisible until their turn.");
     assert.equal(drillHint("relay"), "Recite your ayah. The reciter takes the next.");
     assert.equal(drillHint("verse"), "");
     assert.equal(drillHint("mushaf"), "");
