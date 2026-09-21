@@ -13,7 +13,11 @@ import {
 import { Icon } from "@/components/icon";
 import { Sheet } from "@/components/sheet";
 import { PLUS_NAME } from "@/lib/brand";
-import { PLUS_COPY, type PlusFeature } from "@/lib/billing/gates";
+import {
+  plusCopyFor,
+  type LegacyPlusFeature,
+  type PlusFeature,
+} from "@/lib/billing/gates";
 import { PLUS_STORAGE_KEY } from "@/lib/billing/keys";
 import { getStore, setStore } from "@/lib/storage";
 
@@ -21,7 +25,7 @@ type PlusCtx = {
   plus: boolean;
   ready: boolean;
   trialAvailable: boolean;
-  askPlus: (feature: PlusFeature) => void;
+  askPlus: (feature: LegacyPlusFeature) => void;
   startTrial: () => Promise<boolean>;
   refreshPlus: () => Promise<void>;
 };
@@ -58,7 +62,7 @@ export function PlusProvider({ children }: { children: ReactNode }) {
   const [plus, setPlus] = useState(false);
   const [ready, setReady] = useState(false);
   const [trialAvailable, setTrialAvailable] = useState(false);
-  const [feature, setFeature] = useState<PlusFeature | null>(null);
+  const [feature, setFeature] = useState<LegacyPlusFeature | null>(null);
   const [trialBusy, setTrialBusy] = useState(false);
   const [trialError, setTrialError] = useState("");
 
@@ -103,7 +107,7 @@ export function PlusProvider({ children }: { children: ReactNode }) {
     };
   }, [applyStatus]);
 
-  const askPlus = useCallback((next: PlusFeature) => {
+  const askPlus = useCallback((next: LegacyPlusFeature) => {
     setTrialError("");
     setFeature(next);
     if (typeof window !== "undefined") {
@@ -177,19 +181,19 @@ function PlusGate({
   onStartTrial,
   onClose,
 }: {
-  feature: PlusFeature;
+  feature: LegacyPlusFeature;
   trialAvailable: boolean;
   trialBusy: boolean;
   trialError: string;
   onStartTrial: () => void;
   onClose: () => void;
 }) {
-  const copy = PLUS_COPY[feature];
+  const copy = plusCopyFor(feature);
   return (
     <Sheet title={PLUS_NAME} onClose={onClose}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div className="plus-gate" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <span
-          className="status-medallion"
+          className="status-medallion plus-gate-mark"
           style={{ alignSelf: "center", color: "var(--action-primary)" }}
         >
           <Icon name="sparkles" size={28} />
@@ -215,9 +219,6 @@ function PlusGate({
         >
           See plans
         </Link>
-        <button className="btn-secondary" type="button" onClick={onClose}>
-          {feature === "focus" || feature === "playlists" ? "Keep looking around" : "Keep using free"}
-        </button>
       </div>
     </Sheet>
   );
