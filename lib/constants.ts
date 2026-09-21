@@ -19,7 +19,7 @@ export const FOCUS_JOBS = [
     id: "masked",
     name: "Masked",
     icon: "eye-off",
-    desc: "Cover the words. Peek if you need a look",
+    desc: "Words stay in their slots and stay invisible until their turn",
   },
   {
     id: "relay",
