@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-root";
 import { TurnstileWidget } from "@/components/turnstile-widget";
+import { isPasswordAcceptable, scorePassword } from "@/lib/auth/password-strength";
 
 function authError(data: { error?: string; code?: string }, fallback: string) {
   if (data.code === "TURNSTILE") return "Confirm you are human, then try again.";
@@ -48,6 +49,11 @@ export function EmailAuthForm({
 
   async function submitPassword() {
     setError("");
+    if (mode === "sign-up" && !isPasswordAcceptable(password)) {
+      const { reasons } = scorePassword(password);
+      setError(reasons[0] || "That password is too weak. Use at least 8 characters with a letter and a number.");
+      return;
+    }
     if (mode === "sign-up" && password !== confirm) {
       setError("Those passwords do not match.");
       return;
@@ -97,6 +103,11 @@ export function EmailAuthForm({
 
   async function submitNewPassword() {
     setError("");
+    if (!isPasswordAcceptable(password)) {
+      const { reasons } = scorePassword(password);
+      setError(reasons[0] || "That password is too weak. Use at least 8 characters with a letter and a number.");
+      return;
+    }
     setBusy(true);
     try {
       const res = await fetch("/api/auth/password", {
@@ -118,6 +129,14 @@ export function EmailAuthForm({
   const otherHref = mode === "sign-in" ? "/sign-up" : "/sign-in";
   const otherLabel = mode === "sign-in" ? "Create an account" : "Sign in instead";
   const googleHref = `/api/auth/google?redirect_url=${encodeURIComponent(redirectTo)}`;
+
+  // Password strength — only show on sign-up and password-reset (step === "code").
+  // Sign-in users may have legacy weak passwords; we don't gate them at the UI.
+  const enforceStrength = mode === "sign-up" || step === "code";
+  const strength = useMemo(() => scorePassword(password), [password]);
+  const showStrength = enforceStrength && password.length > 0;
+  const strengthBars = [1, 2, 3, 4].map((n) => n <= strength.score);
+  const strengthBlocked = enforceStrength && password.length > 0 && !strength.acceptable;
 
   return (
     <form
@@ -208,6 +227,19 @@ export function EmailAuthForm({
               onChange={(e) => setPassword(e.target.value)}
             />
           </span>
+          {showStrength ? (
+            <span className="password-strength" data-score={strength.score} aria-live="polite">
+              <span className="password-strength-bars">
+                {strengthBars.map((on, i) => (
+                  <span key={i} className={`password-strength-bar${on ? " on" : ""}`} />
+                ))}
+              </span>
+              <span className="password-strength-label">{strength.label}</span>
+              {strength.reasons[0] ? (
+                <span className="password-strength-reason">{strength.reasons[0]}</span>
+              ) : null}
+            </span>
+          ) : null}
         </label>
       ) : null}
 
@@ -241,7 +273,13 @@ export function EmailAuthForm({
       <button
         className="btn-primary"
         type="submit"
-        disabled={busy || (step !== "code" && !token) || (step === "code" && code.length !== 6)}
+        disabled={
+          busy ||
+          (step !== "code" && !token) ||
+          (step === "code" && code.length !== 6) ||
+          strengthBlocked ||
+          (mode === "sign-up" && step === "password" && password.length > 0 && password !== confirm)
+        }
       >
         {busy
           ? "Please wait…"

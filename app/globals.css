@@ -721,3 +721,17 @@ body:has(.scrim) [class*="cl-userButton"]{
 .word-rep-row button.word-rep-nudge:nth-child(3){animation-delay:.16s}
 .word-rep-row button.word-rep-nudge:nth-child(4){animation-delay:.24s}
 .player-chrome .practice-strip{padding:10px 14px 8px}
+.password-strength{display:flex;flex-direction:column;gap:4px;margin-top:6px;font-size:12px;line-height:1.4;color:var(--text-secondary)}
+.password-strength-bars{display:flex;gap:4px}
+.password-strength-bar{flex:1;height:4px;border-radius:2px;background:var(--border-default);transition:background .15s}
+.password-strength-bar.on{background:var(--action-primary)}
+.password-strength[data-score="1"] .password-strength-bar.on{background:#dc2626}
+.password-strength[data-score="2"] .password-strength-bar.on{background:#f59e0b}
+.password-strength[data-score="3"] .password-strength-bar.on{background:#10b981}
+.password-strength[data-score="4"] .password-strength-bar.on{background:#059669}
+.password-strength-label{font-weight:600;color:var(--text-primary)}
+.password-strength[data-score="1"] .password-strength-label{color:#dc2626}
+.password-strength[data-score="2"] .password-strength-label{color:#f59e0b}
+.password-strength[data-score="3"] .password-strength-label{color:#10b981}
+.password-strength[data-score="4"] .password-strength-label{color:#059669}
+.password-strength-reason{color:var(--text-muted)}
