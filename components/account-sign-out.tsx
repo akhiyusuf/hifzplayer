@@ -1,21 +1,16 @@
 "use client";
 
-import { useClerk } from "@clerk/nextjs";
-import { clerkBrowserReady } from "@/lib/auth/config";
+import { useAuth } from "@/components/auth-root";
 
 export function AccountSignOut() {
-  if (!clerkBrowserReady()) return null;
-  return <AccountSignOutClerk />;
-}
-
-function AccountSignOutClerk() {
-  const { signOut } = useClerk();
+  const { signedIn, signOut } = useAuth();
+  if (!signedIn) return null;
   return (
     <button
       type="button"
       className="btn-secondary account-sign-out"
       aria-label="Sign out"
-      onClick={() => signOut({ redirectUrl: "/" })}
+      onClick={() => signOut()}
     >
       Sign out
     </button>

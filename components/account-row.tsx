@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useUser } from "@clerk/nextjs";
 import { Icon } from "@/components/icon";
 import { accountRowCopy } from "@/lib/account";
-import { clerkBrowserReady } from "@/lib/auth/config";
+import { useAuth } from "@/components/auth-root";
 
 export function AccountRow() {
+  const { loaded, signedIn } = useAuth();
+  const copy = accountRowCopy(loaded ? Boolean(signedIn) : null);
   return (
     <Link
       href="/account?from=settings"
@@ -20,22 +21,9 @@ export function AccountRow() {
     >
       <span className="st">
         <b>Account</b>
-        <span>
-          <AccountRowCopy />
-        </span>
+        <span>{copy}</span>
       </span>
       <Icon name="user" size={17} style={{ color: "var(--action-primary)", flex: "none" }} />
     </Link>
   );
-}
-
-function AccountRowCopy() {
-  if (!clerkBrowserReady()) return accountRowCopy(false);
-  return <AccountRowCopyClerk />;
-}
-
-function AccountRowCopyClerk() {
-  const { isLoaded, isSignedIn } = useUser();
-  if (!isLoaded) return accountRowCopy(null);
-  return accountRowCopy(Boolean(isSignedIn));
 }
