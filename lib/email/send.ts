@@ -25,11 +25,12 @@ async function destination(ent: Entitlement): Promise<string | null> {
 }
 
 /**
- * Providers tried in order. Resend is preferred (better dashboard, deliverability
- * analytics). MailChannels is the uncapped fallback — free for Cloudflare Workers,
- * no daily limit. If neither is configured, the router logs and skips.
+ * Providers tried in order. MailChannels is primary (uncapped, free for
+ * Cloudflare Workers — no daily limit, important for viral spikes in password
+ * resets or Plus confirmations). Resend is fallback if MailChannels is down
+ * or not configured. If neither is configured, the router logs and skips.
  */
-const providers: EmailProvider[] = [resendProvider, mailchannelsProvider];
+const providers: EmailProvider[] = [mailchannelsProvider, resendProvider];
 
 /**
  * Try each configured provider in order. Returns the first successful result,
