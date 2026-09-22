@@ -32,6 +32,7 @@ describe("sign-up welcome email", () => {
     assert.match(html, /Al-Fatiha/);
     assert.match(html, /Focus view/);
     assert.match(html, /mailto:support@diras\.app/);
-    assert.doesNotMatch(html, /<!doctype html>/i);
+    // The email is now a full HTML document (email template).
+    assert.match(html, /<!DOCTYPE html/i);
   });
 });

@@ -1,4 +1,5 @@
 import { APP_NAME, CONTACT_EMAIL, PLUS_NAME } from "../brand.ts";
+import { renderEmailHtml } from "./template.ts";
 
 export type GiftNoticeInput = {
   existingAccount: boolean;
@@ -43,27 +44,33 @@ export function giftNoticeText(input: GiftNoticeInput) {
     "",
     "If you sign up with a different address, the gift will not attach.",
     "",
-    `Questions: ${CONTACT_EMAIL}`,
+    `Need help? Reply to this email or write to ${CONTACT_EMAIL}.`,
   ].join("\n");
 }
 
-export function giftNoticeHtml(input: GiftNoticeInput) {
-  const text = giftNoticeText(input);
-  const escaped = text
+function escapeHtml(s: string): string {
+  return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
-  const paragraphs = escaped.split("\n\n").map((block) => {
-    const html = block.replace(/\n/g, "<br/>");
-    return `<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:#242019">${html}</p>`;
+}
+
+export function giftNoticeHtml(input: GiftNoticeInput) {
+  const how = input.existingAccount
+    ? `Sign in to ${APP_NAME} with this same email — password or Google.`
+    : `You have been granted ${PLUS_NAME}. Sign in or create a ${APP_NAME} account with this same email — password or Google.`;
+
+  const lead =
+    input.existingAccount && input.keptLifetime
+      ? `Assalamu alaikum — someone gifted you ${PLUS_NAME}. You already have lifetime ${PLUS_NAME} on this email, so your access stays lifetime.`
+      : input.existingAccount && input.alreadyPlus && input.stacked
+        ? `Assalamu alaikum — someone gifted you ${extraLabel(input.planId)} of ${PLUS_NAME}. You already had access on this account. This gift adds time on top of what you have — it does not replace it.`
+        : `Assalamu alaikum — someone just gifted you ${PLUS_NAME}.`;
+
+  return renderEmailHtml({
+    preheader: `Someone gifted you ${PLUS_NAME}`,
+    heading: input.alreadyPlus && input.stacked ? "Extra time added" : `You got ${PLUS_NAME}`,
+    bodyHtml: `<p style="margin:0 0 16px">${escapeHtml(lead)}</p><p style="margin:0 0 16px">${PLUS_NAME} unlocks Word Reps, Masked, Relay, occasion lists, and extra word repeats. Quran reading stays free either way.</p><p style="margin:0 0 16px">${escapeHtml(how)}</p><p style="margin:0;font-size:14px;color:#5c554a">If you sign up with a different address, the gift will not attach.</p>`,
+    cta: { label: "Open Diras", url: input.signUpUrl },
   });
-  return `<!doctype html>
-<html>
-<body style="margin:0;padding:24px;background:#faf8f3;font-family:Inter,system-ui,sans-serif">
-  <div style="max-width:520px;margin:0 auto;padding:24px;background:#fff;border:1px solid #e4ddd0;border-radius:12px">
-    <p style="margin:0 0 16px;font-size:20px;font-weight:700;color:#242019">${PLUS_NAME}</p>
-    ${paragraphs.join("\n    ")}
-  </div>
-</body>
-</html>`;
 }

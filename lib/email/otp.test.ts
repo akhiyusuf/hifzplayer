@@ -9,7 +9,10 @@ describe("password-reset OTP email", () => {
     assert.match(text, /482917/);
     assert.match(text, /10 minutes/);
     assert.doesNotMatch(text, /trxref|cs_live|reference/i);
-    assert.doesNotMatch(otpEmailHtml("482917"), /<!doctype html>/i);
     assert.match(otpEmailHtml("482917"), /482917/);
+    // The OTP email is now a full HTML document (email template) — verify it
+    // includes the Diras brand + the support prompt.
+    assert.match(otpEmailHtml("482917"), /Diras/);
+    assert.match(otpEmailHtml("482917"), /support@diras\.app/);
   });
 });

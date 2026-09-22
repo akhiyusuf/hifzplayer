@@ -42,7 +42,7 @@ describe("Diras Plus welcome email", () => {
       until: "2027-09-11T00:00:00.000Z",
     });
     assert.match(html, /Diras Plus/);
-    assert.match(html, /<!doctype html>/i);
+    assert.match(html, /<!DOCTYPE html/i);
   });
 
   it("describes a free trial without charging language", () => {

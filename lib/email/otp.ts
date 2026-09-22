@@ -1,4 +1,5 @@
 import { APP_NAME, CONTACT_EMAIL } from "../brand.ts";
+import { renderEmailHtml } from "./template.ts";
 
 export function otpEmailSubject() {
   return `Your ${APP_NAME} password code`;
@@ -15,9 +16,9 @@ export function otpEmailText(code: string) {
 }
 
 export function otpEmailHtml(code: string) {
-  return [
-    `<p>Assalamu alaikum — your ${APP_NAME} password-reset code is <strong style="font-size:20px;letter-spacing:.12em">${code}</strong>.</p>`,
-    `<p>It expires in 10 minutes. If you did not ask for this, ignore the email.</p>`,
-    `<p>Need help? Write to <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>.</p>`,
-  ].join("");
+  return renderEmailHtml({
+    preheader: `Your ${APP_NAME} password code is ${code}`,
+    heading: "Reset your password",
+    bodyHtml: `<p style="margin:0 0 16px">Assalamu alaikum — your password-reset code is:</p><p style="margin:0 0 16px;font-size:32px;font-weight:700;letter-spacing:0.12em;font-family:'Bricolage Grotesque','Inter',sans-serif;color:#e8590c">${code}</p><p style="margin:0 0 16px">It expires in 10 minutes. If you did not ask for this, ignore this email.</p>`,
+  });
 }

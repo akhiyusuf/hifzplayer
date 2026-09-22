@@ -1,5 +1,6 @@
 import { APP_NAME, CONTACT_EMAIL, PLUS_NAME } from "../brand.ts";
 import { isPaidPlanId, PLANS, quote, type PlanId, type Processor, type RegionId } from "../billing/plans.ts";
+import { renderEmailHtml } from "./template.ts";
 
 export type PlusWelcomeInput = {
   planId: PlanId;
@@ -29,7 +30,7 @@ export function plusWelcomeText(input: PlusWelcomeInput) {
       "• 3×, 5×, 10× and unlimited word repeats",
       "• Relay with more than one qari",
       "",
-      `Questions: ${CONTACT_EMAIL}`,
+      `Need help? Reply to this email or write to ${CONTACT_EMAIL}.`,
     ].join("\n");
   }
 
@@ -59,27 +60,40 @@ export function plusWelcomeText(input: PlusWelcomeInput) {
     "",
     `Paystack or Stripe also send their own payment receipt. This note is from ${APP_NAME}, so you know Plus actually turned on.`,
     "",
-    `Questions: ${CONTACT_EMAIL}`,
+    `Need help? Reply to this email or write to ${CONTACT_EMAIL}.`,
   ].join("\n");
 }
 
-export function plusWelcomeHtml(input: PlusWelcomeInput) {
-  const text = plusWelcomeText(input);
-  const escaped = text
+function escapeHtml(s: string): string {
+  return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
-  const paragraphs = escaped.split("\n\n").map((block) => {
-    const html = block.replace(/\n/g, "<br/>");
-    return `<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:#242019">${html}</p>`;
+}
+
+export function plusWelcomeHtml(input: PlusWelcomeInput) {
+  const isTrial = input.planId === "trial" || input.processor === "trial";
+  const plan = PLANS.find((p) => p.id === input.planId);
+  const priced = isPaidPlanId(input.planId) ? quote(input.regionId, input.planId) : null;
+  const processor = input.processor === "paystack" ? "Paystack" : "Stripe";
+  const until = isTrial
+    ? input.until
+      ? `Your free trial is active until ${new Date(input.until).toLocaleDateString("en-GB", { dateStyle: "long" })}.`
+      : "Your free trial is active for one day."
+    : input.planId === "lifetime"
+      ? "This is a lifetime plan."
+      : input.until
+        ? `This ${plan?.name.toLowerCase() || input.planId} plan is active until ${new Date(input.until).toLocaleDateString("en-GB", { dateStyle: "long" })}.`
+        : `This ${plan?.name.toLowerCase() || input.planId} plan is active.`;
+
+  const intro = isTrial
+    ? `Assalamu alaikum — your ${PLUS_NAME} free trial is on. ${until} No card was charged.`
+    : `Assalamu alaikum — ${PLUS_NAME} is on. Thank you for supporting ${APP_NAME}. Your ${escapeHtml(plan?.name || input.planId)} plan (${escapeHtml(priced?.label || "paid")}, billed through ${escapeHtml(processor)}) is confirmed. ${escapeHtml(until)}`;
+
+  return renderEmailHtml({
+    preheader: `${PLUS_NAME} is active`,
+    heading: isTrial ? "Your free trial is on" : `${PLUS_NAME} is active`,
+    bodyHtml: `<p style="margin:0 0 16px">${intro}</p><p style="margin:0 0 8px"><strong>Unlocked now:</strong></p><p style="margin:0 0 4px">• Word Reps, Masked, and Relay</p><p style="margin:0 0 4px">• Occasion lists</p><p style="margin:0 0 4px">• 3×, 5×, 10× and unlimited word repeats</p><p style="margin:0 0 16px">• Relay with more than one qari</p><p style="margin:0;font-size:14px;color:#5c554a">Quran reading, audio, translation, tajweed, and verse Repeat stay free either way.</p>`,
+    cta: { label: "Open Diras", url: "https://diras.app/home" },
   });
-  return `<!doctype html>
-<html>
-<body style="margin:0;padding:24px;background:#faf8f3;font-family:Inter,system-ui,sans-serif">
-  <div style="max-width:520px;margin:0 auto;padding:24px;background:#fff;border:1px solid #e4ddd0;border-radius:12px">
-    <p style="margin:0 0 16px;font-size:20px;font-weight:700;color:#242019">${PLUS_NAME}</p>
-    ${paragraphs.join("\n    ")}
-  </div>
-</body>
-</html>`;
 }
