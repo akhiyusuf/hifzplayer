@@ -3,6 +3,7 @@ import { verifyEmailOtp } from "@/lib/auth/otp";
 import { verifyRegistrationCode } from "@/lib/auth/password";
 import { verifyTurnstileToken } from "@/lib/auth/turnstile";
 import { emailLooksValid, json, badRequest, serviceUnavailable, unauthorized } from "@/lib/billing/http";
+import { sendSignUpWelcome } from "@/lib/email/send";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,6 +30,13 @@ export async function POST(request: Request) {
   if (body.flow === "register") {
     const user = await verifyRegistrationCode(email, code);
     if ("error" in user) return unauthorized(user.error);
+    // Send the welcome email now that the account is verified + signed in.
+    // Await before returning so the Worker stays alive long enough.
+    try {
+      await sendSignUpWelcome({ to: email, name: user.name });
+    } catch {
+      // Welcome email failure should never block sign-in
+    }
     return json({ ok: true, userId: user.id, name: user.name, email: user.email });
   }
   const user = await verifyEmailOtp(email, code);
