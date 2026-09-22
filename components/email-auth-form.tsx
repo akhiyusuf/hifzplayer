@@ -12,7 +12,7 @@ function authError(data: { error?: string; code?: string }, fallback: string) {
   return data.error || fallback;
 }
 
-type Step = "password" | "forgot" | "code";
+type Step = "password" | "forgot" | "code" | "verify";
 
 export function EmailAuthForm({
   mode,
@@ -66,12 +66,51 @@ export function EmailAuthForm({
         credentials: "same-origin",
         body: JSON.stringify({ email, password, turnstileToken: token }),
       });
-      const data = (await res.json()) as { error?: string; code?: string };
+      const data = (await res.json()) as {
+        error?: string;
+        code?: string;
+        verifyRequired?: boolean;
+        throttled?: boolean;
+        message?: string;
+      };
       if (!res.ok) throw new Error(authError(data, "Could not sign in."));
+      // Sign-up now requires email verification — move to the verify step
+      // instead of signing in immediately.
+      if (mode === "sign-up" && data.verifyRequired) {
+        setStep("verify");
+        setCode("");
+        setPassword("");
+        setConfirm("");
+        resetChallenge();
+        setError(data.message || "");
+        setBusy(false);
+        return;
+      }
       await refresh();
       window.location.assign(redirectTo);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not sign in.");
+      resetChallenge();
+      setBusy(false);
+    }
+  }
+
+  async function submitVerificationCode() {
+    setError("");
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ email, code, flow: "register", turnstileToken: token || undefined }),
+      });
+      const data = (await res.json()) as { error?: string; code?: string };
+      if (!res.ok) throw new Error(authError(data, "Could not verify that code."));
+      await refresh();
+      window.location.assign(redirectTo);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not verify that code.");
       resetChallenge();
       setBusy(false);
     }
@@ -145,23 +184,26 @@ export function EmailAuthForm({
         event.preventDefault();
         if (step === "forgot") void sendResetCode();
         else if (step === "code") void submitNewPassword();
+        else if (step === "verify") void submitVerificationCode();
         else void submitPassword();
       }}
     >
       <p className="pricing-lead" style={{ textAlign: "center" }}>
         {step === "code"
           ? `We sent a 6-digit code to ${email}. Choose a new password.`
-          : step === "forgot"
-            ? "Enter your email. We send a code so you can set a new password."
-            : passwordOn && googleOn
-              ? mode === "sign-up"
-                ? "Create an account with email and a password, or continue with Google."
-                : "Sign in with email and password, or continue with Google."
-              : googleOn
-                ? "Continue with Google."
-                : mode === "sign-up"
-                  ? "Create an account with email and a password."
-                  : "Sign in with email and password."}
+          : step === "verify"
+            ? `We sent a 6-digit code to ${email}. Enter it to finish creating your account.`
+            : step === "forgot"
+              ? "Enter your email. We send a code so you can set a new password."
+              : passwordOn && googleOn
+                ? mode === "sign-up"
+                  ? "Create an account with email and a password, or continue with Google."
+                  : "Sign in with email and password, or continue with Google."
+                : googleOn
+                  ? "Continue with Google."
+                  : mode === "sign-up"
+                    ? "Create an account with email and a password."
+                    : "Sign in with email and password."}
       </p>
 
       {googleOn && step === "password" ? (
@@ -191,7 +233,7 @@ export function EmailAuthForm({
       </label>
       ) : null}
 
-      {step === "code" ? (
+      {step === "code" || step === "verify" ? (
         <label className="pricing-email">
           <span className="label-eyebrow">Code</span>
           <span className="field">
@@ -261,7 +303,7 @@ export function EmailAuthForm({
         </label>
       ) : null}
 
-      {step === "code" || !passwordOn ? null : <TurnstileWidget onToken={setToken} resetKey={resetKey} />}
+      {step === "code" || step === "verify" || !passwordOn ? null : <TurnstileWidget onToken={setToken} resetKey={resetKey} />}
 
       {error ? (
         <p className="pricing-error" role="alert">
@@ -275,8 +317,8 @@ export function EmailAuthForm({
         type="submit"
         disabled={
           busy ||
-          (step !== "code" && !token) ||
-          (step === "code" && code.length !== 6) ||
+          (step !== "code" && step !== "verify" && !token) ||
+          ((step === "code" || step === "verify") && code.length !== 6) ||
           strengthBlocked ||
           (mode === "sign-up" && step === "password" && password.length > 0 && password !== confirm)
         }
@@ -287,9 +329,11 @@ export function EmailAuthForm({
             ? "Email me a code"
             : step === "code"
               ? "Save password"
-              : mode === "sign-up"
-                ? "Create account"
-                : "Sign in"}
+              : step === "verify"
+                ? "Verify and sign in"
+                : mode === "sign-up"
+                  ? "Create account"
+                  : "Sign in"}
       </button>
       ) : null}
 

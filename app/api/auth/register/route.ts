@@ -1,8 +1,8 @@
 import { accountsConfigured } from "@/lib/auth/config";
-import { registerWithPassword } from "@/lib/auth/password";
+import { registerWithPassword, sendRegistrationCode } from "@/lib/auth/password";
 import { verifyTurnstileToken } from "@/lib/auth/turnstile";
 import { emailLooksValid, json, badRequest, serviceUnavailable, unauthorized } from "@/lib/billing/http";
-import { sendSignUpWelcome } from "@/lib/email/send";
+import { sendOtpCode } from "@/lib/email/send";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +24,33 @@ export async function POST(request: Request) {
   if (!human) return unauthorized("Confirm you are human, then try again", { code: "TURNSTILE" });
   const result = await registerWithPassword(email, password);
   if ("error" in result) return badRequest(result.error);
-  // Fire-and-forget — never block account creation on email
-  void sendSignUpWelcome({ to: email, name: result.name });
-  return json({ ok: true, userId: result.id, name: result.name, email: result.email });
+
+  // Send a 6-digit verification code to the email. The user must enter it
+  // on /verify before they can sign in. This proves they own the email.
+  const started = await sendRegistrationCode(email);
+  if (started.throttled) {
+    return json({
+      ok: true,
+      verifyRequired: true,
+      email,
+      throttled: true,
+      message: "We sent too many codes to this email. Try again in an hour.",
+    });
+  }
+  if (started.code) {
+    try {
+      await sendOtpCode(email, started.code);
+    } catch {
+      // Email failure should never block account creation — but the user
+      // won't get a code. Tell them to try again.
+      return serviceUnavailable("Could not send the verification code. Try again.");
+    }
+  }
+
+  return json({
+    ok: true,
+    verifyRequired: true,
+    email,
+    message: `We sent a 6-digit code to ${email}. Enter it to finish creating your account.`,
+  });
 }
