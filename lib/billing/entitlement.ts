@@ -2,9 +2,21 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { billingSigningSecret } from "./env.ts";
 import type { PlanId, Processor, RegionId } from "./plans";
 import { isPlanId, isRegionId } from "./plans";
-import { entitlementForUser, isPlusActive, pickBestEntitlement, publicEntitlement } from "./entitlement-bind";
+import {
+  entitlementForUser,
+  isPlusActive,
+  pickBestEntitlement,
+  planSignedInEntitlement,
+  publicEntitlement,
+} from "./entitlement-bind";
 
-export { entitlementForUser, isPlusActive, pickBestEntitlement, publicEntitlement };
+export {
+  entitlementForUser,
+  isPlusActive,
+  pickBestEntitlement,
+  planSignedInEntitlement,
+  publicEntitlement,
+};
 export const PLUS_COOKIE = "hifz_plus";
 
 export type Entitlement = {
@@ -98,6 +110,7 @@ export function entitlementCookieOptions(ent: Entitlement) {
 }
 
 export async function writeEntitlement(ent: Entitlement) {
+  if (!billingSigningSecret()) return;
   const { cookies } = await import("next/headers");
   const jar = await cookies();
   jar.set(PLUS_COOKIE, sealEntitlement(ent), entitlementCookieOptions(ent));

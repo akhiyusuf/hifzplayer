@@ -36,3 +36,11 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+if (process.env.NODE_ENV !== "production") {
+  void import("@opennextjs/cloudflare")
+    .then((mod) => mod.initOpenNextCloudflareForDev())
+    .catch(() => {
+      /* Wrangler bindings are optional until a Cloudflare preview is run. */
+    });
+}

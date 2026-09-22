@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useUser } from "@clerk/nextjs";
 import { useMemo, useState } from "react";
+import { useAuth } from "@/components/auth-root";
 import { APP_NAME } from "@/lib/brand";
-import { clerkBrowserReady } from "@/lib/auth/config";
 import { PLUS_EXPLAIN } from "@/lib/billing/gates";
 import { GIFT_SEATS, parseGiftEmails } from "@/lib/billing/gift-parse";
 import { formatMoney, type Catalog, type PaidPlanId } from "@/lib/billing/plans";
@@ -18,34 +17,15 @@ export function PricingView(props: {
   canceled?: boolean;
   trialAvailable?: boolean;
   plusOn?: boolean;
+  accountsOn?: boolean;
 }) {
-  if (clerkBrowserReady()) return <PricingViewSigned {...props} />;
+  const auth = useAuth();
   return (
     <PricingForm
       {...props}
-      accountsOn={false}
-      signedIn={false}
-      accountEmail=""
-      trialAvailable={Boolean(props.trialAvailable)}
-      plusOn={Boolean(props.plusOn)}
-    />
-  );
-}
-
-function PricingViewSigned(props: {
-  region: RegionQuote;
-  processors: Processors;
-  canceled?: boolean;
-  trialAvailable?: boolean;
-  plusOn?: boolean;
-}) {
-  const { isLoaded, isSignedIn, user } = useUser();
-  return (
-    <PricingForm
-      {...props}
-      accountsOn
-      signedIn={Boolean(isLoaded && isSignedIn)}
-      accountEmail={user?.primaryEmailAddress?.emailAddress || ""}
+      accountsOn={Boolean(props.accountsOn)}
+      signedIn={auth.signedIn}
+      accountEmail={auth.email}
       trialAvailable={Boolean(props.trialAvailable)}
       plusOn={Boolean(props.plusOn)}
     />

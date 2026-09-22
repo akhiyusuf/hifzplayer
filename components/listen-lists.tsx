@@ -4,8 +4,12 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { useAppData } from "@/lib/app-data";
-import { PLUS_NAME } from "@/lib/brand";
-import { listenLeadCopy, occasionHintCopy } from "@/lib/plus-presence";
+import {
+  listenLeadCopy,
+  occasionHintCopy,
+  playlistsLocked,
+  playlistsLockedPitch,
+} from "@/lib/plus-presence";
 import { usePlus } from "@/lib/plus";
 import { OCCASION_PLAYLISTS, playlistHref, type Playlist } from "@/lib/playlists";
 
@@ -30,11 +34,9 @@ export function useStartList() {
 
 function OccasionCard({
   list,
-  locked,
   onPlay,
 }: {
   list: Playlist;
-  locked: boolean;
   onPlay: () => void;
 }) {
   return (
@@ -45,18 +47,23 @@ function OccasionCard({
       <b>{list.title}</b>
       <span>{list.blurb}</span>
       <span className="occ-meta">
-        {locked ? (
-          <>
-            <Icon name="sparkles" size={13} />
-            {PLUS_NAME}
-          </>
-        ) : (
-          <>
-            <Icon name="sparkles" size={13} />
-            Plus
-          </>
-        )}
+        <Icon name="sparkles" size={13} />
+        Plus
       </span>
+    </button>
+  );
+}
+
+function PlaylistsLockedCard({ onUnlock }: { onUnlock: () => void }) {
+  const pitch = playlistsLockedPitch();
+  return (
+    <button type="button" className="lists-locked tap" onClick={onUnlock} aria-label={pitch.title}>
+      <span className="lists-locked-mark">
+        <Icon name="sparkles" size={22} />
+      </span>
+      <b>{pitch.title}</b>
+      <span>{pitch.body}</span>
+      <span className="occ-meta">{pitch.cta}</span>
     </button>
   );
 }
@@ -67,26 +74,29 @@ export function ListenPageIntro() {
 }
 
 export function ListenLists() {
-  const { plus } = usePlus();
+  const { plus, askPlus, ready } = usePlus();
   const start = useStartList();
-  const locked = !plus;
+  const locked = playlistsLocked(plus);
 
   return (
     <section className="picker-section">
       <div className="index-head">
         <span className="label-eyebrow">For occasions</span>
-        <span className="lists-hint">{occasionHintCopy(plus)}</span>
+        {locked ? null : <span className="lists-hint">{occasionHintCopy(plus)}</span>}
       </div>
-      <div className="occ-scroller">
-        {OCCASION_PLAYLISTS.map((list) => (
-          <OccasionCard
-            key={list.id}
-            list={list}
-            locked={locked}
-            onPlay={() => start(list.id)}
-          />
-        ))}
-      </div>
+      {locked ? (
+        <PlaylistsLockedCard
+          onUnlock={() => {
+            if (ready) askPlus("playlists");
+          }}
+        />
+      ) : (
+        <div className="occ-scroller">
+          {OCCASION_PLAYLISTS.map((list) => (
+            <OccasionCard key={list.id} list={list} onPlay={() => start(list.id)} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

@@ -1,6 +1,6 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
-import { clerkConfigured } from "@/lib/auth/config";
-import { clerkPlusState, savePlusToClerk } from "@/lib/auth/plus";
+import { accountsConfigured } from "./config.ts";
+import { accountPlusState, savePlusToAccount } from "./plus.ts";
+import { signedInUserId } from "./otp.ts";
 import {
   type Entitlement,
   clearEntitlementCookie,
@@ -10,33 +10,15 @@ import {
   writeEntitlement,
 } from "@/lib/billing/entitlement";
 
-export async function signedInUserId(): Promise<string | null> {
-  if (!clerkConfigured()) return null;
-  try {
-    const { userId } = await auth();
-    return userId;
-  } catch {
-    return null;
-  }
-}
-
-export async function signedInEmail(): Promise<string | null> {
-  if (!clerkConfigured()) return null;
-  try {
-    const user = await currentUser();
-    return user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() || null;
-  } catch {
-    return null;
-  }
-}
+export { signedInEmail, signedInUser, signedInUserId, clearSession } from "./otp.ts";
 
 export async function resolveEntitlement(): Promise<Entitlement | null> {
-  const accountsOn = clerkConfigured();
+  const accountsOn = accountsConfigured();
   const userId = await signedInUserId();
   const cookie = entitlementForUser(await readEntitlement(), userId, accountsOn);
 
   if (userId) {
-    const state = await clerkPlusState(userId);
+    const state = await accountPlusState(userId);
     if (state.status === "revoked") {
       await clearEntitlementCookie();
       return null;
@@ -53,7 +35,7 @@ export async function resolveEntitlement(): Promise<Entitlement | null> {
       const bound = { ...cookie, userId };
       if (!cookie.userId) {
         await writeEntitlement(bound);
-        await savePlusToClerk(userId, bound, "granted");
+        await savePlusToAccount(userId, bound, "granted");
       }
       return bound;
     }
@@ -74,11 +56,11 @@ export async function grantPlusToAccount(
   }
   if (userId) {
     try {
-      await savePlusToClerk(userId, next, opts.kind || (next.plus ? "granted" : "revoked"));
+      await savePlusToAccount(userId, next, opts.kind || (next.plus ? "granted" : "revoked"));
     } catch {
       const { logBillingEvent } = await import("@/lib/billing/analytics");
       logBillingEvent({
-        type: "clerk_save_failed",
+        type: "account_save_failed",
         processor: next.processor,
         planId: next.planId,
         regionId: next.regionId,

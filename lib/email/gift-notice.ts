@@ -22,8 +22,8 @@ export function giftNoticeSubject(input?: Pick<GiftNoticeInput, "alreadyPlus" | 
 
 export function giftNoticeText(input: GiftNoticeInput) {
   const how = input.existingAccount
-    ? `Sign in to ${APP_NAME} with this same email — Google is fine if that Google account uses this address.`
-    : `You have been granted ${PLUS_NAME}. Sign in or create a ${APP_NAME} account with this same email. Google is fine if that Google account uses this address.`;
+    ? `Sign in to ${APP_NAME} with this same email — password or Google.`
+    : `You have been granted ${PLUS_NAME}. Sign in or create a ${APP_NAME} account with this same email — password or Google.`;
 
   const lead =
     input.existingAccount && input.keptLifetime
@@ -35,7 +35,7 @@ export function giftNoticeText(input: GiftNoticeInput) {
   return [
     lead,
     "",
-    `${PLUS_NAME} unlocks Focus (Word Reps, Masked, Relay), occasion lists, and extra word repeats. Quran reading stays free either way.`,
+    `${PLUS_NAME} unlocks Word Reps, Masked, Relay, occasion lists, and extra word repeats. Quran reading stays free either way.`,
     "",
     how,
     "",

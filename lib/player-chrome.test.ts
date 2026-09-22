@@ -11,7 +11,17 @@ import {
   rateFace,
   sidebarKind,
   sortedWordRange,
+  destIndexInPassage,
+  freshMaskForVerse,
+  maskedJumpReveal,
+  maskedSkipReveal,
+  shouldRestartMaskOnJump,
+  mushafWordsInteractive,
   wordTapIntent,
+  wordPopActions,
+  wordRepChromeVisible,
+  playerPageKind,
+  mushafMaskReveal,
   spanForVerse,
   spanForPlay,
   spanForSetup,
@@ -21,10 +31,32 @@ import {
   wordIsAway,
   wordRangePassComplete,
   wordRepsDoneState,
+  emptyWordPick,
+  wantsTranslation,
+  buildRelayTurns,
   wordRepsPlayKind,
+  mushafRepSpan,
+  mushafPinHighlight,
+  mushafWordTapKind,
+  wordRepsResumeWord,
+  leavePracticeHow,
+  MASKED_CUTOFF,
+  maskedCutoffLeavesTo,
+  maskedCutoffVisible,
+  practiceSheetJobs,
+  practiceSheetPickMode,
+  practiceSheetShowsExit,
   wrapRelayIndex,
   exclusiveJobPatch,
   exclusiveLayer,
+  defaultRelayOrder,
+  defaultRelaySetup,
+  DEFAULT_RELAY_ROUNDS,
+  relayStartsWith,
+  orderStartingWith,
+  relayRoundLabel,
+  relayWhoseTurn,
+  relayTurnName,
 } from "./player-chrome.ts";
 
 describe("verseRatioLabel", () => {
@@ -51,18 +83,221 @@ describe("sidebarKind", () => {
 });
 
 describe("wordTapIntent", () => {
-  it("opens the mushaf word sheet for any pointer", () => {
+  it("opens the mushaf word sheet for any pointer, including Word Reps", () => {
     assert.equal(wordTapIntent("mushaf", "verse", "mouse"), "meaning");
     assert.equal(wordTapIntent("mushaf", "verse", "pen"), "meaning");
     assert.equal(wordTapIntent("mushaf", "verse", "touch"), "meaning");
     assert.equal(wordTapIntent("mushaf", "verse"), "meaning");
+    assert.equal(wordTapIntent("mushaf", "word", "touch"), "meaning");
   });
 
-  it("uses Word Reps taps for the pin bar, and plays in other Focus jobs", () => {
+  it("opens the study pop in Focus verse and pins on Focus Word Reps", () => {
     assert.equal(wordTapIntent("focus", "word", "touch"), "wordRep");
-    assert.equal(wordTapIntent("focus", "word", "mouse"), "wordRep");
-    assert.equal(wordTapIntent("focus", "verse", "touch"), "play");
-    assert.equal(wordTapIntent("focus", "masked", "mouse"), "play");
+    assert.equal(wordTapIntent("focus", "verse", "touch"), "meaning");
+    assert.equal(wordTapIntent("focus", "verse", "mouse"), "meaning");
+    assert.equal(wordTapIntent("focus", "masked", "mouse"), "meaning");
+  });
+});
+
+describe("wordPopActions", () => {
+  it("shows play actions only in mushaf and Focus verse", () => {
+    assert.deepEqual(wordPopActions("mushaf", "verse"), { play: true, reps: false });
+    assert.deepEqual(wordPopActions("focus", "verse"), { play: true, reps: false });
+  });
+
+  it("shows pin and multipliers only in Word Reps on both views", () => {
+    assert.deepEqual(wordPopActions("mushaf", "word"), { play: false, reps: true });
+    assert.deepEqual(wordPopActions("focus", "word"), { play: false, reps: true });
+    assert.equal(wordRepChromeVisible("word"), true);
+    assert.equal(wordRepChromeVisible("verse"), false);
+  });
+
+  it("hides both tool rows in Masked and Relay", () => {
+    assert.deepEqual(wordPopActions("mushaf", "masked"), { play: false, reps: false });
+    assert.deepEqual(wordPopActions("focus", "relay"), { play: false, reps: false });
+  });
+});
+
+describe("playerPageKind", () => {
+  it("keeps Mushaf on screen during Relay instead of cloning the Focus stage", () => {
+    assert.equal(playerPageKind("mushaf", "verse"), "mushaf");
+    assert.equal(playerPageKind("mushaf", "word"), "mushaf");
+    assert.equal(playerPageKind("mushaf", "masked"), "mushaf");
+    assert.equal(playerPageKind("mushaf", "relay", true), "mushaf");
+    assert.equal(playerPageKind("mushaf", "relay", false), "mushaf");
+  });
+
+  it("uses Focus stages only in Focus view", () => {
+    assert.equal(playerPageKind("focus", "verse"), "focus");
+    assert.equal(playerPageKind("focus", "word"), "word");
+    assert.equal(playerPageKind("focus", "masked"), "masked");
+    assert.equal(playerPageKind("focus", "relay", true), "relay");
+    assert.equal(playerPageKind("focus", "relay", false), "focus");
+  });
+});
+
+describe("mushafMaskReveal", () => {
+  it("hides upcoming words and keeps past ayahs visible", () => {
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "verse",
+        verseIdx: 0,
+        currentIdx: 0,
+        wordCount: 4,
+        currentReveal: 1,
+        verseDone: false,
+      }),
+      { masked: false, revealUpTo: 0 },
+    );
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "masked",
+        verseIdx: 1,
+        currentIdx: 1,
+        wordCount: 5,
+        currentReveal: 2,
+        verseDone: false,
+      }),
+      { masked: true, revealUpTo: 2 },
+    );
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "masked",
+        verseIdx: 0,
+        currentIdx: 1,
+        wordCount: 4,
+        currentReveal: 0,
+        verseDone: false,
+      }),
+      { masked: true, revealUpTo: 4 },
+    );
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "masked",
+        verseIdx: 2,
+        currentIdx: 1,
+        wordCount: 3,
+        currentReveal: 1,
+        verseDone: false,
+      }),
+      { masked: true, revealUpTo: 0 },
+    );
+  });
+
+  it("reveals the current word even when the snapshot lags behind playback", () => {
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "masked",
+        verseIdx: 1,
+        currentIdx: 1,
+        wordCount: 5,
+        currentReveal: 0,
+        curWord: 3,
+        verseDone: false,
+      }),
+      { masked: true, revealUpTo: 3 },
+    );
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "masked",
+        verseIdx: 1,
+        currentIdx: 1,
+        wordCount: 5,
+        currentReveal: 4,
+        curWord: 2,
+        verseDone: false,
+      }),
+      { masked: true, revealUpTo: 4 },
+    );
+  });
+});
+
+describe("masked skip", () => {
+  it("keeps mode masked and starts dest ayah reveal from the beginning", () => {
+    assert.equal(destIndexInPassage(2, 7, -1), 1);
+    assert.equal(destIndexInPassage(2, 7, 1), 3);
+    assert.equal(destIndexInPassage(0, 5, -1), null);
+    assert.equal(destIndexInPassage(4, 5, 1), null);
+    assert.deepEqual(freshMaskForVerse(2), { maxRev: 0, peeks: 2, peekRev: 0 });
+    assert.deepEqual(maskedSkipReveal(1, 5), {
+      mode: "masked",
+      masked: true,
+      revealUpTo: 0,
+    });
+    assert.deepEqual(maskedSkipReveal(3, 6, 1), {
+      mode: "masked",
+      masked: true,
+      revealUpTo: 1,
+    });
+  });
+
+  it("does not treat a previously finished dest ayah as already revealed", () => {
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "masked",
+        verseIdx: 0,
+        currentIdx: 0,
+        wordCount: 4,
+        currentReveal: 4,
+        verseDone: true,
+        curWord: 0,
+      }),
+      { masked: true, revealUpTo: 4 },
+    );
+    assert.deepEqual(maskedSkipReveal(0, 4), {
+      mode: "masked",
+      masked: true,
+      revealUpTo: 0,
+    });
+  });
+});
+
+describe("masked ayah jump", () => {
+  it("restarts dest the same way skip does and keeps words untappable", () => {
+    assert.equal(shouldRestartMaskOnJump("masked"), true);
+    assert.equal(shouldRestartMaskOnJump("verse"), false);
+    assert.equal(shouldRestartMaskOnJump("word"), false);
+    assert.deepEqual(maskedJumpReveal(2, 7), maskedSkipReveal(2, 7));
+    assert.deepEqual(maskedJumpReveal(0, 4), {
+      mode: "masked",
+      masked: true,
+      revealUpTo: 0,
+    });
+    assert.deepEqual(maskedJumpReveal(3, 6, 1), {
+      mode: "masked",
+      masked: true,
+      revealUpTo: 1,
+    });
+    assert.equal(mushafWordsInteractive("masked"), false);
+  });
+
+  it("does not treat a previously finished dest ayah as already revealed", () => {
+    assert.deepEqual(
+      mushafMaskReveal({
+        mode: "masked",
+        verseIdx: 4,
+        currentIdx: 4,
+        wordCount: 5,
+        currentReveal: 5,
+        verseDone: true,
+        curWord: 0,
+      }),
+      { masked: true, revealUpTo: 5 },
+    );
+    assert.deepEqual(maskedJumpReveal(4, 5), {
+      mode: "masked",
+      masked: true,
+      revealUpTo: 0,
+    });
+  });
+});
+
+describe("masked mushaf word tap", () => {
+  it("does not make words tappable or open the study sheet", () => {
+    assert.equal(mushafWordsInteractive("masked"), false);
+    assert.equal(mushafWordsInteractive("verse"), true);
+    assert.equal(mushafWordsInteractive("word"), true);
+    assert.equal(mushafWordsInteractive("relay"), true);
   });
 });
 
@@ -104,7 +339,7 @@ describe("indexOfVerseInPassage", () => {
 describe("drillHint", () => {
   it("returns one line per drill type and nothing otherwise", () => {
     assert.equal(drillHint("word"), "Tap a word. Pin a range, or pick 5×, 10×, or ∞, then play.");
-    assert.equal(drillHint("masked"), "Words are covered. Peek if you need a look.");
+    assert.equal(drillHint("masked"), "Words stay in their slots and stay invisible until their turn.");
     assert.equal(drillHint("relay"), "Recite your ayah. The reciter takes the next.");
     assert.equal(drillHint("verse"), "");
     assert.equal(drillHint("mushaf"), "");
@@ -212,15 +447,201 @@ describe("word reps play kind", () => {
   });
 });
 
+describe("mushafRepSpan", () => {
+  it("replays the tapped word when nothing is pinned", () => {
+    assert.deepEqual(mushafRepSpan(emptyWordPick(), 4), { start: 4, end: 4 });
+    assert.deepEqual(mushafRepSpan(null, 1), { start: 1, end: 1 });
+  });
+
+  it("closes an open pin onto the word that gets 5× / 10× / ∞", () => {
+    assert.deepEqual(
+      mushafRepSpan({ start: 2, end: null }, 6),
+      { start: 2, end: 6 },
+    );
+    assert.deepEqual(
+      mushafRepSpan({ start: 6, end: null }, 2),
+      { start: 2, end: 6 },
+    );
+  });
+
+  it("keeps a completed pin even if another word is open", () => {
+    assert.deepEqual(
+      mushafRepSpan({ start: 2, end: 5 }, 9),
+      { start: 2, end: 5 },
+    );
+  });
+
+  it("treats pin-start on this same word as a single-word drill", () => {
+    assert.deepEqual(
+      mushafRepSpan({ start: 3, end: null }, 3),
+      { start: 3, end: 3 },
+    );
+  });
+});
+
+describe("mushafPinHighlight", () => {
+  it("underlines the first pin as pending on the current ayah", () => {
+    assert.deepEqual(mushafPinHighlight(0, 0, { start: 4, end: null }), {
+      start: 4,
+      end: 4,
+      pending: 4,
+    });
+    assert.equal(mushafPinHighlight(1, 0, { start: 4, end: null }), null);
+  });
+
+  it("underlines a completed pin as a range", () => {
+    assert.deepEqual(mushafPinHighlight(0, 0, { start: 2, end: 5 }), {
+      start: 2,
+      end: 5,
+      pending: 0,
+    });
+  });
+
+  it("ignores a pin that belongs to another ayah", () => {
+    assert.equal(
+      mushafPinHighlight(0, 0, { start: 2, end: 5, vIdx: 3 }),
+      null,
+    );
+  });
+});
+
 describe("word reps done state", () => {
   it("clears the pin, loop, and word step so underlines do not stick", () => {
     const next = wordRepsDoneState();
+    assert.equal(next.mode, "verse");
     assert.equal(next.loop, null);
     assert.equal(next.playing, false);
     assert.equal(next.wordPick.start, null);
     assert.equal(next.wordPick.end, null);
     assert.equal(next.wordStep.active, false);
     assert.equal(next.wordStep.range, null);
+    assert.deepEqual(next.wordPick, emptyWordPick());
+  });
+});
+
+describe("mushafWordTapKind", () => {
+  it("opens meaning until a start pin is waiting for an end", () => {
+    assert.equal(mushafWordTapKind(emptyWordPick(), 4, 0), "meaning");
+    assert.equal(
+      mushafWordTapKind({ start: 2, end: null, open: null, vIdx: 0 }, 2, 0),
+      "meaning",
+    );
+    assert.equal(
+      mushafWordTapKind({ start: 2, end: null, open: null, vIdx: 0 }, 6, 0),
+      "offerEnd",
+    );
+  });
+
+  it("keeps the Pin+X or multiplier bar on the word it is already open on", () => {
+    assert.equal(
+      mushafWordTapKind({ start: 2, end: null, open: 6, vIdx: 0 }, 6, 0),
+      "keepBar",
+    );
+    assert.equal(
+      mushafWordTapKind({ start: 2, end: 6, open: 2, vIdx: 0 }, 2, 0),
+      "keepBar",
+    );
+  });
+
+  it("ignores a pin that belongs to another ayah", () => {
+    assert.equal(
+      mushafWordTapKind({ start: 2, end: null, open: null, vIdx: 3 }, 6, 0),
+      "meaning",
+    );
+  });
+});
+
+describe("wordRepsResumeWord", () => {
+  it("resumes at the last word of a range, then the current word", () => {
+    assert.equal(
+      wordRepsResumeWord({
+        loop: { endW: 8 },
+        wordPick: { start: 2, end: 8 },
+        wordStep: { w: 2, range: { endW: 8 } },
+        curWord: 2,
+      }),
+      8,
+    );
+    assert.equal(
+      wordRepsResumeWord({
+        loop: null,
+        wordPick: emptyWordPick(),
+        wordStep: { w: 4, range: null },
+        curWord: 3,
+      }),
+      4,
+    );
+    assert.equal(wordRepsResumeWord({ curWord: 5 }), 5);
+  });
+});
+
+describe("relay setup defaults", () => {
+  it("starts with the reciter, then you, for two rounds", () => {
+    const draft = defaultRelaySetup(7, 1, 7);
+    assert.deepEqual(draft.order, defaultRelayOrder(7));
+    assert.deepEqual(draft.order, [
+      { kind: "qari", reciterId: 7 },
+      { kind: "you" },
+    ]);
+    assert.equal(draft.vFrom, 1);
+    assert.equal(draft.vTo, 7);
+    assert.equal(draft.rounds, DEFAULT_RELAY_ROUNDS);
+    assert.equal(draft.rounds, 2);
+    assert.equal(relayStartsWith(draft.order), "qari");
+  });
+
+  it("moves You or the reciter to the front without dropping the other seat", () => {
+    const order = defaultRelayOrder(7);
+    const youFirst = orderStartingWith(order, "you", 7);
+    assert.equal(relayStartsWith(youFirst), "you");
+    assert.equal(youFirst[1].kind, "qari");
+    assert.equal(relayStartsWith(orderStartingWith(youFirst, "qari", 7)), "qari");
+    assert.equal(relayStartsWith(orderStartingWith(order, "qari", 7)), "qari");
+  });
+
+  it("labels whose turn it is without a verse number", () => {
+    assert.equal(relayWhoseTurn({ kind: "you" }), "you");
+    assert.equal(relayWhoseTurn({ kind: "qari" }), "qari");
+    assert.equal(relayTurnName("you", "Mahmoud Khalil Al-Husary"), "You");
+    assert.equal(relayTurnName("qari", "Mahmoud Khalil Al-Husary"), "Mahmoud");
+    assert.equal(relayRoundLabel(1, 2), "Round 1 of 2");
+    assert.equal(relayRoundLabel(3, 0), "Round 3");
+  });
+});
+
+describe("buildRelayTurns", () => {
+  const verses = [
+    { number: 1, key: "1:1" },
+    { number: 2, key: "1:2" },
+    { number: 3, key: "1:3" },
+  ];
+  it("walks you and qari through the span and carries the last qari onto your seat", () => {
+    const turns = buildRelayTurns(
+      verses,
+      1,
+      3,
+      [{ kind: "qari", reciterId: 7 }, { kind: "you" }],
+      1,
+      9,
+    );
+    assert.deepEqual(turns, [
+      { kind: "qari", reciterId: 7, verseKey: "1:1" },
+      { kind: "you", reciterId: 7, verseKey: "1:2" },
+      { kind: "qari", reciterId: 7, verseKey: "1:3" },
+    ]);
+  });
+
+  it("rotates the starting seat on later rounds", () => {
+    const turns = buildRelayTurns(
+      verses,
+      1,
+      2,
+      [{ kind: "qari", reciterId: 7 }, { kind: "you" }],
+      2,
+      9,
+    );
+    assert.equal(turns[0].kind, "you");
+    assert.equal(turns[1].kind, "qari");
   });
 });
 
@@ -230,6 +651,65 @@ describe("relay skip", () => {
     assert.equal(wrapRelayIndex(3, 4, 1), 0);
     assert.equal(wrapRelayIndex(0, 4, -1), 3);
     assert.equal(wrapRelayIndex(2, 4, -1), 1);
+  });
+});
+
+describe("leave practice", () => {
+  it("exiting masked returns to verse listen", () => {
+    assert.equal(leavePracticeHow("masked"), "set-verse");
+    assert.equal(practiceSheetPickMode("masked", "verse"), "verse");
+    assert.equal(practiceSheetPickMode("masked", "masked"), "verse");
+  });
+
+  it("exiting relay returns to verse listen", () => {
+    assert.equal(leavePracticeHow("relay"), "exit-relay");
+    assert.equal(practiceSheetPickMode("relay", "verse"), "verse");
+    assert.equal(practiceSheetPickMode("relay", "relay"), "verse");
+  });
+
+  it("shows an exit on the Practice sheet when a drill is active", () => {
+    assert.equal(practiceSheetShowsExit("masked"), true);
+    assert.equal(practiceSheetShowsExit("relay"), true);
+    assert.equal(practiceSheetShowsExit("word"), true);
+    assert.equal(practiceSheetShowsExit("verse"), false);
+    assert.equal(
+      practiceSheetJobs("masked").some((job) => job.id === "verse"),
+      true,
+    );
+    assert.equal(
+      practiceSheetJobs("verse").some((job) => job.id === "verse"),
+      false,
+    );
+    assert.equal(leavePracticeHow("word"), "finish-word-reps");
+  });
+
+  it("shows a Masked cutoff only while Masked is on", () => {
+    assert.equal(maskedCutoffVisible("masked"), true);
+    assert.equal(maskedCutoffVisible("verse"), false);
+    assert.equal(maskedCutoffVisible("word"), false);
+    assert.equal(maskedCutoffVisible("relay"), false);
+    assert.equal(MASKED_CUTOFF.label, "Unmask");
+  });
+
+  it("invoking the Masked cutoff returns to verse listen", () => {
+    assert.equal(maskedCutoffLeavesTo("masked"), "verse");
+    assert.equal(leavePracticeHow("masked"), "set-verse");
+    assert.equal(practiceSheetPickMode("masked", "verse"), "verse");
+    assert.equal(maskedCutoffLeavesTo("verse"), null);
+    assert.equal(maskedCutoffLeavesTo("word"), null);
+    assert.equal(maskedCutoffLeavesTo("relay"), null);
+  });
+
+  it("keeps Practice Listen on every drill after adding the Masked cutoff", () => {
+    assert.equal(practiceSheetShowsExit("masked"), true);
+    assert.equal(practiceSheetShowsExit("word"), true);
+    assert.equal(practiceSheetShowsExit("relay"), true);
+    for (const mode of ["word", "masked", "relay"] as const) {
+      assert.equal(
+        practiceSheetJobs(mode).some((job) => job.id === "verse"),
+        true,
+      );
+    }
   });
 });
 

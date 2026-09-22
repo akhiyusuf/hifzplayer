@@ -106,11 +106,11 @@ export function GiftAssign({ sessionId, reference }: { sessionId: string; refere
         <h2>Gift sent</h2>
         <p>
           {state.existingAccount
-            ? "They already have a Diras account on that email. They should sign in with it — Google is fine if it uses the same address."
+            ? "They already have a Diras account on that email. They should sign in with it — we will email them a 6-digit code."
             : "They will get an email. Sign in or create a Diras account with that same address."}
         </p>
         <div className="status-actions">
-          <Link className="btn-primary" href="/">
+          <Link className="btn-primary" href="/home">
             Back to reading
           </Link>
         </div>
