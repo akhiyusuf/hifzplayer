@@ -16,7 +16,7 @@ describe("sign-up welcome email", () => {
     assert.match(text, /Open Al-Fatiha/);
     assert.match(text, /Focus view/);
     assert.match(text, /Settings/);
-    assert.match(text, /contact@brotheryusuf\.com/);
+    assert.match(text, /support@diras\.app/);
     assert.doesNotMatch(text, /trxref|cs_live|reference/i);
   });
 
@@ -31,7 +31,7 @@ describe("sign-up welcome email", () => {
     assert.match(html, /<strong>Diras<\/strong>/);
     assert.match(html, /Al-Fatiha/);
     assert.match(html, /Focus view/);
-    assert.match(html, /mailto:contact@brotheryusuf\.com/);
+    assert.match(html, /mailto:support@diras\.app/);
     assert.doesNotMatch(html, /<!doctype html>/i);
   });
 });
