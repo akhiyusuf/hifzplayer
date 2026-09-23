@@ -30,6 +30,7 @@ export function EmailAuthForm({
   const { loaded, signedIn, refresh } = useAuth();
   const [step, setStep] = useState<Step>("password");
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [code, setCode] = useState("");
@@ -64,7 +65,7 @@ export function EmailAuthForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify({ email, password, turnstileToken: token }),
+        body: JSON.stringify({ email, password, name: mode === "sign-up" ? name : undefined, turnstileToken: token }),
       });
       const data = (await res.json()) as {
         error?: string;
@@ -224,10 +225,27 @@ export function EmailAuthForm({
             name="email"
             autoComplete="email"
             required
-            autoFocus={step !== "code"}
+            autoFocus={step !== "code" && step !== "verify"}
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+          />
+        </span>
+      </label>
+      ) : null}
+
+      {mode === "sign-up" && step === "password" && passwordOn ? (
+      <label className="pricing-email">
+        <span className="label-eyebrow">Name (optional)</span>
+        <span className="field">
+          <input
+            type="text"
+            name="name"
+            autoComplete="given-name"
+            placeholder="What should we call you?"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={50}
           />
         </span>
       </label>

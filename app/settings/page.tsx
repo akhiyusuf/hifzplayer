@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AccountRow } from "@/components/account-row";
+import { ChangeNameRow } from "@/components/change-name-row";
 import { Icon } from "@/components/icon";
 import { ThemePicker } from "@/components/theme-picker";
 import { PLUS_EXPLAIN } from "@/lib/billing/gates";
@@ -170,6 +171,7 @@ export default function SettingsPage() {
       >
         <span className="label-eyebrow">You</span>
         <AccountRow />
+        <ChangeNameRow />
         <PlusStatus />
         <span className="label-eyebrow" style={gap}>
           Reading

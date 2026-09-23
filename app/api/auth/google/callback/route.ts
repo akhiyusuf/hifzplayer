@@ -19,5 +19,16 @@ export async function GET(request: Request) {
   if ("error" in result) {
     return NextResponse.redirect(new URL(`/sign-in?error=${encodeURIComponent(result.error)}`, origin));
   }
+  // If the user signed in via Google but has no name (or the name is the
+  // fallback "Reader"), redirect to a name-collection page so they can set
+  // their display name. The page sends them to their intended destination
+  // after they enter (or skip) the name.
+  const userName = (result.user.name || "").trim();
+  if (!userName || userName === "Reader") {
+    const next = safePath(result.next, "/");
+    return NextResponse.redirect(
+      new URL(`/welcome?next=${encodeURIComponent(next)}`, origin),
+    );
+  }
   return NextResponse.redirect(new URL(safePath(result.next, "/"), origin));
 }

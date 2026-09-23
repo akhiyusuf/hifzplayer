@@ -6,9 +6,15 @@ import { logOpsEvent } from "@/lib/ops/events";
 
 function displayName(email: string, stored?: string | null) {
   if (stored?.trim()) return stored.trim().split(/\s+/)[0] || stored.trim();
+  // Fallback: derive a name from the email's local part.
+  // "yusuf.ahmed@gmail.com" → "Yusuf", "cool_dude99@yahoo.com" → "cool"
   const local = email.split("@")[0] || "";
   const cleaned = local.replace(/[._-]+/g, " ").trim();
-  return cleaned ? cleaned.split(/\s+/)[0] : "Reader";
+  if (cleaned) {
+    const first = cleaned.split(/\s+/)[0];
+    return first.charAt(0).toUpperCase() + first.slice(1);
+  }
+  return "Reader";
 }
 
 /**
@@ -19,6 +25,7 @@ function displayName(email: string, stored?: string | null) {
 export async function registerWithPassword(
   email: string,
   password: string,
+  name?: string,
 ): Promise<AccountUser | { error: string }> {
   if (!accountsConfigured()) return { error: "Accounts are not configured yet" };
   if (!passwordLooksValid(password)) return { error: `Password must be ${PASSWORD_MIN}–${PASSWORD_MAX} characters` };
@@ -32,14 +39,15 @@ export async function registerWithPassword(
     return { error: "An account already exists for this email. Sign in." };
   }
   const id = randomId("usr");
-  const name = displayName(address);
+  // Use the provided name if given, otherwise fall back to email-derived name.
+  const displayNameValue = (name && name.trim()) ? name.trim().split(/\s+/)[0] : displayName(address);
   await sql()`
     insert into users (id, email, name, password_hash)
-    values (${id}, ${address}, ${name}, ${await hashPassword(password)})
+    values (${id}, ${address}, ${displayNameValue}, ${await hashPassword(password)})
   `;
   logOpsEvent({ type: "user_created", accountId: id, ok: true });
   // Do NOT call completeSignIn — the user must verify their email first.
-  return { id, email: address, name, created: true };
+  return { id, email: address, name: displayNameValue, created: true };
 }
 
 /**
@@ -73,6 +81,18 @@ export async function sendRegistrationCode(
 ): Promise<{ ok: boolean; throttled: boolean; code?: string }> {
   const started = await startEmailOtp(email);
   return { ok: started.ok, throttled: started.throttled, code: "code" in started ? started.code : undefined };
+}
+
+/**
+ * Update the user's display name. Called from Settings.
+ * The name is stored as a single word (first name) to keep the UI simple.
+ */
+export async function updateDisplayName(userId: string, name: string): Promise<{ ok: boolean; name: string }> {
+  const trimmed = name.trim();
+  if (!trimmed) return { ok: false, name: "" };
+  const firstName = trimmed.split(/\s+/)[0];
+  await sql()`update users set name = ${firstName} where id = ${userId}`;
+  return { ok: true, name: firstName };
 }
 
 export async function signInWithPassword(email: string, password: string): Promise<AccountUser | { error: string }> {
