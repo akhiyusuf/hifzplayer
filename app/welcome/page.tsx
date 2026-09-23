@@ -16,8 +16,8 @@ export default async function WelcomePage({
 }
 
 function WelcomeForm({ next }: { next: string }) {
-  const { refresh } = useAuth();
-  const [name, setName] = useState("");
+  const { refresh, name: existingName } = useAuth();
+  const [name, setName] = useState(existingName || "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
