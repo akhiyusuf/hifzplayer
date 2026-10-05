@@ -752,3 +752,8 @@ body:has(.scrim) [class*="cl-userButton"]{
 .password-strength[data-score="3"] .password-strength-label{color:#10b981}
 .password-strength[data-score="4"] .password-strength-label{color:#059669}
 .password-strength-reason{color:var(--text-muted)}
+
+.mode-opt.coming-soon{cursor:not-allowed}
+.mode-opt.coming-soon .radio-dot{visibility:hidden}
+.mode-opt .mo-t b{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge-coming-soon{font-size:10px;font-weight:600;letter-spacing:.02em;color:var(--state-warning);background:var(--badge-beta-bg);border-radius:5px;padding:2px 6px;flex:none}

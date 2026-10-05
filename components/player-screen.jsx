@@ -49,6 +49,7 @@ import { WordStudyPop } from "@/components/word-study-pop";
 import { ConfusableSheet, PhraseSheet, RelaySheet } from "@/components/player-sheets";
 import { MushafFollowButton, MushafJobBar, MushafPage } from "@/components/player-mushaf";
 import { UstadhCoachBar } from "@/components/ustadh/ustadh-coach-bar";
+import { USTADH_ENABLED } from "@/lib/ustadh/enabled";
 import {
   FocusVersePage,
   FocusMaskedPage,
@@ -354,10 +355,9 @@ export function PlayerScreen(e) {
     }, [ep, eStyleQ, eu]),
     useEffect(() => {
       if ("ready" !== ep || !plusReady) return;
-      let e =
-        er && ["word", "verse", "masked", "relay", "ustadh"].includes(er)
-          ? er
-          : "verse";
+      let allowed = ["word", "verse", "masked", "relay"];
+      if (USTADH_ENABLED) allowed.push("ustadh");
+      let e = er && allowed.includes(er) ? er : "verse";
       if (e === "relay") {
         let relay = eu.getSnapshot().relay;
         if (relay && relay.active) return;
@@ -720,6 +720,7 @@ export function PlayerScreen(e) {
         (eu.leavePractice(), eDropModeQuery());
         return;
       }
+      if ("ustadh" === e && !USTADH_ENABLED) return;
       if ("relay" === e) {
         if (!plusOn) {
           ask("practice");
@@ -768,7 +769,7 @@ export function PlayerScreen(e) {
                 onLeavePractice: eLeavePractice,
               })
             : null,
-          "ustadh" === ez.mode
+          USTADH_ENABLED && "ustadh" === ez.mode
             ? _jsx(UstadhCoachBar, {
                 engine: eu,
                 eyesOff: eEyesOff,

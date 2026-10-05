@@ -19,9 +19,26 @@ function upload(fields: Record<string, string>, bytes = [1, 2, 3, 4]) {
 }
 
 describe("handleAsrRequest", () => {
+  it("returns 403 when Ustadh is disabled", async () => {
+    process.env.GROQ_API_KEY = "test-groq-key";
+    const result = await handleAsrRequest(upload({ expectedText: "بسم" }), { enabled: false });
+    assert.equal(result.status, 403);
+    assert.deepEqual(result.body, {
+      error: "AI Ustadh is not available yet",
+      code: "USTADH_DISABLED",
+    });
+  });
+
+  it("blocks ASR by default while USTADH_ENABLED is false", async () => {
+    process.env.GROQ_API_KEY = "test-groq-key";
+    const result = await handleAsrRequest(upload({ expectedText: "بسم" }));
+    assert.equal(result.status, 403);
+    assert.equal((result.body as { code: string }).code, "USTADH_DISABLED");
+  });
+
   it("returns 503 when the Groq key is missing", async () => {
     delete process.env.GROQ_API_KEY;
-    const result = await handleAsrRequest(upload({ expectedText: "بسم" }));
+    const result = await handleAsrRequest(upload({ expectedText: "بسم" }), { enabled: true });
     assert.equal(result.status, 503);
     assert.deepEqual(result.body, {
       error: "GROQ_API_KEY is not set",
@@ -46,7 +63,7 @@ describe("handleAsrRequest", () => {
         sessionId: "practice-1",
         chunkStart: "12.5",
       }),
-      {
+      { enabled: true,
         transcribe: async (_audio, options) => {
           assert.equal(options.filename, "chunk.webm");
           // First pass never leaks the ayah (Whisper would fill skipped words from it).
@@ -77,6 +94,7 @@ describe("handleAsrRequest", () => {
     form.set("audio", new File([], "chunk.webm", { type: "audio/webm" }));
     const result = await handleAsrRequest(
       new Request("http://localhost/api/ustadh/asr", { method: "POST", body: form }),
+      { enabled: true },
     );
     assert.equal(result.status, 400);
     assert.equal((result.body as { code: string }).code, "ASR_AUDIO_REQUIRED");
@@ -93,7 +111,7 @@ describe("handleAsrRequest", () => {
         ayahStart: "2",
         ayahEnd: "2",
       }),
-      {
+      { enabled: true,
         transcribe: async (_audio, options) => {
           calls += 1;
           prompts.push(options.prompt);
@@ -138,7 +156,7 @@ describe("handleAsrRequest", () => {
     let calls = 0;
     const result = await handleAsrRequest(
       upload({ expectedText: "بسم الله" }),
-      {
+      { enabled: true,
         transcribe: async () => {
           calls += 1;
           return { text: "bismillah", words: [{ word: "bismillah", start: 0, end: 0.5 }] };
@@ -156,7 +174,7 @@ describe("handleAsrRequest", () => {
     process.env.GROQ_API_KEY = "test-groq-key";
     const latin = { text: "alhamdu lillahi", words: [{ word: "alhamdu", start: 0, end: 0.4 }] };
     let peekCalls = 0;
-    const peek = await handleAsrRequest(upload({ expectedText: "ٱلْحَمْدُ لِلَّهِ", mode: "peek" }), {
+    const peek = await handleAsrRequest(upload({ expectedText: "ٱلْحَمْدُ لِلَّهِ", mode: "peek" }), { enabled: true,
       transcribe: async () => {
         peekCalls += 1;
         return latin;
@@ -167,7 +185,7 @@ describe("handleAsrRequest", () => {
     assert.equal((peek.body as UstadhAsrResponse).text, "");
 
     let finalCalls = 0;
-    await handleAsrRequest(upload({ expectedText: "ٱلْحَمْدُ لِلَّهِ" }), {
+    await handleAsrRequest(upload({ expectedText: "ٱلْحَمْدُ لِلَّهِ" }), { enabled: true,
       transcribe: async () => {
         finalCalls += 1;
         return latin;
@@ -185,7 +203,7 @@ describe("handleAsrRequest", () => {
     }));
     const result = await handleAsrRequest(
       upload({ expectedText: "يَـٰٓأَيُّهَا ٱلنَّاسُ ٱعْبُدُوا۟ رَبَّكُمُ", surah: "2", ayahStart: "21", ayahEnd: "21" }),
-      { transcribe: async () => ({ text: words.map((w) => w.word).join(" "), words }) },
+      { enabled: true, transcribe: async () => ({ text: words.map((w) => w.word).join(" "), words }) },
     );
     const body = result.body as UstadhAsrResponse;
     assert.equal(result.status, 200);
@@ -211,7 +229,7 @@ describe("handleAsrRequest", () => {
         ayahEnd: "5",
         clipSec: "4.3",
       }),
-      { transcribe: async () => ({ text: words.map((x) => x.word).join(" "), words }) },
+      { enabled: true, transcribe: async () => ({ text: words.map((x) => x.word).join(" "), words }) },
     );
     const body = result.body as UstadhAsrResponse;
     assert.equal(result.status, 200);
@@ -221,7 +239,7 @@ describe("handleAsrRequest", () => {
 
   it("rejects a bad clipSec", async () => {
     process.env.GROQ_API_KEY = "test-groq-key";
-    const result = await handleAsrRequest(upload({ expectedText: "بسم", clipSec: "-1" }), {
+    const result = await handleAsrRequest(upload({ expectedText: "بسم", clipSec: "-1" }), { enabled: true,
       transcribe: async () => ({ text: "", words: [] }),
     });
     assert.equal(result.status, 400);
