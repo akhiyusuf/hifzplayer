@@ -18,6 +18,7 @@ describe("backHref", () => {
     assert.equal(backHref("account"), "/account");
     assert.equal(backHref("pricing"), "/pricing");
     assert.equal(backHref("listen"), "/listen");
+    assert.equal(backHref("practice"), "/practice");
     assert.equal(backHref("roadmap"), "/roadmap");
     assert.equal(backHref("privacy"), "/privacy");
     assert.equal(backHref("tos"), "/tos");

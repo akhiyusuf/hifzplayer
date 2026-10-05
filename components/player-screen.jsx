@@ -21,7 +21,7 @@ import { clampStopIndex, playlistHref, reciterIdForStyle, resolvePlaylist, stopL
 import { fetchPassage, fetchTranslation } from "@/lib/api";
 import { APP_NAME } from "@/lib/brand";
 import { KEYS } from "@/lib/constants";
-import { dropReadModeParam } from "@/lib/nav";
+import { backHref, dropReadModeParam } from "@/lib/nav";
 import {
   coversRange,
   drillHint,
@@ -751,8 +751,14 @@ export function PlayerScreen(e) {
         children: [
           _jsx(PlayerHead, {
             title: eHead,
-            backLabel: eList ? "Playlists" : $ ? $.split(" ")[0] : null,
-            onBack: eList ? () => Y.push("/listen") : undefined,
+            backLabel: eList ? "Playlists" : $ === "practice" ? "Practice" : $ ? $.split(" ")[0] : null,
+            onBack: eList
+              ? () => Y.push("/listen")
+              : $ === "practice"
+                ? () => Y.push("/practice")
+                : $
+                  ? () => Y.push(backHref($))
+                  : undefined,
             onSettings: () => {
               (eQuietUi("settings"), eSetTools(!0));
             },

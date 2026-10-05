@@ -3,7 +3,7 @@ import { USTADH_ENABLED } from "../ustadh/enabled.ts";
 
 export const FREE_REPEAT_MAX = 2;
 
-export type PlusFeature = "repeats" | "practice" | "relay-qaris" | "playlists";
+export type PlusFeature = "repeats" | "practice" | "relay-qaris" | "playlists" | "planner";
 
 /** @deprecated Use "practice" — kept so older call sites still resolve copy. */
 export type LegacyPlusFeature = PlusFeature | "focus";
@@ -25,6 +25,10 @@ export const PLUS_COPY: Record<PlusFeature, { title: string; body: string }> = {
     title: "Playlists are Diras Plus",
     body: "Playing an occasion list is Diras Plus. Mushaf reading stays free.",
   },
+  planner: {
+    title: "Memorization planner",
+    body: "A daily New / Review / Revision plan for your hifz. Set a surah, practise a few ayahs a day, and we bring them back before you forget. Reading stays free.",
+  },
 };
 
 /** Map legacy "focus" asks onto the practice feature. */
@@ -36,8 +40,8 @@ export function plusCopyFor(feature: LegacyPlusFeature) {
 /** Canonical Plus pitch — Settings row, explanation sheet, and pricing stay in sync. */
 export const PLUS_EXPLAIN = {
   rowTitle: `What ${PLUS_NAME} is`,
-  rowSub: "Word Reps, Masked, Relay, playlists, word repeats past ×2, and extra qaris",
-  rowOn: "Word Reps, Masked, Relay, playlists, 3× to unlimited word repeats, and extra qaris",
+  rowSub: "Memorization planner, Word Reps, Masked, Relay, playlists, word repeats past ×2, and extra qaris",
+  rowOn: "Memorization planner, Word Reps, Masked, Relay, playlists, 3× to unlimited word repeats, and extra qaris",
   lead: "Reading stays free. Mushaf and Focus views stay free — including play. Looping a verse with Repeat stays free. You can open Playlists and look around.",
   freeTitle: "Always free",
   free: [
@@ -50,6 +54,7 @@ export const PLUS_EXPLAIN = {
   ],
   plusTitle: PLUS_NAME,
   plus: [
+    "Memorization planner — New, Review, and Revision for the day",
     "Word Reps, Masked, and Relay on Mushaf or Focus",
     "Occasion lists — Friday, night, morning, and the rest",
     "A word played 3×, 5×, 10×, or until you stop",

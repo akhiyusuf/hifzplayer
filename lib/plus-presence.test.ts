@@ -8,6 +8,9 @@ import {
   playlistBarTitle,
   playlistsLocked,
   playlistsLockedPitch,
+  plannerLocked,
+  plannerLockedPitch,
+  practiceLeadCopy,
   plusOnLabel,
   plusSalaamLine,
 } from "./plus-presence.ts";
@@ -49,5 +52,17 @@ describe("plus presence copy", () => {
     assert.equal(playlistBarTitle("Friday", true), "Plus · Friday");
     assert.equal(playlistBarTitle("Friday", false), "Friday");
     assert.equal(plusOnLabel(), `${PLUS_NAME} is on`);
+  });
+
+  it("locks the memorization planner for free users", () => {
+    assert.equal(plannerLocked(false), true);
+    assert.equal(plannerLocked(true), false);
+    const pitch = plannerLockedPitch();
+    assert.match(pitch.title, /planner/i);
+    assert.match(pitch.title, new RegExp(PLUS_NAME));
+    assert.match(pitch.body, /New|Review|Revision/i);
+    assert.equal(pitch.cta, "See plans");
+    assert.match(practiceLeadCopy(false), /Diras Plus/);
+    assert.match(practiceLeadCopy(true), /is on/i);
   });
 });

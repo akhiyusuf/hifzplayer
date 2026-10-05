@@ -6,6 +6,7 @@ export function backHref(from: string | string[] | undefined): string {
   if (value === "pricing") return "/pricing";
   if (value === "gift") return "/pricing";
   if (value === "listen") return "/listen";
+  if (value === "practice") return "/practice";
   if (value === "roadmap") return "/roadmap";
   if (value === "home") return "/home";
   if (value === "privacy") return "/privacy";
