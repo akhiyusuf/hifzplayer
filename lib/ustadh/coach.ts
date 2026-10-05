@@ -86,18 +86,12 @@ export function coachPayloadForVerse(verse: Verse) {
       audio: word.audio,
     })),
     marks: verse.marks,
-    phrases: phrases.map((phrase) => ({
-      id: phrase.id,
-      from: phrase.from,
-      to: phrase.to,
-      verseKey: phrase.verseKey,
-    })),
+    phrases,
     surah,
     ayahStart: ayah,
     ayahEnd: ayah,
     verseKey: verse.key,
     words,
-    phrases,
   };
 }
 
