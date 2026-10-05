@@ -42,6 +42,10 @@ describe("Plus explanation copy", () => {
       true,
     );
     assert.equal(
+      PLUS_EXPLAIN.plus.some((line) => /Memorization planner/.test(line)),
+      true,
+    );
+    assert.equal(
       PLUS_EXPLAIN.plus.some((line) => /Word Reps, Masked, and Relay/.test(line)),
       true,
     );
@@ -79,6 +83,14 @@ describe("Plus explanation copy", () => {
   it("maps legacy focus asks onto practice copy", () => {
     assert.equal(plusCopyFor("focus").title, plusCopyFor("practice").title);
     assert.match(plusCopyFor("practice").body, /Focus views stay free|Mushaf and Focus/i);
+  });
+
+  it("pitches the memorization planner as Plus without ungating drills", () => {
+    assert.match(plusCopyFor("planner").title, /planner/i);
+    assert.match(plusCopyFor("planner").body, /New|Review|Revision|hifz/i);
+    assert.equal(isPaidFocusJob("word"), true);
+    assert.equal(isPaidFocusJob("masked"), true);
+    assert.equal(isPaidFocusJob("relay"), true);
   });
 });
 

@@ -84,4 +84,6 @@ export const KEYS = {
   translationId: "hifz.transId",
   translations: "hifz.translations",
   relayDraft: "hifz.relay.draft",
+  plan: "hifz.plan",
+  ayahState: "hifz.ayahState",
 } as const;

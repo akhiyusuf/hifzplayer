@@ -35,3 +35,21 @@ export function playlistBarTitle(title: string, plus: boolean) {
   const name = (title || "").trim() || "List";
   return plus ? `Plus · ${name}` : name;
 }
+
+export function plannerLocked(plus: boolean) {
+  return !plus;
+}
+
+export function plannerLockedPitch() {
+  return {
+    title: `Memorization planner is ${PLUS_NAME}`,
+    body: `Pick a surah, a few ayahs a day, and get New / Review / Revision cards. Reading stays free.`,
+    cta: "See plans",
+  };
+}
+
+export function practiceLeadCopy(plus: boolean) {
+  return plus
+    ? `${PLUS_NAME} is on. Your plan for today.`
+    : `A daily New / Review / Revision plan for your hifz. The planner is ${PLUS_NAME}. Reading stays free on Menu.`;
+}
