@@ -1,4 +1,4 @@
-import { arabicEqual, normalizeArabic } from "./arabic.ts";
+import { arabicEqual } from "./arabic.ts";
 import type { AsrWord, ExpectedPhrase, ExpectedWord, InterruptHint } from "./types.ts";
 
 export type AlignOp =
@@ -13,8 +13,6 @@ type Step = "match" | "sub" | "del" | "ins";
 export function alignWords(expected: string[], heard: string[]): AlignOp[] {
   const n = expected.length;
   const m = heard.length;
-  const normE = expected.map((word) => normalizeArabic(word));
-  const normH = heard.map((word) => normalizeArabic(word));
   const dp: number[][] = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
   const prev: Step[][] = Array.from({ length: n + 1 }, () => Array<Step>(m + 1).fill("match"));
 
@@ -29,7 +27,7 @@ export function alignWords(expected: string[], heard: string[]): AlignOp[] {
 
   for (let i = 1; i <= n; i++) {
     for (let j = 1; j <= m; j++) {
-      const same = normE[i - 1].length > 0 && normE[i - 1] === normH[j - 1];
+      const same = arabicEqual(expected[i - 1], heard[j - 1]);
       const diag = dp[i - 1][j - 1] + (same ? 0 : 1);
       const del = dp[i - 1][j] + 1;
       const ins = dp[i][j - 1] + 1;

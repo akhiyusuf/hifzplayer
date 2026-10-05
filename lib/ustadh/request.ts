@@ -1,5 +1,12 @@
 import type { Mark } from "../types.ts";
-import { quranAsrPrompt, tokenizeArabic } from "./arabic.ts";
+import {
+  ARABIC_ASR_RETRY_LIMIT,
+  arabicOnlyTranscript,
+  quranAsrPrompt,
+  strongQuranAsrPrompt,
+  tokenizeArabic,
+  transcriptNeedsArabicRetry,
+} from "./arabic.ts";
 import { GROQ_ASR_MODEL, GroqAsrError, groqAsrConfigured, transcribeWithGroq } from "./groq-asr.ts";
 import type { AsrErrorBody, UstadhAsrResponse } from "./types.ts";
 import { assessUstadhTurn } from "./turn.ts";
@@ -268,9 +275,10 @@ export async function handleAsrRequest(
     return fail(400, "Expected text is too long for one chunk", "ASR_JSON");
   }
 
-  const prompt = quranAsrPrompt(
-    passage.words.length ? passage.words.map((word) => word.ar).join(" ") : expectedText,
-  );
+  const expectedForPrompt = passage.words.length
+    ? passage.words.map((word) => word.ar).join(" ")
+    : expectedText;
+  const prompt = quranAsrPrompt(expectedForPrompt);
 
   const transcribe = deps?.transcribe ?? transcribeWithGroq;
   let transcript: { text: string; words: UstadhAsrResponse["words"] };
@@ -281,14 +289,28 @@ export async function handleAsrRequest(
     return fail(502, "Could not transcribe audio", "ASR_UPSTREAM");
   }
 
+  // Latin/transliteration: silently retry same audio up to 3 times with stronger prompts.
+  for (let attempt = 1; attempt <= ARABIC_ASR_RETRY_LIMIT; attempt++) {
+    if (!transcriptNeedsArabicRetry(transcript.text, transcript.words)) break;
+    const retryPrompt = strongQuranAsrPrompt(expectedForPrompt, attempt) || prompt;
+    try {
+      transcript = await transcribe(audio, { filename, prompt: retryPrompt });
+    } catch (error) {
+      if (error instanceof GroqAsrError) return fail(error.status, error.message, error.code);
+      return fail(502, "Could not transcribe audio", "ASR_UPSTREAM");
+    }
+  }
+
+  // Never surface Latin to the client — only Arabic script (empty after failed retries).
+  const arabic = arabicOnlyTranscript(transcript);
   const words =
     chunkStart && chunkStart > 0
-      ? transcript.words.map((word) => ({
+      ? arabic.words.map((word) => ({
           ...word,
           start: Math.round((word.start + chunkStart) * 1000) / 1000,
           end: Math.round((word.end + chunkStart) * 1000) / 1000,
         }))
-      : transcript.words;
+      : arabic.words;
 
   const assessed = assessUstadhTurn({
     words: passage.words,
@@ -301,7 +323,7 @@ export async function handleAsrRequest(
     model: GROQ_ASR_MODEL,
     language: "ar",
     transport: "chunked",
-    text: transcript.text,
+    text: arabic.text,
     words,
     interrupts: assessed.interrupts,
     replays: assessed.replays,

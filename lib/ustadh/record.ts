@@ -56,3 +56,78 @@ export function stopStream(stream: MediaStream | null | undefined) {
     }
   }
 }
+
+
+/** Silence VAD while the coach is listening (AnalyserNode RMS). */
+export const USTADH_VAD = {
+  /** Auto-send after this much silence following speech. */
+  silenceMs: 650,
+  /** Require at least this much speech before silence can auto-send. */
+  minSpeechMs: 700,
+  /** Hard cap on a single listen take. */
+  maxListenMs: 11_000,
+  /** RMS above this counts as speech (getByteTimeDomainData scaled). */
+  speechRms: 0.045,
+  /** Poll interval for the analyser. */
+  pollMs: 50,
+} as const;
+
+export type VadGateState = {
+  hasSpoken: boolean;
+  speechStartedAtMs: number | null;
+  lastSpeechAtMs: number | null;
+};
+
+export type VadDecision = {
+  action: "continue" | "auto_send";
+  state: VadGateState;
+};
+
+/** Pure VAD gate used by the coach bar (unit-tested without Web Audio). */
+export function advanceVadGate(input: {
+  nowMs: number;
+  rms: number;
+  startedAtMs: number;
+  state: VadGateState;
+  config?: typeof USTADH_VAD;
+}): VadDecision {
+  const config = input.config ?? USTADH_VAD;
+  const speaking = input.rms >= config.speechRms;
+  let { hasSpoken, speechStartedAtMs, lastSpeechAtMs } = input.state;
+
+  if (speaking) {
+    hasSpoken = true;
+    if (speechStartedAtMs == null) speechStartedAtMs = input.nowMs;
+    lastSpeechAtMs = input.nowMs;
+  }
+
+  const state: VadGateState = { hasSpoken, speechStartedAtMs, lastSpeechAtMs };
+
+  if (input.nowMs - input.startedAtMs >= config.maxListenMs) {
+    return { action: "auto_send", state };
+  }
+
+  if (!hasSpoken || speechStartedAtMs == null || lastSpeechAtMs == null) {
+    return { action: "continue", state };
+  }
+
+  const quietFor = speaking ? 0 : input.nowMs - lastSpeechAtMs;
+  const voicedSpan = lastSpeechAtMs - speechStartedAtMs;
+  if (!speaking && quietFor >= config.silenceMs && voicedSpan >= config.minSpeechMs) {
+    return { action: "auto_send", state };
+  }
+
+  return { action: "continue", state };
+}
+
+/** RMS from AnalyserNode time-domain bytes (128 = silence). */
+export function rmsFromTimeDomain(data: ArrayLike<number>): number {
+  const n = data.length;
+  if (!n) return 0;
+  let sum = 0;
+  for (let i = 0; i < n; i++) {
+    const centered = ((data[i] as number) - 128) / 128;
+    sum += centered * centered;
+  }
+  return Math.sqrt(sum / n);
+}

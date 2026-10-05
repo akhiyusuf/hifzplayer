@@ -80,4 +80,35 @@ describe("ustadh coach helpers", () => {
     });
     assert.equal(turnOutcome({ ...response, interrupts: [], replays: [] }), "matched");
   });
+
+
+  it("prefers sticky word replay over phrase restart", () => {
+    const response: UstadhAsrResponse = {
+      model: "whisper-large-v3-turbo",
+      language: "ar",
+      transport: "chunked",
+      text: "x",
+      words: [],
+      interrupts: [{ type: "phrase", expected: "…", wordIndex: 0 }],
+      replays: [
+        {
+          action: "replay_phrase",
+          targetId: "1:2:p0",
+          wordIndex: 0,
+          missCount: 1,
+          phraseId: "1:2:p0",
+        },
+        {
+          action: "slow_word",
+          targetId: "wbw/001_002_004.mp3",
+          wordIndex: 3,
+          missCount: 2,
+          pos: 4,
+          verseKey: "1:2",
+        },
+      ],
+    };
+    assert.equal(primaryReplay(response)?.action, "slow_word");
+    assert.equal(primaryReplay(response)?.wordIndex, 3);
+  });
 });

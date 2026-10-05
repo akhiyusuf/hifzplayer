@@ -53,7 +53,7 @@ export function ustadhErrorHint(code: UstadhCoachErrorCode | string | null | und
     case "NETWORK":
       return "Check your connection and try again.";
     case "EMPTY_CLIP":
-      return "Hold a little longer, then tap Send.";
+      return "Hold a little longer, then pause or tap Send.";
     case "ASR_UPSTREAM":
       return "The speech service had a hiccup. Try once more.";
     default:
@@ -116,9 +116,33 @@ export function turnOutcome(response: UstadhAsrResponse): "matched" | "miss" {
   return response.interrupts.length || response.replays.length ? "miss" : "matched";
 }
 
-/** Primary replay to act on: first interrupt’s word, else first replay. */
+/**
+ * Primary replay to act on.
+ * Prefer earliest sticky word clip (`replay_word` / `slow_word`, rising missCount)
+ * over phrase / ayah-wide restart so a learner stuck on العالمين hears that word.
+ */
 export function primaryReplay(response: UstadhAsrResponse): ReplayDecision | null {
   if (!response.replays.length) return null;
+
+  const byWordIndex = (a: ReplayDecision, b: ReplayDecision) =>
+    (a.wordIndex ?? 0) - (b.wordIndex ?? 0);
+
+  const sticky = response.replays
+    .filter((replay) => replay.action === "slow_word" || (replay.missCount ?? 0) >= 2)
+    .sort(byWordIndex);
+  if (sticky[0]) {
+    const hit = sticky[0];
+    if (hit.action === "replay_phrase") {
+      return { ...hit, action: "slow_word" };
+    }
+    return hit;
+  }
+
+  const wordLevel = response.replays
+    .filter((replay) => replay.action === "replay_word")
+    .sort(byWordIndex);
+  if (wordLevel[0]) return wordLevel[0];
+
   const interrupt = response.interrupts[0];
   if (interrupt && interrupt.wordIndex != null) {
     const hit = response.replays.find((replay) => replay.wordIndex === interrupt.wordIndex);

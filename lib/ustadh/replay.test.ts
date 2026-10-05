@@ -40,7 +40,18 @@ describe("assessUstadhTurn", () => {
     assert.deepEqual(result.replays, []);
   });
 
-  it("replays one word on a single miss", () => {
+  
+  it("accepts ASR العالمين for dagger-alef ٱلْعَٰلَمِينَ", () => {
+    const passage = expectedFromVerse(verse("1:2", ["ٱلْحَمْدُ", "لِلَّهِ", "رَبِّ", "ٱلْعَٰلَمِينَ"]));
+    const result = assessUstadhTurn({
+      ...passage,
+      heard: heard(["الحمد", "لله", "رب", "العالمين"]),
+    });
+    assert.deepEqual(result.interrupts, []);
+    assert.deepEqual(result.replays, []);
+  });
+
+it("replays one word on a single miss", () => {
     const passage = expectedFromVerse(verse("1:2", ["ٱلْحَمْدُ", "لِلَّهِ", "رَبِّ", "ٱلْعَٰلَمِينَ"]));
     const result = assessUstadhTurn({
       ...passage,
