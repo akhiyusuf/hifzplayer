@@ -45,6 +45,12 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section className="landing-purpose" aria-labelledby="landing-purpose-title">
+        <h2 id="landing-purpose-title">{LANDING.purposeTitle}</h2>
+        <p>{LANDING.purposeBody}</p>
+        <p className="landing-purpose-note">{LANDING.googleApis}</p>
+      </section>
+
       <section className="landing-focus" aria-labelledby="landing-focus-title">
         <div className="landing-section-head">
           <h2 id="landing-focus-title">{LANDING.focusTitle}</h2>
@@ -123,6 +129,10 @@ export default function LandingPage() {
         <Link href="/home">Mushaf</Link>
         <span aria-hidden="true">·</span>
         <Link href="/pricing">Pricing</Link>
+        <span aria-hidden="true">·</span>
+        <Link href="/privacy">Privacy</Link>
+        <span aria-hidden="true">·</span>
+        <Link href="/tos">Terms</Link>
         <span aria-hidden="true">·</span>
         <Link href="/account">Account</Link>
       </footer>

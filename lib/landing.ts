@@ -3,13 +3,18 @@ import { APP_NAME, PLUS_NAME } from "./brand.ts";
 /** Marketing landing — sells Focus first; free mushaf is the trust line. */
 
 export const LANDING = {
-  metaTitle: `${APP_NAME} — practise on the page`,
+  metaTitle: `${APP_NAME} — Quran reading and memorisation`,
   metaDescription:
-    "Diras Focus turns the mushaf into Word Reps, Masked, and Relay. Reading stays free. Try Plus for one day.",
+    "Diras is a Quran reading and memorisation practice app. Read the mushaf free, then practise with Word Reps, Masked, and Relay.",
   salaam: "Assalamu alaikum",
   brand: APP_NAME,
-  headline: "Practise on the page — not another reader.",
-  lead: "Other apps only play the mushaf. Focus makes you work it: loop hard words, hide the line, trade turns with the qari. Try the live floor beside you — no account.",
+  headline: "Practise the Quran on the page.",
+  lead: "Diras is a Quran reading and memorisation practice app. Word Reps loops a hard word, Masked hides the line, and Relay trades turns with the qari. Try the live floor beside you — no account.",
+  purposeTitle: "What Diras is for",
+  purposeBody:
+    "Diras is a Quran reading and memorisation practice app. You can open the mushaf and read or listen without signing in. Practice on a passage is Word Reps, Masked, and Relay: loop a word, hide the line, or trade ayahs with the qari. An account is optional.",
+  googleApis:
+    "Diras does not use Google APIs to create or distribute AI-generated non-consensual intimate imagery; Google sign-in is only for account login.",
   primaryCta: "Try Plus free for 1 day",
   primaryHref: "/pricing",
   secondaryCta: "Open the mushaf",
