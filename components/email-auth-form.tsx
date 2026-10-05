@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/components/auth-root";
 import { TurnstileWidget } from "@/components/turnstile-widget";
 import { isPasswordAcceptable, scorePassword } from "@/lib/auth/password-strength";
@@ -13,6 +13,8 @@ function authError(data: { error?: string; code?: string }, fallback: string) {
 }
 
 type Step = "password" | "forgot" | "code" | "verify";
+
+const RESEND_COOLDOWN_S = 30;
 
 export function EmailAuthForm({
   mode,
@@ -42,18 +44,38 @@ export function EmailAuthForm({
   const [resetKey, setResetKey] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(startError);
+  const [info, setInfo] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+  const [needsResendChallenge, setNeedsResendChallenge] = useState(false);
+  const pendingResendRef = useRef(false);
 
   useEffect(() => {
     if (loaded && signedIn) window.location.replace(redirectTo);
   }, [loaded, signedIn, redirectTo]);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = window.setTimeout(() => setCooldown((c) => Math.max(0, c - 1)), 1000);
+    return () => window.clearTimeout(id);
+  }, [cooldown]);
 
   function resetChallenge() {
     setToken("");
     setResetKey((n) => n + 1);
   }
 
+  function beginCodeStep(next: "code" | "verify") {
+    setStep(next);
+    setCode("");
+    setNeedsResendChallenge(false);
+    pendingResendRef.current = false;
+    setCooldown(RESEND_COOLDOWN_S);
+    resetChallenge();
+  }
+
   async function submitPassword() {
     setError("");
+    setInfo("");
     if (mode === "sign-up" && !isPasswordAcceptable(password)) {
       const { reasons } = scorePassword(password);
       setError(reasons[0] || "That password is too weak. Use at least 8 characters with a letter and a number.");
@@ -82,12 +104,14 @@ export function EmailAuthForm({
       // Sign-up now requires email verification — move to the verify step
       // instead of signing in immediately.
       if (mode === "sign-up" && data.verifyRequired) {
-        setStep("verify");
-        setCode("");
         setPassword("");
         setConfirm("");
-        resetChallenge();
-        setError(data.message || "");
+        beginCodeStep("verify");
+        // Keep instructional copy in the neutral lead above — only surface
+        // real failures (e.g. throttled) in red.
+        if (data.throttled) setError(data.message || "We sent too many codes to this email. Try again in an hour.");
+        else setError("");
+        setInfo("");
         setBusy(false);
         return;
       }
@@ -102,6 +126,7 @@ export function EmailAuthForm({
 
   async function submitVerificationCode() {
     setError("");
+    setInfo("");
     setBusy(true);
     try {
       const res = await fetch("/api/auth/verify", {
@@ -121,22 +146,22 @@ export function EmailAuthForm({
     }
   }
 
-  async function sendResetCode() {
+  async function sendResetCode(turnstileToken = token) {
     setError("");
+    setInfo("");
     setBusy(true);
     try {
       const res = await fetch("/api/auth/otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify({ email, turnstileToken: token }),
+        body: JSON.stringify({ email, turnstileToken }),
       });
       const data = (await res.json()) as { error?: string; code?: string };
       if (!res.ok) throw new Error(authError(data, "Could not send the code."));
-      setStep("code");
-      setCode("");
+      beginCodeStep("code");
       setPassword("");
-      resetChallenge();
+      setInfo("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send the code.");
       resetChallenge();
@@ -145,8 +170,49 @@ export function EmailAuthForm({
     }
   }
 
+  async function resendCode(turnstileToken = token) {
+    setError("");
+    setInfo("");
+    if (challengeOn && !turnstileToken) {
+      setNeedsResendChallenge(true);
+      pendingResendRef.current = true;
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ email, turnstileToken }),
+      });
+      const data = (await res.json()) as { error?: string; code?: string };
+      if (!res.ok) throw new Error(authError(data, "Could not resend the code."));
+      setCooldown(RESEND_COOLDOWN_S);
+      setNeedsResendChallenge(false);
+      pendingResendRef.current = false;
+      setInfo("We sent a new code.");
+      resetChallenge();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not resend the code.");
+      pendingResendRef.current = false;
+      resetChallenge();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function onTurnstileToken(next: string) {
+    setToken(next);
+    if (next && pendingResendRef.current) {
+      pendingResendRef.current = false;
+      void resendCode(next);
+    }
+  }
+
   async function submitNewPassword() {
     setError("");
+    setInfo("");
     if (!isPasswordAcceptable(password)) {
       const { reasons } = scorePassword(password);
       setError(reasons[0] || "That password is too weak. Use at least 8 characters with a letter and a number.");
@@ -173,6 +239,10 @@ export function EmailAuthForm({
   const otherHref = mode === "sign-in" ? "/sign-up" : "/sign-in";
   const otherLabel = mode === "sign-in" ? "Create an account" : "Sign in instead";
   const googleHref = `/api/auth/google?redirect_url=${encodeURIComponent(redirectTo)}`;
+  const onCodeStep = step === "code" || step === "verify";
+  const showChallenge =
+    challengeOn &&
+    (onCodeStep ? needsResendChallenge : Boolean(passwordOn));
 
   // Password strength — only show on sign-up and password-reset (step === "code").
   // Sign-in users may have legacy weak passwords; we don't gate them at the UI.
@@ -233,6 +303,7 @@ export function EmailAuthForm({
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            readOnly={onCodeStep}
           />
         </span>
       </label>
@@ -255,7 +326,7 @@ export function EmailAuthForm({
       </label>
       ) : null}
 
-      {step === "code" || step === "verify" ? (
+      {onCodeStep ? (
         <label className="pricing-email">
           <span className="label-eyebrow">Code</span>
           <span className="field">
@@ -325,13 +396,24 @@ export function EmailAuthForm({
         </label>
       ) : null}
 
-      {step === "code" || step === "verify" || !passwordOn || !challengeOn ? null : (
-        <TurnstileWidget siteKey={turnstileSiteKey} onToken={setToken} resetKey={resetKey} action={mode === "sign-up" ? "signup" : "login"} />
-      )}
+      {showChallenge ? (
+        <TurnstileWidget
+          siteKey={turnstileSiteKey}
+          onToken={onTurnstileToken}
+          resetKey={resetKey}
+          action={mode === "sign-up" ? "signup" : "login"}
+        />
+      ) : null}
 
       {error ? (
         <p className="pricing-error" role="alert">
           {error}
+        </p>
+      ) : null}
+
+      {info && !error ? (
+        <p className="pricing-note" role="status">
+          {info}
         </p>
       ) : null}
 
@@ -341,8 +423,8 @@ export function EmailAuthForm({
         type="submit"
         disabled={
           busy ||
-          (challengeOn && step !== "code" && step !== "verify" && !token) ||
-          ((step === "code" || step === "verify") && code.length !== 6) ||
+          (challengeOn && !onCodeStep && !token) ||
+          (onCodeStep && code.length !== 6) ||
           strengthBlocked ||
           (mode === "sign-up" && step === "password" && password.length > 0 && password !== confirm)
         }
@@ -361,6 +443,21 @@ export function EmailAuthForm({
       </button>
       ) : null}
 
+      {onCodeStep ? (
+        <button
+          className="btn-secondary"
+          type="button"
+          disabled={busy || cooldown > 0}
+          onClick={() => void resendCode()}
+        >
+          {cooldown > 0
+            ? `Resend code in ${cooldown}s`
+            : needsResendChallenge && challengeOn && !token
+              ? "Confirm you are human above"
+              : "Resend code"}
+        </button>
+      ) : null}
+
       {step === "password" && mode === "sign-in" && passwordOn ? (
         <button
           className="btn-secondary"
@@ -369,6 +466,7 @@ export function EmailAuthForm({
           onClick={() => {
             setStep("forgot");
             setError("");
+            setInfo("");
             resetChallenge();
           }}
         >
@@ -385,6 +483,10 @@ export function EmailAuthForm({
             setStep("password");
             setCode("");
             setError("");
+            setInfo("");
+            setNeedsResendChallenge(false);
+            pendingResendRef.current = false;
+            setCooldown(0);
             resetChallenge();
           }}
         >

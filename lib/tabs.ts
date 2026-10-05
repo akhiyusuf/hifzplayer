@@ -18,6 +18,8 @@ export function hideMobileTabs(path: string) {
     path.startsWith("/sign-up") ||
     path.startsWith("/privacy") ||
     path.startsWith("/tos") ||
-    path.startsWith("/credits")
+    path.startsWith("/credits") ||
+    // Pricing is a conversion surface — keep the trial CTA clear of the tab bar.
+    path.startsWith("/pricing")
   );
 }
