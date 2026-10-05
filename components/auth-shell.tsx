@@ -30,9 +30,10 @@ export function AccountsNotConfigured() {
     <>
       <p className="pricing-lead" style={{ textAlign: "center", maxWidth: 360 }}>
         Sign-in runs on the Cloudflare Worker. Accounts live in Neon. Add <code>DATABASE_URL</code> and{" "}
-        <code>AUTH_SECRET</code> (or <code>BILLING_SIGNING_SECRET</code>). Password forms also need Turnstile{" "}
-        (<code>NEXT_PUBLIC_TURNSTILE_SITE_KEY</code>, <code>TURNSTILE_SECRET_KEY</code>). Tables are created on
-        first sign-in — you do not paste SQL.
+        <code>AUTH_SECRET</code> (or <code>BILLING_SIGNING_SECRET</code>). Optional bot check: Turnstile{" "}
+        (<code>NEXT_PUBLIC_TURNSTILE_SITE_KEY</code> in wrangler vars + build env,{" "}
+        <code>TURNSTILE_SECRET_KEY</code> Worker secret). Tables are created on first sign-in — you do not paste
+        SQL.
       </p>
       <p className="pricing-note" style={{ textAlign: "center", maxWidth: 360 }}>
         Quran reading stays open either way. Accounts lock {PLUS_NAME} to you, not to a shared browser cookie.

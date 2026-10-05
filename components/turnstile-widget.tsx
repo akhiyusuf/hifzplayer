@@ -9,32 +9,40 @@ declare global {
         el: HTMLElement,
         opts: {
           sitekey: string;
+          action?: string;
           callback: (token: string) => void;
           "expired-callback"?: () => void;
           "error-callback"?: () => void;
           theme?: "light" | "dark" | "auto";
+          size?: "normal" | "compact" | "flexible" | "invisible";
         },
       ) => string;
+      reset: (id: string) => void;
       remove: (id: string) => void;
     };
   }
 }
 
 export function TurnstileWidget({
+  siteKey,
   onToken,
   resetKey = 0,
+  action = "login",
 }: {
+  /** Public site key from the server (Worker vars). Do not rely on client process.env. */
+  siteKey: string;
   onToken: (token: string) => void;
   resetKey?: number;
+  action?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
   const onTokenRef = useRef(onToken);
   onTokenRef.current = onToken;
-  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
+  const key = (siteKey || "").trim();
 
   useEffect(() => {
-    if (!siteKey || !ref.current) return;
+    if (!key || !ref.current) return;
     let cancelled = false;
 
     function renderWidget() {
@@ -44,7 +52,8 @@ export function TurnstileWidget({
         widgetId.current = null;
       }
       widgetId.current = window.turnstile.render(ref.current, {
-        sitekey: siteKey,
+        sitekey: key,
+        action,
         callback: (token) => onTokenRef.current(token),
         "expired-callback": () => onTokenRef.current(""),
         "error-callback": () => onTokenRef.current(""),
@@ -74,8 +83,8 @@ export function TurnstileWidget({
         widgetId.current = null;
       }
     };
-  }, [siteKey, resetKey]);
+  }, [key, resetKey, action]);
 
-  if (!siteKey) return null;
-  return <div className="turnstile-slot" ref={ref} />;
+  if (!key) return null;
+  return <div className="turnstile-slot" ref={ref} data-turnstile-action={action} />;
 }

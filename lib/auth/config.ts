@@ -15,8 +15,12 @@ export function turnstileSiteKey() {
   return process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 }
 
+/**
+ * Worker secret may be stored as TURNSTILE_SECRET_KEY (docs) or TURNSTILE_SECRET
+ * (older put). Prefer the documented name.
+ */
 export function turnstileSecretKey() {
-  return process.env.TURNSTILE_SECRET_KEY || "";
+  return process.env.TURNSTILE_SECRET_KEY || process.env.TURNSTILE_SECRET || "";
 }
 
 /** Neon + signing secret. Webhooks and grants can run with this even before Turnstile is on. */
@@ -58,9 +62,12 @@ export function passwordLooksValid(password: string) {
   return password.length >= PASSWORD_MIN && password.length <= PASSWORD_MAX;
 }
 
-/** Public signal that the email/password form can render (Turnstile site key). */
+/**
+ * Email/password form can render whenever accounts are configured.
+ * Turnstile is optional: the widget appears only when a site key is present.
+ */
 export function accountsBrowserReady() {
-  return Boolean(turnstileSiteKey());
+  return accountsConfigured();
 }
 
 export function sessionCookieOptions() {
