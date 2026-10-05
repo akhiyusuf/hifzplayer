@@ -1,5 +1,6 @@
 import { accountsConfigured } from "@/lib/auth/config";
 import { signInWithPassword } from "@/lib/auth/password";
+import { TURNSTILE_ACTIONS } from "@/lib/auth/turnstile-actions";
 import { verifyTurnstileToken } from "@/lib/auth/turnstile";
 import { emailLooksValid, json, badRequest, serviceUnavailable, unauthorized } from "@/lib/billing/http";
 
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
   const email = (body.email || "").trim().toLowerCase();
   const password = body.password || "";
   if (!emailLooksValid(email) || !password) return unauthorized("Email or password is wrong");
-  const human = await verifyTurnstileToken(body.turnstileToken, request.headers);
+  const human = await verifyTurnstileToken(body.turnstileToken, request.headers, TURNSTILE_ACTIONS.login);
   if (!human) return unauthorized("Confirm you are human, then try again", { code: "TURNSTILE" });
   const result = await signInWithPassword(email, password);
   if ("error" in result) return unauthorized(result.error);

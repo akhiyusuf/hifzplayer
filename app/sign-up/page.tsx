@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { APP_NAME } from "@/lib/brand";
-import { accountsBrowserReady, accountsConfigured, googleConfigured } from "@/lib/auth/config";
+import { accountsBrowserReady, accountsConfigured, googleConfigured, turnstileSiteKey } from "@/lib/auth/config";
 import { AccountsNotConfigured, AuthShell } from "@/components/auth-shell";
 import { EmailAuthForm } from "@/components/email-auth-form";
 import { safePath } from "@/lib/nav";
@@ -25,6 +25,7 @@ export default async function SignUpPage({
         <EmailAuthForm
           mode="sign-up"
           redirectTo={next}
+          siteKey={turnstileSiteKey()}
           googleOn={googleConfigured()}
           passwordOn={accountsBrowserReady()}
         />

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-root";
 import { TurnstileWidget } from "@/components/turnstile-widget";
+import { TURNSTILE_ACTIONS, type TurnstileAction } from "@/lib/auth/turnstile-actions";
 import { isPasswordAcceptable, scorePassword } from "@/lib/auth/password-strength";
 
 function authError(data: { error?: string; code?: string }, fallback: string) {
@@ -14,15 +15,24 @@ function authError(data: { error?: string; code?: string }, fallback: string) {
 
 type Step = "password" | "forgot" | "code" | "verify";
 
+function turnstileAction(mode: "sign-in" | "sign-up", step: Step): TurnstileAction {
+  if (step === "forgot") return TURNSTILE_ACTIONS.resetRequest;
+  if (step === "code") return TURNSTILE_ACTIONS.passwordReset;
+  if (step === "verify") return TURNSTILE_ACTIONS.verifyEmail;
+  return mode === "sign-up" ? TURNSTILE_ACTIONS.signup : TURNSTILE_ACTIONS.login;
+}
+
 export function EmailAuthForm({
   mode,
   redirectTo,
+  siteKey = "",
   googleOn = false,
   passwordOn = true,
   startError = "",
 }: {
   mode: "sign-in" | "sign-up";
   redirectTo: string;
+  siteKey?: string;
   googleOn?: boolean;
   passwordOn?: boolean;
   startError?: string;
@@ -162,6 +172,7 @@ export function EmailAuthForm({
       window.location.assign(redirectTo);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not reset that password.");
+      resetChallenge();
       setBusy(false);
     }
   }
@@ -321,7 +332,14 @@ export function EmailAuthForm({
         </label>
       ) : null}
 
-      {step === "code" || step === "verify" || !passwordOn ? null : <TurnstileWidget onToken={setToken} resetKey={resetKey} />}
+      {passwordOn || step !== "password" ? (
+        <TurnstileWidget
+          siteKey={siteKey}
+          action={turnstileAction(mode, step)}
+          onToken={setToken}
+          resetKey={resetKey}
+        />
+      ) : null}
 
       {error ? (
         <p className="pricing-error" role="alert">
@@ -335,7 +353,7 @@ export function EmailAuthForm({
         type="submit"
         disabled={
           busy ||
-          (step !== "code" && step !== "verify" && !token) ||
+          ((passwordOn || step !== "password") && !token) ||
           ((step === "code" || step === "verify") && code.length !== 6) ||
           strengthBlocked ||
           (mode === "sign-up" && step === "password" && password.length > 0 && password !== confirm)

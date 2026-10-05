@@ -1,6 +1,7 @@
 import { accountsConfigured } from "@/lib/auth/config";
 import { verifyEmailOtp } from "@/lib/auth/otp";
 import { verifyRegistrationCode } from "@/lib/auth/password";
+import { TURNSTILE_ACTIONS } from "@/lib/auth/turnstile-actions";
 import { verifyTurnstileToken } from "@/lib/auth/turnstile";
 import { emailLooksValid, json, badRequest, serviceUnavailable, unauthorized } from "@/lib/billing/http";
 import { sendSignUpWelcome } from "@/lib/email/send";
@@ -21,10 +22,8 @@ export async function POST(request: Request) {
   const email = (body.email || "").trim().toLowerCase();
   const code = (body.code || "").trim();
   if (!emailLooksValid(email) || !/^\d{6}$/.test(code)) return badRequest("Enter the 6-digit code");
-  if (body.turnstileToken) {
-    const human = await verifyTurnstileToken(body.turnstileToken, request.headers);
-    if (!human) return unauthorized("Confirm you are human, then try again", { code: "TURNSTILE" });
-  }
+  const human = await verifyTurnstileToken(body.turnstileToken, request.headers, TURNSTILE_ACTIONS.verifyEmail);
+  if (!human) return unauthorized("Confirm you are human, then try again", { code: "TURNSTILE" });
   // flow=register verifies a freshly-created account and signs it in.
   // flow=reset (or unset) is the password-reset path that may create a user.
   if (body.flow === "register") {

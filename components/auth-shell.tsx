@@ -31,7 +31,7 @@ export function AccountsNotConfigured() {
       <p className="pricing-lead" style={{ textAlign: "center", maxWidth: 360 }}>
         Sign-in runs on the Cloudflare Worker. Accounts live in Neon. Add <code>DATABASE_URL</code> and{" "}
         <code>AUTH_SECRET</code> (or <code>BILLING_SIGNING_SECRET</code>). Password forms also need Turnstile{" "}
-        (<code>NEXT_PUBLIC_TURNSTILE_SITE_KEY</code>, <code>TURNSTILE_SECRET_KEY</code>). Continue with Google
+        (<code>NEXT_PUBLIC_TURNSTILE_SITE_KEY</code>, Worker secret <code>TURNSTILE_SECRET_KEY</code>). Continue with Google
         needs <code>GOOGLE_CLIENT_ID</code> and <code>GOOGLE_CLIENT_SECRET</code>. Tables are created on first
         sign-in — you do not paste SQL.
       </p>

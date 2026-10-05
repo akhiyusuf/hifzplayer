@@ -1,5 +1,6 @@
 import { accountsConfigured } from "@/lib/auth/config";
 import { resetPasswordWithOtp } from "@/lib/auth/password";
+import { TURNSTILE_ACTIONS } from "@/lib/auth/turnstile-actions";
 import { verifyTurnstileToken } from "@/lib/auth/turnstile";
 import { emailLooksValid, json, badRequest, serviceUnavailable, unauthorized } from "@/lib/billing/http";
 
@@ -20,10 +21,8 @@ export async function POST(request: Request) {
   const code = (body.code || "").trim();
   const password = body.password || "";
   if (!emailLooksValid(email) || !/^\d{6}$/.test(code)) return badRequest("Enter the 6-digit code");
-  if (body.turnstileToken) {
-    const human = await verifyTurnstileToken(body.turnstileToken, request.headers);
-    if (!human) return unauthorized("Confirm you are human, then try again", { code: "TURNSTILE" });
-  }
+  const human = await verifyTurnstileToken(body.turnstileToken, request.headers, TURNSTILE_ACTIONS.passwordReset);
+  if (!human) return unauthorized("Confirm you are human, then try again", { code: "TURNSTILE" });
   const result = await resetPasswordWithOtp(email, code, password);
   if ("error" in result) return unauthorized(result.error);
   return json({ ok: true, userId: result.id, name: result.name, email: result.email });

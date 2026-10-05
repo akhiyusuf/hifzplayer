@@ -24,11 +24,12 @@ Nothing is stored on a server for reading. Position, recents, streak, reciter, a
 
 ## Accounts
 
-Sign-in is **email + password** or **Continue with Google**, stored in Neon. The APIs run on the Cloudflare Worker. Cloudflare **Turnstile** is the bot check on the password form (not Google). Add:
+Sign-in is **email + password** or **Continue with Google**, stored in Neon. The APIs run on the Cloudflare Worker. Cloudflare **Turnstile** (managed widget **Diras**, sitekey `0x4AAAAAAE9ruY8EYQqAdKA0`, hostnames `diras.app` and `localhost`) checks password sign-in, sign-up, the email code request, the new-password submit, and email verification. Google sign-in is unchanged. Add:
 
 - `DATABASE_URL` (Neon pooled connection string). Tables are created on first query — you do not paste SQL.
 - `AUTH_SECRET` (or `BILLING_SIGNING_SECRET`)
-- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` for password sign-in
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` — public site key, defaulted in `.env.example` to the Diras widget.
+- `TURNSTILE_SECRET_KEY` — the Diras widget secret. Set it as a Worker secret, never in git: `npx wrangler secret put TURNSTILE_SECRET_KEY` (Worker name `diras` in `wrangler.jsonc`). `CF_TURNSTILE_SECRET` is an accepted alias. Production rejects protected actions when this secret is missing. `next dev` skips the check only when both names are unset, so local UI work can proceed. To test the real widget, put the secret in gitignored `.env.local`, run `npm run dev`, and open `http://localhost:3000/sign-in`. The widget already allows `localhost`. Siteverify must return `success`, the action for that form (`login`, `signup`, `reset-request`, `password-reset`, or `verify-email`), and hostname `localhost`. A reused token is rejected. Do not add `localhost` to `TURNSTILE_HOSTNAMES` in production (the production allowlist defaults to `diras.app` and drops local hosts).
 - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` for Google (redirect `{APP_URL}/api/auth/google/callback`). In Google Cloud, set the OAuth consent screen **App name** to **Diras** — that is the name on “Allow ____ to access your Google Account”, not Cloudflare or Neon.
 - `RESEND_API_KEY` (Plus confirmation mail and password-reset codes)
 

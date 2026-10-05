@@ -9,6 +9,10 @@
     "binding": "ASSETS"
   },
   "vars": {
+    // Public site key for the managed widget "Diras" (diras.app + localhost).
+    // The secret is not a var. Yusuf sets it on this Worker (name: diras):
+    //   npx wrangler secret put TURNSTILE_SECRET_KEY
+    // CF_TURNSTILE_SECRET is accepted as an alias. Do not put the secret here.
     "NEXT_PUBLIC_TURNSTILE_SITE_KEY": "0x4AAAAAAE9ruY8EYQqAdKA0"
   },
   "services": [

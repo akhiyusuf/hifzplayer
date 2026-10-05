@@ -18,7 +18,7 @@ Cloudflare Access / Zero Trust is **not** used. That would gate the Quran behind
 
 ## Authentication (password + Google + Turnstile)
 
-1. **Password:** browser posts email, password, and a Turnstile token to `/api/auth/register` or `/api/auth/login`. The Worker verifies Turnstile (`siteverify` + `CF-Connecting-IP`), hashes the password (`scrypt`), writes the user/session in Neon, and sets httpOnly `diras_sid`.
+1. **Password:** the browser shows the managed Turnstile widget, then posts email, password, and the token. Protected routes: `POST /api/auth/login` (action `login`), `POST /api/auth/register` (`signup`), `POST /api/auth/otp` (`reset-request`), `POST /api/auth/password` (`password-reset`), `POST /api/auth/verify` (`verify-email`). The Worker calls siteverify with `TURNSTILE_SECRET_KEY`, `CF-Connecting-IP`, and requires `success`, the matching action, and an allowed hostname. Tokens are single-use. Google (`/api/auth/google`) is not behind Turnstile. The Worker then hashes the password (`scrypt`), writes the user/session in Neon, and sets httpOnly `diras_sid`.
 2. **Google:** `/api/auth/google` redirects to Google. The callback stores `google_sub` on the Neon user and sets the same session cookie. Redirect URI: `https://diras.app/api/auth/google/callback` (and `http://localhost:3000/api/auth/google/callback` for local).
 3. **Forgot password:** email OTP is only for reset (`/api/auth/otp` then `/api/auth/password`). Codes are hashed in Neon (10 minutes, 5 attempts, 5/email/hour).
 4. Middleware only checks that the cookie is **present** on checkout. Routes that grant Plus hash the cookie against Neon.
@@ -34,9 +34,12 @@ You still create the **Neon project** and paste `DATABASE_URL` into Worker secre
 
 ### Cloudflare dashboard (you)
 
-- Turnstile widget (managed). Copy the site key to `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and the secret to `TURNSTILE_SECRET_KEY`.
-- Allowed hostnames: `diras.app` (and `localhost` for dummy keys).
-- Dummy keys for local: site `1x00000000000000000000AA`, secret `1x0000000000000000000000000000000AA`.
+- Turnstile widget **Diras** already exists (managed, sitekey `0x4AAAAAAE9ruY8EYQqAdKA0`, hostnames `diras.app` and `localhost`). The public site key is `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (already in `wrangler.jsonc` vars and `.env.example`).
+- The widget **secret** is a Worker secret, not a var. On the Worker named `diras`: `npx wrangler secret put TURNSTILE_SECRET_KEY`. Paste the Diras widget secret from the Cloudflare dashboard (Turnstile → Diras → secret). `CF_TURNSTILE_SECRET` is an accepted alias if you already stored it under that name. Do not commit the secret, and do not put it in `wrangler.jsonc`.
+- Production fails closed: password sign-in, sign-up, email-code request, password reset, and email verification all return 401 `TURNSTILE` when the secret is missing or siteverify does not return `success`, the matching action, and hostname `diras.app`.
+- Local bypass: `next dev` skips siteverify only when `TURNSTILE_SECRET_KEY` and `CF_TURNSTILE_SECRET` are both unset. That bypass does not run when `NODE_ENV` is `production`.
+- Test the real widget locally: copy `.env.example` to `.env.local`, set `DATABASE_URL`, `AUTH_SECRET`, and `TURNSTILE_SECRET_KEY`, keep the site key, run `npm run dev`, open `http://localhost:3000/sign-in`. The existing widget allows `localhost`. Optional `TURNSTILE_HOSTNAMES` overrides the allowlist; production ignores `localhost` and `127.0.0.1` even if they are listed.
+- Bot Fight Mode stays on. This app check is separate from that edge setting.
 - Webhooks: point Stripe and Paystack at the Worker origin (`https://diras.app/api/billing/webhook/...`).
 - `NEXT_PUBLIC_APP_URL=https://diras.app`
 
@@ -103,7 +106,7 @@ Secrets to put on the Worker (same names as `.env.example`): Turnstile, Google, 
 
 1. Neon `DATABASE_URL` is set; first sign-in creates tables (`SELECT 1` through the URL succeeds).
 2. Deploy the Worker. Confirm `/sign-in` completes a password or Google session (cookie `diras_sid`, `Secure` + `HttpOnly`).
-3. Confirm Turnstile renders on the password form and a bad token is rejected.
+3. Confirm the Turnstile widget renders on `/sign-in` and a missing or replayed token is rejected (`401`, code `TURNSTILE`).
 4. Place a test object in R2 and confirm the public URL streams.
 5. Point Stripe/Paystack webhooks at `diras.app`.
 6. Then change `diras.app` DNS to the Worker. Keep Vercel up until that works.

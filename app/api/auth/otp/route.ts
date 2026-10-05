@@ -1,5 +1,6 @@
 import { accountsConfigured } from "@/lib/auth/config";
 import { startEmailOtp } from "@/lib/auth/otp";
+import { TURNSTILE_ACTIONS } from "@/lib/auth/turnstile-actions";
 import { verifyTurnstileToken } from "@/lib/auth/turnstile";
 import { emailLooksValid, json, badRequest, serviceUnavailable, unauthorized } from "@/lib/billing/http";
 import { sendOtpCode } from "@/lib/email/send";
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
   }
   const email = (body.email || "").trim().toLowerCase();
   if (!emailLooksValid(email)) return badRequest("Enter a valid email");
-  const human = await verifyTurnstileToken(body.turnstileToken, request.headers);
+  const human = await verifyTurnstileToken(body.turnstileToken, request.headers, TURNSTILE_ACTIONS.resetRequest);
   if (!human) return unauthorized("Confirm you are human, then try again", { code: "TURNSTILE" });
 
   const started = await startEmailOtp(email);

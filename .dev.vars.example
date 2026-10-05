@@ -1,7 +1,10 @@
 NEXTJS_ENV=development
 DATABASE_URL=
 AUTH_SECRET=
-NEXT_PUBLIC_TURNSTILE_SITE_KEY=
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=0x4AAAAAAE9ruY8EYQqAdKA0
+# Worker secret for the Diras widget. Local wrangler: put the value here (gitignored copy).
+# Production: npx wrangler secret put TURNSTILE_SECRET_KEY
+# Alias: CF_TURNSTILE_SECRET. Leave blank only for the next-dev bypass.
 TURNSTILE_SECRET_KEY=
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=

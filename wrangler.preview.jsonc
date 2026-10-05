@@ -9,6 +9,8 @@
     "binding": "ASSETS"
   },
   "vars": {
+    // Same public site key as production. Secret: wrangler secret put TURNSTILE_SECRET_KEY
+    // against this preview Worker if you deploy it. Never commit the secret.
     "NEXT_PUBLIC_TURNSTILE_SITE_KEY": "0x4AAAAAAE9ruY8EYQqAdKA0"
   },
   "services": [

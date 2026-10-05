@@ -94,8 +94,8 @@ export default async function PrivacyPage({
               {APP_NAME}.
             </li>
             <li>
-              A Cloudflare Turnstile challenge token, on password sign-in, sign-up, and password reset, so we can
-              check that a person is there. We do not store the token after the check.
+              A Cloudflare Turnstile challenge token, on password sign-in, sign-up, email code requests, and
+              password reset, so we can check that a person is there. We do not store the token after the check.
             </li>
             <li>
               Device-local preferences: reading position, recent passages, day streak, reciter, colour theme,

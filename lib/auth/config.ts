@@ -12,11 +12,12 @@ export function authSecret() {
 }
 
 export function turnstileSiteKey() {
-  return process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
+  return (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "").trim();
 }
 
+/** Worker secret. Primary name is TURNSTILE_SECRET_KEY; CF_TURNSTILE_SECRET is an alias. */
 export function turnstileSecretKey() {
-  return process.env.TURNSTILE_SECRET_KEY || "";
+  return (process.env.TURNSTILE_SECRET_KEY || process.env.CF_TURNSTILE_SECRET || "").trim();
 }
 
 /** Neon + signing secret. Webhooks and grants can run with this even before Turnstile is on. */
