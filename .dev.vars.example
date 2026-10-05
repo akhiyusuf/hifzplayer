@@ -17,3 +17,5 @@ MAILCHANNELS_DKIM_PRIVATE_KEY=
 MAILCHANNELS_DKIM_SELECTOR=mailchannels
 MAILCHANNELS_DKIM_DOMAIN=diras.app
 R2_PUBLIC_BASE_URL=
+# AI Ustadh ASR. Leave empty until a Groq key is issued. Never commit the real value.
+GROQ_API_KEY=
