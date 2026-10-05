@@ -4,6 +4,7 @@ import {
   FOCUS_FALLBACK,
   backHref,
   focusPassageHref,
+  legalPeerHref,
   isFocusReadQuery,
   dropReadModeParam,
   safePath,
@@ -18,9 +19,23 @@ describe("backHref", () => {
     assert.equal(backHref("pricing"), "/pricing");
     assert.equal(backHref("listen"), "/listen");
     assert.equal(backHref("roadmap"), "/roadmap");
+    assert.equal(backHref("privacy"), "/privacy");
+    assert.equal(backHref("tos"), "/tos");
     assert.equal(backHref("nope"), "/home");
     assert.equal(backHref(undefined), "/home");
     assert.equal(backHref("home"), "/home");
+  });
+});
+
+describe("legalPeerHref", () => {
+  it("points Privacy and Terms at each other, and keeps a known from", () => {
+    assert.equal(legalPeerHref("privacy", undefined), "/privacy?from=tos");
+    assert.equal(legalPeerHref("tos", undefined), "/tos?from=privacy");
+    assert.equal(legalPeerHref("privacy", "settings"), "/privacy?from=settings");
+    assert.equal(legalPeerHref("tos", "account"), "/tos?from=account");
+    assert.equal(legalPeerHref("privacy", "home"), "/privacy?from=home");
+    assert.equal(legalPeerHref("privacy", "nope"), "/privacy?from=tos");
+    assert.equal(legalPeerHref("tos", "tos"), "/tos?from=privacy");
   });
 });
 

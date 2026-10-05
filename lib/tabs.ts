@@ -17,6 +17,7 @@ export function hideMobileTabs(path: string) {
     path.startsWith("/sign-in") ||
     path.startsWith("/sign-up") ||
     path.startsWith("/privacy") ||
+    path.startsWith("/tos") ||
     path.startsWith("/credits")
   );
 }

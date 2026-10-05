@@ -258,6 +258,8 @@ export default function SettingsPage() {
           <Link href="/credits?from=settings">Data & attributions</Link>
           <span aria-hidden="true">·</span>
           <Link href="/privacy?from=settings">Privacy</Link>
+          <span aria-hidden="true">·</span>
+          <Link href="/tos?from=settings">Terms</Link>
         </div>
       </div>
     </main>

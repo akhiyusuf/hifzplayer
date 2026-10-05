@@ -46,6 +46,8 @@ export function AppSidebar() {
         <Link href="/roadmap">What&apos;s coming</Link>
         <span aria-hidden="true"> · </span>
         <Link href="/privacy">Privacy</Link>
+        <span aria-hidden="true"> · </span>
+        <Link href="/tos">Terms</Link>
         <p>Quran content is always free to access</p>
       </div>
     </nav>

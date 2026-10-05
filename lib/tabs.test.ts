@@ -33,4 +33,10 @@ describe("hideMobileTabs", () => {
     assert.equal(hideMobileTabs("/listen"), false);
     assert.equal(hideMobileTabs("/settings"), false);
   });
+
+  it("hides the bar on legal pages", () => {
+    assert.equal(hideMobileTabs("/privacy"), true);
+    assert.equal(hideMobileTabs("/tos"), true);
+    assert.equal(hideMobileTabs("/tos?from=settings"), true);
+  });
 });

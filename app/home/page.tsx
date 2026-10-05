@@ -338,6 +338,8 @@ export default function HomePage() {
               <Link href="/credits">Data & attributions</Link>
               <span aria-hidden="true">·</span>
               <Link href="/privacy">Privacy</Link>
+              <span aria-hidden="true">·</span>
+              <Link href="/tos">Terms</Link>
             </div>
           </>
         )}
