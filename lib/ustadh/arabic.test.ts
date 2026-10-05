@@ -88,3 +88,48 @@ describe("Latin ASR retry helpers", () => {
     assert.ok(p1.length <= QURAN_PROMPT_CHARS);
   });
 });
+
+describe("arabicEqual matrix (Mushaf text vs plain ASR)", () => {
+  const same: [string, string, string][] = [
+    ["tatweel + dagger alef", "ٱلْعَـٰلَمِينَ", "العالمين"],
+    ["dagger alef, stripped form", "ٱلرَّحْمَـٰنِ", "الرحمن"],
+    ["dagger alef, expanded form", "ٱلرَّحْمَـٰنِ", "الرحمان"],
+    ["dagger alef mid-word", "مَـٰلِكِ", "مالك"],
+    ["dagger alef with alef wasla", "ٱلصِّرَٰطَ", "الصراط"],
+    ["alef wasla", "ٱهْدِنَا", "اهدنا"],
+    ["hamza on alef", "أَنْعَمْتَ", "انعمت"],
+    ["hamza below alef", "إِيَّاكَ", "اياك"],
+    ["madda", "ءَامَنُوا۟", "آمنوا"],
+    ["small high rounded zero", "ءَامَنُوا۟", "امنوا"],
+    ["ta marbuta vs ha", "ٱلصَّلَوٰةَ", "الصلاه"],
+    ["small low meem (iqlab mark)", "هُدًۭى", "هدى"],
+    ["shadda + kasra", "لِّلْمُتَّقِينَ", "للمتقين"],
+    ["waw hamza", "يُؤْمِنُونَ", "يومنون"],
+    ["ya hamza", "ٱلْأَفْـِٔدَةِ", "الافيده"],
+    ["inverted damma (ۥ)", "لَّهُۥ", "له"],
+    ["sukun on nun", "يَكُن", "يكن"],
+    ["identical plain", "رب", "رب"],
+  ];
+  for (const [label, mushaf, asr] of same) {
+    it(`matches: ${label}`, () => {
+      assert.equal(arabicEqual(mushaf, asr), true, `${mushaf} vs ${asr}`);
+      assert.equal(arabicEqual(asr, mushaf), true, `symmetric ${asr} vs ${mushaf}`);
+    });
+  }
+
+  const different: [string, string, string][] = [
+    ["case ending i vs u (العالمين / العالمون)", "ٱلْعَـٰلَمِينَ", "العالمون"],
+    ["alif maqsura vs ya", "عَلَى", "علي"],
+    ["different root", "رَبِّ", "قال"],
+    ["missing letter", "ٱلْمُسْتَقِيمَ", "المستقم"],
+    ["extra letter", "نَعْبُدُ", "نعبدو"],
+    ["Latin transliteration", "رَبِّ", "rabbi"],
+    ["empty vs word", "رَبِّ", ""],
+    ["empty vs empty", "", ""],
+  ];
+  for (const [label, a, b] of different) {
+    it(`does not match: ${label}`, () => {
+      assert.equal(arabicEqual(a, b), false, `${a} vs ${b}`);
+    });
+  }
+});

@@ -6,6 +6,7 @@ export type UstadhCoachStatus =
   | "idle"
   | "listening"
   | "checking"
+  | "replaying"
   | "matched"
   | "miss"
   | "error";
@@ -26,6 +27,8 @@ export function ustadhStatusLabel(status: UstadhCoachStatus, errorCode?: string 
       return "Listening…";
     case "checking":
       return "Checking…";
+    case "replaying":
+      return "Ustadh reciting…";
     case "matched":
       return "Matched";
     case "miss":

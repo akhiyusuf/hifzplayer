@@ -20,7 +20,9 @@ Keep chunks to a few seconds of recitation (about 2–15s). Groq bills a **10 se
 
 If Groq returns segment metadata without a `words` array, the Worker splits that segment’s text evenly across the segment. Word timestamps from Groq are preferred. `probability` is included only when Groq sends it.
 
-The optional `prompt` is the expected ayah, trimmed under Groq’s 224-token prompt cap, in Arabic, as a light vocabulary bias.
+The first-pass `prompt` is **Quranic context (the basmala), not the ayah being checked**. With the expected ayah as the prompt, Whisper fills in words the learner skipped: real Groq output for 1:5 with وَإِيَّاكَ cut out of Mishary’s recitation came back complete, so the coach would accept a mistake. Measured with `scripts/ustadh-audio-soak.ts`, the basmala prompt transcribes clean takes the same way and leaves skipped words out. Only the Latin→Arabic retries (up to 3, after a Latin first pass) use the ayah text in a stronger prompt.
+
+As a safety net, heard words with impossible timing are dropped before comparison (`lib/ustadh/plausible.ts`): a word shorter than 60 ms, two or more words in a row under 150 ms each (prompt filler squeezed into the gap), or, when the client sends `clipSec`, a word that starts or ends well after the clip does.
 
 ## Interrupt ladder
 
@@ -60,6 +62,8 @@ Phrase edges come from the app’s waqf splitter (`lib/waqf.ts`): stop marks bre
 | `sessionId` | no | Letters, numbers, `_`, `-` |
 | `missCounts` | no | JSON object |
 | `chunkStart` | no | Seconds |
+| `clipSec` | no | Length of the uploaded clip in seconds. Heard words past the end are dropped |
+| `mode` | no | `peek` for the coach’s rolling in-progress clips: skips the Latin retries (the final send still retries) |
 
 Example:
 
@@ -138,3 +142,75 @@ HTTP **503**. The route does not invent audio.
 Turnstile skips its check in local dev when `TURNSTILE_SECRET_KEY` is unset. ASR does not. Groq has no dummy key that can transcribe, so a missing `GROQ_API_KEY` fails closed everywhere.
 
 Upstream failures return `ASR_UPSTREAM` (502), `ASR_UPSTREAM_AUTH` (502), or `ASR_UPSTREAM_RATE_LIMIT` (429). The Groq key is not included in those bodies.
+
+## Practice coach: continuous loop + live highlight
+
+`components/ustadh/ustadh-coach-bar.tsx` (Practice → AI Ustadh).
+
+**Loop** (`lib/ustadh/loop.ts`). Tap **Listen** once and the coach keeps going. Each take auto-sends after a pause (silence VAD). Then:
+
+| Result | Next |
+|---|---|
+| Miss with a replay | Ustadh plays the word/phrase clip, then the mic reopens after 350 ms |
+| Miss, nothing to replay | Mic reopens after 900 ms |
+| Matched | "Matched" shows for 1.2 s, then the mic reopens for another take of the same ayah |
+| No speech for 8 s | Nothing is uploaded. Tries once more, then pauses after 2 silent takes |
+| Mic / network / config error | Loop pauses with the error |
+
+**Pause** stops the loop at any point. It drops the open take, stops Ustadh mid-clip, and keeps the last highlight. **Skip** (while Ustadh recites) cuts the replay short and goes straight back to listening. **Send** still works mid-take.
+
+**Highlight** (`lib/ustadh/highlight.ts`, `lib/ustadh/highlight-driver.ts`):
+
+- *While you recite*: rolling peeks every 1.5 s (`USTADH_PEEK`) upload the take so far (`mode=peek`). A prefix alignment moves the highlight to the last **confirmed** word. The visible highlight walks one word per 140 ms toward it, never jumps, and never moves back mid-take. A peek can’t confirm more words than you could have said in the voiced time (2.5 words/s + 1). A single unmatched trailing token waits for the next peek (often a word cut mid-way). Skipped or wrong words behind the frontier get a red wavy underline (`ustadhWordCss`). They are never passed silently.
+- *While Ustadh recites*: the word whose clip is playing is current, with a green ring. Phrase replays walk word by word. Misses stay underlined.
+- The recited range uses the existing pin underline (`wordPick`), so Mushaf and Focus both show it. Miss and speaking styles are a scoped `<style>` keyed on each word’s `data-v` / `data-w`, so the shared word components stay untouched and the coach is easy to remove.
+
+Peeks cost Groq minutes too: each request bills a 10 s minimum, so a 10 s take costs roughly 7 requests.
+
+## Tests and soak
+
+```bash
+npm test                                   # everything, including lib/ustadh/*.test.ts
+node --experimental-strip-types --test lib/ustadh/*.test.ts   # just the coach
+USTADH_SOAK_TAKES=500 node --experimental-strip-types --test lib/ustadh/soak.test.ts  # longer synthetic soak
+```
+
+| File | Covers |
+|---|---|
+| `arabic.test.ts` | `arabicEqual` matrix: dagger alef (+ tatweel), wasla, hamza seats, waw-dagger (الصلوة→الصلاة), tatweel-hamza kursi, ta marbuta, alif maqsura ≠ ya, Latin |
+| `align.test.ts` | final + prefix alignment, skip vs substitution, repeats (إياك/وإياك), Whisper split يا أيها / glued words |
+| `highlight.test.ts` | live vs final highlight, tentative tail, off-track, skip underline, voiced cap, timing guard, merge/step, CSS, engine notify |
+| `highlight-driver.test.ts` | one-word-per-step walk, monotonic peeks, final override |
+| `loop.test.ts` | auto-listen state machine + 5k-turn random soak |
+| `coach.test.ts` | `primaryReplay` pin-to-word (earliest word, sticky → slow, phrase fallback), end-to-end repeat miss → slow |
+| `plausible.test.ts` | prompt-hallucination guard on verbatim Groq timings |
+| `request.test.ts` | context prompt (never the ayah), 3× Arabic retry still uses the ayah, `mode=peek`, `clipSec` |
+| `soak.test.ts` | every fixture ayah × seeded synthetic takes (clean, noisy peeks, prompt hallucination, skipped word, wrong word, stopped short) through the real peek → driver → final code, checking: no jumps, never ahead of the learner, misses underlined |
+| `asr-recorded.test.ts` | the same invariants over **real Groq transcripts** of reference audio (`fixtures/asr-recorded.json`) |
+
+**Live audio soak** (real reference recitation → real ASR path → highlight):
+
+```bash
+# in-process (needs GROQ_API_KEY and ffmpeg), records fixtures for asr-recorded.test.ts
+node --experimental-strip-types scripts/ustadh-audio-soak.ts --verses 1:2,1:5,1:7 --variants ayah,skip,stop --record
+
+# against a deployed Worker instead
+node --experimental-strip-types scripts/ustadh-audio-soak.ts --endpoint https://diras.<account>.workers.dev
+```
+
+It downloads Mishary Alafasy ayah audio (word segments from quran.com) or Quran.com word clips, builds variants (`ayah`, `wbw`, `skip` = a middle word cut out, `stop` = take ends halfway), uploads progressive webm/opus prefixes every 1.5 s as `mode=peek` plus the final clip, and runs the highlight invariants. It exits 1 on any failure. Calls are paced (`--pace-ms`, default 3 s) because Groq rate-limits by requests and audio-seconds.
+
+**Browser e2e** (Chrome fake mic → real coach UI → loop + highlight), see the header of `scripts/ustadh-browser-e2e.mjs` for building the mic WAV:
+
+```bash
+npm i --no-save puppeteer-core
+npm run build && npx next start -p 3100 &          # GROQ_API_KEY in env
+# miss: one tap → miss underlined on word 3, replay walks the speaking ring, mic reopens, Pause stops
+node scripts/ustadh-browser-e2e.mjs --wav mic.wav --expect-miss 3 \
+  --url "http://localhost:3100/read/1?from=5&to=5&mode=ustadh&style=mushaf"
+# clean take in Focus style: matched → automatic listen again
+node scripts/ustadh-browser-e2e.mjs --wav mic-clean.wav --expect-match --seconds 22 \
+  --url "http://localhost:3100/read/1?from=2&to=2&mode=ustadh&style=focus"
+```
+
+It fails on any page error. Fake-mic WAVs loop, so later takes can start mid-file; judge the live peek walk on the first take.

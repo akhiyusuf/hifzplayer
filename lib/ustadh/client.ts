@@ -16,6 +16,13 @@ export type UstadhAsrClientRequest = {
   missCounts?: Record<string, number>;
   /** Seconds to add to Groq timestamps so they line up with the session clock. */
   chunkStart?: number;
+  /**
+   * `peek`: rolling in-progress clip for the live highlight. The Worker skips the
+   * Latin→Arabic retries for peeks (the final send still retries up to 3×).
+   */
+  mode?: "peek" | "final";
+  /** Length of the uploaded clip in seconds (lets the Worker drop words past the end). */
+  clipSec?: number;
 };
 
 export class UstadhAsrClientError extends Error {
@@ -52,6 +59,10 @@ export async function postUstadhAsr(
   if (input.sessionId) body.set("sessionId", input.sessionId);
   if (input.missCounts) body.set("missCounts", JSON.stringify(input.missCounts));
   if (input.chunkStart != null) body.set("chunkStart", String(input.chunkStart));
+  if (input.mode === "peek") body.set("mode", "peek");
+  if (input.clipSec != null && Number.isFinite(input.clipSec) && input.clipSec > 0) {
+    body.set("clipSec", input.clipSec.toFixed(2));
+  }
 
   const res = await fetch("/api/ustadh/asr", { method: "POST", body, signal: init?.signal });
   let data: UstadhAsrResponse | AsrErrorBody | null = null;

@@ -2,6 +2,7 @@ import type { Mark } from "../types.ts";
 import {
   ARABIC_ASR_RETRY_LIMIT,
   arabicOnlyTranscript,
+  QURAN_CONTEXT_PROMPT,
   quranAsrPrompt,
   strongQuranAsrPrompt,
   tokenizeArabic,
@@ -10,6 +11,7 @@ import {
 import { GROQ_ASR_MODEL, GroqAsrError, groqAsrConfigured, transcribeWithGroq } from "./groq-asr.ts";
 import type { AsrErrorBody, UstadhAsrResponse } from "./types.ts";
 import { assessUstadhTurn } from "./turn.ts";
+import { plausibleAsrWords } from "./plausible.ts";
 import {
   applyPhraseRanges,
   expectedFromRawWords,
@@ -215,6 +217,16 @@ export async function handleAsrRequest(
     chunkStart = n;
   }
 
+  const clipRaw = field(form, "clipSec");
+  let clipSec: number | undefined;
+  if (clipRaw) {
+    const n = Number(clipRaw);
+    if (!Number.isFinite(n) || n <= 0 || n > 60 * 30) {
+      return fail(400, "clipSec must be the clip length in seconds", "ASR_CLIP_SEC");
+    }
+    clipSec = n;
+  }
+
   const sessionId = sessionIdOf(field(form, "sessionId"));
   if (sessionId === null) {
     return fail(400, "sessionId must be letters, numbers, _ or -", "ASR_SESSION");
@@ -278,7 +290,8 @@ export async function handleAsrRequest(
   const expectedForPrompt = passage.words.length
     ? passage.words.map((word) => word.ar).join(" ")
     : expectedText;
-  const prompt = quranAsrPrompt(expectedForPrompt);
+  // Neutral Quranic context first (the ayah itself makes Whisper fill skipped words).
+  const prompt = QURAN_CONTEXT_PROMPT || quranAsrPrompt(expectedForPrompt);
 
   const transcribe = deps?.transcribe ?? transcribeWithGroq;
   let transcript: { text: string; words: UstadhAsrResponse["words"] };
@@ -290,7 +303,9 @@ export async function handleAsrRequest(
   }
 
   // Latin/transliteration: silently retry same audio up to 3 times with stronger prompts.
-  for (let attempt = 1; attempt <= ARABIC_ASR_RETRY_LIMIT; attempt++) {
+  // Live highlight peeks skip retries (latency); the final send of the take still retries.
+  const retryLimit = field(form, "mode") === "peek" ? 0 : ARABIC_ASR_RETRY_LIMIT;
+  for (let attempt = 1; attempt <= retryLimit; attempt++) {
     if (!transcriptNeedsArabicRetry(transcript.text, transcript.words)) break;
     const retryPrompt = strongQuranAsrPrompt(expectedForPrompt, attempt) || prompt;
     try {
@@ -302,7 +317,13 @@ export async function handleAsrRequest(
   }
 
   // Never surface Latin to the client — only Arabic script (empty after failed retries).
-  const arabic = arabicOnlyTranscript(transcript);
+  const arabicRaw = arabicOnlyTranscript(transcript);
+  // Drop words Whisper filled in from the prompt (impossible timing / past the clip end).
+  const plausible = plausibleAsrWords(arabicRaw.words, { clipSec });
+  const arabic =
+    plausible.length === arabicRaw.words.length
+      ? arabicRaw
+      : { text: plausible.map((word) => word.word).join(" "), words: plausible };
   const words =
     chunkStart && chunkStart > 0
       ? arabic.words.map((word) => ({

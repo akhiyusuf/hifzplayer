@@ -66,11 +66,15 @@ export const USTADH_VAD = {
   minSpeechMs: 700,
   /** Hard cap on a single listen take. */
   maxListenMs: 11_000,
+  /** End a take with no speech at all after this long (nothing is uploaded). */
+  noSpeechMs: 8_000,
   /** RMS above this counts as speech (getByteTimeDomainData scaled). */
   speechRms: 0.045,
   /** Poll interval for the analyser. */
   pollMs: 50,
 } as const;
+
+export type UstadhVadConfig = { readonly [K in keyof typeof USTADH_VAD]: number };
 
 export type VadGateState = {
   hasSpoken: boolean;
@@ -79,7 +83,8 @@ export type VadGateState = {
 };
 
 export type VadDecision = {
-  action: "continue" | "auto_send";
+  /** `no_speech`: the take timed out without any voice — skip the upload. */
+  action: "continue" | "auto_send" | "no_speech";
   state: VadGateState;
 };
 
@@ -89,7 +94,7 @@ export function advanceVadGate(input: {
   rms: number;
   startedAtMs: number;
   state: VadGateState;
-  config?: typeof USTADH_VAD;
+  config?: UstadhVadConfig;
 }): VadDecision {
   const config = input.config ?? USTADH_VAD;
   const speaking = input.rms >= config.speechRms;
@@ -103,7 +108,11 @@ export function advanceVadGate(input: {
 
   const state: VadGateState = { hasSpoken, speechStartedAtMs, lastSpeechAtMs };
 
-  if (input.nowMs - input.startedAtMs >= config.maxListenMs) {
+  const elapsed = input.nowMs - input.startedAtMs;
+  if (!hasSpoken && elapsed >= Math.min(config.noSpeechMs, config.maxListenMs)) {
+    return { action: "no_speech", state };
+  }
+  if (elapsed >= config.maxListenMs) {
     return { action: "auto_send", state };
   }
 

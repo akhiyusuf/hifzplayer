@@ -60,9 +60,26 @@ function resolveClip(word: ExpectedWord | { audio?: string | null; verseKey?: st
   return null;
 }
 
+/** Words a replay decision will play, in order (phrase → every member; word → one). */
+export function replayWordIndexes(input: {
+  decision: ReplayDecision;
+  words: ExpectedWord[];
+  phrases: ExpectedPhrase[];
+}): number[] {
+  const { decision, words, phrases } = input;
+  if (decision.action === "replay_phrase") {
+    const phraseId = decision.phraseId || decision.targetId;
+    return wordsForPhrase(words, phrases, phraseId).map((word) => word.index);
+  }
+  if (decision.wordIndex != null && words[decision.wordIndex]) return [decision.wordIndex];
+  const word = words.find((row) => row.targetId === decision.targetId || row.audio === decision.targetId);
+  return word ? [word.index] : [];
+}
+
 /**
  * Play the interrupt’s replay using existing wbw URLs.
  * Phrase → sequential word clips. slow_word → same clip at 0.75×.
+ * `onWord(index)` fires just before each clip so the Mushaf can follow Ustadh.
  */
 export async function playUstadhReplay(input: {
   decision: ReplayDecision;
@@ -70,8 +87,9 @@ export async function playUstadhReplay(input: {
   phrases: ExpectedPhrase[];
   verses: Verse[];
   signal?: AbortSignal;
+  onWord?: (index: number) => void;
 }): Promise<void> {
-  const { decision, words, phrases, signal } = input;
+  const { decision, words, phrases, signal, onWord } = input;
   const rate = decision.action === "slow_word" ? SLOW_RATE : 1;
 
   if (decision.action === "replay_phrase") {
@@ -81,6 +99,7 @@ export async function playUstadhReplay(input: {
       if (signal?.aborted) return;
       const url = resolveClip(word);
       if (!url) continue;
+      onWord?.(word.index);
       try {
         await playUrl(url, 1, signal);
       } catch (err) {
@@ -100,6 +119,7 @@ export async function playUstadhReplay(input: {
     resolveWordAudioUrl(decision.targetId) ||
     null;
   if (!url) return;
+  if (word) onWord?.(word.index);
   try {
     await playUrl(url, rate, signal);
   } catch (err) {

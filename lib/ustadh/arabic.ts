@@ -37,14 +37,37 @@ export function normalizeArabic(input: string): string {
   return foldSkeleton(String(input ?? "").replace(DAGGER_ALEF, "ا"));
 }
 
-/** Both dagger→ا and dagger-stripped skeletons (deduped, non-empty). */
+/**
+ * Uthmani spellings that ASR writes with a plain letter:
+ * - waw carrying a dagger alef (ٱلصَّلَوٰةَ, ٱلزَّكَوٰةَ, ٱلْحَيَوٰةِ) → ASR الصلاة
+ * - a hamza riding a tatweel kursi (ٱلْأَفْـِٔدَةِ) → ASR الأفئدة
+ * Each is offered as an extra spelling, never instead of the original.
+ */
+const WAW_DAGGER = /\u0648([\u064B-\u0652]*)\u0670/g;
+const TATWEEL_HAMZA = /\u0640([\u064B-\u0652]*)\u0654/g;
+
+function seatSpellings(raw: string): string[] {
+  const out = [raw];
+  const wawAlef = raw.replace(WAW_DAGGER, "ا$1");
+  if (wawAlef !== raw) out.push(wawAlef);
+  for (const base of [...out]) {
+    const kursi = base.replace(TATWEEL_HAMZA, "ئ$1");
+    if (kursi !== base) out.push(kursi);
+  }
+  return out;
+}
+
+/** Both dagger→ا and dagger-stripped skeletons (deduped, non-empty), plus seat spellings. */
 export function normalizeArabicVariants(input: string): string[] {
   const raw = String(input ?? "");
-  const expanded = foldSkeleton(raw.replace(DAGGER_ALEF, "ا"));
-  const stripped = foldSkeleton(raw.replace(DAGGER_ALEF, ""));
   const out: string[] = [];
-  if (expanded) out.push(expanded);
-  if (stripped && stripped !== expanded) out.push(stripped);
+  const add = (value: string) => {
+    if (value && !out.includes(value)) out.push(value);
+  };
+  for (const base of seatSpellings(raw)) {
+    add(foldSkeleton(base.replace(DAGGER_ALEF, "ا")));
+    add(foldSkeleton(base.replace(DAGGER_ALEF, "")));
+  }
   return out;
 }
 
@@ -78,6 +101,17 @@ export function filterArabicTranscript(text: string): string {
 export function filterArabicAsrWords<T extends { word: string }>(words: T[]): T[] {
   return (words || []).filter((row) => hasArabicScript(row.word));
 }
+
+/**
+ * First-pass Whisper prompt: Quranic context in Uthmani script, NOT the ayah being
+ * checked. With the expected ayah as the prompt Whisper fills in words the learner
+ * skipped (real Groq output for 1:5 with وَإِيَّاكَ cut out came back complete), so
+ * the coach would wave a mistake through. The basmala keeps output in Arabic script
+ * and Quranic spelling without leaking the answer. Measured on reference audio via
+ * scripts/ustadh-audio-soak.ts: clean takes transcribe the same; skipped words stay
+ * skipped. The Latin→Arabic retries still use the ayah text (strongQuranAsrPrompt).
+ */
+export const QURAN_CONTEXT_PROMPT = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ";
 
 /** Groq's Whisper prompt is capped at 224 tokens. Stay well under that in characters. */
 export const QURAN_PROMPT_CHARS = 180;

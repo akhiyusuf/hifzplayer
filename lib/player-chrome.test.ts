@@ -341,7 +341,7 @@ describe("drillHint", () => {
     assert.equal(drillHint("word"), "Tap a word. Pin a range, or pick 5×, 10×, or ∞, then play.");
     assert.equal(drillHint("masked"), "Words stay in their slots and stay invisible until their turn.");
     assert.equal(drillHint("relay"), "Recite your ayah. The reciter takes the next.");
-    assert.equal(drillHint("ustadh"), "Tap Listen, recite the ayah, tap Send. Eyes-off hides the text.");
+    assert.equal(drillHint("ustadh"), "Tap Listen once and recite. Ustadh replays misses and listens again. Pause stops.");
     assert.equal(drillHint("verse"), "");
     assert.equal(drillHint("mushaf"), "");
   });
