@@ -111,4 +111,102 @@ describe("ustadh coach helpers", () => {
     assert.equal(primaryReplay(response)?.action, "slow_word");
     assert.equal(primaryReplay(response)?.wordIndex, 3);
   });
+
+  it("labels the replaying state", () => {
+    assert.equal(ustadhStatusLabel("replaying"), "Ustadh reciting…");
+  });
+});
+
+describe("primaryReplay pin-to-word", () => {
+  const base: Omit<UstadhAsrResponse, "interrupts" | "replays"> = {
+    model: "whisper-large-v3-turbo",
+    language: "ar",
+    transport: "chunked",
+    text: "x",
+    words: [],
+  };
+  const word = (wordIndex: number, extra: Partial<UstadhAsrResponse["replays"][number]> = {}) => ({
+    action: "replay_word" as const,
+    targetId: `wbw/001_007_00${wordIndex + 1}.mp3`,
+    wordIndex,
+    missCount: 1,
+    pos: wordIndex + 1,
+    verseKey: "1:7",
+    ...extra,
+  });
+
+  it("returns null when there is nothing to replay", () => {
+    assert.equal(primaryReplay({ ...base, interrupts: [], replays: [] }), null);
+  });
+
+  it("picks the earliest word replay regardless of response order", () => {
+    const r = primaryReplay({ ...base, interrupts: [], replays: [word(5), word(2), word(7)] });
+    assert.equal(r?.wordIndex, 2);
+  });
+
+  it("prefers a word replay over a phrase restart", () => {
+    const r = primaryReplay({
+      ...base,
+      interrupts: [{ type: "phrase", expected: "…", wordIndex: 0 }],
+      replays: [
+        { action: "replay_phrase", targetId: "1:7:p0", phraseId: "1:7:p0", wordIndex: 0, missCount: 1 },
+        word(4),
+      ],
+    });
+    assert.equal(r?.action, "replay_word");
+    assert.equal(r?.wordIndex, 4);
+  });
+
+  it("pins a sticky phrase miss (missCount ≥ 2) to a slow word clip", () => {
+    const r = primaryReplay({
+      ...base,
+      interrupts: [],
+      replays: [{ action: "replay_phrase", targetId: "1:7:p0", phraseId: "1:7:p0", wordIndex: 3, missCount: 2 }],
+    });
+    assert.equal(r?.action, "slow_word");
+    assert.equal(r?.wordIndex, 3);
+  });
+
+  it("earliest sticky word wins over an earlier first-time miss", () => {
+    const r = primaryReplay({
+      ...base,
+      interrupts: [],
+      replays: [word(1), word(6, { action: "slow_word", missCount: 2 })],
+    });
+    assert.equal(r?.action, "slow_word");
+    assert.equal(r?.wordIndex, 6);
+  });
+
+  it("falls back to the first interrupt's replay, then the first replay", () => {
+    const phraseOnly = primaryReplay({
+      ...base,
+      interrupts: [{ type: "phrase", expected: "…", wordIndex: 4 }],
+      replays: [
+        { action: "replay_phrase", targetId: "1:7:p0", phraseId: "1:7:p0", wordIndex: 0, missCount: 1 },
+        { action: "replay_phrase", targetId: "1:7:p1", phraseId: "1:7:p1", wordIndex: 4, missCount: 1 },
+      ],
+    });
+    assert.equal(phraseOnly?.targetId, "1:7:p1");
+    const noInterrupt = primaryReplay({
+      ...base,
+      interrupts: [],
+      replays: [{ action: "replay_phrase", targetId: "1:7:p0", phraseId: "1:7:p0", wordIndex: 0, missCount: 1 }],
+    });
+    assert.equal(noInterrupt?.targetId, "1:7:p0");
+  });
+
+  it("end-to-end: a repeated miss on العالمين replays that word slowly", async () => {
+    const { assessUstadhTurn } = await import("./turn.ts");
+    const payload = coachPayloadForVerse(fatiha2);
+    const heard = ["الحمد", "لله", "رب", "العالمون"].map((w, i) => ({ word: w, start: i, end: i + 0.5 }));
+    const first = assessUstadhTurn({ words: payload.words, phrases: payload.phrases, heard });
+    const pick1 = primaryReplay({ ...base, ...first });
+    assert.equal(pick1?.action, "replay_word");
+    assert.equal(pick1?.pos, 4);
+    const counts = mergeMissCounts({}, first.replays);
+    const second = assessUstadhTurn({ words: payload.words, phrases: payload.phrases, heard, missCounts: counts });
+    const pick2 = primaryReplay({ ...base, ...second });
+    assert.equal(pick2?.action, "slow_word");
+    assert.equal(pick2?.pos, 4);
+  });
 });

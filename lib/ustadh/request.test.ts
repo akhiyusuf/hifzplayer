@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
+import { normalizeArabic, QURAN_CONTEXT_PROMPT } from "./arabic.ts";
 import { handleAsrRequest } from "./request.ts";
 import type { AsrWord, UstadhAsrResponse } from "./types.ts";
 
@@ -48,7 +49,9 @@ describe("handleAsrRequest", () => {
       {
         transcribe: async (_audio, options) => {
           assert.equal(options.filename, "chunk.webm");
-          assert.equal(options.prompt, "ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ");
+          // First pass never leaks the ayah (Whisper would fill skipped words from it).
+          assert.equal(options.prompt, QURAN_CONTEXT_PROMPT);
+          assert.ok(!String(options.prompt).includes("لِلَّهِ"));
           return { text: words.map((word) => word.word).join(" "), words };
         },
       },
@@ -120,6 +123,8 @@ describe("handleAsrRequest", () => {
     assert.equal(calls, 4); // 1 first + 3 retries
     assert.equal(prompts.length, 4);
     assert.notEqual(prompts[1], prompts[0]);
+    // Retries (only after Latin output) still carry the ayah text.
+    assert.ok(normalizeArabic(String(prompts[1])).includes("الحمد لله رب"), "retry prompt includes the ayah");
     assert.notEqual(prompts[2], prompts[1]);
     const body = result.body as UstadhAsrResponse;
     assert.equal(body.text, "الحمد لله رب العالمين");
@@ -145,5 +150,80 @@ describe("handleAsrRequest", () => {
     const body = result.body as UstadhAsrResponse;
     assert.equal(body.text, "");
     assert.equal(body.words.length, 0);
+  });
+
+  it("peek mode skips the Latin retries; final mode keeps all 3", async () => {
+    process.env.GROQ_API_KEY = "test-groq-key";
+    const latin = { text: "alhamdu lillahi", words: [{ word: "alhamdu", start: 0, end: 0.4 }] };
+    let peekCalls = 0;
+    const peek = await handleAsrRequest(upload({ expectedText: "ٱلْحَمْدُ لِلَّهِ", mode: "peek" }), {
+      transcribe: async () => {
+        peekCalls += 1;
+        return latin;
+      },
+    });
+    assert.equal(peek.status, 200);
+    assert.equal(peekCalls, 1);
+    assert.equal((peek.body as UstadhAsrResponse).text, "");
+
+    let finalCalls = 0;
+    await handleAsrRequest(upload({ expectedText: "ٱلْحَمْدُ لِلَّهِ" }), {
+      transcribe: async () => {
+        finalCalls += 1;
+        return latin;
+      },
+    });
+    assert.equal(finalCalls, 4, "first pass + 3 Arabic retries");
+  });
+
+  it("accepts Whisper's split يا أيها as a clean take", async () => {
+    process.env.GROQ_API_KEY = "test-groq-key";
+    const words: AsrWord[] = ["يا", "أيها", "الناس", "اعبدوا", "ربكم"].map((word, i) => ({
+      word,
+      start: i * 0.5,
+      end: i * 0.5 + 0.4,
+    }));
+    const result = await handleAsrRequest(
+      upload({ expectedText: "يَـٰٓأَيُّهَا ٱلنَّاسُ ٱعْبُدُوا۟ رَبَّكُمُ", surah: "2", ayahStart: "21", ayahEnd: "21" }),
+      { transcribe: async () => ({ text: words.map((w) => w.word).join(" "), words }) },
+    );
+    const body = result.body as UstadhAsrResponse;
+    assert.equal(result.status, 200);
+    assert.deepEqual(body.interrupts, []);
+    assert.deepEqual(body.replays, []);
+  });
+
+  it("drops prompt-filled words using timing + clipSec, so a skipped word is still flagged", async () => {
+    process.env.GROQ_API_KEY = "test-groq-key";
+    const words: AsrWord[] = [
+      { word: "إِيَّاكَ", start: 0.4, end: 1.28 },
+      { word: "نَعْبُدُ", start: 1.28, end: 2.1 },
+      { word: "وَإِيَّاكَ", start: 2.1, end: 2.2 },
+      { word: "نَعْبُدُ", start: 2.2, end: 2.22 },
+      { word: "وَإِيَّاكَ", start: 2.22, end: 2.32 },
+      { word: "نَسْتَعِينُ", start: 2.32, end: 4.06 },
+    ];
+    const result = await handleAsrRequest(
+      upload({
+        expectedText: "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",
+        surah: "1",
+        ayahStart: "5",
+        ayahEnd: "5",
+        clipSec: "4.3",
+      }),
+      { transcribe: async () => ({ text: words.map((x) => x.word).join(" "), words }) },
+    );
+    const body = result.body as UstadhAsrResponse;
+    assert.equal(result.status, 200);
+    assert.equal(body.text, "إِيَّاكَ نَعْبُدُ نَسْتَعِينُ");
+    assert.equal(body.replays[0]?.pos, 3, "وَإِيَّاكَ is replayed");
+  });
+
+  it("rejects a bad clipSec", async () => {
+    process.env.GROQ_API_KEY = "test-groq-key";
+    const result = await handleAsrRequest(upload({ expectedText: "بسم", clipSec: "-1" }), {
+      transcribe: async () => ({ text: "", words: [] }),
+    });
+    assert.equal(result.status, 400);
   });
 });

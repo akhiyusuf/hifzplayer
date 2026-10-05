@@ -43,9 +43,33 @@ describe("ustadh VAD gate", () => {
       nowMs: USTADH_VAD.maxListenMs,
       rms: silent,
       startedAtMs: 0,
-      state: { hasSpoken: false, speechStartedAtMs: null, lastSpeechAtMs: null },
+      state: { hasSpoken: true, speechStartedAtMs: 100, lastSpeechAtMs: USTADH_VAD.maxListenMs - 10 },
     });
     assert.equal(capped.action, "auto_send");
     assert.ok(rmsFromTimeDomain([128, 128, 128]) < 0.01);
+  });
+
+  it("ends a take with no speech as no_speech (nothing uploaded)", () => {
+    const empty = { hasSpoken: false, speechStartedAtMs: null, lastSpeechAtMs: null };
+    const early = advanceVadGate({ nowMs: USTADH_VAD.noSpeechMs - 50, rms: 0, startedAtMs: 0, state: empty });
+    assert.equal(early.action, "continue");
+    const timeout = advanceVadGate({ nowMs: USTADH_VAD.noSpeechMs, rms: 0, startedAtMs: 0, state: empty });
+    assert.equal(timeout.action, "no_speech");
+  });
+
+  it("keeps listening through a short breath mid-ayah", () => {
+    const loud = USTADH_VAD.speechRms + 0.02;
+    let state = { hasSpoken: false, speechStartedAtMs: null as number | null, lastSpeechAtMs: null as number | null };
+    for (let t = 0; t <= 1_000; t += 50) state = advanceVadGate({ nowMs: t, rms: loud, startedAtMs: 0, state }).state;
+    const breath = advanceVadGate({ nowMs: 1_000 + USTADH_VAD.silenceMs - 100, rms: 0, startedAtMs: 0, state });
+    assert.equal(breath.action, "continue");
+  });
+
+  it("does not auto-send on a click shorter than minSpeechMs", () => {
+    const loud = USTADH_VAD.speechRms + 0.02;
+    let state = { hasSpoken: false, speechStartedAtMs: null as number | null, lastSpeechAtMs: null as number | null };
+    state = advanceVadGate({ nowMs: 100, rms: loud, startedAtMs: 0, state }).state;
+    const after = advanceVadGate({ nowMs: 100 + USTADH_VAD.silenceMs + 50, rms: 0, startedAtMs: 0, state });
+    assert.equal(after.action, "continue");
   });
 });

@@ -309,7 +309,7 @@ export const DRILL_HINTS = {
   word: "Tap a word. Pin a range, or pick 5×, 10×, or ∞, then play.",
   masked: "Words stay in their slots and stay invisible until their turn.",
   relay: "Recite your ayah. The reciter takes the next.",
-  ustadh: "Tap Listen, recite the ayah, tap Send. Eyes-off hides the text.",
+  ustadh: "Tap Listen once and recite. Ustadh replays misses and listens again. Pause stops.",
 } as const;
 
 export const WORD_REP_COUNTS = [5, 10, 0] as const;
