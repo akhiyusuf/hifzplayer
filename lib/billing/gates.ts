@@ -44,6 +44,7 @@ export const PLUS_EXPLAIN = {
     "Mushaf view and Focus view, including play",
     "Repeat on the player, this verse or a range of verses, until you turn it off",
     "A word played once or twice",
+    "AI Ustadh recite coach (mic + interrupt clips)",
     "Colour themes — orange, green, black and white, pink, and gold",
     "Opening Playlists and leaving",
   ],
@@ -78,4 +79,9 @@ export function isPaidRelay(order: { kind?: string }[] | null | undefined) {
 /** Word Reps, Masked, and Relay — the Focus *view* itself stays free. */
 export function isPaidFocusJob(mode: string | null | undefined) {
   return mode === "word" || mode === "masked" || mode === "relay";
+}
+
+/** Free practice jobs (no Plus). Verse listen + AI Ustadh. */
+export function isFreePracticeJob(mode: string | null | undefined) {
+  return mode === "verse" || mode === "ustadh";
 }

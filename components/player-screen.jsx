@@ -48,6 +48,7 @@ import { PlayerHead, PlayerFoot, useOverlayHistory } from "@/components/player-t
 import { WordStudyPop } from "@/components/word-study-pop";
 import { ConfusableSheet, PhraseSheet, RelaySheet } from "@/components/player-sheets";
 import { MushafFollowButton, MushafJobBar, MushafPage } from "@/components/player-mushaf";
+import { UstadhCoachBar } from "@/components/ustadh/ustadh-coach-bar";
 import {
   FocusVersePage,
   FocusMaskedPage,
@@ -108,6 +109,7 @@ export function PlayerScreen(e) {
     [eRepeat, eSetRepeat] = useState(!1),
     [eDock, eSetDock] = useState(!1),
     [eHint, eSetHint] = useState(""),
+    [eEyesOff, eSetEyesOff] = useState(!1),
     eHintFor = useRef(null),
     eHintTimer = useRef(null),
     eRelayUrlAsked = useRef(!1),
@@ -353,7 +355,7 @@ export function PlayerScreen(e) {
     useEffect(() => {
       if ("ready" !== ep || !plusReady) return;
       let e =
-        er && ["word", "verse", "masked", "relay"].includes(er)
+        er && ["word", "verse", "masked", "relay", "ustadh"].includes(er)
           ? er
           : "verse";
       if (e === "relay") {
@@ -422,6 +424,9 @@ export function PlayerScreen(e) {
       },
       [],
     ),
+    useEffect(() => {
+      if ("ustadh" !== ez.mode) eSetEyesOff(!1);
+    }, [ez.mode]),
     useEffect(() => {
       let e = (e) => {
         let t = e.target;
@@ -737,7 +742,7 @@ export function PlayerScreen(e) {
               ? _jsx(FocusVersePage, { ...eX })
               : _jsx(MushafPage, { ...eX });
   return _jsxs("main", {
-    className: "shell player",
+    className: "shell player".concat(eEyesOff && "ustadh" === ez.mode ? " ustadh-eyes-off" : ""),
     id: "main",
     children: [
       _jsxs("div", {
@@ -761,6 +766,14 @@ export function PlayerScreen(e) {
                 engine: eu,
                 state: ez,
                 onLeavePractice: eLeavePractice,
+              })
+            : null,
+          "ustadh" === ez.mode
+            ? _jsx(UstadhCoachBar, {
+                engine: eu,
+                eyesOff: eEyesOff,
+                onEyesOff: eSetEyesOff,
+                onLeave: eLeavePractice,
               })
             : null,
           eHint && !("mushaf" === ez.style && "relay" === ez.mode)
