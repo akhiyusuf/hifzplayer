@@ -63,9 +63,13 @@ function probabilityOf(word: GroqWord): number | undefined {
   return raw;
 }
 
+/** Drop near-zero Whisper word probs (noise) without over-filtering. */
+const LOW_PROBABILITY = 0.08;
+
 function pushWord(out: AsrWord[], word: string, start: number, end: number, probability?: number, shift = 0) {
   const text = word.trim();
   if (!text) return;
+  if (probability != null && probability < LOW_PROBABILITY) return;
   let from = start;
   let to = end;
   if (to < from) {
