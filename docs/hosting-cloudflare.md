@@ -97,7 +97,7 @@ npm run preview                  # OpenNext + workerd, not next start
 npm run deploy                   # needs a logged-in wrangler account
 ```
 
-Secrets to put on the Worker (same names as `.env.example`): Turnstile, Google, Stripe, Paystack, billing signing, Resend, `DATABASE_URL`, `AUTH_SECRET`.
+Secrets to put on the Worker (same names as `.env.example`): Turnstile, Google, Stripe, Paystack, billing signing, Resend, `DATABASE_URL`, `AUTH_SECRET`. AI Ustadh transcription also needs `GROQ_API_KEY` (`npx wrangler secret put GROQ_API_KEY`). Leave that secret unset until a key exists — `/api/ustadh/asr` then returns 503. See [AI Ustadh ASR](ai-ustadh-asr.md).
 
 ## Cutover
 

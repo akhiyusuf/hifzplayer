@@ -82,6 +82,10 @@ Rename the Paystack page/product and the Stripe product to **Diras Plus** in tho
 
 The app still builds with `next build` / `next start`. Cloudflare is a second compile (`npm run preview` / `npm run deploy`) via OpenNext. Sign-in is **email and password in Neon + Turnstile** on the Worker — not Cloudflare Access. Google OAuth stays in the code and turns back on with `GOOGLE_SIGN_IN=1`. Cutover steps, Neon, and R2: [docs/hosting-cloudflare.md](docs/hosting-cloudflare.md).
 
+## AI Ustadh ASR
+
+Recite-after-me transcription is Groq `whisper-large-v3-turbo` behind `POST /api/ustadh/asr`. The browser sends a short audio chunk to the Worker. The Worker calls Groq and returns word timestamps plus an interrupt hint (`word`, `phrase`, or `ayah`) and a replay decision (`replay_word`, `replay_phrase`, or `slow_word`). Phrase edges follow waqf marks. Set `GROQ_API_KEY` as a Worker secret when you have one. Until then the route returns 503. Details: [docs/ai-ustadh-asr.md](docs/ai-ustadh-asr.md).
+
 ## Security
 
 Production builds omit browser source maps and the `X-Powered-By` header. Middleware adds framing, MIME, referrer, and CSP headers. `/api`, `/account`, and sign-in routes are `noindex`. Payment errors return a generic 502 — processor messages never go to the client. Status APIs return Plus on/off, never email, payment refs, or user ids. The signed-in account page shows that user’s account id.
