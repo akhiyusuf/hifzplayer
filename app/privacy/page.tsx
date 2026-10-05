@@ -124,9 +124,8 @@ export default async function PrivacyPage({
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <h2 style={sectionTitle}>Google user data</h2>
           <p style={body}>
-            Sign in with Google is optional. This section states what Google user data we access, how we use
-            Google user data, with whom we share, transfer, or disclose Google user data, and the data protection
-            mechanisms for that data.
+            Sign in with Google is optional. This section comprehensively discloses how {APP_NAME} accesses, uses,
+            stores, or shares Google user data, including the data protection mechanisms for that data.
           </p>
           <h3 style={subTitle}>What Google user data we access</h3>
           <p style={body}>
@@ -141,6 +140,16 @@ export default async function PrivacyPage({
             training AI/ML models. We do not use Google Workspace APIs to develop, improve, or train
             non-personalized AI/ML models. Google sign-in is authentication only.
           </p>
+          <h3 style={subTitle}>How we store Google user data</h3>
+          <p style={body}>
+            Google user data (name, verified email, and Google account id) is stored in our Neon database used by
+            the {APP_NAME} account service. We do not keep the Google access token. We retain that Google user
+            data while the account exists. To delete it, email{" "}
+            <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "var(--action-primary)" }}>
+              {CONTACT_EMAIL}
+            </a>{" "}
+            from the verified email on the account and say you want the account deleted.
+          </p>
           <h3 style={subTitle}>With whom we share, transfer, or disclose Google user data</h3>
           <p style={body}>
             We do not sell Google user data. We do not transfer or disclose Google user data to third parties for
@@ -150,9 +159,10 @@ export default async function PrivacyPage({
           </p>
           <h3 style={subTitle}>Data protection mechanisms for Google user data</h3>
           <p style={body}>
-            Google user data (name, email, and Google account id) is stored with industry-standard protections.
-            The data protection mechanisms include HTTPS in transit, hashed sessions, and access limited to
-            running the account. Security procedures are in place to protect the confidentiality of this data.
+            We use encryption in transit (HTTPS) to protect your information. Google user data (name, verified
+            email, and Google account id) is stored with industry-standard protections. The data protection
+            mechanisms include encryption in transit (HTTPS), hashed sessions, and access limited to running the
+            account. Security procedures are in place to protect the confidentiality of your data.
           </p>
           <p style={body}>
             {APP_NAME} does not use Google APIs to create or distribute AI-generated non-consensual intimate

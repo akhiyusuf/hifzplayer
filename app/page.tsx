@@ -48,6 +48,7 @@ export default function LandingPage() {
       <section className="landing-purpose" aria-labelledby="landing-purpose-title">
         <h2 id="landing-purpose-title">{LANDING.purposeTitle}</h2>
         <p>{LANDING.purposeBody}</p>
+        <p>{LANDING.googleUserData}</p>
         <p className="landing-purpose-note">{LANDING.googleApis}</p>
         <p>
           {LANDING.purposeLegalBefore} <Link href="/privacy">{LANDING.purposePrivacyLabel}</Link>{" "}
