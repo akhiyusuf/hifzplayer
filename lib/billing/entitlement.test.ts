@@ -135,3 +135,21 @@ describe("plan signed-in entitlement", () => {
     assert.equal(plan.persist, "none");
   });
 });
+
+describe("lifetime Plus on a page render", () => {
+  it("does not ask to rewrite cookies when lifetime Plus already matches the cookie", () => {
+    const ent = sample({ userId: "user_life", planId: "lifetime", until: null });
+    const plan = planSignedInEntitlement({ status: "ok", ent }, ent, "user_life", true);
+    assert.equal(plan.ent?.planId, "lifetime");
+    assert.equal(plan.ent?.until, null);
+    assert.equal(plan.persist, "none");
+  });
+
+  it("still returns lifetime Plus when the browser cookie is missing (write may be skipped on pages)", () => {
+    const ent = sample({ planId: "lifetime", until: null });
+    const plan = planSignedInEntitlement({ status: "ok", ent }, null, "user_life", true);
+    assert.equal(plan.ent?.planId, "lifetime");
+    assert.equal(plan.ent?.userId, "user_life");
+    assert.equal(plan.persist, "write");
+  });
+});
