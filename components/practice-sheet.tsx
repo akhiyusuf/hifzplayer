@@ -6,6 +6,7 @@ import {
   practiceSheetPickMode,
   practiceSheetShowsExit,
 } from "@/lib/player-chrome";
+import { isFreePracticeJob } from "@/lib/billing/gates";
 import { usePlus } from "@/lib/plus";
 import { Icon } from "./icon";
 import { PassageRange } from "./passage-range";
@@ -48,7 +49,8 @@ export function PracticeSheet({
           {jobs.map((m) => {
             const on = mode === m.id;
             const listen = m.id === "verse";
-            const locked = !plusOn && !on && !listen;
+            const free = isFreePracticeJob(m.id);
+            const locked = !plusOn && !on && !listen && !free;
             return (
               <button
                 key={m.id}
@@ -58,7 +60,8 @@ export function PracticeSheet({
                 onClick={() => {
                   const next = practiceSheetPickMode(mode, m.id);
                   const leaving = next === "verse";
-                  if (!leaving && !ready) return;
+                  const nextFree = isFreePracticeJob(next);
+                  if (!leaving && !nextFree && !ready) return;
                   if (locked) {
                     askPlus("practice");
                     return;

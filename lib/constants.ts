@@ -29,6 +29,14 @@ export const FOCUS_JOBS = [
   },
 ] as const;
 
+/** Free mic coach — listed in Practice, not a Plus Focus job. */
+export const USTADH_JOB = {
+  id: "ustadh",
+  name: "AI Ustadh",
+  icon: "mic",
+  desc: "Recite into the mic — free coach interrupts on a miss",
+} as const;
+
 export const MODES = [
   {
     id: "verse",
@@ -37,6 +45,7 @@ export const MODES = [
     desc: "Listen to this ayah",
   },
   ...FOCUS_JOBS,
+  USTADH_JOB,
 ] as const;
 
 export type ModeId = (typeof MODES)[number]["id"];

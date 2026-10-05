@@ -10,7 +10,7 @@ export const SECURITY_HEADERS: { key: string; value: string }[] = [
   { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
+    value: "camera=(), microphone=(self), geolocation=(), payment=(), usb=(), interest-cohort=()",
   },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
   { key: "Cross-Origin-Resource-Policy", value: "same-origin" },

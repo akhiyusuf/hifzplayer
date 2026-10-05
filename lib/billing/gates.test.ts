@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   PLUS_EXPLAIN,
   clampRepeat,
+  isFreePracticeJob,
   isPaidFocusJob,
   isPaidRelay,
   isPaidRepeat,
@@ -82,7 +83,11 @@ describe("Focus job gating", () => {
 
   it("leaves verse listen and the Focus view itself free to open", () => {
     assert.equal(isPaidFocusJob("verse"), false);
+    assert.equal(isPaidFocusJob("ustadh"), false);
     assert.equal(isPaidFocusJob(""), false);
+    assert.equal(isFreePracticeJob("ustadh"), true);
+    assert.equal(isFreePracticeJob("verse"), true);
+    assert.equal(isFreePracticeJob("word"), false);
   });
 });
 

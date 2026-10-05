@@ -1,4 +1,4 @@
-import { FOCUS_JOBS, KEYS, LOOP_COUNTS, MODES, RATES } from "./constants.ts";
+import { FOCUS_JOBS, KEYS, LOOP_COUNTS, MODES, RATES, USTADH_JOB } from "./constants.ts";
 import { getStore } from "./storage.ts";
 
 export function verseRatioLabel(name: string, verse: number, total: number) {
@@ -309,6 +309,7 @@ export const DRILL_HINTS = {
   word: "Tap a word. Pin a range, or pick 5×, 10×, or ∞, then play.",
   masked: "Words stay in their slots and stay invisible until their turn.",
   relay: "Recite your ayah. The reciter takes the next.",
+  ustadh: "Tap Listen, recite the ayah, tap Send. Eyes-off hides the text.",
 } as const;
 
 export const WORD_REP_COUNTS = [5, 10, 0] as const;
@@ -360,7 +361,7 @@ export function wordRepsDoneState() {
 }
 
 export function isPracticeDrill(mode: string) {
-  return mode === "word" || mode === "masked" || mode === "relay";
+  return mode === "word" || mode === "masked" || mode === "relay" || mode === "ustadh";
 }
 
 /** Verse / Listen — the Practice sheet's way back to the ayah. */
@@ -374,9 +375,10 @@ export function practiceSheetShowsExit(mode: string) {
 }
 
 export function practiceSheetJobs(mode: string) {
+  const jobs = [...FOCUS_JOBS, USTADH_JOB];
   return practiceSheetShowsExit(mode)
-    ? [practiceListenOption(), ...FOCUS_JOBS]
-    : [...FOCUS_JOBS];
+    ? [practiceListenOption(), ...jobs]
+    : jobs;
 }
 
 export type LeavePracticeHow = "finish-word-reps" | "exit-relay" | "set-verse" | null;
@@ -384,7 +386,7 @@ export type LeavePracticeHow = "finish-word-reps" | "exit-relay" | "set-verse" |
 export function leavePracticeHow(mode: string): LeavePracticeHow {
   if (mode === "word") return "finish-word-reps";
   if (mode === "relay") return "exit-relay";
-  if (mode === "masked") return "set-verse";
+  if (mode === "masked" || mode === "ustadh") return "set-verse";
   return null;
 }
 
@@ -427,7 +429,9 @@ export function nextVerseInLoop(current: number, from: number, to: number) {
 }
 
 export function drillHint(mode: string) {
-  if (mode === "word" || mode === "masked" || mode === "relay") return DRILL_HINTS[mode];
+  if (mode === "word" || mode === "masked" || mode === "relay" || mode === "ustadh") {
+    return DRILL_HINTS[mode];
+  }
   return "";
 }
 

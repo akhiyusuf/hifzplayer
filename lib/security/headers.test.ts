@@ -9,6 +9,12 @@ import {
 } from "./headers.ts";
 
 describe("security headers", () => {
+  it("allows the same-origin microphone for AI Ustadh", () => {
+    const map = Object.fromEntries(SECURITY_HEADERS.map((h) => [h.key, h.value]));
+    assert.match(map["Permissions-Policy"] || "", /microphone=\(self\)/);
+    assert.doesNotMatch(map["Permissions-Policy"] || "", /microphone=\(\)/);
+  });
+
   it("blocks framing and MIME sniffing", () => {
     const headers = new Headers();
     applySecurityHeaders(headers);
