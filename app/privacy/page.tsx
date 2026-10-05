@@ -10,6 +10,14 @@ const sectionTitle = {
   fontFamily: "var(--font-display)",
   fontWeight: 700,
   fontSize: 15,
+  margin: 0,
+} as const;
+
+const subTitle = {
+  ...sectionTitle,
+  fontWeight: 600,
+  fontSize: 14,
+  marginTop: 8,
 } as const;
 
 const body = {
@@ -114,6 +122,53 @@ export default async function PrivacyPage({
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <h2 style={sectionTitle}>Google user data</h2>
+          <p style={body}>
+            Sign in with Google is optional. This section states what Google user data we access, how we use
+            Google user data, with whom we share, transfer, or disclose Google user data, and the data protection
+            mechanisms for that data.
+          </p>
+          <h3 style={subTitle}>What Google user data we access</h3>
+          <p style={body}>
+            When you use Sign in with Google, we receive your Google account id, name, and verified email. Those
+            are the profile and email scopes only. We do not access Gmail, Drive, Calendar, Photos, Contacts, or
+            any other Google product data.
+          </p>
+          <h3 style={subTitle}>How we use Google user data</h3>
+          <p style={body}>
+            We use Google user data only to create or sign into your {APP_NAME} account and to show your name in
+            the app. We do not use Google user data for advertising, sale, profiling across sites, credit, or
+            training AI/ML models. We do not use Google Workspace APIs to develop, improve, or train
+            non-personalized AI/ML models. Google sign-in is authentication only.
+          </p>
+          <h3 style={subTitle}>With whom we share, transfer, or disclose Google user data</h3>
+          <p style={body}>
+            We do not sell Google user data. We do not transfer or disclose Google user data to third parties for
+            advertising or unrelated purposes. Account storage is in our Neon database on Cloudflare-hosted
+            infrastructure. Payment processors never receive Google tokens. We do not keep the Google access
+            token.
+          </p>
+          <h3 style={subTitle}>Data protection mechanisms for Google user data</h3>
+          <p style={body}>
+            Google user data (name, email, and Google account id) is stored with industry-standard protections.
+            The data protection mechanisms include HTTPS in transit, hashed sessions, and access limited to
+            running the account. Security procedures are in place to protect the confidentiality of this data.
+          </p>
+          <p style={body}>
+            {APP_NAME} does not use Google APIs to create or distribute AI-generated non-consensual intimate
+            imagery. Google sign-in is only for account login.
+          </p>
+          <p style={body}>
+            To delete Google user data on a Google-linked account, email{" "}
+            <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "var(--action-primary)" }}>
+              {CONTACT_EMAIL}
+            </a>{" "}
+            from the address on the account — the verified email we received from Google — and say you want the
+            account deleted. We then delete the Google account id, name, and email stored for that account. The
+            same path is under Deletion and contact.
+          </p>
+        </section>
+        <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <h2 style={sectionTitle}>What stays on your device</h2>
           <p style={body}>
             Your reading position, recent passages, day streak, chosen reciter, colour theme, night theme,
@@ -185,9 +240,10 @@ export default async function PrivacyPage({
             <li>A one-time code expires after 10 minutes. Once it is used, that code is deleted.</li>
             <li>The Turnstile token is not kept after Cloudflare answers the check.</li>
             <li>
-              Name, email, Plus entitlement, and payment references stay while the account exists, including
-              after a plan ends, so we can match a receipt or a dispute. They are deleted when you ask us to
-              delete the account. Stripe and Paystack keep their own copy of the charge under their policies.
+              Name, email, the Google account id if you signed in with Google, Plus entitlement, and payment
+              references stay while the account exists, including after a plan ends, so we can match a receipt
+              or a dispute. They are deleted when you ask us to delete the account. Stripe and Paystack keep
+              their own copy of the charge under their policies.
             </li>
           </ul>
         </section>
@@ -199,7 +255,9 @@ export default async function PrivacyPage({
               {CONTACT_EMAIL}
             </a>{" "}
             from the address on the account, and say you want it deleted. We delete the account and the
-            sessions, Plus record, and gifts tied to it. We cannot clear preferences stored only on your device
+            sessions, Plus record, and gifts tied to it. If you signed in with Google, that same email deletes
+            the Google user data we stored: your Google account id, name, and verified email. We cannot clear
+            preferences stored only on your device
             — clearing the browser’s site data does that. We also cannot delete the payment record held by
             Stripe or Paystack. The same address is where to ask a question about this policy. If this policy
             changes, this page will say so plainly, including what is collected and why.

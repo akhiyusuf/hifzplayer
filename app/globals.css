@@ -268,6 +268,7 @@ button.listen-sheet-row{cursor:pointer}
 .landing-purpose{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
 .landing-purpose p{margin:0;font-size:15px;line-height:1.55;color:var(--text-secondary);max-width:40rem}
 .landing-purpose .landing-purpose-note{color:var(--text-primary)}
+.landing-purpose a{color:var(--action-primary);font-weight:600;text-decoration:underline}
 .landing-section-head{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;max-width:40rem}
 .landing-section-head h2,.landing-close h2,.landing-plus h2,.landing-purpose h2{margin:0;font-family:var(--font-display);font-weight:700;font-size:clamp(22px,4vw,30px);letter-spacing:-.02em}
 .landing-section-head p,.landing-close p{margin:0;font-size:14.5px;line-height:1.5;color:var(--text-secondary)}

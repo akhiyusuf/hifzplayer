@@ -49,6 +49,11 @@ export default function LandingPage() {
         <h2 id="landing-purpose-title">{LANDING.purposeTitle}</h2>
         <p>{LANDING.purposeBody}</p>
         <p className="landing-purpose-note">{LANDING.googleApis}</p>
+        <p>
+          {LANDING.purposeLegalBefore} <Link href="/privacy">{LANDING.purposePrivacyLabel}</Link>{" "}
+          {LANDING.purposeLegalBetween} <Link href="/tos">{LANDING.purposeTermsLabel}</Link>.{" "}
+          {LANDING.purposeLegalAfter}
+        </p>
       </section>
 
       <section className="landing-focus" aria-labelledby="landing-focus-title">
