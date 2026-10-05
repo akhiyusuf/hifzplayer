@@ -40,13 +40,13 @@ describe("accounts config", () => {
     }
   });
 
-  it("turns on with Neon and a signing secret", () => {
+  it("turns on with Neon and a signing secret (Turnstile optional)", () => {
     const prevDb = process.env.DATABASE_URL;
     const prevAuth = process.env.AUTH_SECRET;
     const prevSite = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
     process.env.DATABASE_URL = "postgres://example";
     process.env.AUTH_SECRET = "test-secret";
-    process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY = "1x00000000000000000000AA";
+    delete process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
     try {
       assert.equal(accountsConfigured(), true);
       assert.equal(accountsBrowserReady(), true);

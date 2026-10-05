@@ -20,13 +20,17 @@ export function EmailAuthForm({
   googleOn = false,
   passwordOn = true,
   startError = "",
+  turnstileSiteKey = "",
 }: {
   mode: "sign-in" | "sign-up";
   redirectTo: string;
   googleOn?: boolean;
   passwordOn?: boolean;
   startError?: string;
+  /** Server-passed Turnstile site key (Worker vars). Empty = skip client challenge. */
+  turnstileSiteKey?: string;
 }) {
+  const challengeOn = Boolean(turnstileSiteKey.trim());
   const { loaded, signedIn, refresh } = useAuth();
   const [step, setStep] = useState<Step>("password");
   const [email, setEmail] = useState("");
@@ -321,7 +325,9 @@ export function EmailAuthForm({
         </label>
       ) : null}
 
-      {step === "code" || step === "verify" || !passwordOn ? null : <TurnstileWidget onToken={setToken} resetKey={resetKey} />}
+      {step === "code" || step === "verify" || !passwordOn || !challengeOn ? null : (
+        <TurnstileWidget siteKey={turnstileSiteKey} onToken={setToken} resetKey={resetKey} action={mode === "sign-up" ? "signup" : "login"} />
+      )}
 
       {error ? (
         <p className="pricing-error" role="alert">
@@ -335,7 +341,7 @@ export function EmailAuthForm({
         type="submit"
         disabled={
           busy ||
-          (step !== "code" && step !== "verify" && !token) ||
+          (challengeOn && step !== "code" && step !== "verify" && !token) ||
           ((step === "code" || step === "verify") && code.length !== 6) ||
           strengthBlocked ||
           (mode === "sign-up" && step === "password" && password.length > 0 && password !== confirm)
