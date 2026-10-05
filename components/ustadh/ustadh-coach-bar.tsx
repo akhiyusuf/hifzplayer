@@ -22,7 +22,6 @@ import {
   clearUstadhReciteHighlight,
   reciteHighlightFromHeard,
   USTADH_ROLLING_PEEK_MS,
-  type HighlightEngine,
 } from "@/lib/ustadh/highlight";
 import {
   advanceVadGate,
@@ -37,7 +36,7 @@ import { playUstadhReplay } from "@/lib/ustadh/replay-play";
 import type { Verse } from "@/lib/types";
 import type { UstadhAsrResponse } from "@/lib/ustadh/types";
 
-type EngineLike = HighlightEngine & {
+type EngineLike = {
   getSnapshot: () => {
     verses: Verse[];
     vIdx: number;
@@ -49,6 +48,20 @@ type EngineLike = HighlightEngine & {
   stopAudio?: () => void;
   stopJobs?: () => void;
   jumpToVerse?: (idx: number, play?: boolean) => void;
+  notify?: () => void;
+  notifyWord?: () => void;
+  onWordChange?: (vIdx: number, pos: number) => void;
+  st?: {
+    curWord: number;
+    wordPick: {
+      start: number | null;
+      end: number | null;
+      count: number | null;
+      open: number | null;
+      vIdx: number | null;
+    };
+    vIdx: number;
+  };
 };
 
 export function UstadhCoachBar({
