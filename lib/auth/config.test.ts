@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { accountsBrowserReady, accountsConfigured, googleConfigured, passwordLooksValid } from "./config.ts";
+import {
+  accountsBrowserReady,
+  accountsConfigured,
+  googleConfigured,
+  googleOnlyAccountMessage,
+  googleSignInEnabled,
+  passwordLooksValid,
+} from "./config.ts";
 
 describe("accounts config", () => {
   it("stays off when keys are missing", () => {
@@ -69,6 +76,36 @@ describe("accounts config", () => {
       else process.env.GOOGLE_CLIENT_ID = prevId;
       if (prevSecret === undefined) delete process.env.GOOGLE_CLIENT_SECRET;
       else process.env.GOOGLE_CLIENT_SECRET = prevSecret;
+    }
+  });
+
+  it("keeps Google sign-in off until GOOGLE_SIGN_IN is set", () => {
+    const prevId = process.env.GOOGLE_CLIENT_ID;
+    const prevSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const prevFlag = process.env.GOOGLE_SIGN_IN;
+    process.env.GOOGLE_CLIENT_ID = "id.apps.googleusercontent.com";
+    process.env.GOOGLE_CLIENT_SECRET = "secret";
+    delete process.env.GOOGLE_SIGN_IN;
+    try {
+      assert.equal(googleConfigured(), true);
+      assert.equal(googleSignInEnabled(), false);
+      process.env.GOOGLE_SIGN_IN = "0";
+      assert.equal(googleSignInEnabled(), false);
+      process.env.GOOGLE_SIGN_IN = "true";
+      assert.equal(googleSignInEnabled(), true);
+      delete process.env.GOOGLE_CLIENT_SECRET;
+      assert.equal(googleSignInEnabled(), false);
+      assert.match(googleOnlyAccountMessage(), /Forgot password/);
+      process.env.GOOGLE_CLIENT_SECRET = "secret";
+      process.env.GOOGLE_SIGN_IN = "1";
+      assert.equal(googleOnlyAccountMessage(), "This email uses Google. Continue with Google.");
+    } finally {
+      if (prevId === undefined) delete process.env.GOOGLE_CLIENT_ID;
+      else process.env.GOOGLE_CLIENT_ID = prevId;
+      if (prevSecret === undefined) delete process.env.GOOGLE_CLIENT_SECRET;
+      else process.env.GOOGLE_CLIENT_SECRET = prevSecret;
+      if (prevFlag === undefined) delete process.env.GOOGLE_SIGN_IN;
+      else process.env.GOOGLE_SIGN_IN = prevFlag;
     }
   });
 

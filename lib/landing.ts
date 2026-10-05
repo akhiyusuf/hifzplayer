@@ -23,6 +23,8 @@ export const LANDING = {
   purposeTermsLabel: "terms of service",
   purposeLegalAfter:
     "Both pages are public. They describe what Diras collects, including Google user data, and the rules for using the app.",
+  purposeLegalAfterEmail:
+    "Both pages are public. They describe what Diras collects and the rules for using the app.",
   primaryCta: "Try Plus free for 1 day",
   primaryHref: "/pricing",
   secondaryCta: "Open the mushaf",

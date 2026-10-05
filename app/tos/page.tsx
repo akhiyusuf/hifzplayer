@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
+import { googleSignInEnabled } from "@/lib/auth/config";
 import { APP_NAME, CONTACT_EMAIL, PLUS_NAME } from "@/lib/brand";
 import { backHref, legalPeerHref } from "@/lib/nav";
 
@@ -12,6 +13,7 @@ export default async function TermsPage({
   searchParams: Promise<{ from?: string }>;
 }) {
   const { from } = await searchParams;
+  const googleOn = googleSignInEnabled();
   return (
     <main className="shell" id="main">
       <nav className="page-nav">
@@ -49,9 +51,11 @@ export default async function TermsPage({
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Accounts</h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
-            You can read without an account. If you sign in, use email and a password, or Google. A code by email
-            is only for resetting a password. Keep the password to yourself. An account is for one person — do not
-            share a paid login so other people can use {PLUS_NAME} without paying.
+            You can read without an account. Sign in with email and a password. A code by email confirms a new
+            account or resets a password.
+            {googleOn ? " You can also continue with Google while that option is turned on." : ""} Keep the
+            password to yourself. An account is for one person — do not share a paid login so other people can
+            use {PLUS_NAME} without paying.
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>

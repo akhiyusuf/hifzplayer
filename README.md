@@ -24,12 +24,12 @@ Nothing is stored on a server for reading. Position, recents, streak, reciter, a
 
 ## Accounts
 
-Sign-in is **email + password** or **Continue with Google**, stored in Neon. The APIs run on the Cloudflare Worker. Cloudflare **Turnstile** is the bot check on the password form (not Google). Add:
+Sign-in is **email + password**, stored in Neon. A 6-digit email code confirms a new account and resets a forgotten password. **Continue with Google** stays off unless `GOOGLE_SIGN_IN=1`. The APIs run on the Cloudflare Worker. Cloudflare **Turnstile** is the bot check on the password form (not Google). Add:
 
 - `DATABASE_URL` (Neon pooled connection string). Tables are created on first query — you do not paste SQL.
 - `AUTH_SECRET` (or `BILLING_SIGNING_SECRET`)
 - `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` for password sign-in
-- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` for Google (redirect `{APP_URL}/api/auth/google/callback`). In Google Cloud, set the OAuth consent screen **App name** to **Diras** — that is the name on “Allow ____ to access your Google Account”, not Cloudflare or Neon.
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` can stay set. Google sign-in is hidden until `GOOGLE_SIGN_IN=1` (redirect `{APP_URL}/api/auth/google/callback`). In Google Cloud, set the OAuth consent screen **App name** to **Diras** — that is the name on “Allow ____ to access your Google Account”, not Cloudflare or Neon.
 - `RESEND_API_KEY` (Plus confirmation mail and password-reset codes)
 
 Reading stays public. When accounts are on, buying Diras Plus requires sign-in, and Plus is stored on that account (not only a browser cookie). Without the keys, `/sign-in` and `/account` show setup copy instead of a fake signed-in state.
@@ -80,7 +80,7 @@ Rename the Paystack page/product and the Stripe product to **Diras Plus** in tho
 
 ## Hosting (Cloudflare + Neon + R2)
 
-The app still builds with `next build` / `next start`. Cloudflare is a second compile (`npm run preview` / `npm run deploy`) via OpenNext. Sign-in is **password or Google in Neon + Turnstile** on the Worker — not Cloudflare Access. Cutover steps, Neon, and R2: [docs/hosting-cloudflare.md](docs/hosting-cloudflare.md).
+The app still builds with `next build` / `next start`. Cloudflare is a second compile (`npm run preview` / `npm run deploy`) via OpenNext. Sign-in is **email and password in Neon + Turnstile** on the Worker — not Cloudflare Access. Google OAuth stays in the code and turns back on with `GOOGLE_SIGN_IN=1`. Cutover steps, Neon, and R2: [docs/hosting-cloudflare.md](docs/hosting-cloudflare.md).
 
 ## Security
 

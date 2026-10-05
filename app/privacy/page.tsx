@@ -74,14 +74,15 @@ export default async function PrivacyPage({
             You can read without an account. If you sign in or pay, we collect only what that step needs:
           </p>
           <ul style={list}>
-            <li>Name and email, when you create an account or sign in with Google.</li>
+            <li>Name and email, when you create an account.</li>
             <li>
               A password hash, if you choose email and a password. We never store the password itself. A one-time
               code for confirming a new account or resetting a password is emailed and kept only as a hash.
             </li>
             <li>
-              A Google account id, if you use Google sign-in. Google shares your name and verified email for
-              that login. We do not keep the Google access token, and we do not ask Google for anything else.
+              A Google account id, only for an account that used Google sign-in while that option was enabled.
+              Google then shares a name and verified email for that login. We do not keep the Google access
+              token, and we do not ask Google for anything else. Google sign-in is turned off right now.
             </li>
             <li>A session cookie, so the browser stays signed in. The matching session is stored as a hash.</li>
             <li>
@@ -117,21 +118,24 @@ export default async function PrivacyPage({
           </ul>
           <p style={body}>
             We do not use this data for advertising. We do not sell it. We do not use it to build a profile of
-            you across other sites. Google sign-in is only for account login. {APP_NAME} does not use Google
-            APIs to create or distribute images of any kind.
+            you across other sites. When Google sign-in is enabled, it is only for account login. {APP_NAME}{" "}
+            does not use Google APIs to create or distribute images of any kind.
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <h2 style={sectionTitle}>Google user data</h2>
           <p style={body}>
-            Sign in with Google is optional. This section comprehensively discloses how {APP_NAME} accesses, uses,
-            stores, or shares Google user data, including the data protection mechanisms for that data.
+            Sign in with Google is turned off. Accounts use email and a password. This section still
+            comprehensively discloses how {APP_NAME} accesses, uses, stores, or shares Google user data when
+            Google sign-in is enabled, and what we keep for accounts that already used it, including the data
+            protection mechanisms for that data.
           </p>
           <h3 style={subTitle}>What Google user data we access</h3>
           <p style={body}>
-            When you use Sign in with Google, we receive your Google account id, name, and verified email. Those
-            are the profile and email scopes only. We do not access Gmail, Drive, Calendar, Photos, Contacts, or
-            any other Google product data.
+            When Google sign-in is enabled and you choose it, we receive your Google account id, name, and
+            verified email. Those are the profile and email scopes only. We do not access Gmail, Drive, Calendar,
+            Photos, Contacts, or any other Google product data. While Google sign-in is off, new sign-ins do not
+            request Google user data.
           </p>
           <h3 style={subTitle}>How we use Google user data</h3>
           <p style={body}>
@@ -220,8 +224,9 @@ export default async function PrivacyPage({
           <p style={body}>
             No advertising and no fingerprinting. Sign-in sets one httpOnly session cookie. After {PLUS_NAME}{" "}
             is granted, this site sets one httpOnly cookie so this browser can remember that the plan is active.
-            If you are signed in, Plus is also stored on your account. A short httpOnly cookie is set only while
-            a Google sign-in is in progress, then cleared. Those cookies are not used to track you across other
+            If you are signed in, Plus is also stored on your account. When Google sign-in is enabled, a short
+            httpOnly cookie is set only while a Google sign-in is in progress, then cleared. Those cookies are
+            not used to track you across other
             sites. Sign-in pages and account details are not indexed. If the site is served by Vercel, Vercel
             Web Analytics may count a page view. That count is not tied to your name or email and is not used
             for ads. On Cloudflare that counter is off.

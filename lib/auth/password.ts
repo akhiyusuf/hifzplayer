@@ -1,4 +1,10 @@
-import { PASSWORD_MAX, PASSWORD_MIN, accountsConfigured, passwordLooksValid } from "./config.ts";
+import {
+  PASSWORD_MAX,
+  PASSWORD_MIN,
+  accountsConfigured,
+  googleOnlyAccountMessage,
+  passwordLooksValid,
+} from "./config.ts";
 import { hashPassword, randomId, verifyPassword } from "./crypto.ts";
 import { completeSignIn, consumeEmailOtp, startEmailOtp, type AccountUser } from "./otp.ts";
 import { sql } from "../db/neon.ts";
@@ -34,7 +40,7 @@ export async function registerWithPassword(
   const row = existing[0] as { id?: string; password_hash?: string | null; google_sub?: string | null } | undefined;
   if (row?.id) {
     if (row.google_sub && !row.password_hash) {
-      return { error: "This email uses Google. Continue with Google." };
+      return { error: googleOnlyAccountMessage() };
     }
     return { error: "An account already exists for this email. Sign in." };
   }
@@ -110,7 +116,7 @@ export async function signInWithPassword(email: string, password: string): Promi
     | undefined;
   if (!row) return { error: "Email or password is wrong" };
   if (!row.password_hash) {
-    return { error: row.google_sub ? "This email uses Google. Continue with Google." : "Email or password is wrong" };
+    return { error: row.google_sub ? googleOnlyAccountMessage() : "Email or password is wrong" };
   }
   if (!(await verifyPassword(password, row.password_hash))) return { error: "Email or password is wrong" };
   const user = { id: row.id, email: row.email, name: displayName(row.email, row.name) };
