@@ -63,9 +63,11 @@ export function PracticeSheet({
                 aria-label={
                   comingSoon
                     ? `${m.name} — Coming soon, part of ${PLUS_NAME}`
-                    : listen && showExit
-                      ? "Stop practice"
-                      : undefined
+                    : locked
+                      ? `${m.name} — ${PLUS_NAME}`
+                      : listen && showExit
+                        ? "Stop practice"
+                        : undefined
                 }
                 disabled={comingSoon}
                 onClick={() => {
@@ -91,18 +93,25 @@ export function PracticeSheet({
                     {listen && showExit ? "Listen" : m.name}
                     {comingSoon ? (
                       <span className="badge-coming-soon">Coming soon</span>
+                    ) : locked ? (
+                      <span className="badge-plus-lock">
+                        <Icon name="lock" size={10} />
+                        Plus
+                      </span>
                     ) : null}
                   </b>
                   <span>
                     {comingSoon
                       ? `Part of ${PLUS_NAME}`
-                      : listen && showExit
-                        ? "Stop practice — listen to this ayah"
-                        : m.desc}
+                      : locked
+                        ? `Part of ${PLUS_NAME}`
+                        : listen && showExit
+                          ? "Stop practice — listen to this ayah"
+                          : m.desc}
                   </span>
                 </span>
-                <span className="radio-dot">
-                  <Icon name="check" size={13} />
+                <span className={`radio-dot${locked ? " plus-lock" : ""}`}>
+                  {locked ? <Icon name="lock" size={13} /> : <Icon name="check" size={13} />}
                 </span>
               </button>
             );

@@ -91,8 +91,8 @@ export default function LandingPage() {
               <li key={point}>{point}</li>
             ))}
           </ul>
-          <Link className="btn-primary" href={LANDING.primaryHref}>
-            {LANDING.primaryCta}
+          <Link className="btn-primary" href={LANDING.plusHref}>
+            {LANDING.plusCta}
           </Link>
         </div>
       </section>
@@ -124,11 +124,11 @@ export default function LandingPage() {
         <h2 id="landing-close-title">{LANDING.closeTitle}</h2>
         <p>{LANDING.closeLead}</p>
         <div className="landing-cta">
-          <Link className="btn-primary" href={LANDING.closeHref}>
-            {LANDING.closeCta}
-          </Link>
-          <Link className="btn-secondary" href="/home">
+          <Link className="btn-primary" href="/home">
             Open the mushaf
+          </Link>
+          <Link className="btn-secondary" href={LANDING.closeHref}>
+            {LANDING.closeCta}
           </Link>
         </div>
       </section>

@@ -144,7 +144,7 @@ function Row({
 }
 
 export default function SettingsPage() {
-  const { dark, toggle } = useTheme();
+  const { dark, setDark } = useTheme();
   const { showToast } = useToast();
   const [taj, setTaj] = usePref(KEYS.taj, false);
   const [translation, setTranslation] = usePref(KEYS.showTranslation, true);
@@ -177,7 +177,7 @@ export default function SettingsPage() {
           Reading
         </span>
         <ThemePicker />
-        <Row title="Dark theme" sub="Easier on the eyes at night" checked={dark} onChange={toggle} />
+        <Row title="Dark theme" sub="Easier on the eyes at night" checked={dark} onChange={setDark} />
         <Row title="Tajweed colours" sub="Colour letters by recitation rule" checked={taj} onChange={setTaj} />
         <button
           type="button"

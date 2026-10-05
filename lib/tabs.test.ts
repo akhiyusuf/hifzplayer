@@ -39,4 +39,10 @@ describe("hideMobileTabs", () => {
     assert.equal(hideMobileTabs("/tos"), true);
     assert.equal(hideMobileTabs("/tos?from=settings"), true);
   });
+
+  it("hides the bar on pricing so the trial CTA is not occluded", () => {
+    assert.equal(hideMobileTabs("/pricing"), true);
+    assert.equal(hideMobileTabs("/pricing?from=settings"), true);
+    assert.equal(hideMobileTabs("/pricing/gift"), true);
+  });
 });
