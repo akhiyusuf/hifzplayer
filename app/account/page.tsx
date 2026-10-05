@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { accountsConfigured } from "@/lib/auth/config";
-import { resolveEntitlement, signedInUser } from "@/lib/auth/session";
+import { resolveEntitlementSafe, signedInUser } from "@/lib/auth/session";
 import { AccountId } from "@/components/account-id";
 import { AccountsNotConfigured, AuthShell } from "@/components/auth-shell";
 import { SignOutButton } from "@/components/sign-out-button";
@@ -62,7 +62,7 @@ export default async function AccountPage({
     );
   }
 
-  const plus = publicEntitlement(await resolveEntitlement());
+  const plus = publicEntitlement(await resolveEntitlementSafe());
 
   return (
     <AuthShell title="Account" backHref={back}>
