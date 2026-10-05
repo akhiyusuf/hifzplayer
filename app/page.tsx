@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { LandingFocusDemo } from "@/components/landing-focus-demo";
+import { googleSignInEnabled } from "@/lib/auth/config";
 import { LANDING } from "@/lib/landing";
 
 export const metadata: Metadata = {
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default function LandingPage() {
+  const googleOn = googleSignInEnabled();
   return (
     <main className="landing" id="main">
       <header className="landing-top">
@@ -48,12 +50,12 @@ export default function LandingPage() {
       <section className="landing-purpose" aria-labelledby="landing-purpose-title">
         <h2 id="landing-purpose-title">{LANDING.purposeTitle}</h2>
         <p>{LANDING.purposeBody}</p>
-        <p>{LANDING.googleUserData}</p>
-        <p className="landing-purpose-note">{LANDING.googleApis}</p>
+        {googleOn ? <p>{LANDING.googleUserData}</p> : null}
+        {googleOn ? <p className="landing-purpose-note">{LANDING.googleApis}</p> : null}
         <p>
           {LANDING.purposeLegalBefore} <Link href="/privacy">{LANDING.purposePrivacyLabel}</Link>{" "}
           {LANDING.purposeLegalBetween} <Link href="/tos">{LANDING.purposeTermsLabel}</Link>.{" "}
-          {LANDING.purposeLegalAfter}
+          {googleOn ? LANDING.purposeLegalAfter : LANDING.purposeLegalAfterEmail}
         </p>
       </section>
 

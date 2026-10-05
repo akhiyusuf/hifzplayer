@@ -10,17 +10,17 @@ Diras can keep running on Vercel while this stack is prepared. Flip `diras.app` 
 | User rows, sessions, Plus, gifts | Neon Postgres | Neon dashboard: one project, copy `DATABASE_URL` |
 | Files / audio | R2 | Cloudflare R2 bucket |
 | Bot check on password forms | Turnstile | Cloudflare Turnstile widget |
-| Continue with Google | Google OAuth | Google Cloud credentials, not Cloudflare |
+| Continue with Google | Google OAuth, off unless `GOOGLE_SIGN_IN=1` | Google Cloud credentials, not Cloudflare |
 
 Password and Google sign-in **run on Cloudflare** (the Worker). The accounts themselves are **not** stored in Cloudflare. Neon is the database. Turnstile is only the “are you human” checkbox.
 
 Cloudflare Access / Zero Trust is **not** used. That would gate the Quran behind a team login, and the 50-seat Access free tier is the wrong product for consumer Plus.
 
-## Authentication (password + Google + Turnstile)
+## Authentication (password + optional Google + Turnstile)
 
-1. **Password:** browser posts email, password, and a Turnstile token to `/api/auth/register` or `/api/auth/login`. The Worker verifies Turnstile (`siteverify` + `CF-Connecting-IP`), hashes the password (`scrypt`), writes the user/session in Neon, and sets httpOnly `diras_sid`.
-2. **Google:** `/api/auth/google` redirects to Google. The callback stores `google_sub` on the Neon user and sets the same session cookie. Redirect URI: `https://diras.app/api/auth/google/callback` (and `http://localhost:3000/api/auth/google/callback` for local).
-3. **Forgot password:** email OTP is only for reset (`/api/auth/otp` then `/api/auth/password`). Codes are hashed in Neon (10 minutes, 5 attempts, 5/email/hour).
+1. **Password:** browser posts email, password, and a Turnstile token to `/api/auth/register` or `/api/auth/login`. The Worker verifies Turnstile (`siteverify` + `CF-Connecting-IP`), hashes the password (`scrypt`), writes the user/session in Neon, and sets httpOnly `diras_sid`. A new account also enters a 6-digit email code (`/api/auth/verify`).
+2. **Google:** off unless `GOOGLE_SIGN_IN` is `1` or `true` (and both Google credentials are set). While it is off, the button is hidden and `/api/auth/google` redirects back to `/sign-in`. When it is on, `/api/auth/google` redirects to Google. The callback stores `google_sub` on the Neon user and sets the same session cookie. Redirect URI: `https://diras.app/api/auth/google/callback` (and `http://localhost:3000/api/auth/google/callback` for local).
+3. **Forgot password:** email OTP sets a new password (`/api/auth/otp` then `/api/auth/password`). Codes are hashed in Neon (10 minutes, 5 attempts, 5/email/hour). An account that was created with Google can use this path to set a password while Google sign-in is off.
 4. Middleware only checks that the cookie is **present** on checkout. Routes that grant Plus hash the cookie against Neon.
 5. Plus, trial-used, and gift holds live in Neon (`entitlements`, `gift_holds`). The Plus cookie is a cache.
 
@@ -66,7 +66,7 @@ Typical copy: **“Diras wants to access your Google Account”**, then email an
 5. Scopes: `openid`, `email`, `profile` (non-sensitive). Do not request extra Google scopes.
 6. Then **Credentials → Create OAuth client**, type **Web application**. The client’s internal name (e.g. “Diras web”) is not shown to users.
 7. Authorized redirect URIs: `https://diras.app/api/auth/google/callback` and `http://localhost:3000/api/auth/google/callback`.
-8. Put `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` on the Worker. Google sign-in is not a Cloudflare product.
+8. Put `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` on the Worker. Google sign-in is not a Cloudflare product. Leave `GOOGLE_SIGN_IN` unset to keep the button and OAuth routes off. Set `GOOGLE_SIGN_IN=1` to show Continue with Google again.
 
 Until Google verifies the app, they may also see an “unverified app” warning. The product name on that page is still the App name you set — keep it **Diras**.
 
@@ -102,7 +102,7 @@ Secrets to put on the Worker (same names as `.env.example`): Turnstile, Google, 
 ## Cutover
 
 1. Neon `DATABASE_URL` is set; first sign-in creates tables (`SELECT 1` through the URL succeeds).
-2. Deploy the Worker. Confirm `/sign-in` completes a password or Google session (cookie `diras_sid`, `Secure` + `HttpOnly`).
+2. Deploy the Worker. Confirm `/sign-in` completes an email-and-password session (cookie `diras_sid`, `Secure` + `HttpOnly`). Google is optional and stays off until `GOOGLE_SIGN_IN=1`.
 3. Confirm Turnstile renders on the password form and a bad token is rejected.
 4. Place a test object in R2 and confirm the public URL streams.
 5. Point Stripe/Paystack webhooks at `diras.app`.

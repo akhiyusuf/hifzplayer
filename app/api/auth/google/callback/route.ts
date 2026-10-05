@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { googleSignInEnabled } from "@/lib/auth/config";
 import { finishGoogleOAuth } from "@/lib/auth/google";
 import { appUrl } from "@/lib/billing/env";
 import { safePath } from "@/lib/nav";
@@ -12,6 +13,9 @@ export async function GET(request: Request) {
   const err = url.searchParams.get("error");
   const code = url.searchParams.get("code") || "";
   const state = url.searchParams.get("state") || "";
+  if (!googleSignInEnabled()) {
+    return NextResponse.redirect(new URL("/sign-in?error=google-off", origin));
+  }
   if (err || !code || !state) {
     return NextResponse.redirect(new URL("/sign-in?error=google", origin));
   }

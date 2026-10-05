@@ -1,5 +1,10 @@
 import { cookies } from "next/headers";
-import { OAUTH_COOKIE, googleClientId, googleClientSecret, googleConfigured } from "./config.ts";
+import {
+  OAUTH_COOKIE,
+  googleClientId,
+  googleClientSecret,
+  googleSignInEnabled,
+} from "./config.ts";
 import { completeSignIn, findOrCreateUser, type AccountUser } from "./otp.ts";
 import { randomToken } from "./crypto.ts";
 import { sql } from "../db/neon.ts";
@@ -30,7 +35,7 @@ export function googleRedirectUrl(request: Request, state: string) {
 }
 
 export async function beginGoogleOAuth(request: Request, next: string) {
-  if (!googleConfigured()) return null;
+  if (!googleSignInEnabled()) return null;
   const state = randomToken();
   const jar = await cookies();
   const payload: OauthCookie = { state, next: safePath(next, "/") };
@@ -49,7 +54,7 @@ export async function finishGoogleOAuth(
   code: string,
   state: string,
 ): Promise<{ user: AccountUser; next: string } | { error: string }> {
-  if (!googleConfigured()) return { error: "Google sign-in is not configured yet" };
+  if (!googleSignInEnabled()) return { error: "Google sign-in is turned off. Use email and a password." };
   const jar = await cookies();
   const raw = jar.get(OAUTH_COOKIE)?.value || "";
   jar.set(OAUTH_COOKIE, "", { path: "/", maxAge: 0 });

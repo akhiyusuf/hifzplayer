@@ -33,8 +33,25 @@ export function googleClientSecret() {
   return process.env.GOOGLE_CLIENT_SECRET || "";
 }
 
+/** Credentials exist. Routes and consent code stay in the repo for a later re-enable. */
 export function googleConfigured() {
   return Boolean(googleClientId() && googleClientSecret());
+}
+
+/**
+ * Product switch. Off unless `GOOGLE_SIGN_IN` is `1` or `true`, even when
+ * Google credentials are already set. Re-enable by setting that variable.
+ */
+export function googleSignInEnabled() {
+  const flag = (process.env.GOOGLE_SIGN_IN || "").trim().toLowerCase();
+  if (flag !== "1" && flag !== "true") return false;
+  return googleConfigured();
+}
+
+/** Google-only rows still exist. While Google is off, point them at the email reset. */
+export function googleOnlyAccountMessage() {
+  if (googleSignInEnabled()) return "This email uses Google. Continue with Google.";
+  return "This email was created with Google. On the sign-in page, choose Forgot password and set a password from the code we email you.";
 }
 
 export function passwordLooksValid(password: string) {

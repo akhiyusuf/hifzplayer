@@ -1,3 +1,4 @@
+import { googleSignInEnabled } from "../auth/config.ts";
 import { APP_NAME, CONTACT_EMAIL, PLUS_NAME } from "../brand.ts";
 import { renderEmailHtml } from "./template.ts";
 
@@ -21,10 +22,15 @@ export function giftNoticeSubject(input?: Pick<GiftNoticeInput, "alreadyPlus" | 
   return `Someone gifted you ${PLUS_NAME}`;
 }
 
+function signInHow(existingAccount: boolean) {
+  const method = googleSignInEnabled() ? "password or Google" : "email and a password";
+  return existingAccount
+    ? `Sign in to ${APP_NAME} with this same email — ${method}.`
+    : `You have been granted ${PLUS_NAME}. Sign in or create a ${APP_NAME} account with this same email — ${method}.`;
+}
+
 export function giftNoticeText(input: GiftNoticeInput) {
-  const how = input.existingAccount
-    ? `Sign in to ${APP_NAME} with this same email — password or Google.`
-    : `You have been granted ${PLUS_NAME}. Sign in or create a ${APP_NAME} account with this same email — password or Google.`;
+  const how = signInHow(input.existingAccount);
 
   const lead =
     input.existingAccount && input.keptLifetime
@@ -56,9 +62,7 @@ function escapeHtml(s: string): string {
 }
 
 export function giftNoticeHtml(input: GiftNoticeInput) {
-  const how = input.existingAccount
-    ? `Sign in to ${APP_NAME} with this same email — password or Google.`
-    : `You have been granted ${PLUS_NAME}. Sign in or create a ${APP_NAME} account with this same email — password or Google.`;
+  const how = signInHow(input.existingAccount);
 
   const lead =
     input.existingAccount && input.keptLifetime
