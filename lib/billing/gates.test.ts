@@ -66,6 +66,14 @@ describe("Plus explanation copy", () => {
       PLUS_EXPLAIN.plus.some((line) => /theme|palette|colour/i.test(line)),
       false,
     );
+    assert.equal(
+      PLUS_EXPLAIN.free.some((line) => /AI Ustadh/i.test(line)),
+      false,
+    );
+    assert.equal(
+      PLUS_EXPLAIN.plus.some((line) => /AI Ustadh/i.test(line)),
+      true,
+    );
   });
 
   it("maps legacy focus asks onto practice copy", () => {
@@ -85,7 +93,7 @@ describe("Focus job gating", () => {
     assert.equal(isPaidFocusJob("verse"), false);
     assert.equal(isPaidFocusJob("ustadh"), false);
     assert.equal(isPaidFocusJob(""), false);
-    assert.equal(isFreePracticeJob("ustadh"), true);
+    assert.equal(isFreePracticeJob("ustadh"), false); // USTADH_ENABLED=false
     assert.equal(isFreePracticeJob("verse"), true);
     assert.equal(isFreePracticeJob("word"), false);
   });

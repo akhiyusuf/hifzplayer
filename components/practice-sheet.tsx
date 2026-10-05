@@ -7,6 +7,8 @@ import {
   practiceSheetShowsExit,
 } from "@/lib/player-chrome";
 import { isFreePracticeJob } from "@/lib/billing/gates";
+import { PLUS_NAME } from "@/lib/brand";
+import { USTADH_ENABLED } from "@/lib/ustadh/enabled";
 import { usePlus } from "@/lib/plus";
 import { Icon } from "./icon";
 import { PassageRange } from "./passage-range";
@@ -49,15 +51,25 @@ export function PracticeSheet({
           {jobs.map((m) => {
             const on = mode === m.id;
             const listen = m.id === "verse";
+            const comingSoon = m.id === "ustadh" && !USTADH_ENABLED;
             const free = isFreePracticeJob(m.id);
-            const locked = !plusOn && !on && !listen && !free;
+            const locked = !comingSoon && !plusOn && !on && !listen && !free;
             return (
               <button
                 key={m.id}
-                className={`mode-opt${on ? " on" : ""}${locked ? " locked" : ""}`}
+                type="button"
+                className={`mode-opt${on ? " on" : ""}${locked || comingSoon ? " locked" : ""}${comingSoon ? " coming-soon" : ""}`}
                 data-practice-exit={listen && showExit ? "true" : undefined}
-                aria-label={listen && showExit ? "Stop practice" : undefined}
+                aria-label={
+                  comingSoon
+                    ? `${m.name} — Coming soon, part of ${PLUS_NAME}`
+                    : listen && showExit
+                      ? "Stop practice"
+                      : undefined
+                }
+                disabled={comingSoon}
                 onClick={() => {
+                  if (comingSoon) return;
                   const next = practiceSheetPickMode(mode, m.id);
                   const leaving = next === "verse";
                   const nextFree = isFreePracticeJob(next);
@@ -75,8 +87,19 @@ export function PracticeSheet({
                   <Icon name={m.icon} size={19} />
                 </span>
                 <span className="mo-t">
-                  <b>{listen && showExit ? "Listen" : m.name}</b>
-                  <span>{listen && showExit ? "Stop practice — listen to this ayah" : m.desc}</span>
+                  <b>
+                    {listen && showExit ? "Listen" : m.name}
+                    {comingSoon ? (
+                      <span className="badge-coming-soon">Coming soon</span>
+                    ) : null}
+                  </b>
+                  <span>
+                    {comingSoon
+                      ? `Part of ${PLUS_NAME}`
+                      : listen && showExit
+                        ? "Stop practice — listen to this ayah"
+                        : m.desc}
+                  </span>
                 </span>
                 <span className="radio-dot">
                   <Icon name="check" size={13} />

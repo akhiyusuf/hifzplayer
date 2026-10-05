@@ -1,4 +1,5 @@
 import { PLUS_NAME } from "../brand.ts";
+import { USTADH_ENABLED } from "../ustadh/enabled.ts";
 
 export const FREE_REPEAT_MAX = 2;
 
@@ -44,7 +45,6 @@ export const PLUS_EXPLAIN = {
     "Mushaf view and Focus view, including play",
     "Repeat on the player, this verse or a range of verses, until you turn it off",
     "A word played once or twice",
-    "AI Ustadh recite coach (mic + interrupt clips)",
     "Colour themes — orange, green, black and white, pink, and gold",
     "Opening Playlists and leaving",
   ],
@@ -54,6 +54,7 @@ export const PLUS_EXPLAIN = {
     "Occasion lists — Friday, night, morning, and the rest",
     "A word played 3×, 5×, 10×, or until you stop",
     "Relay with more than one qari",
+    "AI Ustadh recite coach — coming soon",
   ],
 } as const;
 
@@ -81,7 +82,9 @@ export function isPaidFocusJob(mode: string | null | undefined) {
   return mode === "word" || mode === "masked" || mode === "relay";
 }
 
-/** Free practice jobs (no Plus). Verse listen + AI Ustadh. */
+/** Free practice jobs (no Plus). Verse listen; AI Ustadh when enabled. */
 export function isFreePracticeJob(mode: string | null | undefined) {
-  return mode === "verse" || mode === "ustadh";
+  if (mode === "verse") return true;
+  if (mode === "ustadh") return USTADH_ENABLED;
+  return false;
 }

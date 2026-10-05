@@ -22,6 +22,7 @@ import {
   type PhraseRange,
   type RawExpectedWord,
 } from "./units.ts";
+import { USTADH_ENABLED } from "./enabled.ts";
 
 export const MAX_ASR_BYTES = 25 * 1024 * 1024;
 const AUDIO_EXT = new Set(["flac", "mp3", "mp4", "mpeg", "mpga", "m4a", "ogg", "wav", "webm"]);
@@ -164,8 +165,13 @@ function sessionIdOf(raw: string): string | undefined | null {
 
 export async function handleAsrRequest(
   request: Request,
-  deps?: { transcribe?: TranscribeFn },
+  deps?: { transcribe?: TranscribeFn; enabled?: boolean },
 ): Promise<{ status: number; body: UstadhAsrResponse | AsrErrorBody }> {
+  const enabled = deps?.enabled ?? USTADH_ENABLED;
+  if (!enabled) {
+    return fail(403, "AI Ustadh is not available yet", "USTADH_DISABLED");
+  }
+
   if (!groqAsrConfigured()) {
     return fail(503, "GROQ_API_KEY is not set", "ASR_NOT_CONFIGURED");
   }
