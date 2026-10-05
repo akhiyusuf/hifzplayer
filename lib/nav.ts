@@ -8,7 +8,22 @@ export function backHref(from: string | string[] | undefined): string {
   if (value === "listen") return "/listen";
   if (value === "roadmap") return "/roadmap";
   if (value === "home") return "/home";
+  if (value === "privacy") return "/privacy";
+  if (value === "tos") return "/tos";
   return "/home";
+}
+
+/**
+ * Link between Privacy and Terms.
+ * A known `from` (settings, account, …) is kept so Back still returns there.
+ * Otherwise the link names this page (`from=tos` on Privacy, `from=privacy` on Terms).
+ */
+export function legalPeerHref(target: "privacy" | "tos", from: string | string[] | undefined): string {
+  const value = Array.isArray(from) ? from[0] : from;
+  const self = target === "privacy" ? "tos" : "privacy";
+  if (!value || value === target) return `/${target}?from=${self}`;
+  if (value === "home" || backHref(value) !== "/home") return `/${target}?from=${value}`;
+  return `/${target}?from=${self}`;
 }
 
 /** Allow only same-origin relative paths. */

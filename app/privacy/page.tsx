@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/icon";
 import { APP_NAME, CONTACT_EMAIL, PLUS_NAME } from "@/lib/brand";
-import { backHref } from "@/lib/nav";
+import { backHref, legalPeerHref } from "@/lib/nav";
 
 export const metadata: Metadata = { title: `Privacy — ${APP_NAME}` };
 
@@ -115,7 +115,8 @@ export default async function PrivacyPage({
           <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Changes and contact</h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
             If this policy ever changes — for example, if error reporting is added — this page will say so plainly,
-            including what is collected and why. Questions:{" "}
+            including what is collected and why. The rules for using {APP_NAME} are on the{" "}
+            <Link href={legalPeerHref("tos", from)}>terms</Link>. Questions:{" "}
             <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "var(--action-primary)" }}>
               {CONTACT_EMAIL}
             </a>
