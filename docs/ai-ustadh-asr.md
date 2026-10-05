@@ -33,6 +33,8 @@ The route compares those words to the expected ayah. Comparison ignores tashkeel
 | Two or more words inside one phrase | `phrase` | `replay_phrase` |
 | Every word in the ayah, or most words across every phrase | `ayah` | phrase decisions, plus the ayah hint |
 
+`slow_word` is decided per word. If that word’s `missCount` is already 2 or more, its replay is `slow_word` even when other words in the phrase also missed. The interrupt for that take stays `phrase` (or `ayah`) so the client can play the larger unit or slow the sticky word.
+
 Act on **`interrupts[0]`** and stop listening. That hint is the earliest unit in the ayah. `replays` is one decision per flagged word so the client can pick the recording:
 
 - `replay_word` / `slow_word` → `targetId` is the Quran.com word clip, e.g. `wbw/001_002_004.mp3` (`resolveWordAudioUrl` already knows that path). `slow_word` is the same clip; the client plays it slower.
