@@ -15,6 +15,12 @@ export const LANDING = {
     "Diras is a Quran reading and memorisation practice app. You can open the mushaf and read or listen without signing in. Practice on a passage is Word Reps, Masked, and Relay: loop a word, hide the line, or trade ayahs with the qari. An account is optional.",
   googleApis:
     "Diras does not use Google APIs to create or distribute AI-generated non-consensual intimate imagery; Google sign-in is only for account login.",
+  purposeLegalBefore: "Read the",
+  purposePrivacyLabel: "privacy policy",
+  purposeLegalBetween: "and the",
+  purposeTermsLabel: "terms of service",
+  purposeLegalAfter:
+    "Both pages are public. They describe what Diras collects, including Google user data, and the rules for using the app.",
   primaryCta: "Try Plus free for 1 day",
   primaryHref: "/pricing",
   secondaryCta: "Open the mushaf",
