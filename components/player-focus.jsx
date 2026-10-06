@@ -215,7 +215,6 @@ export function FocusWordPage(e) {
   return _jsx(FocusStage, {
     title: w ? w.ar : "Word Reps",
     meta: h.key,
-    hint: undefined,
     hint: pick.start != null && pick.end != null
       ? "Pick 5\xd7, 10\xd7, or \u221e below, then play."
       : "Tap a word, pin a range, then pick a count.",
