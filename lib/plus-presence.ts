@@ -22,7 +22,7 @@ export function playlistsLocked(plus: boolean) {
 export function playlistsLockedPitch() {
   return {
     title: `Playlists are ${PLUS_NAME}`,
-    body: `Eight occasion lists — Friday, night, morning, and the rest. Play is ${PLUS_NAME}.`,
+    body: `Browse the lists below. Play is ${PLUS_NAME}. Reading stays free on Menu.`,
     cta: "See plans",
   };
 }

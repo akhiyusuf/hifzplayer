@@ -55,8 +55,16 @@ export default async function AccountPage({
         <p className="pricing-lead" style={{ textAlign: "center", maxWidth: 360 }}>
           Sign in so {PLUS_NAME} follows you, not just this browser.
         </p>
+        <ul className="account-benefits">
+          <li>{PLUS_NAME} portability across devices</li>
+          <li>Gifts and account recovery</li>
+          <li>Reading stays free either way</li>
+        </ul>
         <Link className="btn-primary" href={`/sign-in?redirect_url=${next}`}>
           Sign in
+        </Link>
+        <Link className="btn-secondary" href={`/sign-up?redirect_url=${next}`}>
+          Create account
         </Link>
       </AuthShell>
     );

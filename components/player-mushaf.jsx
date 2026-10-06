@@ -11,6 +11,7 @@ import {
 import { Icon } from "@/components/icon";
 import { MaskedCutoffChip } from "@/components/masked-cutoff";
 import { PracticeStrip } from "@/components/practice-strip";
+import { WordRepChrome } from "@/components/word-rep-chrome";
 import {
   MUSHAF_HOT_PAD,
   MUSHAF_VIEW_PAD,
@@ -31,8 +32,24 @@ import {
 export function MushafJobBar(e) {
   let { engine: t, state: s, onLeavePractice: leave } = e;
   useSyncExternalStore(t.subscribeWord, t.getWordSnap, t.getWordSnap);
+  let { plus: plusOn, askPlus: ask } = usePlus();
   if ("relay" === s.mode && s.relay && s.relay.active) {
     return _jsx(MushafRelayBar, { engine: t, state: s });
+  }
+  if ("word" === s.mode) {
+    let pick = s.wordPick || emptyWordPick();
+    return _jsx(WordRepChrome, {
+      start: pick.start,
+      end: pick.end,
+      count: pick.count,
+      plusOn,
+      onCount: (n) => {
+        let p = t.getSnapshot().wordPick || emptyWordPick(),
+          span = mushafRepSpan(p, p.open || p.start || 1);
+        t.playWordReps(span.start, span.end, n);
+      },
+      onAskPlus: () => ask("practice"),
+    });
   }
   if ("masked" !== s.mode) return null;
   let verse = s.verses[s.vIdx];
@@ -43,18 +60,27 @@ export function MushafJobBar(e) {
   return _jsx(PracticeStrip, {
     title: "Revealed ".concat(i.maxRev, " of ", l),
     meta: verse.key,
-    extra: leave ? _jsx(MaskedCutoffChip, { onLeave: leave }) : null,
-    actions: _jsxs("button", {
-      className: "focus-act primary",
-      onClick: () => t.peek(),
-      disabled: i.peeks <= 0 || c,
+    actions: _jsxs(_Fragment, {
       children: [
-        _jsx(Icon, { name: "eye", size: 16 }),
-        c
-          ? "Verse revealed"
-          : i.peeking
-            ? "Peeking"
-            : "Peek \xb7 ".concat(i.peeks, " left"),
+        leave
+          ? _jsx(MaskedCutoffChip, {
+              onLeave: leave,
+              onUnmask: () => t.revealTo(verse, l),
+            })
+          : null,
+        _jsxs("button", {
+          className: "focus-act",
+          onClick: () => t.peek(),
+          disabled: i.peeks <= 0 || c,
+          children: [
+            _jsx(Icon, { name: "eye", size: 16 }),
+            c
+              ? "Verse revealed"
+              : i.peeking
+                ? "Peeking"
+                : "Peek \xb7 ".concat(i.peeks, " left"),
+          ],
+        }),
       ],
     }),
   });

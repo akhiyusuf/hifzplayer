@@ -206,14 +206,25 @@ export function PlayerFoot(e) {
             (onOccupy("dock"), setTransOpen(!0));
           },
           "aria-expanded": transOpen,
-          "aria-label": "Translation",
+          "aria-label": transOpen
+            ? "Collapse translation"
+            : "Show full translation",
         children: [
             _jsxs("div", {
               className: "trans-meta",
               children: [
                 _jsx("b", { children: d.key.replace(":", " : ") }),
-                _jsx("span", {
-                  children: s.translationName,
+                _jsxs("span", {
+                  className: "trans-meta-end",
+                  children: [
+                    s.translationName,
+                    transOpen
+                      ? null
+                      : _jsx("span", {
+                          className: "trans-more",
+                          children: "More",
+                        }),
+                  ],
                 }),
               ],
             }),

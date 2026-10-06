@@ -62,7 +62,7 @@ export function PracticeSheet({
                 data-practice-exit={listen && showExit ? "true" : undefined}
                 aria-label={
                   comingSoon
-                    ? `${m.name} — Coming soon, part of ${PLUS_NAME}`
+                    ? `${m.name} — Coming soon`
                     : locked
                       ? `${m.name} — ${PLUS_NAME}`
                       : listen && showExit
@@ -102,7 +102,7 @@ export function PracticeSheet({
                   </b>
                   <span>
                     {comingSoon
-                      ? `Part of ${PLUS_NAME}`
+                      ? "Not available yet"
                       : locked
                         ? `Part of ${PLUS_NAME}`
                         : listen && showExit

@@ -13,7 +13,7 @@ export const FOCUS_JOBS = [
     id: "word",
     name: "Word Reps",
     icon: "brackets",
-    desc: "Tap a word. Pin a range, or pick 5×, 10×, or ∞, then play",
+    desc: "Tap a word to pin it, pick 5× / 10× / ∞ below, then play",
   },
   {
     id: "masked",

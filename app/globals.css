@@ -63,8 +63,8 @@ body:has(.onboard) .shell{padding-bottom:calc(28px + env(safe-area-inset-bottom)
 .index-row .index-play{display:flex;align-items:center;gap:13px;flex:1;min-width:0;padding:12px 10px 12px 14px;text-align:left}
 .index-row .index-setup{width:46px;flex:none;display:flex;align-items:center;justify-content:center;color:var(--text-muted);border-left:1px solid var(--border-default)}
 .index-row .index-setup:hover{color:var(--action-primary);background:var(--tint-primary-06)}
-.qari-inline{display:inline-flex;align-items:center;gap:5px;max-width:46%;padding:5px 8px;border-radius:var(--radius-pill);font-size:12px;font-weight:600;color:var(--text-secondary);background:var(--bg-surface-alt)}
-.qari-inline>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qari-inline{display:inline-flex;align-items:center;gap:5px;max-width:52%;padding:5px 10px;border-radius:var(--radius-pill);font-size:12px;font-weight:600;color:var(--text-secondary);background:var(--bg-surface-alt)}
+.qari-inline>span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.25;white-space:normal;text-align:start}
 .app-sidebar .as-foot a{color:inherit;text-decoration:none}
 .app-sidebar .as-foot p{margin:8px 0 0}
 .player-tools{display:flex;align-items:center;gap:8px;min-width:0}
@@ -75,7 +75,7 @@ body:has(.onboard) .shell{padding-bottom:calc(28px + env(safe-area-inset-bottom)
 
 .trans-dock.tap{width:100%;text-align:left;background:var(--bg-surface);border:none;cursor:pointer;font:inherit;color:inherit}
 .trans-dock.compact{max-height:none;overflow:hidden;padding-bottom:6px}
-.trans-clamp{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.trans-clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .listen-menu{position:relative;display:flex;justify-content:center;align-self:center;z-index:6}
 .listen-menu-btn{width:40px;height:40px;border-radius:var(--radius-pill);border:1px solid var(--border-default);background:var(--bg-surface);color:var(--text-secondary);display:inline-flex;align-items:center;justify-content:center}
 .listen-menu-btn:active{background:var(--bg-surface-alt)}
@@ -623,16 +623,21 @@ a.qari-inline{text-decoration:none;color:inherit}
 }
 .index-row .index-setup{
   width:auto;
-  min-width:58px;
-  padding:8px 10px;
+  min-width:64px;
+  min-height:52px;
+  margin:4px 6px 4px 0;
+  padding:10px 12px;
   flex-direction:column;
-  gap:3px;
-  font-size:10px;
+  gap:4px;
+  font-size:11px;
   font-weight:600;
   line-height:1.15;
   letter-spacing:.01em;
+  border-radius:var(--radius-button);
 }
 .index-row .index-setup svg{display:block;flex:none}
+.index-row .index-play{padding-right:8px}
+.index-row{gap:4px}
 body:has(.scrim) .follow-back,
 body:has(.scrim) .repeat-pop,
 body:has(.scrim) .player-foot,
@@ -782,3 +787,33 @@ body:has(.scrim) [class*="cl-userButton"]{
 .plan-foot-actions .btn-secondary{flex:1 1;font-size:13.5px;padding:11px}
 .plan-hint{margin:4px 2px 0;font-size:12.5px;line-height:1.45;color:var(--text-muted)}
 .plan-hint a{color:var(--action-primary);font-weight:600;text-decoration:none}
+
+/* Mobile audit remaining */
+.trans-more{margin-left:8px;font-size:11px;font-weight:700;color:var(--action-primary);letter-spacing:.02em;text-transform:uppercase}
+.trans-meta-end{display:inline-flex;align-items:center;gap:0;flex:none}
+.trans-dock.compact{cursor:pointer}
+.account-benefits{margin:0 auto 12px;padding:0 0 0 18px;max-width:320px;display:flex;flex-direction:column;gap:6px;font-size:13.5px;line-height:1.45;color:var(--text-secondary);text-align:left}
+.lists-locked-banner{display:flex;flex-direction:column;align-items:flex-start;gap:10px;width:100%;padding:16px;border-radius:var(--radius-card);background:var(--bg-surface);border:1px solid var(--border-default)}
+.lists-locked-banner .lists-locked-copy{display:flex;flex-direction:column;gap:4px}
+.lists-locked-banner .lists-locked-copy b{font-family:var(--font-display);font-size:17px;font-weight:700}
+.lists-locked-banner .lists-locked-copy span{font-size:13.5px;line-height:1.45;color:var(--text-secondary)}
+.lists-locked-cta{width:100%;margin-top:4px}
+.lists-locked .lists-locked-cta{margin-top:8px}
+.occ-card.locked{position:relative;opacity:.92}
+.occ-card.locked::after{content:"";position:absolute;inset:0;border-radius:var(--radius-card);background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.04));pointer-events:none}
+.masked-cutoff-row{display:flex;gap:8px;flex-wrap:wrap;width:100%}
+.masked-cutoff-row .focus-act{flex:1 1;min-width:0;justify-content:center}
+.practice-strip-actions .masked-cutoff-row{width:100%}
+.relay-simple-summary{margin:4px 0 8px;font-size:13.5px;line-height:1.45;color:var(--text-secondary)}
+.relay-customize-btn{display:inline;padding:0;border:none;background:none;color:var(--action-primary);font-weight:600;font-size:13.5px;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.legal-toc{position:sticky;top:0;z-index:4;display:flex;flex-wrap:wrap;gap:6px;padding:10px 0 12px;margin:0 0 4px;background:var(--bg-app);border-bottom:1px solid var(--border-default)}
+.legal-toc a{display:inline-flex;align-items:center;padding:6px 10px;border-radius:var(--radius-pill);border:1px solid var(--border-default);background:var(--bg-surface);font-size:12px;font-weight:600;color:var(--text-secondary);text-decoration:none}
+.legal-toc a:active{background:var(--tint-primary-08);color:var(--action-primary);border-color:var(--tint-primary-border)}
+.legal-collapse{border:1px solid var(--border-default);border-radius:var(--radius-card);background:var(--bg-surface);padding:0}
+.legal-collapse>summary{list-style:none;cursor:pointer;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.legal-collapse>summary::-webkit-details-marker{display:none}
+.legal-collapse>summary::after{content:"+";font-size:18px;font-weight:600;color:var(--text-muted);flex:none}
+.legal-collapse[open]>summary::after{content:"–"}
+.legal-collapse-body{padding:0 14px 14px;display:flex;flex-direction:column;gap:6px}
+.practice-strip .rep-seg button.locked{opacity:.7}
+.practice-strip .rep-seg button:disabled{opacity:.4}

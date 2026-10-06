@@ -38,12 +38,12 @@ describe("plus presence copy", () => {
     assert.doesNotMatch(occasionHintCopy(true, "Minshawi"), /Minshawi/);
   });
 
-  it("shows one locked Plus pitch instead of eight sparkle cards", () => {
+  it("keeps a locked Plus pitch for the playlists banner", () => {
     assert.equal(playlistsLocked(false), true);
     assert.equal(playlistsLocked(true), false);
     const pitch = playlistsLockedPitch();
     assert.match(pitch.title, new RegExp(PLUS_NAME));
-    assert.match(pitch.body, /occasion lists/i);
+    assert.match(pitch.body, /Browse the lists|Play is/i);
     assert.doesNotMatch(pitch.body, /Look around/);
     assert.equal(pitch.cta, "See plans");
   });

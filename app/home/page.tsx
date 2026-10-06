@@ -17,12 +17,13 @@ import {
   snapshotOnboarding,
 } from "@/lib/onboarding";
 import { spanForPlay, spanForSetup } from "@/lib/player-chrome";
+import { reciterPillName } from "@/lib/playlists";
 import { listSessions, streakCount, timeAgo } from "@/lib/sessions";
 import type { Session } from "@/lib/types";
 
 export default function HomePage() {
   const router = useRouter();
-  const { chapters, status, reload, reciterId, setReciterId, reciterName } = useAppData();
+  const { chapters, status, reload, reciterId, setReciterId, reciterName, recitations } = useAppData();
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -120,9 +121,6 @@ export default function HomePage() {
           >
             <Icon name="search" size={18} />
           </button>
-          <Link className="icon-btn tap" href="/settings" aria-label="Settings">
-            <Icon name="settings" size={18} />
-          </Link>
         </div>
       </div>
       <OfflineBanner />
@@ -259,9 +257,12 @@ export default function HomePage() {
             <section className="picker-section">
               <div className="index-head">
                 <span className="label-eyebrow">Surahs</span>
-                <button className="qari-inline tap" onClick={() => setQariOpen(true)} aria-label="Change reciter">
+                <button className="qari-inline tap" onClick={() => setQariOpen(true)} aria-label={`Change reciter, ${reciterName(reciterId)}`}>
                   <Icon name="mic" size={14} style={{ color: "var(--text-muted)", flex: "none" }} />
-                  <span>{reciterName(reciterId)}</span>
+                  <span>{(() => {
+                    const rec = recitations.find((r) => r.id === reciterId);
+                    return rec ? reciterPillName(rec.name, rec.style) : reciterName(reciterId);
+                  })()}</span>
                   <Icon name="chevron-down" size={13} style={{ color: "var(--text-muted)", flex: "none" }} />
                 </button>
               </div>
@@ -317,14 +318,14 @@ export default function HomePage() {
                         <button
                           type="button"
                           className="index-setup tap"
-                          aria-label={`Set up ${c.name_simple}`}
+                          aria-label={`Choose range for ${c.name_simple}`}
                           onClick={() => {
                             setSelectedId(c.id);
                             setPracticeOpen(true);
                           }}
                         >
                           <Icon name="settings-2" size={18} />
-                          <span>Set up</span>
+                          <span>Range</span>
                         </button>
                       </div>
                     );

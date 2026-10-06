@@ -40,8 +40,16 @@ export default async function TermsPage({
           {PLUS_NAME} are optional. If you read here, create an account, or pay for Plus, you agree to these
           terms and to the <Link href={legalPeerHref("privacy", from)}>privacy policy</Link>.
         </p>
+        <nav className="legal-toc" aria-label="Terms sections">
+          <a href="#the-service">Service</a>
+          <a href="#accounts">Accounts</a>
+          <a href="#bot-checks">Bots</a>
+          <a href="#payments">Payments</a>
+          <a href="#quran-text-and-audio">Quran</a>
+          <a href="#acceptable-use">Use</a>
+        </nav>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>The service</h2>
+          <h2 id="the-service" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>The service</h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
             {APP_NAME} is a web app for reading and practising the Quran. We try to keep it available, but we do
             not promise that it will always be up, fast, or free of mistakes. A feature can change, pause, or
@@ -49,7 +57,7 @@ export default async function TermsPage({
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Accounts</h2>
+          <h2 id="accounts" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Accounts</h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
             You can read without an account. Sign in with email and a password. A code by email confirms a new
             account or resets a password.
@@ -59,14 +67,14 @@ export default async function TermsPage({
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Bot checks</h2>
+          <h2 id="bot-checks" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Bot checks</h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
             Password sign-in and sign-up use Cloudflare Turnstile. It checks that a person is at the form, not a
             script. That check runs with Cloudflare.
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Payments</h2>
+          <h2 id="payments" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Payments</h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
             Optional {PLUS_NAME} checkout is handled by Paystack (Nigeria and West Africa) or Stripe (other
             regions), chosen from your location. Card numbers go to those providers, not to {APP_NAME}. The price
@@ -76,7 +84,7 @@ export default async function TermsPage({
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>
+          <h2 id="quran-text-and-audio" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>
             Quran text and audio
           </h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
@@ -86,7 +94,7 @@ export default async function TermsPage({
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Acceptable use</h2>
+          <h2 id="acceptable-use" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Acceptable use</h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
             Use {APP_NAME} for your own reading and practice. Do not abuse it. That means no scraping or automated
             downloading, no attempts to break, overload, or probe the app, and no sharing of a Plus account so
@@ -94,7 +102,7 @@ export default async function TermsPage({
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Ending access</h2>
+          <h2 id="ending-access" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>Ending access</h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
             You can stop using {APP_NAME} whenever you like. To close an account, write to{" "}
             <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "var(--action-primary)" }}>
@@ -105,7 +113,7 @@ export default async function TermsPage({
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>
+          <h2 id="limits-on-liability" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>
             Limits on liability
           </h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>
@@ -116,7 +124,7 @@ export default async function TermsPage({
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>
+          <h2 id="changes-and-contact" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>
             Changes and contact
           </h2>
           <p style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--text-secondary)" }}>

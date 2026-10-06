@@ -398,6 +398,7 @@ export function RelaySheet(e) {
         : defaults.rounds,
     ),
     [W, A] = useState(!1),
+    [customize, setCustomize] = useState(!1),
     { plus: plusOn, askPlus: ask } = usePlus(),
     L = (e, t) => {
       let s = e + t;
@@ -437,11 +438,32 @@ export function RelaySheet(e) {
           ),
         ),
       }),
-      _jsx("span", {
-        className: "label-eyebrow",
-        children: "Turn order",
-      }),
-      _jsx("div", {
+      customize
+        ? null
+        : _jsxs("p", {
+            className: "relay-simple-summary",
+            children: [
+              "Default: ",
+              relayStartsWith(b) === "you" ? "You ↔ Reciter" : "Reciter ↔ You",
+              ". ",
+              _jsx("button", {
+                type: "button",
+                className: "relay-customize-btn tap",
+                onClick: () => setCustomize(!0),
+                children: "Customize turn order",
+              }),
+            ],
+          }),
+      customize
+        ? _jsx("span", {
+            className: "label-eyebrow",
+            children: "Turn order",
+          })
+        : null,
+      customize
+        ? _jsxs(_Fragment, {
+            children: [
+_jsx("div", {
         className: "sheet-list",
         children: b.map((e, t) => {
           let s = "you" === e.kind ? "You (paced)" : g(e.reciterId);
@@ -572,6 +594,15 @@ export function RelaySheet(e) {
           plusOn ? "Add participant" : "Add another reciter",
         ],
       }),
+              _jsx("button", {
+                type: "button",
+                className: "btn-secondary",
+                onClick: () => setCustomize(!1),
+                children: "Hide advanced",
+              }),
+            ],
+          })
+        : null,
       _jsx("div", {
         style: { display: "flex", gap: 12 },
         children: [

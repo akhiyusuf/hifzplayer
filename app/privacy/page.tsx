@@ -68,8 +68,21 @@ export default async function PrivacyPage({
           long we keep it, and how to ask us to delete it. The rules for using the app are on the{" "}
           <Link href={legalPeerHref("tos", from)}>terms</Link>.
         </p>
+
+        <nav className="legal-toc" aria-label="Privacy sections">
+          <a href="#data">Data</a>
+          <a href="#why">Why</a>
+          <a href="#google">Google</a>
+          <a href="#device">On device</a>
+          <a href="#processors">Processors</a>
+          <a href="#cookies">Cookies</a>
+          <a href="#payments">Payments</a>
+          <a href="#retention">Retention</a>
+          <a href="#contact">Contact</a>
+        </nav>
+
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={sectionTitle}>Data we collect</h2>
+          <h2 id="data" style={sectionTitle}>Data we collect</h2>
           <p style={body}>
             You can read without an account. If you sign in or pay, we collect only what that step needs:
           </p>
@@ -105,7 +118,7 @@ export default async function PrivacyPage({
           </ul>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={sectionTitle}>Why we use it</h2>
+          <h2 id="why" style={sectionTitle}>Why we use it</h2>
           <ul style={list}>
             <li>
               To run the account: sign you in, show your name, confirm a new email, and send a password reset
@@ -123,7 +136,7 @@ export default async function PrivacyPage({
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={sectionTitle}>Google user data</h2>
+          <h2 id="google" style={sectionTitle}>Google user data</h2>
           <p style={body}>
             Sign in with Google is turned off. Accounts use email and a password. This section still
             comprehensively discloses how {APP_NAME} accesses, uses, stores, or shares Google user data when
@@ -183,7 +196,7 @@ export default async function PrivacyPage({
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={sectionTitle}>What stays on your device</h2>
+          <h2 id="device" style={sectionTitle}>What stays on your device</h2>
           <p style={body}>
             Your reading position, recent passages, day streak, chosen reciter, colour theme, night theme,
             settings, and a note that you have seen the welcome screen are saved in your browser’s local
@@ -194,7 +207,7 @@ export default async function PrivacyPage({
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={sectionTitle}>Who else handles data</h2>
+          <h2 id="processors" style={sectionTitle}>Who else handles data</h2>
           <p style={body}>We do not give your account to advertisers. These services see only their own job:</p>
           <ul style={list}>
             <li>
@@ -220,7 +233,7 @@ export default async function PrivacyPage({
           </ul>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={sectionTitle}>Cookies</h2>
+          <h2 id="cookies" style={sectionTitle}>Cookies</h2>
           <p style={body}>
             No advertising and no fingerprinting. Sign-in sets one httpOnly session cookie. After {PLUS_NAME}{" "}
             is granted, this site sets one httpOnly cookie so this browser can remember that the plan is active.
@@ -233,7 +246,7 @@ export default async function PrivacyPage({
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={sectionTitle}>Payments and gifts</h2>
+          <h2 id="payments" style={sectionTitle}>Payments and gifts</h2>
           <p style={body}>
             If you gift Plus, you sign in first, choose how many people, and paste their emails. We check who
             already has a {APP_NAME} account — they do not need one yet. After you pay, Plus is granted to those
@@ -247,7 +260,7 @@ export default async function PrivacyPage({
           </p>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={sectionTitle}>How long we keep it</h2>
+          <h2 id="retention" style={sectionTitle}>How long we keep it</h2>
           <ul style={list}>
             <li>Device-local preferences stay until you clear this browser’s data for the site.</li>
             <li>The session lasts 30 days, or until you sign out. Signing out deletes that session.</li>
@@ -263,7 +276,7 @@ export default async function PrivacyPage({
           </ul>
         </section>
         <section style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h2 style={sectionTitle}>Deletion and contact</h2>
+          <h2 id="contact" style={sectionTitle}>Deletion and contact</h2>
           <p style={body}>
             To ask us to delete your account, email{" "}
             <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "var(--action-primary)" }}>

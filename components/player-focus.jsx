@@ -4,6 +4,7 @@ import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-run
 import { FocusStage } from "@/components/focus-stage";
 import { Icon } from "@/components/icon";
 import { MaskedCutoffChip } from "@/components/masked-cutoff";
+import { WordRepCountRow } from "@/components/word-rep-chrome";
 import { FocusLines, MushafVerse, MushafVerseActive } from "@/components/player-verse";
 import { useAppData } from "@/lib/app-data";
 import { emptyWordPick, wantsTranslation, relayRoundLabel, relayTurnName } from "@/lib/player-chrome";
@@ -53,19 +54,29 @@ export function FocusMaskedPage(e) {
     title: "Revealed ".concat(i.maxRev, " of ", l),
     meta: n.key,
     hint: undefined,
-    extra: leave ? _jsx(MaskedCutoffChip, { onLeave: leave }) : null,
+    extra: null,
     progress: {
       now: i.maxRev,
       max: l,
       label: "Words revealed",
     },
-    actions: _jsxs("button", {
-      className: "focus-act primary",
-      onClick: () => t.peek(),
-      disabled: i.peeks <= 0 || c,
+    actions: _jsxs(_Fragment, {
       children: [
-        _jsx(Icon, { name: "eye", size: 16 }),
-        c ? "Verse revealed" : i.peeking ? "Peeking" : "Peek \xb7 ".concat(i.peeks, " left"),
+        leave
+          ? _jsx(MaskedCutoffChip, {
+              onLeave: leave,
+              onUnmask: () => t.revealTo(n, l),
+            })
+          : null,
+        _jsxs("button", {
+          className: "focus-act",
+          onClick: () => t.peek(),
+          disabled: i.peeks <= 0 || c,
+          children: [
+            _jsx(Icon, { name: "eye", size: 16 }),
+            c ? "Verse revealed" : i.peeking ? "Peeking" : "Peek \xb7 ".concat(i.peeks, " left"),
+          ],
+        }),
       ],
     }),
     gloss: wantsTranslation() ? n.translation || null : null,
@@ -205,6 +216,17 @@ export function FocusWordPage(e) {
     title: w ? w.ar : "Word Reps",
     meta: h.key,
     hint: undefined,
+    hint: pick.start != null && pick.end != null
+      ? "Pick 5\xd7, 10\xd7, or \u221e below, then play."
+      : "Tap a word, pin a range, then pick a count.",
+    actions: _jsx(WordRepCountRow, {
+      start: pick.start,
+      end: pick.end,
+      count: pick.count,
+      plusOn,
+      onCount: (n) => t.setWordRepCount(n),
+      onAskPlus: () => ask("repeats"),
+    }),
     gloss: wantsTranslation() ? y || null : null,
     children: _jsx(FocusLines, {
       verse: h,
