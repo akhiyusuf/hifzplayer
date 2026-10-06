@@ -338,7 +338,7 @@ describe("indexOfVerseInPassage", () => {
 
 describe("drillHint", () => {
   it("returns one line per drill type and nothing otherwise", () => {
-    assert.equal(drillHint("word"), "Tap a word. Pin a range, or pick 5×, 10×, or ∞, then play.");
+    assert.equal(drillHint("word"), "Tap a word to pin it. Use 5×, 10×, or ∞ below, then play.");
     assert.equal(drillHint("masked"), "Words stay in their slots and stay invisible until their turn.");
     assert.equal(drillHint("relay"), "Recite your ayah. The reciter takes the next.");
     assert.equal(drillHint("ustadh"), "Tap Listen once and recite. Ustadh replays misses and listens again. Pause stops.");
@@ -696,6 +696,8 @@ describe("leave practice", () => {
     assert.equal(maskedCutoffVisible("word"), false);
     assert.equal(maskedCutoffVisible("relay"), false);
     assert.equal(MASKED_CUTOFF.label, "Unmask");
+    assert.equal(MASKED_CUTOFF.unmask, "Unmask");
+    assert.equal(MASKED_CUTOFF.listen, "Listen");
   });
 
   it("invoking the Masked cutoff returns to verse listen", () => {

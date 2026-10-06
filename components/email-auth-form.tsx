@@ -490,7 +490,7 @@ export function EmailAuthForm({
             resetChallenge();
           }}
         >
-          Back to password
+          {step === "verify" ? "Back to account details" : "Back to password"}
         </button>
       ) : (
         <p className="auth-switch">

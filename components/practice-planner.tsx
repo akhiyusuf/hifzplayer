@@ -55,14 +55,16 @@ function saveAyahState(state: AyahStateMap) {
 function PlannerLockedCard({ onUnlock }: { onUnlock: () => void }) {
   const pitch = plannerLockedPitch();
   return (
-    <button type="button" className="lists-locked tap" onClick={onUnlock} aria-label={pitch.title}>
+    <div className="lists-locked">
       <span className="lists-locked-mark">
         <Icon name="sparkles" size={22} />
       </span>
       <b>{pitch.title}</b>
       <span>{pitch.body}</span>
-      <span className="occ-meta">{pitch.cta}</span>
-    </button>
+      <button type="button" className="btn-primary lists-locked-cta" onClick={onUnlock} aria-label={pitch.title}>
+        {pitch.cta}
+      </button>
+    </div>
   );
 }
 

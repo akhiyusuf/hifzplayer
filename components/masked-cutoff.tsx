@@ -3,22 +3,34 @@
 import { MASKED_CUTOFF } from "@/lib/player-chrome";
 import { Icon } from "./icon";
 
-export function MaskedCutoffChip({ onLeave }: { onLeave: () => void }) {
+export function MaskedCutoffChip({
+  onLeave,
+  onUnmask,
+}: {
+  onLeave: () => void;
+  /** Reveal remaining masked words without leaving the drill. */
+  onUnmask?: () => void;
+}) {
   return (
-    <button
-      type="button"
-      className="turn-chip now masked-cutoff"
-      data-masked-cutoff="true"
-      aria-label={MASKED_CUTOFF.aria}
-      onClick={onLeave}
-    >
-      <span className="turn-avatar">
-        <Icon name="eye-off" size={14} />
-      </span>
-      <span className="turn-text">
-        <b>{MASKED_CUTOFF.label}</b>
-        <span>{MASKED_CUTOFF.detail}</span>
-      </span>
-    </button>
+    <div className="masked-cutoff-row" role="group" aria-label="Masked controls">
+      <button
+        type="button"
+        className="focus-act masked-cutoff-unmask"
+        aria-label={MASKED_CUTOFF.unmaskAria}
+        onClick={() => (onUnmask ? onUnmask() : onLeave())}
+      >
+        <Icon name="eye" size={14} />
+        {MASKED_CUTOFF.unmask}
+      </button>
+      <button
+        type="button"
+        className="focus-act primary masked-cutoff-listen"
+        aria-label={MASKED_CUTOFF.listenAria}
+        onClick={onLeave}
+      >
+        <Icon name="volume-2" size={14} />
+        {MASKED_CUTOFF.listen}
+      </button>
+    </div>
   );
 }

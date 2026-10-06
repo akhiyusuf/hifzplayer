@@ -306,7 +306,7 @@ export function indexOfVerseInPassage(
 export const DRILL_HINT_MS = 10_000;
 
 export const DRILL_HINTS = {
-  word: "Tap a word. Pin a range, or pick 5×, 10×, or ∞, then play.",
+  word: "Tap a word to pin it. Use 5×, 10×, or ∞ below, then play.",
   masked: "Words stay in their slots and stay invisible until their turn.",
   relay: "Recite your ayah. The reciter takes the next.",
   ustadh: "Tap Listen once and recite. Ustadh replays misses and listens again. Pause stops.",
@@ -406,6 +406,10 @@ export const MASKED_CUTOFF = {
   label: "Unmask",
   detail: "Listen",
   aria: "Stop mask — listen to this ayah",
+  unmask: "Unmask",
+  listen: "Listen",
+  unmaskAria: "Reveal all masked words",
+  listenAria: "Stop mask — listen to this ayah",
 } as const;
 
 /** Same destination as Practice Listen / leavePractice. */
