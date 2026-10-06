@@ -1,5 +1,5 @@
-import { clerkClient } from "@clerk/nextjs/server";
-import { clerkConfigured } from "@/lib/auth/config";
+import { accountsConfigured } from "./config.ts";
+import { sql } from "../db/neon.ts";
 import {
   type Entitlement,
   grantFromPayment,
@@ -11,16 +11,17 @@ import { isPlanId, isRegionId } from "@/lib/billing/plans";
 
 type StoredPlus = {
   plus?: boolean;
-  planId?: PlanId;
-  regionId?: RegionId;
-  processor?: Processor;
-  until?: string | null;
+  plan_id?: string;
+  region_id?: string;
+  processor?: string;
+  until?: string | Date | null;
   ref?: string;
-  sub?: string;
-  grantedAt?: string;
-  welcomeSentFor?: string;
-  revokedAt?: string;
-  revokedReason?: "chargeback";
+  sub?: string | null;
+  granted_at?: string | Date;
+  welcome_sent_for?: string | null;
+  revoked_at?: string | Date | null;
+  revoked_reason?: string | null;
+  events?: unknown;
 };
 
 type StoredBillingEvent = {
@@ -34,228 +35,239 @@ type StoredBillingEvent = {
 
 const EVENT_CAP = 20;
 
-type ClerkPrivate = {
-  hifzPlus?: StoredPlus;
-  hifzPlusEvents?: StoredBillingEvent[];
-  hifzTrialUsedAt?: string;
-};
-
-export type ClerkPlusState =
+export type AccountPlusState =
   | { status: "none" }
   | { status: "revoked" }
   | { status: "ok"; ent: Entitlement };
 
 export type PlusSaveKind = "granted" | "renewed" | "revoked";
 
-async function clerkUser(userId: string) {
-  const client = await clerkClient();
-  return client.users.getUser(userId);
+function iso(value: string | Date | null | undefined) {
+  if (!value) return null;
+  if (value instanceof Date) return value.toISOString();
+  return value;
+}
+
+function asEvents(raw: unknown): StoredBillingEvent[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((row): row is StoredBillingEvent => Boolean(row && typeof row === "object"));
 }
 
 function storedToEntitlement(userId: string, raw: StoredPlus): Entitlement | null {
-  if (!raw.planId || !raw.regionId || !raw.processor || !raw.ref) return null;
-  if (!isPlanId(raw.planId) || !isRegionId(raw.regionId)) return null;
-  if (raw.processor !== "stripe" && raw.processor !== "paystack" && raw.processor !== "trial")
-    return null;
+  if (!raw.plan_id || !raw.region_id || !raw.processor || !raw.ref) return null;
+  if (!isPlanId(raw.plan_id) || !isRegionId(raw.region_id)) return null;
+  if (raw.processor !== "stripe" && raw.processor !== "paystack" && raw.processor !== "trial") return null;
   const ent = grantFromPayment({
-    planId: raw.planId,
-    regionId: raw.regionId,
+    planId: raw.plan_id,
+    regionId: raw.region_id,
     processor: raw.processor,
     ref: raw.ref,
-    until: raw.until,
+    until: iso(raw.until),
     plus: raw.plus !== false,
-    sub: raw.sub,
+    sub: raw.sub || undefined,
   });
   ent.userId = userId;
-  if (raw.grantedAt) ent.grantedAt = raw.grantedAt;
+  const granted = iso(raw.granted_at);
+  if (granted) ent.grantedAt = granted;
   return ent;
 }
 
-export async function clerkPlusState(userId: string): Promise<ClerkPlusState> {
-  if (!clerkConfigured()) return { status: "none" };
+async function entitlementRow(userId: string): Promise<StoredPlus | null> {
+  if (!accountsConfigured() || !userId) return null;
   try {
-    const user = await clerkUser(userId);
-    const raw = (user.privateMetadata as ClerkPrivate | undefined)?.hifzPlus;
-    if (!raw) return { status: "none" };
-    if (raw.plus === false) return { status: "revoked" };
-    const ent = storedToEntitlement(userId, raw);
-    if (!ent) return { status: "none" };
-    if (!isPlusActive(ent)) return { status: "none" };
-    return { status: "ok", ent };
+    const rows = await sql()`select * from entitlements where user_id = ${userId} limit 1`;
+    return (rows[0] as StoredPlus | undefined) || null;
   } catch {
-    return { status: "none" };
+    return null;
   }
 }
 
-export async function savePlusToClerk(userId: string, ent: Entitlement, kind: PlusSaveKind = "granted") {
-  if (!clerkConfigured()) return;
-  const client = await clerkClient();
-  let events: StoredBillingEvent[] = [];
-  let welcomeSentFor: string | undefined;
-  let previousSub: string | undefined;
-  try {
-    const user = await clerkUser(userId);
-    const meta = user.privateMetadata as ClerkPrivate | undefined;
-    if (Array.isArray(meta?.hifzPlusEvents)) events = meta.hifzPlusEvents;
-    welcomeSentFor = meta?.hifzPlus?.welcomeSentFor;
-    previousSub = meta?.hifzPlus?.sub;
-  } catch {
-    events = [];
-  }
-  const eventKind: StoredBillingEvent["type"] = ent.plus === false ? "revoked" : kind;
-  events = [
-    ...events,
+export async function accountPlusState(userId: string): Promise<AccountPlusState> {
+  const raw = await entitlementRow(userId);
+  if (!raw) return { status: "none" };
+  if (raw.plus === false) return { status: "revoked" };
+  const ent = storedToEntitlement(userId, raw);
+  if (!ent) return { status: "none" };
+  if (!isPlusActive(ent)) return { status: "none" };
+  return { status: "ok", ent };
+}
+
+export async function savePlusToAccount(userId: string, ent: Entitlement, kind: PlusSaveKind = "granted") {
+  if (!accountsConfigured()) return;
+  const current = await entitlementRow(userId);
+  const events = [
+    ...asEvents(current?.events),
     {
       at: ent.grantedAt,
-      type: eventKind,
+      type: (ent.plus === false ? "revoked" : kind) as StoredBillingEvent["type"],
       planId: ent.planId,
       regionId: ent.regionId,
       processor: ent.processor,
     },
   ].slice(-EVENT_CAP);
-
-  await client.users.updateUserMetadata(userId, {
-    privateMetadata: {
-      hifzPlus: {
-        plus: ent.plus,
-        planId: ent.planId,
-        regionId: ent.regionId,
-        processor: ent.processor,
-        until: ent.until,
-        ref: ent.ref,
-        sub: ent.sub || previousSub,
-        grantedAt: ent.grantedAt,
-        ...(welcomeSentFor ? { welcomeSentFor } : {}),
-      } satisfies StoredPlus,
-      hifzPlusEvents: events,
-    },
-  });
+  const welcome = current?.welcome_sent_for || null;
+  const sub = ent.sub || current?.sub || null;
+  await sql()`
+    insert into entitlements (
+      user_id, plus, plan_id, region_id, processor, until, ref, sub, granted_at,
+      revoked_at, revoked_reason, welcome_sent_for, events
+    )
+    values (
+      ${userId}, ${ent.plus}, ${ent.planId}, ${ent.regionId}, ${ent.processor},
+      ${ent.until}, ${ent.ref}, ${sub}, ${ent.grantedAt},
+      ${ent.plus === false ? new Date().toISOString() : null},
+      ${ent.plus === false ? "revoked" : null},
+      ${welcome}, ${JSON.stringify(events)}::jsonb
+    )
+    on conflict (user_id) do update set
+      plus = excluded.plus,
+      plan_id = excluded.plan_id,
+      region_id = excluded.region_id,
+      processor = excluded.processor,
+      until = excluded.until,
+      ref = excluded.ref,
+      sub = coalesce(excluded.sub, entitlements.sub),
+      granted_at = excluded.granted_at,
+      revoked_at = excluded.revoked_at,
+      revoked_reason = excluded.revoked_reason,
+      events = excluded.events
+  `;
 }
 
-export async function plusFromClerk(userId: string): Promise<Entitlement | null> {
-  const state = await clerkPlusState(userId);
+export async function plusFromAccount(userId: string): Promise<Entitlement | null> {
+  const state = await accountPlusState(userId);
   return state.status === "ok" ? state.ent : null;
 }
 
-export async function clerkEmailForUser(userId: string): Promise<string | null> {
-  if (!clerkConfigured()) return null;
+export async function emailForUser(userId: string): Promise<string | null> {
+  if (!accountsConfigured()) return null;
   try {
-    const user = await clerkUser(userId);
-    return user.primaryEmailAddress?.emailAddress?.trim().toLowerCase() || null;
+    const rows = await sql()`select email from users where id = ${userId} limit 1`;
+    const email = (rows[0] as { email?: string } | undefined)?.email;
+    return email?.trim().toLowerCase() || null;
   } catch {
     return null;
   }
 }
 
-/** Resolve a Clerk user id from a receipt email. Never log the email. */
-export async function clerkUserIdByEmail(email: string): Promise<string | null> {
-  if (!clerkConfigured()) return null;
+export async function userIdByEmail(email: string): Promise<string | null> {
+  if (!accountsConfigured()) return null;
   const address = email.trim().toLowerCase();
   if (!address) return null;
   try {
-    const client = await clerkClient();
-    const { data } = await client.users.getUserList({ emailAddress: [address], limit: 2 });
-    if (data.length === 1) return data[0]?.id || null;
-    return null;
+    const rows = await sql()`select id from users where email = ${address} limit 1`;
+    return (rows[0] as { id?: string } | undefined)?.id || null;
   } catch {
     return null;
   }
 }
 
 export async function plusWelcomeAlreadySent(userId: string, _ref?: string): Promise<boolean> {
-  if (!clerkConfigured()) return false;
+  const raw = await entitlementRow(userId);
+  if (raw?.welcome_sent_for) return true;
+  if (!accountsConfigured()) return false;
   try {
-    const user = await clerkUser(userId);
-    return Boolean((user.privateMetadata as ClerkPrivate | undefined)?.hifzPlus?.welcomeSentFor);
+    const rows = await sql()`select welcome_sent_for from users where id = ${userId} limit 1`;
+    return Boolean((rows[0] as { welcome_sent_for?: string } | undefined)?.welcome_sent_for);
   } catch {
     return false;
   }
 }
 
 export async function markPlusWelcomeSent(userId: string, ref: string) {
-  if (!clerkConfigured() || !ref) return;
-  const client = await clerkClient();
-  let stored: StoredPlus = { plus: true, ref, welcomeSentFor: ref };
-  try {
-    const user = await clerkUser(userId);
-    stored = { ...(user.privateMetadata as ClerkPrivate | undefined)?.hifzPlus, welcomeSentFor: ref };
-  } catch {
-    /* keep the stub and still record the send */
-  }
-  await client.users.updateUserMetadata(userId, {
-    privateMetadata: {
-      hifzPlus: { ...stored, welcomeSentFor: ref } satisfies StoredPlus,
-    },
-  });
+  if (!accountsConfigured() || !ref) return;
+  await sql()`
+    update entitlements set welcome_sent_for = ${ref} where user_id = ${userId}
+  `;
+  await sql()`
+    update users set welcome_sent_for = ${ref} where id = ${userId}
+  `;
 }
 
-export async function clerkTrialUsedAt(userId: string): Promise<string | null> {
-  if (!clerkConfigured()) return null;
+export async function trialUsedAt(userId: string): Promise<string | null> {
+  if (!accountsConfigured()) return null;
   try {
-    const user = await clerkUser(userId);
-    const at = (user.privateMetadata as ClerkPrivate | undefined)?.hifzTrialUsedAt;
-    return typeof at === "string" && Number.isFinite(Date.parse(at)) ? at : null;
+    const rows = await sql()`select trial_used_at from users where id = ${userId} limit 1`;
+    const at = iso((rows[0] as { trial_used_at?: string | Date } | undefined)?.trial_used_at);
+    return at && Number.isFinite(Date.parse(at)) ? at : null;
   } catch {
     return null;
   }
 }
 
-export async function markClerkTrialUsed(userId: string, at = new Date().toISOString()) {
-  if (!clerkConfigured()) return;
-  const client = await clerkClient();
-  let previous: string | undefined;
-  try {
-    const user = await clerkUser(userId);
-    previous = (user.privateMetadata as ClerkPrivate | undefined)?.hifzTrialUsedAt;
-  } catch {
-    previous = undefined;
-  }
+export async function markTrialUsed(userId: string, at = new Date().toISOString()) {
+  if (!accountsConfigured()) return;
+  const previous = await trialUsedAt(userId);
   if (previous) return;
-  await client.users.updateUserMetadata(userId, {
-    privateMetadata: {
-      hifzTrialUsedAt: at,
-    },
+  await sql()`update users set trial_used_at = ${at} where id = ${userId} and trial_used_at is null`;
+}
+
+export async function accountPlusRevoked(userId: string): Promise<boolean> {
+  const raw = await entitlementRow(userId);
+  return plusRevokedByChargeback({
+    plus: raw?.plus,
+    revokedReason: raw?.revoked_reason || undefined,
   });
 }
 
-export async function clerkPlusRevoked(userId: string): Promise<boolean> {
-  if (!clerkConfigured()) return false;
-  try {
-    const user = await clerkUser(userId);
-    return plusRevokedByChargeback((user.privateMetadata as ClerkPrivate | undefined)?.hifzPlus);
-  } catch {
-    return false;
-  }
-}
-
-export async function revokePlusOnClerk(userId: string) {
-  if (!clerkConfigured()) return;
-  const client = await clerkClient();
-  let stored: StoredPlus | undefined;
-  let events: StoredBillingEvent[] = [];
-  try {
-    const user = await clerkUser(userId);
-    const meta = user.privateMetadata as ClerkPrivate | undefined;
-    stored = meta?.hifzPlus;
-    if (Array.isArray(meta?.hifzPlusEvents)) events = meta.hifzPlusEvents;
-  } catch {
-    stored = undefined;
-  }
+export async function revokePlusOnAccount(userId: string) {
+  if (!accountsConfigured()) return;
+  const stored = await entitlementRow(userId);
   const at = new Date().toISOString();
-  const next = applyChargebackRevoke(stored, at);
-  const revokedEvent: StoredBillingEvent = {
-    at,
-    type: "revoked",
-    planId: stored?.planId,
-    regionId: stored?.regionId,
-    processor: stored?.processor,
-    reason: "chargeback",
-  };
-  events = [...events, revokedEvent].slice(-EVENT_CAP);
-  await client.users.updateUserMetadata(userId, {
-    privateMetadata: {
-      hifzPlus: next satisfies StoredPlus,
-      hifzPlusEvents: events,
+  const next = applyChargebackRevoke(
+    {
+      plus: stored?.plus,
+      planId: stored?.plan_id,
+      regionId: stored?.region_id,
+      processor: stored?.processor,
+      until: iso(stored?.until),
+      ref: stored?.ref,
+      sub: stored?.sub,
+      grantedAt: iso(stored?.granted_at),
     },
-  });
+    at,
+  );
+  const events = [
+    ...asEvents(stored?.events),
+    {
+      at,
+      type: "revoked" as const,
+      planId: stored?.plan_id as PlanId | undefined,
+      regionId: stored?.region_id as RegionId | undefined,
+      processor: stored?.processor as Processor | undefined,
+      reason: "chargeback" as const,
+    },
+  ].slice(-EVENT_CAP);
+  if (!stored) {
+    await sql()`
+      insert into entitlements (
+        user_id, plus, plan_id, region_id, processor, until, ref, granted_at,
+        revoked_at, revoked_reason, events
+      )
+      values (
+        ${userId}, false, 'monthly', 'us', 'stripe', ${at}, 'chargeback', ${at},
+        ${at}, 'chargeback', ${JSON.stringify(events)}::jsonb
+      )
+      on conflict (user_id) do update set
+        plus = false,
+        revoked_at = excluded.revoked_at,
+        revoked_reason = 'chargeback',
+        events = excluded.events
+    `;
+    return;
+  }
+  await sql()`
+    update entitlements set
+      plus = false,
+      revoked_at = ${at},
+      revoked_reason = 'chargeback',
+      events = ${JSON.stringify(events)}::jsonb
+    where user_id = ${userId}
+  `;
+  void next;
+}
+
+export async function emailsOnUser(userId: string): Promise<string[]> {
+  const email = await emailForUser(userId);
+  return email ? [email] : [];
 }

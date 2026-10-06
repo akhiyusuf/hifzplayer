@@ -117,6 +117,19 @@ export function reciterDisplayName(name: string, style?: string | null) {
   return st ? `${trimmed} · ${st}` : trimmed;
 }
 
+/** Compact label for tight pills (390px). Prefer surname · style. */
+export function reciterPillName(name: string, style?: string | null) {
+  const trimmed = (name || "").trim() || "Reciter";
+  const al = trimmed.match(/\b(?:al|el)-([A-Za-z][\w'-]*)$/i);
+  let short = al ? al[1] : trimmed;
+  if (!al) {
+    const parts = trimmed.split(/\s+/).filter(Boolean);
+    short = parts.length ? parts[parts.length - 1]! : trimmed;
+  }
+  const st = (style || "").trim();
+  return st ? `${short} · ${st}` : short;
+}
+
 export function isMuallimReciter(name: string, style?: string | null) {
   return /mual+im/i.test(`${name || ""} ${style || ""}`);
 }

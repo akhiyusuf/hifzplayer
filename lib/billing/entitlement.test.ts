@@ -4,6 +4,7 @@ import {
   entitlementForUser,
   isPlusActive,
   pickBestEntitlement,
+  planSignedInEntitlement,
   publicEntitlement,
   applyChargebackRevoke,
   plusRevokedByChargeback,
@@ -94,5 +95,61 @@ describe("pick best entitlement", () => {
     const cookie = sample();
     assert.equal(pickBestEntitlement(expired, cookie)?.ref, cookie.ref);
     assert.equal(pickBestEntitlement(sample({ plus: false }), cookie)?.ref, cookie.ref);
+  });
+});
+
+describe("plan signed-in entitlement", () => {
+  it("does not rewrite a cookie that already matches Clerk Plus", () => {
+    const ent = sample({ userId: "user_1" });
+    const plan = planSignedInEntitlement({ status: "ok", ent }, ent, "user_1", true);
+    assert.equal(plan.ent?.ref, ent.ref);
+    assert.equal(plan.persist, "none");
+    assert.equal(plan.saveToClerk, false);
+  });
+
+  it("writes once when Clerk has Plus and the browser cookie is missing", () => {
+    const ent = sample();
+    const plan = planSignedInEntitlement({ status: "ok", ent }, null, "user_1", true);
+    assert.equal(plan.ent?.userId, "user_1");
+    assert.equal(plan.persist, "write");
+  });
+
+  it("binds a guest cookie to the signed-in user and asks to save it", () => {
+    const guest = sample();
+    const plan = planSignedInEntitlement({ status: "none" }, guest, "user_9", true);
+    assert.equal(plan.ent?.userId, "user_9");
+    assert.equal(plan.persist, "write");
+    assert.equal(plan.saveToClerk, true);
+  });
+
+  it("clears a cookie when Clerk says Plus was revoked", () => {
+    const ent = sample({ userId: "user_1" });
+    const plan = planSignedInEntitlement({ status: "revoked" }, ent, "user_1", true);
+    assert.equal(plan.ent, null);
+    assert.equal(plan.persist, "clear");
+  });
+
+  it("returns nothing for a first-time sign-in with no Plus", () => {
+    const plan = planSignedInEntitlement({ status: "none" }, null, "user_1", true);
+    assert.equal(plan.ent, null);
+    assert.equal(plan.persist, "none");
+  });
+});
+
+describe("lifetime Plus on a page render", () => {
+  it("does not ask to rewrite cookies when lifetime Plus already matches the cookie", () => {
+    const ent = sample({ userId: "user_life", planId: "lifetime", until: null });
+    const plan = planSignedInEntitlement({ status: "ok", ent }, ent, "user_life", true);
+    assert.equal(plan.ent?.planId, "lifetime");
+    assert.equal(plan.ent?.until, null);
+    assert.equal(plan.persist, "none");
+  });
+
+  it("still returns lifetime Plus when the browser cookie is missing (write may be skipped on pages)", () => {
+    const ent = sample({ planId: "lifetime", until: null });
+    const plan = planSignedInEntitlement({ status: "ok", ent }, null, "user_life", true);
+    assert.equal(plan.ent?.planId, "lifetime");
+    assert.equal(plan.ent?.userId, "user_life");
+    assert.equal(plan.persist, "write");
   });
 });

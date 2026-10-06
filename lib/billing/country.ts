@@ -2,8 +2,8 @@ import { regionForCountry, type RegionId } from "./plans.ts";
 
 export function countryFromHeaders(headers: Headers): string | null {
   const raw =
-    headers.get("x-vercel-ip-country") ||
     headers.get("cf-ipcountry") ||
+    headers.get("x-vercel-ip-country") ||
     headers.get("x-country-code") ||
     "";
   const code = raw.trim().toUpperCase();

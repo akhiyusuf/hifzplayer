@@ -3,9 +3,11 @@ import { describe, it } from "node:test";
 import {
   PLUS_EXPLAIN,
   clampRepeat,
+  isFreePracticeJob,
   isPaidFocusJob,
   isPaidRelay,
   isPaidRepeat,
+  plusCopyFor,
   qariCount,
 } from "./gates.ts";
 
@@ -31,17 +33,20 @@ describe("repeat gating", () => {
 });
 
 describe("Plus explanation copy", () => {
-  it("keeps reading and verse Repeat free, and lists Focus as Plus", () => {
+  it("keeps Mushaf and Focus views free, and lists practice tools as Plus", () => {
     assert.match(PLUS_EXPLAIN.lead, /Reading stays free/);
-    assert.match(PLUS_EXPLAIN.lead, /look around/);
-    assert.doesNotMatch(PLUS_EXPLAIN.lead, /Focus stays free/);
+    assert.match(PLUS_EXPLAIN.lead, /Focus views stay free|Mushaf and Focus/i);
     assert.match(PLUS_EXPLAIN.lead, /Repeat/);
     assert.equal(
-      PLUS_EXPLAIN.free.some((line) => /Opening Focus or Listen/.test(line)),
+      PLUS_EXPLAIN.free.some((line) => /Mushaf view and Focus view/i.test(line)),
       true,
     );
     assert.equal(
-      PLUS_EXPLAIN.plus.some((line) => /Play, Word Reps, Masked, and Relay/.test(line)),
+      PLUS_EXPLAIN.plus.some((line) => /Memorization planner/.test(line)),
+      true,
+    );
+    assert.equal(
+      PLUS_EXPLAIN.plus.some((line) => /Word Reps, Masked, and Relay/.test(line)),
       true,
     );
     assert.equal(
@@ -56,8 +61,7 @@ describe("Plus explanation copy", () => {
       PLUS_EXPLAIN.plus.some((line) => /3×, 5×, 10×/.test(line)),
       true,
     );
-    assert.match(PLUS_EXPLAIN.rowSub, /listen lists/);
-    assert.doesNotMatch(PLUS_EXPLAIN.rowSub, /Practise stays free/);
+    assert.match(PLUS_EXPLAIN.rowSub, /Word Reps/);
     assert.equal(
       PLUS_EXPLAIN.free.some((line) => /Colour themes/.test(line)),
       true,
@@ -66,6 +70,27 @@ describe("Plus explanation copy", () => {
       PLUS_EXPLAIN.plus.some((line) => /theme|palette|colour/i.test(line)),
       false,
     );
+    assert.equal(
+      PLUS_EXPLAIN.free.some((line) => /AI Ustadh/i.test(line)),
+      false,
+    );
+    assert.equal(
+      PLUS_EXPLAIN.plus.some((line) => /AI Ustadh/i.test(line)),
+      true,
+    );
+  });
+
+  it("maps legacy focus asks onto practice copy", () => {
+    assert.equal(plusCopyFor("focus").title, plusCopyFor("practice").title);
+    assert.match(plusCopyFor("practice").body, /Focus views stay free|Mushaf and Focus/i);
+  });
+
+  it("pitches the memorization planner as Plus without ungating drills", () => {
+    assert.match(plusCopyFor("planner").title, /planner/i);
+    assert.match(plusCopyFor("planner").body, /New|Review|Revision|hifz/i);
+    assert.equal(isPaidFocusJob("word"), true);
+    assert.equal(isPaidFocusJob("masked"), true);
+    assert.equal(isPaidFocusJob("relay"), true);
   });
 });
 
@@ -78,7 +103,11 @@ describe("Focus job gating", () => {
 
   it("leaves verse listen and the Focus view itself free to open", () => {
     assert.equal(isPaidFocusJob("verse"), false);
+    assert.equal(isPaidFocusJob("ustadh"), false);
     assert.equal(isPaidFocusJob(""), false);
+    assert.equal(isFreePracticeJob("ustadh"), false); // USTADH_ENABLED=false
+    assert.equal(isFreePracticeJob("verse"), true);
+    assert.equal(isFreePracticeJob("word"), false);
   });
 });
 

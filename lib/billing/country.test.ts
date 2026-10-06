@@ -8,6 +8,14 @@ describe("checkout region", () => {
     assert.equal(countryFromHeaders(headers), "NG");
   });
 
+  it("prefers Cloudflare's country when both hosts set a header", () => {
+    const headers = new Headers({
+      "cf-ipcountry": "gb",
+      "x-vercel-ip-country": "ng",
+    });
+    assert.equal(countryFromHeaders(headers), "GB");
+  });
+
   it("ignores a client-supplied region", () => {
     const nigeria = new Headers({ "x-vercel-ip-country": "NG" });
     assert.equal(checkoutRegionId(nigeria, "us"), "ng");

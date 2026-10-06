@@ -1,7 +1,7 @@
 import { PLUS_NAME } from "@/lib/brand";
 import { resolveGiftRecipients } from "@/lib/auth/gifts";
 import { signedInEmail, signedInUserId } from "@/lib/auth/session";
-import { clerkConfigured } from "@/lib/auth/config";
+import { accountsConfigured } from "@/lib/auth/config";
 import { logBillingEvent } from "@/lib/billing/analytics";
 import { checkoutRegionId } from "@/lib/billing/country";
 import { appUrl, processorsReady } from "@/lib/billing/env";
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     return badRequest("Checkout body must be JSON");
   }
 
-  const accountsOn = clerkConfigured();
+  const accountsOn = accountsConfigured();
   const userId = accountsOn ? await signedInUserId() : null;
   if (accountsOn && !userId) {
     return unauthorized(`Sign in to buy ${PLUS_NAME}`, { code: "SIGN_IN_REQUIRED" });

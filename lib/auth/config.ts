@@ -1,16 +1,85 @@
-export function clerkPublishableKey() {
-  return process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || "";
+export const SESSION_COOKIE = "diras_sid";
+export const OAUTH_COOKIE = "diras_oauth";
+export const SESSION_MAX_AGE = 60 * 60 * 24 * 30;
+export const OTP_TTL_MS = 10 * 60 * 1000;
+export const OTP_MAX_ATTEMPTS = 5;
+export const OTP_PER_EMAIL_PER_HOUR = 5;
+export const PASSWORD_MIN = 8;
+export const PASSWORD_MAX = 128;
+
+export function authSecret() {
+  return process.env.AUTH_SECRET || process.env.BILLING_SIGNING_SECRET || "";
 }
 
-export function clerkSecretKey() {
-  return process.env.CLERK_SECRET_KEY || "";
+export function turnstileSiteKey() {
+  return process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 }
 
-/** Both keys must be present before we treat accounts as live. */
-export function clerkConfigured() {
-  return Boolean(clerkPublishableKey() && clerkSecretKey());
+/**
+ * Worker secret may be stored as TURNSTILE_SECRET_KEY (docs) or TURNSTILE_SECRET
+ * (older put). Prefer the documented name.
+ */
+export function turnstileSecretKey() {
+  return process.env.TURNSTILE_SECRET_KEY || process.env.TURNSTILE_SECRET || "";
 }
 
-export function clerkBrowserReady() {
-  return Boolean(clerkPublishableKey());
+/** Neon + signing secret. Webhooks and grants can run with this even before Turnstile is on. */
+export function accountsConfigured() {
+  const db = process.env.DATABASE_URL || process.env.NEON_DATABASE_URL || "";
+  return Boolean(db) && Boolean(authSecret());
+}
+
+export function googleClientId() {
+  return process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+}
+
+export function googleClientSecret() {
+  return process.env.GOOGLE_CLIENT_SECRET || "";
+}
+
+/** Credentials exist. Routes and consent code stay in the repo for a later re-enable. */
+export function googleConfigured() {
+  return Boolean(googleClientId() && googleClientSecret());
+}
+
+/**
+ * Product switch. Off unless `GOOGLE_SIGN_IN` is `1` or `true`, even when
+ * Google credentials are already set. Re-enable by setting that variable.
+ */
+export function googleSignInEnabled() {
+  const flag = (process.env.GOOGLE_SIGN_IN || "").trim().toLowerCase();
+  if (flag !== "1" && flag !== "true") return false;
+  return googleConfigured();
+}
+
+/** Google-only rows still exist. While Google is off, point them at the email reset. */
+export function googleOnlyAccountMessage() {
+  if (googleSignInEnabled()) return "This email uses Google. Continue with Google.";
+  return "This email was created with Google. On the sign-in page, choose Forgot password and set a password from the code we email you.";
+}
+
+export function passwordLooksValid(password: string) {
+  return password.length >= PASSWORD_MIN && password.length <= PASSWORD_MAX;
+}
+
+/**
+ * Email/password form can render whenever accounts are configured.
+ * Turnstile is optional: the widget appears only when a site key is present.
+ */
+export function accountsBrowserReady() {
+  return accountsConfigured();
+}
+
+export function sessionCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: SESSION_MAX_AGE,
+  };
+}
+
+export function clearSessionCookieOptions() {
+  return { ...sessionCookieOptions(), maxAge: 0 };
 }

@@ -8,7 +8,7 @@ export type BillingEventType =
   | "confirm_failed"
   | "webhook_received"
   | "payment_failed"
-  | "clerk_save_failed"
+  | "account_save_failed"
   | "recover_attempt"
   | "welcome_sent"
   | "welcome_skipped"
@@ -27,11 +27,11 @@ export type BillingEvent = {
   ok?: boolean;
   reason?: string;
   hasUserId?: boolean;
-  /** Clerk user id. Never an email, card number, or payment reference. */
+  /** Account id. Never an email, card number, or payment reference. */
   accountId?: string;
 };
 
-/** Structured payment logs for Vercel. Never includes email, card data, or payment refs. */
+/** Structured payment logs. Never includes email, card data, or payment refs. */
 export function logBillingEvent(event: BillingEvent) {
   console.info(
     JSON.stringify({

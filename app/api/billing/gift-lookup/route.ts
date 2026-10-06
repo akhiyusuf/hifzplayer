@@ -1,5 +1,5 @@
 import { resolveGiftRecipients } from "@/lib/auth/gifts";
-import { clerkConfigured } from "@/lib/auth/config";
+import { accountsConfigured } from "@/lib/auth/config";
 import { signedInEmail, signedInUserId } from "@/lib/auth/session";
 import { PLUS_NAME } from "@/lib/brand";
 import { badRequest, json, unauthorized } from "@/lib/billing/http";
@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  if (!clerkConfigured()) return unauthorized(`Sign in to gift ${PLUS_NAME}`, { code: "SIGN_IN_REQUIRED" });
+  if (!accountsConfigured()) return unauthorized(`Sign in to gift ${PLUS_NAME}`, { code: "SIGN_IN_REQUIRED" });
   const userId = await signedInUserId();
   if (!userId) return unauthorized(`Sign in to gift ${PLUS_NAME}`, { code: "SIGN_IN_REQUIRED" });
 

@@ -13,13 +13,13 @@ export const FOCUS_JOBS = [
     id: "word",
     name: "Word Reps",
     icon: "brackets",
-    desc: "Tap a word. Pin a range, or pick 5×, 10×, or ∞, then play",
+    desc: "Tap a word to pin it, pick 5× / 10× / ∞ below, then play",
   },
   {
     id: "masked",
     name: "Masked",
     icon: "eye-off",
-    desc: "Cover the words. Peek if you need a look",
+    desc: "Words stay in their slots and stay invisible until their turn",
   },
   {
     id: "relay",
@@ -29,6 +29,14 @@ export const FOCUS_JOBS = [
   },
 ] as const;
 
+/** Free mic coach — listed in Practice, not a Plus Focus job. */
+export const USTADH_JOB = {
+  id: "ustadh",
+  name: "AI Ustadh",
+  icon: "mic",
+  desc: "Recite into the mic — free coach interrupts on a miss",
+} as const;
+
 export const MODES = [
   {
     id: "verse",
@@ -37,6 +45,7 @@ export const MODES = [
     desc: "Listen to this ayah",
   },
   ...FOCUS_JOBS,
+  USTADH_JOB,
 ] as const;
 
 export type ModeId = (typeof MODES)[number]["id"];
@@ -75,4 +84,6 @@ export const KEYS = {
   translationId: "hifz.transId",
   translations: "hifz.translations",
   relayDraft: "hifz.relay.draft",
+  plan: "hifz.plan",
+  ayahState: "hifz.ayahState",
 } as const;

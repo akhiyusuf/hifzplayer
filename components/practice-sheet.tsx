@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { FOCUS_JOBS } from "@/lib/constants";
+import {
+  practiceSheetJobs,
+  practiceSheetPickMode,
+  practiceSheetShowsExit,
+} from "@/lib/player-chrome";
+import { isFreePracticeJob } from "@/lib/billing/gates";
+import { PLUS_NAME } from "@/lib/brand";
+import { USTADH_ENABLED } from "@/lib/ustadh/enabled";
+import { usePlus } from "@/lib/plus";
 import { Icon } from "./icon";
 import { PassageRange } from "./passage-range";
 import { Sheet } from "./sheet";
@@ -28,37 +36,86 @@ export function PracticeSheet({
   const [from, setFrom] = useState(Math.min(initialFrom, versesCount));
   const [to, setTo] = useState(Math.min(initialTo, versesCount));
   const [mode, setMode] = useState(initialMode);
+  const { plus: plusOn, askPlus, ready } = usePlus();
   const modeOnly = variant === "mode";
+  const jobs = modeOnly ? practiceSheetJobs(mode) : [];
+  const showExit = modeOnly && practiceSheetShowsExit(mode);
 
   return (
-    <Sheet title={modeOnly ? "Practise" : `Set up ${surahName}`} onClose={onClose}>
+    <Sheet title={modeOnly ? "Practice" : `Set up ${surahName}`} onClose={onClose}>
       {!modeOnly && (
         <PassageRange versesCount={versesCount} from={from} to={to} onFrom={setFrom} onTo={setTo} />
       )}
       {modeOnly ? (
         <div className="sheet-list">
-          {FOCUS_JOBS.map((m) => (
-            <button
-              key={m.id}
-              className={`mode-opt${mode === m.id ? " on" : ""}`}
-              onClick={() => {
-                setMode(m.id);
-                onStart(from, to, m.id);
-              }}
-              aria-pressed={mode === m.id}
-            >
-              <span className="mo-ic">
-                <Icon name={m.icon} size={19} />
-              </span>
-              <span className="mo-t">
-                <b>{m.name}</b>
-                <span>{m.desc}</span>
-              </span>
-              <span className="radio-dot">
-                <Icon name="check" size={13} />
-              </span>
-            </button>
-          ))}
+          {jobs.map((m) => {
+            const on = mode === m.id;
+            const listen = m.id === "verse";
+            const comingSoon = m.id === "ustadh" && !USTADH_ENABLED;
+            const free = isFreePracticeJob(m.id);
+            const locked = !comingSoon && !plusOn && !on && !listen && !free;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                className={`mode-opt${on ? " on" : ""}${locked || comingSoon ? " locked" : ""}${comingSoon ? " coming-soon" : ""}`}
+                data-practice-exit={listen && showExit ? "true" : undefined}
+                aria-label={
+                  comingSoon
+                    ? `${m.name} — Coming soon`
+                    : locked
+                      ? `${m.name} — ${PLUS_NAME}`
+                      : listen && showExit
+                        ? "Stop practice"
+                        : undefined
+                }
+                disabled={comingSoon}
+                onClick={() => {
+                  if (comingSoon) return;
+                  const next = practiceSheetPickMode(mode, m.id);
+                  const leaving = next === "verse";
+                  const nextFree = isFreePracticeJob(next);
+                  if (!leaving && !nextFree && !ready) return;
+                  if (locked) {
+                    askPlus("practice");
+                    return;
+                  }
+                  setMode(next);
+                  onStart(from, to, next);
+                }}
+                aria-pressed={on}
+              >
+                <span className="mo-ic">
+                  <Icon name={m.icon} size={19} />
+                </span>
+                <span className="mo-t">
+                  <b>
+                    {listen && showExit ? "Listen" : m.name}
+                    {comingSoon ? (
+                      <span className="badge-coming-soon">Coming soon</span>
+                    ) : locked ? (
+                      <span className="badge-plus-lock">
+                        <Icon name="lock" size={10} />
+                        Plus
+                      </span>
+                    ) : null}
+                  </b>
+                  <span>
+                    {comingSoon
+                      ? "Not available yet"
+                      : locked
+                        ? `Part of ${PLUS_NAME}`
+                        : listen && showExit
+                          ? "Stop practice — listen to this ayah"
+                          : m.desc}
+                  </span>
+                </span>
+                <span className={`radio-dot${locked ? " plus-lock" : ""}`}>
+                  {locked ? <Icon name="lock" size={13} /> : <Icon name="check" size={13} />}
+                </span>
+              </button>
+            );
+          })}
         </div>
       ) : (
         <button className="btn-primary" onClick={() => onStart(from, to, "verse")}>

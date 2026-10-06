@@ -6,6 +6,11 @@ import {
   listenLeadCopy,
   occasionHintCopy,
   playlistBarTitle,
+  playlistsLocked,
+  playlistsLockedPitch,
+  plannerLocked,
+  plannerLockedPitch,
+  practiceLeadCopy,
   plusOnLabel,
   plusSalaamLine,
 } from "./plus-presence.ts";
@@ -22,18 +27,42 @@ describe("plus presence copy", () => {
     assert.doesNotMatch(listenLeadCopy(true), /Playing a list is/);
     assert.doesNotMatch(listenLeadCopy(true), /reciter/i);
     assert.match(listenLeadCopy(false), /Diras Plus/);
-    assert.match(listenLeadCopy(false), /Playing a list is/);
+    assert.match(listenLeadCopy(false), /Reading stays free on Menu/);
+    assert.doesNotMatch(listenLeadCopy(false), /Look around/);
   });
 
   it("does not repeat the reciter on occasion rows", () => {
     assert.equal(occasionHintCopy(true, "Minshawi"), "Play a list");
-    assert.match(occasionHintCopy(false, "Minshawi"), /Look around/);
+    assert.equal(occasionHintCopy(false, "Minshawi"), `${PLUS_NAME} extra`);
+    assert.doesNotMatch(occasionHintCopy(false, "Minshawi"), /Look around/);
     assert.doesNotMatch(occasionHintCopy(true, "Minshawi"), /Minshawi/);
+  });
+
+  it("keeps a locked Plus pitch for the playlists banner", () => {
+    assert.equal(playlistsLocked(false), true);
+    assert.equal(playlistsLocked(true), false);
+    const pitch = playlistsLockedPitch();
+    assert.match(pitch.title, new RegExp(PLUS_NAME));
+    assert.match(pitch.body, /Browse the lists|Play is/i);
+    assert.doesNotMatch(pitch.body, /Look around/);
+    assert.equal(pitch.cta, "See plans");
   });
 
   it("marks a playing list as Plus", () => {
     assert.equal(playlistBarTitle("Friday", true), "Plus · Friday");
     assert.equal(playlistBarTitle("Friday", false), "Friday");
     assert.equal(plusOnLabel(), `${PLUS_NAME} is on`);
+  });
+
+  it("locks the memorization planner for free users", () => {
+    assert.equal(plannerLocked(false), true);
+    assert.equal(plannerLocked(true), false);
+    const pitch = plannerLockedPitch();
+    assert.match(pitch.title, /planner/i);
+    assert.match(pitch.title, new RegExp(PLUS_NAME));
+    assert.match(pitch.body, /New|Review|Revision/i);
+    assert.equal(pitch.cta, "See plans");
+    assert.match(practiceLeadCopy(false), /Diras Plus/);
+    assert.match(practiceLeadCopy(true), /is on/i);
   });
 });

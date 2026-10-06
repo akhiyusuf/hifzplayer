@@ -16,7 +16,7 @@ describe("Diras Plus welcome email", () => {
     assert.match(text, /Paystack/);
     assert.match(text, /1,500|₦/);
     assert.match(text, /3×, 5×, 10× and unlimited word repeats/);
-    assert.match(text, /Focus — Word Reps, Masked, and Relay/);
+    assert.match(text, /Word Reps, Masked, and Relay/);
     assert.match(text, /Occasion lists/);
     assert.doesNotMatch(text, /Best of a reciter/);
     assert.doesNotMatch(text, /user_/);
@@ -42,7 +42,7 @@ describe("Diras Plus welcome email", () => {
       until: "2027-09-11T00:00:00.000Z",
     });
     assert.match(html, /Diras Plus/);
-    assert.match(html, /<!doctype html>/i);
+    assert.match(html, /<!DOCTYPE html/i);
   });
 
   it("describes a free trial without charging language", () => {

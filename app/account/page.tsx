@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { currentUser } from "@clerk/nextjs/server";
-import { clerkConfigured } from "@/lib/auth/config";
-import { resolveEntitlement } from "@/lib/auth/session";
+import { accountsConfigured } from "@/lib/auth/config";
+import { resolveEntitlementSafe, signedInUser } from "@/lib/auth/session";
 import { AccountId } from "@/components/account-id";
 import { AccountsNotConfigured, AuthShell } from "@/components/auth-shell";
+import { SignOutButton } from "@/components/sign-out-button";
 import { publicEntitlement } from "@/lib/billing/entitlement";
 import { APP_NAME, PLUS_NAME } from "@/lib/brand";
 import { backHref } from "@/lib/nav";
@@ -39,7 +39,7 @@ export default async function AccountPage({
   const { from } = await searchParams;
   const back = backHref(from);
 
-  if (!clerkConfigured()) {
+  if (!accountsConfigured()) {
     return (
       <AuthShell title="Account" backHref={back}>
         <AccountsNotConfigured />
@@ -47,7 +47,7 @@ export default async function AccountPage({
     );
   }
 
-  const user = await currentUser();
+  const user = await signedInUser();
   if (!user) {
     const next = encodeURIComponent(`/account?from=${from || "settings"}`);
     return (
@@ -55,22 +55,28 @@ export default async function AccountPage({
         <p className="pricing-lead" style={{ textAlign: "center", maxWidth: 360 }}>
           Sign in so {PLUS_NAME} follows you, not just this browser.
         </p>
+        <ul className="account-benefits">
+          <li>{PLUS_NAME} portability across devices</li>
+          <li>Gifts and account recovery</li>
+          <li>Reading stays free either way</li>
+        </ul>
         <Link className="btn-primary" href={`/sign-in?redirect_url=${next}`}>
           Sign in
+        </Link>
+        <Link className="btn-secondary" href={`/sign-up?redirect_url=${next}`}>
+          Create account
         </Link>
       </AuthShell>
     );
   }
 
-  const plus = publicEntitlement(await resolveEntitlement());
-  const email = user.primaryEmailAddress?.emailAddress;
-  const name = user.firstName || user.username || "Signed in";
+  const plus = publicEntitlement(await resolveEntitlementSafe());
 
   return (
     <AuthShell title="Account" backHref={back}>
       <div className="account-card">
-        <b>{name}</b>
-        {email ? <span>{email}</span> : null}
+        <b>{user.name}</b>
+        {user.email ? <span>{user.email}</span> : null}
         <span className="account-plus">{plusLabel(plus)}</span>
         <AccountId id={user.id} />
       </div>
@@ -79,6 +85,7 @@ export default async function AccountPage({
         in on another browser. Quote your account ID if something goes wrong — it is the same id in our logs.
         Paystack and Stripe hold the payment ledger; this account shows the plan that was granted.
       </p>
+      <SignOutButton />
     </AuthShell>
   );
 }
