@@ -15,6 +15,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { OfflineBanner } from "@/components/offline-banner";
 import { FocusStage } from "@/components/focus-stage";
+import { FocusJobsGuide } from "@/components/focus-guide";
 import { PracticeSheet } from "@/components/practice-sheet";
 import { PlayerSettingsSheet } from "@/components/player-settings-sheet";
 import { ReciterSheet } from "@/components/reciter-sheet";
@@ -22,8 +23,8 @@ import { PlaylistBar } from "@/components/playlist-bar";
 import { WordRepBar } from "@/components/word-rep-bar";
 import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
-import { clampStopIndex, playlistHref, pickMuallimReciter, reciterIdForStyle, resolvePlaylist, stopLabel } from "@/lib/playlists";
-import { attachAudio, fetchAudio, fetchPassage, fetchTransliteration, fetchTranslation } from "@/lib/api";
+import { clampStopIndex, pickMuallimReciter, playlistVerseIndex, playlistVerseRefs, reciterIdForStyle, resolvePlaylist, verseKeyLabel } from "@/lib/playlists";
+import { attachAudio, fetchAudio, fetchPassage, fetchPlaylistPassage, fetchTransliteration, fetchTranslation } from "@/lib/api";
 import { resolveWordAudioUrl } from "@/lib/audio-url";
 import { fmtTime, segsForVerse, segForWord, toArabicDigits, wordAt } from "@/lib/audio";
 import { APP_NAME } from "@/lib/brand";
@@ -421,6 +422,17 @@ class g {
   }
   audioKey(e) {
     let t = this.st.passage;
+    if (t && t.ranges && t.ranges.length)
+      return ""
+        .concat(e, ":list:")
+        .concat(t.listId || "", ":")
+        .concat(
+          t.ranges
+            .map((r) =>
+              "".concat(r.chapter, ":").concat(r.from, "-").concat(r.to),
+            )
+            .join(","),
+        );
     return ""
       .concat(e, ":")
       .concat(t.chapter, ":")
@@ -432,7 +444,15 @@ class g {
       s = this.audioByReciter[t];
     if (s) return s;
     let r = this.st.passage,
-      a = await fetchAudio(e, r.chapter, r.from, r.to);
+      ranges = r && r.ranges;
+    if (ranges && ranges.length) {
+      let parts = await Promise.all(
+        ranges.map((g) => fetchAudio(e, g.chapter, g.from, g.to)),
+      );
+      let merged = Object.assign({}, ...parts);
+      return ((this.audioByReciter[t] = merged), merged);
+    }
+    let a = await fetchAudio(e, r.chapter, r.from, r.to);
     return ((this.audioByReciter[t] = a), a);
   }
   setReciters(e) {
@@ -505,6 +525,16 @@ class g {
       (this.pendingWordInit = !1),
       this.clearGap(),
       "masked" === this.st.mode && this.ensureMaskState(a));
+    if (this.st.passage && this.st.passage.ranges && a.key) {
+      let ch = Number(String(a.key).split(":")[0]);
+      ch &&
+        (this.st.passage = {
+          ...this.st.passage,
+          chapter: ch,
+          from: a.number,
+          to: a.number,
+        });
+    }
     let n = null === (r = a.audio) || void 0 === r ? void 0 : r.url;
     if (!n) {
       (this.toast(
@@ -707,7 +737,7 @@ class g {
   setVerseTranslations(e, t) {
     ((this.st.verses = this.st.verses.map((s) => ({
       ...s,
-      translation: e.get(s.number) || "",
+      translation: e.get(s.key) ?? e.get(s.number) ?? "",
     }))),
       (this.st.translationName = t || this.st.translationName),
       this.notify());
@@ -3413,7 +3443,7 @@ function FocusLines(e) {
   );
 }
 function F(e) {
-  let { state: s, onWordTap: a, onWordHold: n } = e,
+  let { engine: t, state: s, onWordTap: a, onWordHold: n } = e,
     i = s.verses[s.vIdx];
   if (!i) return null;
   let u = i.words
@@ -3421,12 +3451,16 @@ function F(e) {
     .filter(Boolean)
     .join(" \xb7 ");
   return _jsx(FocusStage, {
+    banner: _jsx(FocusJobsGuide, {
+      mode: s.mode,
+      onPick: (id) => t.setMode(id),
+    }),
     title: i.key,
     meta:
       s.verses.length > 1
         ? "".concat(s.vIdx + 1, " of ", s.verses.length)
         : undefined,
-    hint: "verse" === s.mode ? "Look around, or pick a job in Settings" : undefined,
+    hint: undefined,
     progress:
       s.verses.length > 1
         ? {
@@ -3773,6 +3807,7 @@ function H(e) {
       selection: i,
       annFor: l,
       arrived: o,
+      verseLabels: labels = null,
     } = e,
     d = useRef(null),
     c = s.verses.length,
@@ -3824,6 +3859,18 @@ function H(e) {
       null == t ||
         t.scrollIntoView({ block: "center", behavior: "smooth" });
     }, [o, s.verses]));
+  let listed = !!(labels && labels.length);
+  useEffect(() => {
+    if (!listed) return;
+    let root = d.current;
+    if (!root) return;
+    let row = root.querySelector(".playlist-verse.on");
+    if (!row) return;
+    let box = root.getBoundingClientRect(),
+      r = row.getBoundingClientRect();
+    if (r.top < box.top + 8 || r.bottom > box.bottom - 8)
+      row.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [s.vIdx, listed]);
   let y = s.passage,
     b = !!y && 1 === y.from && 1 !== y.chapter && 9 !== y.chapter;
   return _jsx("div", {
@@ -3831,45 +3878,84 @@ function H(e) {
     className: "player-body",
     style: { padding: "16px 20px 6px" },
     children: _jsxs("div", {
-      className: "mushaf-wrap",
+      className: listed ? "playlist-verses" : "mushaf-wrap",
       children: [
-        b &&
+        !listed &&
+          b &&
           _jsx("div", {
             className: "basmala",
             children: "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
           }),
         _jsx("div", {
-          className: "mushaf",
+          className: listed ? "playlist-verses-list" : "mushaf",
           children: s.verses.map((e, a) => {
-            let r = t.isVerseDone(a);
+            let r = t.isVerseDone(a),
+              node;
             if (!isHotVerse(a, u, p))
-              return _jsx(
+              node = _jsx(
                 ColdVerse,
                 { verse: e, vIdx: a, done: r, onMarkTap: h },
                 e.key,
               );
-            let d = q(a, s, i),
-              c = {
-                verse: e,
-                vIdx: a,
-                taj: s.taj,
-                done: r,
-                rangeStart: d.start,
-                rangeEnd: d.end,
-                pendingPos: d.pending,
-                annotations: l(e.number),
-                arrivedFrom:
-                  (null == o ? void 0 : o.verse) === e.number
-                    ? o.from
-                    : 0,
-                arrivedTo:
-                  (null == o ? void 0 : o.verse) === e.number ? o.to : 0,
-                onWordTap: n,
-                onMarkTap: h,
-              };
-            return a === s.vIdx
-              ? _jsx(MushafVerseActive, { engine: t, ...c }, e.key)
-              : _jsx(O, { ...c, curWord: 0, revealUpTo: 0, masked: !1, interactive: !0 }, e.key);
+            else {
+              let d = q(a, s, i),
+                c = {
+                  verse: e,
+                  vIdx: a,
+                  taj: s.taj,
+                  done: r,
+                  rangeStart: d.start,
+                  rangeEnd: d.end,
+                  pendingPos: d.pending,
+                  annotations: l(e.number),
+                  arrivedFrom:
+                    (null == o ? void 0 : o.verse) === e.number ? o.from : 0,
+                  arrivedTo:
+                    (null == o ? void 0 : o.verse) === e.number ? o.to : 0,
+                  onWordTap: n,
+                  onMarkTap: h,
+                };
+              node =
+                a === s.vIdx
+                  ? _jsx(MushafVerseActive, { engine: t, ...c }, e.key)
+                  : _jsx(
+                      O,
+                      {
+                        ...c,
+                        curWord: 0,
+                        revealUpTo: 0,
+                        masked: !1,
+                        interactive: !0,
+                      },
+                      e.key,
+                    );
+            }
+            if (!listed) return node;
+            return _jsxs(
+              "div",
+              {
+                className: "playlist-verse".concat(a === s.vIdx ? " on" : ""),
+                children: [
+                  _jsx("span", {
+                    className: "playlist-verse-k",
+                    children: (labels && labels[a]) || e.key,
+                  }),
+                  e.number === 1 &&
+                  !e.key.startsWith("1:") &&
+                  !e.key.startsWith("9:")
+                    ? _jsx("div", {
+                        className: "basmala",
+                        children: "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
+                      })
+                    : null,
+                  _jsx("div", {
+                    className: "mushaf playlist-verse-ar",
+                    children: node,
+                  }),
+                ],
+              },
+              e.key,
+            );
           }),
         }),
       ],
@@ -4125,11 +4211,21 @@ function U(e) {
       null !== (y = null == eO ? void 0 : eO.name_simple) && void 0 !== y
         ? y
         : "Surah ".concat(z),
-    eHead = verseRatioLabel(
-      e_,
-      (ez.verses[ez.vIdx] && ez.verses[ez.vIdx].number) || V,
-      (eO && eO.verses_count) || D,
-    );
+    eListAt = eList
+      ? (ez.verses.length ? ez.vIdx : playlistVerseIndex(eList, eStopN))
+      : 0,
+    eListRefs = eList ? playlistVerseRefs(eList) : null,
+    eHead = eList
+      ? verseRatioLabel(
+          eList.title,
+          eListAt + 1,
+          (ez.verses.length || (eListRefs && eListRefs.length) || 1),
+        )
+      : verseRatioLabel(
+          e_,
+          (ez.verses[ez.vIdx] && ez.verses[ez.vIdx].number) || V,
+          (eO && eO.verses_count) || D,
+        );
   (useEffect(() => () => eu.destroy(), [eu]),
     useEffect(() => eu.subscribeToast(eh), [eu, eh]),
     useEffect(() => {
@@ -4171,26 +4267,16 @@ function U(e) {
           (eu.onNeedPrevStop = null));
         return;
       }
-      let go = (next, play) => {
-        if (next < 0 || next >= eList.stops.length) return !1;
-        if (!plusOn) return (ask("playlists"), !0);
-        let href = playlistHref({
-          listId: eListId,
-          reciterId: eM,
-          stop: next,
-          play: play,
-        });
-        return href ? (Y.replace(href), !0) : !1;
-      };
-      ((eu.onPassageEnd = () => go(eStopN + 1, !0)),
-        (eu.onNeedNextStop = () => go(eStopN + 1, eu.getSnapshot().playing)),
-        (eu.onNeedPrevStop = () => go(eStopN - 1, eu.getSnapshot().playing)));
+      // The playlist is already one verse list. Don't open the rest of a surah.
+      ((eu.onPassageEnd = () => !1),
+        (eu.onNeedNextStop = () => (eu.finishPassage(), !0)),
+        (eu.onNeedPrevStop = null));
       return () => {
         ((eu.onPassageEnd = null),
           (eu.onNeedNextStop = null),
           (eu.onNeedPrevStop = null));
       };
-    }, [eu, eList, eListId, eStopN, plusOn, ask, eM, Y]),
+    }, [eu, eList, eListId]),
     useEffect(() => {
       null != O && O !== el && eo(O);
     }, [O, el, eo]),
@@ -4200,24 +4286,31 @@ function U(e) {
       (em("loading"), ex(!1));
       let t = setTimeout(() => !e && ex(!0), 5e3);
       return (
-        fetchPassage(z, V, D)
+        (eList ? fetchPlaylistPassage(eList.stops) : fetchPassage(z, V, D))
           .then(async (t) => {
             let { verses: s, translationName: r } = t;
             if (!e) {
               if (!s.length) throw Error("empty passage");
-              (await eu.openPassage(
-                { chapter: z, from: V, to: D, name: e_ },
-                eM,
-                s,
-                r,
-              ),
+              let passage = eList
+                  ? {
+                      chapter: eList.stops[eStopN].chapter,
+                      from: eList.stops[eStopN].from,
+                      to: eList.stops[eStopN].to,
+                      name: eList.title,
+                      ranges: eList.stops,
+                      listId: eList.id,
+                    }
+                  : { chapter: z, from: V, to: D, name: e_ },
+                start = eList ? playlistVerseIndex(eList, eStopN) : 0;
+              (await eu.openPassage(passage, eM, s, r),
                 e ||
-                  (em("ready"),
+                  (start > 0 && eu.loadVerseAudio(start, !1),
+                  em("ready"),
                   ec({
-                    chapter: z,
-                    from: V,
-                    to: D,
-                    name: e_,
+                    chapter: passage.chapter,
+                    from: passage.from,
+                    to: passage.to,
+                    name: passage.name,
                     reciter: ed(eM),
                   }),
                   eWantPlay && plusOn && eu.playAudio()));
@@ -4231,7 +4324,7 @@ function U(e) {
           ((e = !0), clearTimeout(t), eu.stopAudio());
         }
       );
-    }, [z, V, D, eM, ei, eu, eWantPlay, plusOn]));
+    }, [z, V, D, eM, ei, eu, eWantPlay, plusOn, eList, eStopN]));
   let eH = useCallback(
       (e, t, s, pointerType) => {
         let r = eu.getSnapshot(),
@@ -4649,7 +4742,12 @@ function U(e) {
             ? _jsx(G, { ...eX })
             : "focus" === ez.style
               ? _jsx(F, { ...eX })
-              : _jsx(H, { ...eX });
+              : _jsx(H, {
+                  ...eX,
+                  verseLabels: eList
+                    ? ez.verses.map((v) => verseKeyLabel(v.key, en))
+                    : null,
+                });
   return _jsxs("main", {
     className: "shell player",
     id: "main",
@@ -4676,13 +4774,20 @@ function U(e) {
           eList
             ? _jsx(PlaylistBar, {
                 title: eList.title,
-                index: eStopN,
-                total: eList.stops.length,
+                index: eListAt,
+                total: ez.verses.length || (eListRefs && eListRefs.length) || 0,
                 plusOn: plusOn,
-                nextLabel:
-                  eStopN < eList.stops.length - 1
-                    ? stopLabel(eList.stops[eStopN + 1], en)
-                    : null,
+                nextLabel: (function () {
+                  let nxt = ez.verses[eListAt + 1];
+                  if (nxt) return verseKeyLabel(nxt.key, en);
+                  let ref = eListRefs && eListRefs[eListAt + 1];
+                  return ref
+                    ? verseKeyLabel(
+                        "".concat(ref.chapter, ":").concat(ref.verse),
+                        en,
+                      )
+                    : null;
+                })(),
               })
             : null,
         ],
@@ -4976,6 +5081,35 @@ function U(e) {
           },
           onTranslationId: (id) => {
             setStore(KEYS.translationId, id);
+            if (eList) {
+              let chapters = [
+                ...new Set(eList.stops.map((stop) => stop.chapter)),
+              ];
+              Promise.all(
+                chapters.map((ch) =>
+                  fetchTranslation(ch, id).then((t) => ({ ch: ch, t: t })),
+                ),
+              )
+                .then((parts) => {
+                  let byKey = new Map(),
+                    name = parts[0] ? parts[0].t.name : "Translation";
+                  for (let stop of eList.stops) {
+                    let part = parts.find((p) => p.ch === stop.chapter);
+                    if (!part) continue;
+                    for (let n = stop.from; n <= stop.to; n++) {
+                      let text = part.t.byVerse.get(n);
+                      text &&
+                        byKey.set(
+                          "".concat(stop.chapter, ":").concat(n),
+                          text,
+                        );
+                    }
+                  }
+                  eu.setVerseTranslations(byKey, name);
+                })
+                .catch(() => {});
+              return;
+            }
             fetchTranslation(z, id)
               .then((t) => eu.setVerseTranslations(t.byVerse, t.name))
               .catch(() => {});

@@ -218,6 +218,46 @@ export function stopLabel(
   return `${name} ${stop.from}–${stop.to}`;
 }
 
+export type PlaylistVerseRef = {
+  chapter: number;
+  verse: number;
+  stop: number;
+};
+
+/** Playlist order, one row per ayah. Does not fill in the rest of a surah. */
+export function playlistVerseRefs(list: Playlist): PlaylistVerseRef[] {
+  const refs: PlaylistVerseRef[] = [];
+  list.stops.forEach((stop, stopIndex) => {
+    for (let verse = stop.from; verse <= stop.to; verse++) {
+      refs.push({ chapter: stop.chapter, verse, stop: stopIndex });
+    }
+  });
+  return refs;
+}
+
+/** Index of the first ayah in a stop, inside `playlistVerseRefs`. */
+export function playlistVerseIndex(list: Playlist, stopIndex: number) {
+  const stop = clampStopIndex(list, stopIndex);
+  let index = 0;
+  for (let i = 0; i < stop; i++) {
+    const span = list.stops[i];
+    index += span.to - span.from + 1;
+  }
+  return index;
+}
+
+export function verseKeyLabel(
+  key: string,
+  chapters: { id: number; name_simple: string }[],
+) {
+  const [chapterRaw, verseRaw] = String(key || "").split(":");
+  const chapter = Number(chapterRaw);
+  const name =
+    chapters.find((item) => item.id === chapter)?.name_simple ||
+    (chapter ? `Surah ${chapter}` : "Verse");
+  return verseRaw ? `${name} ${verseRaw}` : name;
+}
+
 export function sortRecitersForBestOf<T extends { id: number }>(list: T[]): T[] {
   const rank = new Map(FEATURED_RECITER_IDS.map((id, i) => [id, i]));
   return [...list].sort((a, b) => {
