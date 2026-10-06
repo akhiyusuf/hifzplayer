@@ -94,7 +94,12 @@ export function FocusJobsGuide({
   }
 
   return (
-    <div className="practice-strip focus-guide" role="region" aria-label="Practice modes">
+    <div
+      className="practice-strip focus-guide"
+      role="region"
+      aria-label="Practice modes"
+      onPointerEnter={() => setHeld(true)}
+    >
       <div className="practice-strip-head">
         <b>Pick a practice</b>
         <span>{tour ? `${step + 1} of ${FOCUS_JOBS.length}` : "Word Reps, Masked, or Relay"}</span>
