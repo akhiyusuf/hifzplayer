@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AccountEntry } from "./account-entry";
+import { BrandLogo } from "./brand-logo";
 import { Icon } from "./icon";
-import { APP_NAME, PLUS_NAME } from "@/lib/brand";
+import { PLUS_NAME } from "@/lib/brand";
 import { plusOnLabel } from "@/lib/plus-presence";
 import { usePlus } from "@/lib/plus";
 
@@ -20,14 +21,8 @@ export function AppSidebar() {
   const { plus } = usePlus();
   return (
     <nav className="app-sidebar" aria-label="Main">
-      <Link href="/home" className="as-brand">
-        <span className="as-mark">
-          <Icon name="book-open" size={19} />
-        </span>
-        <span className="as-name">
-          <b>{APP_NAME}</b>
-          <span>Quran study</span>
-        </span>
+      <Link href="/home" className="as-brand" aria-label="Diras home">
+        <BrandLogo variant="lockup" height={28} />
       </Link>
       <div className="as-items">
         {ITEMS.map((item) => (

@@ -1,18 +1,16 @@
 "use client";
 
+import { BrandLogo } from "@/components/brand-logo";
 import { Icon } from "@/components/icon";
-import { APP_NAME } from "@/lib/brand";
 import { SALAAM } from "@/lib/greeting";
 import { ONBOARDING_LEAD, ONBOARDING_POINTS } from "@/lib/onboarding";
 
 export function Onboarding({ onDone }: { onDone: () => void }) {
   return (
     <main className="shell onboard" id="main">
-      <span className="onboard-mark" aria-hidden="true">
-        <Icon name="book-open" size={22} />
-      </span>
+      <BrandLogo variant="lockup" height={40} className="onboard-logo" />
       <span className="label-eyebrow salaam">{SALAAM}</span>
-      <h1>{APP_NAME}</h1>
+      <h1 className="sr-only">Diras</h1>
       <p className="onboard-lead">{ONBOARDING_LEAD}</p>
       <ul className="onboard-points">
         {ONBOARDING_POINTS.map((point) => (
