@@ -89,7 +89,7 @@ export function plusWelcomeHtml(input: PlusWelcomeInput) {
   return renderEmailHtml({
     preheader: `${PLUS_NAME} is active`,
     heading: isTrial ? "Your free trial is on" : `${PLUS_NAME} is active`,
-    bodyHtml: `<p style="margin:0 0 16px">${intro}</p><p style="margin:0 0 8px"><strong>Unlocked now:</strong></p><p style="margin:0 0 4px">• Memorization planner</p><p style="margin:0 0 16px">• Occasion lists</p><p style="margin:0;font-size:14px;color:#5c554a">Quran reading, audio, translation, tajweed, verse Repeat, Word Reps, Masked, Relay, and word repeats stay free either way.</p>`,
+    bodyHtml: `<p style="margin:0 0 16px">${intro}</p><p style="margin:0 0 8px"><strong>Unlocked now:</strong></p><p style="margin:0 0 4px">• Memorization planner</p><p style="margin:0 0 16px">• Occasion lists</p><p style="margin:0;font-size:14px;color:#66645E">Quran reading, audio, translation, tajweed, verse Repeat, Word Reps, Masked, Relay, and word repeats stay free either way.</p>`,
     cta: { label: "Open Diras", url: "https://diras.app/home" },
   });
 }

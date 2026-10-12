@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BrandLogo } from "@/components/brand-logo";
 import { Icon } from "@/components/icon";
 import { LandingFocusDemo } from "@/components/landing-focus-demo";
 import { googleSignInEnabled } from "@/lib/auth/config";
@@ -15,9 +16,9 @@ export default function LandingPage() {
   return (
     <main className="landing" id="main">
       <header className="landing-top">
-        <span className="landing-mark" aria-hidden="true">
-          <Icon name="book-open" size={18} />
-        </span>
+        <Link href="/home" className="landing-mark-link" aria-label="Diras home">
+          <BrandLogo variant="mark" height={36} />
+        </Link>
         <nav className="landing-nav" aria-label="Marketing">
           <Link href="/pricing">{LANDING.plusTitle}</Link>
           <Link href="/home">Open app</Link>
@@ -27,7 +28,10 @@ export default function LandingPage() {
       <section className="landing-hero">
         <div className="landing-hero-copy">
           <p className="label-eyebrow salaam">{LANDING.salaam}</p>
-          <p className="landing-brand">{LANDING.brand}</p>
+          <p className="landing-brand">
+            <BrandLogo variant="lockup" height={56} className="landing-lockup" />
+            <span className="sr-only">{LANDING.brand}</span>
+          </p>
           <h1>{LANDING.headline}</h1>
           <p className="landing-lead">{LANDING.lead}</p>
           <div className="landing-cta">
