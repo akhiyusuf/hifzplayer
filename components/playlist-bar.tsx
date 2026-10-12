@@ -21,7 +21,7 @@ export function PlaylistBar({
       <b className="list-bar-title">{playlistBarTitle(title, plusOn)}</b>
       <span>
         {index + 1} of {total}
-        {last ? " · last stop" : nextLabel ? ` · next ${nextLabel}` : ""}
+        {last ? " · last verse" : nextLabel ? ` · next ${nextLabel}` : ""}
       </span>
     </div>
   );

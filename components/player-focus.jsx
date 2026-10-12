@@ -2,6 +2,7 @@
 
 import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { FocusStage } from "@/components/focus-stage";
+import { FocusJobsGuide } from "@/components/focus-guide";
 import { Icon } from "@/components/icon";
 import { MaskedCutoffChip } from "@/components/masked-cutoff";
 import { WordRepCountRow } from "@/components/word-rep-chrome";
@@ -11,7 +12,7 @@ import { emptyWordPick, wantsTranslation, relayRoundLabel, relayTurnName } from 
 import { usePlus } from "@/lib/plus";
 
 export function FocusVersePage(e) {
-  let { state: s, onWordTap: a, onWordHold: n } = e,
+  let { engine: t, state: s, onWordTap: a, onWordHold: n } = e,
     i = s.verses[s.vIdx];
   if (!i) return null;
   let u = i.words
@@ -19,6 +20,10 @@ export function FocusVersePage(e) {
     .filter(Boolean)
     .join(" \xb7 ");
   return _jsx(FocusStage, {
+    banner: _jsx(FocusJobsGuide, {
+      mode: s.mode,
+      onPick: (id) => t.setMode(id),
+    }),
     title: i.key,
     meta:
       s.verses.length > 1
