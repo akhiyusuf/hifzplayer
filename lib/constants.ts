@@ -86,4 +86,5 @@ export const KEYS = {
   relayDraft: "hifz.relay.draft",
   plan: "hifz.plan",
   ayahState: "hifz.ayahState",
+  focusGuide: "hifz.focusGuide",
 } as const;

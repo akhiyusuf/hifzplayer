@@ -148,6 +148,16 @@ export async function fetchPassage(chapter: number, from: number, to: number) {
   };
 }
 
+/** Load only the ayahs a playlist names, in playlist order, across surahs. */
+export async function fetchPlaylistPassage(stops: { chapter: number; from: number; to: number }[]) {
+  if (!stops.length) return { verses: [] as Verse[], translationName: "Translation" };
+  const chunks = await Promise.all(stops.map((stop) => fetchPassage(stop.chapter, stop.from, stop.to)));
+  return {
+    verses: chunks.flatMap((chunk) => chunk.verses),
+    translationName: chunks.find((chunk) => chunk.translationName)?.translationName || "Translation",
+  };
+}
+
 const translitCache = new Map<string, string>();
 
 export async function fetchTransliteration(verseKey: string, pos: number): Promise<string> {

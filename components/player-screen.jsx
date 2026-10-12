@@ -17,8 +17,8 @@ import { PlayerSettingsSheet } from "@/components/player-settings-sheet";
 import { ReciterSheet } from "@/components/reciter-sheet";
 import { PlaylistBar } from "@/components/playlist-bar";
 import { useAppData } from "@/lib/app-data";
-import { clampStopIndex, playlistHref, reciterIdForStyle, resolvePlaylist, stopLabel } from "@/lib/playlists";
-import { fetchPassage, fetchTranslation } from "@/lib/api";
+import { clampStopIndex, playlistVerseIndex, playlistVerseRefs, reciterIdForStyle, resolvePlaylist, verseKeyLabel } from "@/lib/playlists";
+import { fetchPassage, fetchPlaylistPassage, fetchTranslation } from "@/lib/api";
 import { APP_NAME } from "@/lib/brand";
 import { KEYS } from "@/lib/constants";
 import { backHref, dropReadModeParam } from "@/lib/nav";
@@ -158,11 +158,21 @@ export function PlayerScreen(e) {
       null !== (y = null == eO ? void 0 : eO.name_simple) && void 0 !== y
         ? y
         : "Surah ".concat(z),
-    eHead = verseRatioLabel(
-      e_,
-      (ez.verses[ez.vIdx] && ez.verses[ez.vIdx].number) || V,
-      (eO && eO.verses_count) || D,
-    );
+    eListAt = eList
+      ? (ez.verses.length ? ez.vIdx : playlistVerseIndex(eList, eStopN))
+      : 0,
+    eListRefs = eList ? playlistVerseRefs(eList) : null,
+    eHead = eList
+      ? verseRatioLabel(
+          eList.title,
+          eListAt + 1,
+          (ez.verses.length || (eListRefs && eListRefs.length) || 1),
+        )
+      : verseRatioLabel(
+          e_,
+          (ez.verses[ez.vIdx] && ez.verses[ez.vIdx].number) || V,
+          (eO && eO.verses_count) || D,
+        );
   (useEffect(() => () => eu.destroy(), [eu]),
     useEffect(() => eu.subscribeToast(eh), [eu, eh]),
     useEffect(() => {
@@ -204,26 +214,16 @@ export function PlayerScreen(e) {
           (eu.onNeedPrevStop = null));
         return;
       }
-      let go = (next, play) => {
-        if (next < 0 || next >= eList.stops.length) return !1;
-        if (!plusOn) return (ask("playlists"), !0);
-        let href = playlistHref({
-          listId: eListId,
-          reciterId: eM,
-          stop: next,
-          play: play,
-        });
-        return href ? (Y.replace(href), !0) : !1;
-      };
-      ((eu.onPassageEnd = () => go(eStopN + 1, !0)),
-        (eu.onNeedNextStop = () => go(eStopN + 1, eu.getSnapshot().playing)),
-        (eu.onNeedPrevStop = () => go(eStopN - 1, eu.getSnapshot().playing)));
+      // The playlist is already one verse list. Don't open the rest of a surah.
+      ((eu.onPassageEnd = () => !1),
+        (eu.onNeedNextStop = () => (eu.finishPassage(), !0)),
+        (eu.onNeedPrevStop = null));
       return () => {
         ((eu.onPassageEnd = null),
           (eu.onNeedNextStop = null),
           (eu.onNeedPrevStop = null));
       };
-    }, [eu, eList, eListId, eStopN, plusOn, ask, eM, Y]),
+    }, [eu, eList, eListId]),
     useEffect(() => {
       null != O && O !== el && eo(O);
     }, [O, el, eo]),
@@ -233,24 +233,31 @@ export function PlayerScreen(e) {
       (em("loading"), ex(!1));
       let t = setTimeout(() => !e && ex(!0), 5e3);
       return (
-        fetchPassage(z, V, D)
+        (eList ? fetchPlaylistPassage(eList.stops) : fetchPassage(z, V, D))
           .then(async (t) => {
             let { verses: s, translationName: r } = t;
             if (!e) {
               if (!s.length) throw Error("empty passage");
-              (await eu.openPassage(
-                { chapter: z, from: V, to: D, name: e_ },
-                eM,
-                s,
-                r,
-              ),
+              let passage = eList
+                  ? {
+                      chapter: eList.stops[eStopN].chapter,
+                      from: eList.stops[eStopN].from,
+                      to: eList.stops[eStopN].to,
+                      name: eList.title,
+                      ranges: eList.stops,
+                      listId: eList.id,
+                    }
+                  : { chapter: z, from: V, to: D, name: e_ },
+                start = eList ? playlistVerseIndex(eList, eStopN) : 0;
+              (await eu.openPassage(passage, eM, s, r),
                 e ||
-                  (em("ready"),
+                  (start > 0 && eu.loadVerseAudio(start, !1),
+                  em("ready"),
                   ec({
-                    chapter: z,
-                    from: V,
-                    to: D,
-                    name: e_,
+                    chapter: passage.chapter,
+                    from: passage.from,
+                    to: passage.to,
+                    name: passage.name,
                     reciter: ed(eM),
                   }),
                   eWantPlay && eu.playAudio()));
@@ -264,7 +271,7 @@ export function PlayerScreen(e) {
           ((e = !0), clearTimeout(t), eu.stopAudio());
         }
       );
-    }, [z, V, D, eM, ei, eu, eWantPlay, plusOn]));
+    }, [z, V, D, eM, ei, eu, eWantPlay, plusOn, eList, eStopN]));
   let eH = useCallback(
       (e, t, s, pointerType) => {
         let r = eu.getSnapshot(),
@@ -741,7 +748,12 @@ export function PlayerScreen(e) {
             ? _jsx(FocusWordPage, { ...eX })
             : "focus" === ePage
               ? _jsx(FocusVersePage, { ...eX })
-              : _jsx(MushafPage, { ...eX });
+              : _jsx(MushafPage, {
+                  ...eX,
+                  verseLabels: eList
+                    ? ez.verses.map((v) => verseKeyLabel(v.key, en))
+                    : null,
+                });
   return _jsxs("main", {
     className: "shell player".concat(eEyesOff && "ustadh" === ez.mode ? " ustadh-eyes-off" : ""),
     id: "main",
@@ -793,13 +805,20 @@ export function PlayerScreen(e) {
           eList
             ? _jsx(PlaylistBar, {
                 title: eList.title,
-                index: eStopN,
-                total: eList.stops.length,
+                index: eListAt,
+                total: ez.verses.length || (eListRefs && eListRefs.length) || 0,
                 plusOn: plusOn,
-                nextLabel:
-                  eStopN < eList.stops.length - 1
-                    ? stopLabel(eList.stops[eStopN + 1], en)
-                    : null,
+                nextLabel: (function () {
+                  let nxt = ez.verses[eListAt + 1];
+                  if (nxt) return verseKeyLabel(nxt.key, en);
+                  let ref = eListRefs && eListRefs[eListAt + 1];
+                  return ref
+                    ? verseKeyLabel(
+                        "".concat(ref.chapter, ":").concat(ref.verse),
+                        en,
+                      )
+                    : null;
+                })(),
               })
             : null,
         ],
@@ -1061,6 +1080,35 @@ export function PlayerScreen(e) {
           },
           onTranslationId: (id) => {
             setStore(KEYS.translationId, id);
+            if (eList) {
+              let chapters = [
+                ...new Set(eList.stops.map((stop) => stop.chapter)),
+              ];
+              Promise.all(
+                chapters.map((ch) =>
+                  fetchTranslation(ch, id).then((t) => ({ ch: ch, t: t })),
+                ),
+              )
+                .then((parts) => {
+                  let byKey = new Map(),
+                    name = parts[0] ? parts[0].t.name : "Translation";
+                  for (let stop of eList.stops) {
+                    let part = parts.find((p) => p.ch === stop.chapter);
+                    if (!part) continue;
+                    for (let n = stop.from; n <= stop.to; n++) {
+                      let text = part.t.byVerse.get(n);
+                      text &&
+                        byKey.set(
+                          "".concat(stop.chapter, ":").concat(n),
+                          text,
+                        );
+                    }
+                  }
+                  eu.setVerseTranslations(byKey, name);
+                })
+                .catch(() => {});
+              return;
+            }
             fetchTranslation(z, id)
               .then((t) => eu.setVerseTranslations(t.byVerse, t.name))
               .catch(() => {});

@@ -250,6 +250,7 @@ export function MushafPage(e) {
       selection: i,
       annFor: l,
       arrived: o,
+      verseLabels: labels = null,
     } = e,
     { plus: plusOn, askPlus: ask } = usePlus(),
     d = useRef(null),
@@ -302,6 +303,18 @@ export function MushafPage(e) {
       null == t ||
         t.scrollIntoView({ block: "center", behavior: "smooth" });
     }, [o, s.verses]));
+  let listed = !!(labels && labels.length);
+  useEffect(() => {
+    if (!listed) return;
+    let root = d.current;
+    if (!root) return;
+    let row = root.querySelector(".playlist-verse.on");
+    if (!row) return;
+    let box = root.getBoundingClientRect(),
+      r = row.getBoundingClientRect();
+    if (r.top < box.top + 8 || r.bottom > box.bottom - 8)
+      row.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [s.vIdx, listed]);
   let y = s.passage,
     b = !!y && 1 === y.from && 1 !== y.chapter && 9 !== y.chapter,
     pick = s.wordPick || emptyWordPick(),
@@ -330,15 +343,18 @@ export function MushafPage(e) {
     className: "player-body",
     style: { padding: "16px 20px 6px" },
     children: _jsxs("div", {
-            className: "mushaf-wrap".concat("relay" === s.mode ? " relay-on" : ""),
+      className: (listed ? "playlist-verses" : "mushaf-wrap").concat(
+        "relay" === s.mode ? " relay-on" : "",
+      ),
       children: [
-        b &&
+        !listed &&
+          b &&
           _jsx("div", {
             className: "basmala",
             children: "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
           }),
         _jsx("div", {
-          className: "mushaf",
+          className: listed ? "playlist-verses-list" : "mushaf",
           children: s.verses.map((e, a) => {
             let r = t.isVerseDone(a),
               mask = mushafMaskReveal({
@@ -350,12 +366,14 @@ export function MushafPage(e) {
                   "masked" === s.mode ? t.maskStateFor(e).reveal : 0,
                 verseDone: r,
               });
+            let node;
             if (!isHotVerse(a, u, p) && !mask.masked)
-              return _jsx(
+              node = _jsx(
                 ColdVerse,
                 { verse: e, vIdx: a, done: r, onMarkTap: h },
                 e.key,
               );
+            else {
             let d = verseWordRange(a, s, i),
               c = {
                 verse: e,
@@ -379,9 +397,37 @@ export function MushafPage(e) {
                 interactive: mushafWordsInteractive(s.mode),
                 wordRep: a === s.vIdx ? wordRep : null,
               };
-            return a === s.vIdx
-              ? _jsx(MushafVerseActive, { engine: t, ...c }, e.key)
-              : _jsx(MushafVerse, { ...c, curWord: 0 }, e.key);
+            node =
+              a === s.vIdx
+                ? _jsx(MushafVerseActive, { engine: t, ...c }, e.key)
+                : _jsx(MushafVerse, { ...c, curWord: 0 }, e.key);
+            }
+            if (!listed) return node;
+            return _jsxs(
+              "div",
+              {
+                className: "playlist-verse".concat(a === s.vIdx ? " on" : ""),
+                children: [
+                  _jsx("span", {
+                    className: "playlist-verse-k",
+                    children: (labels && labels[a]) || e.key,
+                  }),
+                  e.number === 1 &&
+                  !e.key.startsWith("1:") &&
+                  !e.key.startsWith("9:")
+                    ? _jsx("div", {
+                        className: "basmala",
+                        children: "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
+                      })
+                    : null,
+                  _jsx("div", {
+                    className: "mushaf playlist-verse-ar",
+                    children: node,
+                  }),
+                ],
+              },
+              e.key,
+            );
           }),
         }),
       ],

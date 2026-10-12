@@ -10,6 +10,7 @@ export function FocusStage({
   progress,
   extra,
   actions,
+  banner,
   children,
   gloss,
   contextLabel,
@@ -21,6 +22,7 @@ export function FocusStage({
   progress?: { now: number; max: number; label: string };
   extra?: ReactNode;
   actions?: ReactNode;
+  banner?: ReactNode;
   children: ReactNode;
   gloss?: ReactNode;
   contextLabel?: string;
@@ -28,6 +30,7 @@ export function FocusStage({
 }) {
   return (
     <div className="player-body">
+      {banner}
       <PracticeStrip
         title={title}
         meta={meta}
