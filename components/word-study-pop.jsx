@@ -125,7 +125,7 @@ export function WordStudyPop(e) {
               _jsx("span", { className: "tr", children: d.tr }),
             _jsx("span", {
               className: "gl",
-              children: d.gloss || "—",
+              children: d.gloss || "·",
             }),
           ],
         }),

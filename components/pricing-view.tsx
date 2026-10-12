@@ -189,7 +189,7 @@ function PricingForm({
       <div className="pricing-buy">
         {trialOn ? (
           <p className="pricing-note" role="status">
-            {PLUS_EXPLAIN.plusTitle} is on. Pick a plan below any time — your free trial (if any) does not renew.
+            {PLUS_EXPLAIN.plusTitle} is on. Pick a plan below any time. Your free trial (if any) does not renew.
           </p>
         ) : canTrial ? (
           <div className="pricing-trial">
@@ -314,7 +314,7 @@ function PricingForm({
         {gift ? (
           <p className="pricing-note">
             {signedIn
-              ? "Paste the emails first. We check who already has a Diras account — they do not need one yet. If they already have Plus, extra time stacks on top. For me still buys Plus for you."
+              ? "Paste the emails first. We check who already has a Diras account; they do not need one yet. If they already have Plus, extra time stacks on top. For me still buys Plus for you."
               : "Sign in to gift someone. You can gift an email even if they have not signed up yet."}
           </p>
         ) : null}

@@ -11,11 +11,11 @@ export type LegacyPlusFeature = PlusFeature | "focus";
 export const PLUS_COPY: Record<PlusFeature, { title: string; body: string }> = {
   repeats: {
     title: "3× and unlimited word repeats",
-    body: "Word repeats are free at every count — 3×, 5×, 10×, or until you stop. Diras Plus adds the memorization planner and playlists.",
+    body: "Word repeats are free at every count: 3×, 5×, 10×, or until you stop. Diras Plus adds the memorization planner and playlists.",
   },
   practice: {
     title: "Word Reps, Masked, and Relay",
-    body: "Mushaf and Focus views stay free — including play. Word Reps, Masked, and Relay are free too. Diras Plus adds the memorization planner and playlists.",
+    body: "Mushaf and Focus views stay free, including play. Word Reps, Masked, and Relay are free too. Diras Plus adds the memorization planner and playlists.",
   },
   "relay-qaris": {
     title: "More than one qari",
@@ -42,23 +42,23 @@ export const PLUS_EXPLAIN = {
   rowTitle: `What ${PLUS_NAME} is`,
   rowSub: "Memorization planner and playlists",
   rowOn: "Memorization planner and playlists",
-  lead: "Reading stays free. Mushaf and Focus views stay free — including play. Word Reps, Masked, and Relay are free. Looping a verse with Repeat stays free. You can open Playlists and look around.",
+  lead: "Reading stays free. Mushaf and Focus views stay free, including play. Word Reps, Masked, and Relay are free. Looping a verse with Repeat stays free. You can open Playlists and look around.",
   freeTitle: "Always free",
   free: [
     "Quran with audio, translation, and tajweed",
     "Mushaf view and Focus view, including play",
     "Word Reps, Masked, and Relay on Mushaf or Focus",
     "Repeat on the player, this verse or a range of verses, until you turn it off",
-    "Word repeats — 3×, 5×, 10×, or until you stop",
+    "Word repeats: 3×, 5×, 10×, or until you stop",
     "Relay with more than one qari",
-    "Colour themes — orange, green, black and white, pink, and gold",
+    "Colour themes: orange, green, black and white, pink, and gold",
     "Opening Playlists and leaving",
   ],
   plusTitle: PLUS_NAME,
   plus: [
-    "Memorization planner — New, Review, and Revision for the day",
-    "Occasion lists — Friday, night, morning, and the rest",
-    "AI Ustadh recite coach — coming soon",
+    "Memorization planner: New, Review, and Revision for the day",
+    "Occasion lists: Friday, night, morning, and the rest",
+    "AI Ustadh recite coach (coming soon)",
   ],
 } as const;
 

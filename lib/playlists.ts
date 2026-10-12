@@ -42,7 +42,7 @@ export const OCCASION_PLAYLISTS: Playlist[] = [
     id: "sleep",
     title: "Before sleep",
     arabic: "الملك",
-    blurb: "Al-Mulk, then As-Sajdah — a nightly listen many keep.",
+    blurb: "Al-Mulk, then As-Sajdah: a nightly listen many keep.",
     stops: [
       { chapter: 67, from: 1, to: 30 },
       { chapter: 32, from: 1, to: 30 },
@@ -86,7 +86,7 @@ export const OCCASION_PLAYLISTS: Playlist[] = [
     id: "ease",
     title: "Ease",
     arabic: "الشرح",
-    blurb: "Ad-Duha and Ash-Sharh, then Al-Fatihah — short surahs people play when they need ease.",
+    blurb: "Ad-Duha and Ash-Sharh, then Al-Fatihah: short surahs people play when they need ease.",
     stops: [
       { chapter: 93, from: 1, to: 11 },
       { chapter: 94, from: 1, to: 8 },
@@ -97,7 +97,7 @@ export const OCCASION_PLAYLISTS: Playlist[] = [
     id: "unwell",
     title: "When unwell",
     arabic: "الفاتحة",
-    blurb: "Al-Fatihah, Ayat al-Kursi, and the three Quls — as listening, not as treatment.",
+    blurb: "Al-Fatihah, Ayat al-Kursi, and the three Quls, as listening, not as treatment.",
     stops: [
       { chapter: 1, from: 1, to: 7 },
       { chapter: 2, from: 255, to: 255 },
@@ -179,7 +179,7 @@ export function bestOfPlaylist(reciterName: string, style?: string | null): Play
     id: BEST_OF_ID,
     title: `Best of ${shown}`,
     arabic: "",
-    blurb: "Loved passages in this recitation — the same ayahs, this voice.",
+    blurb: "Loved passages in this recitation: the same ayahs, this voice.",
     stops: BEST_OF_STOPS,
   };
 }

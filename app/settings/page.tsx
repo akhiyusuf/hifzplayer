@@ -239,7 +239,7 @@ export default function SettingsPage() {
           }}
           onClick={() => {
             for (const k of [KEYS.chapters, KEYS.recitations]) window.localStorage.removeItem(k);
-            showToast("Cached content cleared — it re-downloads on next use");
+            showToast("Cached content cleared. It re-downloads on next use");
           }}
         >
           <span className="st">

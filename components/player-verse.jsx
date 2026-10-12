@@ -90,7 +90,7 @@ export let PlayerWord = memo(function (e) {
         tabIndex: 0,
         "aria-label": ""
           .concat(t.ar)
-          .concat(t.gloss ? " — ".concat(t.gloss) : ""),
+          .concat(t.gloss ? ": ".concat(t.gloss) : ""),
         onPointerDown: (e) => {
           lastPtr.current = e.pointerType || "mouse";
           if (!y || ("mouse" === e.pointerType && 0 !== e.button)) return;

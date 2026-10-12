@@ -83,7 +83,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const reciterName = useCallback(
     (id: number | null | undefined) => {
       const rec = recitations.find((r) => r.id === id);
-      return rec ? reciterDisplayName(rec.name, rec.style) : "—";
+      return rec ? reciterDisplayName(rec.name, rec.style) : "·";
     },
     [recitations],
   );

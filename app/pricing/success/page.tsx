@@ -4,7 +4,7 @@ import { Icon } from "@/components/icon";
 import { PricingSuccess } from "@/components/pricing-success";
 import { PLUS_NAME } from "@/lib/brand";
 
-export const metadata: Metadata = { title: `Payment — ${PLUS_NAME}` };
+export const metadata: Metadata = { title: `Payment · ${PLUS_NAME}` };
 export const dynamic = "force-dynamic";
 
 export default async function PricingSuccessPage({

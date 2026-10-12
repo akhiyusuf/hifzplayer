@@ -36,7 +36,7 @@ export function AccountsNotConfigured() {
         Sign-in runs on the Cloudflare Worker. Accounts live in Neon. Add <code>DATABASE_URL</code> and{" "}
         <code>AUTH_SECRET</code> (or <code>BILLING_SIGNING_SECRET</code>). Optional bot check: Turnstile{" "}
         (<code>NEXT_PUBLIC_TURNSTILE_SITE_KEY</code> in wrangler vars + build env,{" "}
-        <code>TURNSTILE_SECRET_KEY</code> Worker secret). Tables are created on first sign-in — you do not paste
+        <code>TURNSTILE_SECRET_KEY</code> Worker secret). Tables are created on first sign-in. You do not paste
         SQL.
       </p>
       <p className="pricing-note" style={{ textAlign: "center", maxWidth: 360 }}>

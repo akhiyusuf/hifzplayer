@@ -3,13 +3,13 @@ import { APP_NAME, PLUS_NAME } from "./brand.ts";
 /** Marketing landing — sells Focus first; free mushaf is the trust line. */
 
 export const LANDING = {
-  metaTitle: `${APP_NAME} — Quran reading and memorisation`,
+  metaTitle: `${APP_NAME}: Quran reading and memorisation`,
   metaDescription:
     "Diras is a Quran reading and memorisation practice app. Read the mushaf free, then practise with Word Reps, Masked, and Relay.",
   salaam: "Assalamu alaikum",
   brand: APP_NAME,
   headline: "Practise the Quran on the page.",
-  lead: "Diras is a Quran reading and memorisation practice app. Word Reps loops a hard word, Masked hides the line, and Relay trades turns with the qari. Try the live floor beside you — no account.",
+  lead: "Diras is a Quran reading and memorisation practice app. Word Reps loops a hard word, Masked hides the line, and Relay trades turns with the qari. Try the live floor beside you, no account.",
   purposeTitle: "What Diras is for",
   purposeBody:
     "Diras is a Quran reading and memorisation practice app. You can open the mushaf and read or listen without signing in. Practice on a passage is Word Reps, Masked, and Relay: loop a word, hide the line, or trade ayahs with the qari. An account is optional.",
@@ -34,13 +34,13 @@ export const LANDING = {
   demoKicker: "Live Focus · Al-ʿAṣr · no account",
   freeLine: "Reading and word-sync audio stay free. Word Reps, Masked, and Relay are free too. Plus unlocks the memorization planner and playlists.",
   focusTitle: "Three jobs. One floor.",
-  focusLead: "Same Word Reps, Masked, and Relay as in the app — try them above, then keep going in the mushaf.",
+  focusLead: "Same Word Reps, Masked, and Relay as in the app. Try them above, then keep going in the mushaf.",
   jobs: [
     {
       id: "word-reps",
       icon: "repeat" as const,
       title: "Word Reps",
-      blurb: "Tap a word to loop it. Pin a stretch to drill a phrase with the teaching reciter — 5×, 10×, or until you stop.",
+      blurb: "Tap a word to loop it. Pin a stretch to drill a phrase with the teaching reciter: 5×, 10×, or until you stop.",
       sample: { kind: "reps" as const },
     },
     {
@@ -54,15 +54,15 @@ export const LANDING = {
       id: "relay",
       icon: "users" as const,
       title: "Relay",
-      blurb: "You take an ayah. Then the qari takes the next. Skip when you are done — the chain keeps moving.",
+      blurb: "You take an ayah. Then the qari takes the next. Skip when you are done. The chain keeps moving.",
       sample: { kind: "relay" as const },
     },
   ],
   plusTitle: PLUS_NAME,
-  plusLead: "Focus unlocked in the app. Listen lists. Deep word repeats. One day free — no card.",
+  plusLead: "Focus unlocked in the app. Listen lists. Deep word repeats. One day free, no card.",
   plusPoints: [
     "Word Reps, Masked, and Relay on every page you open",
-    "Occasion listen lists — Friday, night, morning",
+    "Occasion listen lists: Friday, night, morning",
     "Word repeats past ×2, and Relay with more than one qari",
   ],
   upcomingTitle: "What’s coming",
@@ -72,7 +72,7 @@ export const LANDING = {
       id: "ask",
       icon: "sparkles" as const,
       title: "Ask the Quran",
-      blurb: "Sit with a verse and ask — answers from the text you have open.",
+      blurb: "Sit with a verse and ask. Answers from the text you have open.",
       plus: true,
     },
     {
@@ -86,7 +86,7 @@ export const LANDING = {
       id: "phrases",
       icon: "layers" as const,
       title: "Recurring phrases",
-      blurb: "The same wording returns — tap it and jump to the other places.",
+      blurb: "The same wording returns. Tap it and jump to the other places.",
       plus: false,
     },
     {
@@ -98,7 +98,7 @@ export const LANDING = {
     },
   ],
   closeTitle: "Feel the difference in one day",
-  closeLead: `You already tried Focus above. Keep practising in the mushaf for free. Start the free ${PLUS_NAME} trial for the planner and playlists — or walk away; reading was always free.`,
+  closeLead: `You already tried Focus above. Keep practising in the mushaf for free. Start the free ${PLUS_NAME} trial for the planner and playlists, or walk away; reading was always free.`,
   closeCta: "Start free trial",
   closeHref: "/pricing",
 } as const;

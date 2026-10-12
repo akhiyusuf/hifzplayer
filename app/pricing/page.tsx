@@ -13,7 +13,7 @@ import { catalog, regionForCountry } from "@/lib/billing/plans";
 import { openTrialUsed, trialAvailable, TRIAL_USED_COOKIE } from "@/lib/billing/trial";
 import { backHref } from "@/lib/nav";
 
-export const metadata: Metadata = { title: `${PLUS_NAME} — pricing` };
+export const metadata: Metadata = { title: `${PLUS_NAME}: pricing` };
 export const dynamic = "force-dynamic";
 
 export default async function PricingPage({

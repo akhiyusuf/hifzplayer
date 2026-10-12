@@ -100,8 +100,8 @@ export function ConfusableSheet(e) {
                 _jsxs("span", {
                   className: "gloss",
                   children: [
-                    n ? "“".concat(n, "”") : "—",
-                    t.pos ? " — ".concat(P(t.pos)) : "",
+                    n ? "“".concat(n, "”") : "·",
+                    t.pos ? ": ".concat(P(t.pos)) : "",
                   ],
                 }),
               ],
@@ -267,7 +267,7 @@ export function PhraseSheet(e) {
                     children: [
                       _jsx("div", {
                         className: "ar",
-                        children: a || "—",
+                        children: a || "·",
                       }),
                       _jsxs("div", {
                         className: "sub",

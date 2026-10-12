@@ -635,24 +635,24 @@ export function UstadhCoachBar({
         : status === "checking"
           ? "Comparing to the ayah…"
           : status === "replaying"
-            ? "Listen to Ustadh — the mic opens again after"
+            ? "Listen to Ustadh. The mic opens again after"
             : status === "matched"
               ? auto
-                ? "Nice — next take starts in a moment"
-                : "Nice — tap Listen for another take"
+                ? "Nice. Next take starts in a moment"
+                : "Nice. Tap Listen for another take"
               : status === "miss"
                 ? arabicHint
                   ? `Heard: ${arabicHint}`
                   : auto
-                    ? "Try again — listening shortly"
-                    : "Replay finished — try again"
+                    ? "Try again. Listening shortly"
+                    : "Replay finished. Try again"
                 : pausedReason === "silent"
-                  ? "Paused after silence — tap Listen to resume"
+                  ? "Paused after silence. Tap Listen to resume"
                   : pausedReason === "stopped"
-                    ? "Paused — tap Listen to resume"
+                    ? "Paused. Tap Listen to resume"
                     : auto && errorCode === "EMPTY_CLIP"
-                      ? "Didn’t catch that — listening again"
-                      : "Tap Listen once — Ustadh keeps listening after each take";
+                      ? "Didn’t catch that. Listening again"
+                      : "Tap Listen once. Ustadh keeps listening after each take";
 
   const looping = auto || status === "listening" || status === "checking" || status === "replaying";
   const words = payload?.words || [];

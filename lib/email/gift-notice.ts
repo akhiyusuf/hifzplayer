@@ -25,8 +25,8 @@ export function giftNoticeSubject(input?: Pick<GiftNoticeInput, "alreadyPlus" | 
 function signInHow(existingAccount: boolean) {
   const method = googleSignInEnabled() ? "password or Google" : "email and a password";
   return existingAccount
-    ? `Sign in to ${APP_NAME} with this same email — ${method}.`
-    : `You have been granted ${PLUS_NAME}. Sign in or create a ${APP_NAME} account with this same email — ${method}.`;
+    ? `Sign in to ${APP_NAME} with this same email (${method}).`
+    : `You have been granted ${PLUS_NAME}. Sign in or create a ${APP_NAME} account with this same email (${method}).`;
 }
 
 export function giftNoticeText(input: GiftNoticeInput) {
@@ -34,10 +34,10 @@ export function giftNoticeText(input: GiftNoticeInput) {
 
   const lead =
     input.existingAccount && input.keptLifetime
-      ? `Assalamu alaikum — someone gifted you ${PLUS_NAME}. You already have lifetime ${PLUS_NAME} on this email, so your access stays lifetime.`
+      ? `Assalamu alaikum. Someone gifted you ${PLUS_NAME}. You already have lifetime ${PLUS_NAME} on this email, so your access stays lifetime.`
       : input.existingAccount && input.alreadyPlus && input.stacked
-        ? `Assalamu alaikum — someone gifted you ${extraLabel(input.planId)} of ${PLUS_NAME}. You already had access on this account. This gift adds time on top of what you have — it does not replace it.`
-        : `Assalamu alaikum — someone just gifted you ${PLUS_NAME}.`;
+        ? `Assalamu alaikum. Someone gifted you ${extraLabel(input.planId)} of ${PLUS_NAME}. You already had access on this account. This gift adds time on top of what you have; it does not replace it.`
+        : `Assalamu alaikum. Someone just gifted you ${PLUS_NAME}.`;
 
   return [
     lead,
@@ -66,10 +66,10 @@ export function giftNoticeHtml(input: GiftNoticeInput) {
 
   const lead =
     input.existingAccount && input.keptLifetime
-      ? `Assalamu alaikum — someone gifted you ${PLUS_NAME}. You already have lifetime ${PLUS_NAME} on this email, so your access stays lifetime.`
+      ? `Assalamu alaikum. Someone gifted you ${PLUS_NAME}. You already have lifetime ${PLUS_NAME} on this email, so your access stays lifetime.`
       : input.existingAccount && input.alreadyPlus && input.stacked
-        ? `Assalamu alaikum — someone gifted you ${extraLabel(input.planId)} of ${PLUS_NAME}. You already had access on this account. This gift adds time on top of what you have — it does not replace it.`
-        : `Assalamu alaikum — someone just gifted you ${PLUS_NAME}.`;
+        ? `Assalamu alaikum. Someone gifted you ${extraLabel(input.planId)} of ${PLUS_NAME}. You already had access on this account. This gift adds time on top of what you have; it does not replace it.`
+        : `Assalamu alaikum. Someone just gifted you ${PLUS_NAME}.`;
 
   return renderEmailHtml({
     preheader: `Someone gifted you ${PLUS_NAME}`,

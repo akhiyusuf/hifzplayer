@@ -4,7 +4,7 @@ import { Icon } from "@/components/icon";
 import { APP_NAME, CONTACT_EMAIL, PLUS_NAME } from "@/lib/brand";
 import { backHref, legalPeerHref } from "@/lib/nav";
 
-export const metadata: Metadata = { title: `Privacy — ${APP_NAME}` };
+export const metadata: Metadata = { title: `Privacy · ${APP_NAME}` };
 
 const sectionTitle = {
   fontFamily: "var(--font-display)",
@@ -190,7 +190,7 @@ export default async function PrivacyPage({
             <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "var(--action-primary)" }}>
               {CONTACT_EMAIL}
             </a>{" "}
-            from the address on the account — the verified email we received from Google — and say you want the
+            from the address on the account (the verified email we received from Google) and say you want the
             account deleted. We then delete the Google account id, name, and email stored for that account. The
             same path is under Deletion and contact.
           </p>
@@ -211,22 +211,22 @@ export default async function PrivacyPage({
           <p style={body}>We do not give your account to advertisers. These services see only their own job:</p>
           <ul style={list}>
             <li>
-              Quran Foundation (quran.com) — Quran text, translations, and recitation audio. Those requests go
+              Quran Foundation (quran.com): Quran text, translations, and recitation audio. Those requests go
               directly from your browser to their servers. We add no account id or email to them. Their privacy
               policy applies.
             </li>
             <li>
-              Cloudflare — serves {APP_NAME}, and runs the Turnstile human check on password forms. Turnstile
+              Cloudflare serves {APP_NAME}, and runs the Turnstile human check on password forms. Turnstile
               may set a cookie on Cloudflare’s challenge domain while you complete that check.
             </li>
-            <li>Neon — the database that holds accounts, sessions, and Plus.</li>
+            <li>Neon: the database that holds accounts, sessions, and Plus.</li>
             <li>
-              Resend — sends the account email, the one-time code, and the note that Plus turned on. On
+              Resend sends the account email, the one-time code, and the note that Plus turned on. On
               Cloudflare, the same message may go through MailChannels instead. Either way it is one
               transactional email, not a mailing list.
             </li>
             <li>
-              Stripe or Paystack — checkout. Nigeria and West Africa use Paystack; other regions use Stripe,
+              Stripe or Paystack handle checkout. Nigeria and West Africa use Paystack; other regions use Stripe,
               chosen from your location. Their privacy policies apply to the card form. Their dashboards are
               the payment ledger.
             </li>
@@ -249,13 +249,13 @@ export default async function PrivacyPage({
           <h2 id="payments" style={sectionTitle}>Payments and gifts</h2>
           <p style={body}>
             If you gift Plus, you sign in first, choose how many people, and paste their emails. We check who
-            already has a {APP_NAME} account — they do not need one yet. After you pay, Plus is granted to those
+            already has a {APP_NAME} account; they do not need one yet. After you pay, Plus is granted to those
             emails, not to you. Someone without an account gets a note to sign in with that same address. If
             they already have Plus, extra time stacks on top. Buying for yourself puts Plus on the signed-in
             account. Paystack and Stripe still send their own receipts. The app never shows payment references.
             Your account ID is shown only to you on the account page so you can quote it if something goes
             wrong. We log payment confirmation and renewal events (plan, processor, success or failure, and that
-            same account ID — never your email) so a paid subscription can be fulfilled. If you dispute or
+            same account ID, never your email) so a paid subscription can be fulfilled. If you dispute or
             charge back a Plus payment, we turn Plus off on the account that received it.
           </p>
         </section>
@@ -286,7 +286,7 @@ export default async function PrivacyPage({
             sessions, Plus record, and gifts tied to it. If you signed in with Google, that same email deletes
             the Google user data we stored: your Google account id, name, and verified email. We cannot clear
             preferences stored only on your device
-            — clearing the browser’s site data does that. We also cannot delete the payment record held by
+            Clearing the browser’s site data does that. We also cannot delete the payment record held by
             Stripe or Paystack. The same address is where to ask a question about this policy. If this policy
             changes, this page will say so plainly, including what is collected and why.
           </p>

@@ -106,7 +106,7 @@ export function GiftAssign({ sessionId, reference }: { sessionId: string; refere
         <h2>Gift sent</h2>
         <p>
           {state.existingAccount
-            ? "They already have a Diras account on that email. They should sign in with it — we will email them a 6-digit code."
+            ? "They already have a Diras account on that email. They should sign in with it. We will email them a 6-digit code."
             : "They will get an email. Sign in or create a Diras account with that same address."}
         </p>
         <div className="status-actions">
@@ -142,7 +142,7 @@ export function GiftAssign({ sessionId, reference }: { sessionId: string; refere
         Who is this for?
       </h2>
       <p>
-        Payment is done. Paste their email — they do not need a Diras account yet. We email them to sign in with
+        Payment is done. Paste their email. They do not need a Diras account yet. We email them to sign in with
         that address. If they already have Plus, extra time stacks on top.
       </p>
       <label className="pricing-email">

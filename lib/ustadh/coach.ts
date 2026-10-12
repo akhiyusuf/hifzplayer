@@ -32,7 +32,7 @@ export function ustadhStatusLabel(status: UstadhCoachStatus, errorCode?: string 
     case "matched":
       return "Matched";
     case "miss":
-      return "Miss — listen and try again";
+      return "Miss. Listen and try again";
     case "error":
       if (errorCode === "MIC_DENIED") return "Mic blocked";
       if (errorCode === "MIC_UNAVAILABLE") return "Mic unavailable";

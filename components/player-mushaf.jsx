@@ -149,7 +149,7 @@ function MushafRelayBar(e) {
       title: h ? "Your turn" : who,
       meta: relayRoundLabel(l.round, l.rounds),
       hint: h
-        ? "Recite aloud — the reciter plays muted to pace you"
+        ? "Recite aloud. The reciter plays muted to pace you"
         : l.waitingTap
           ? "Tap play to begin"
           : undefined,

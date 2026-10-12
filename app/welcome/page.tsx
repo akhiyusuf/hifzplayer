@@ -53,7 +53,7 @@ function WelcomeForm({ next }: { next: string }) {
   return (
     <form className="auth-form" onSubmit={submit}>
       <p className="pricing-lead" style={{ textAlign: "center" }}>
-        Assalamu alaikum — welcome to Diras.
+        Assalamu alaikum. Welcome to Diras.
       </p>
       <p className="pricing-lead" style={{ textAlign: "center", fontSize: 15 }}>
         What should we call you? Your name shows on your account, in emails, and on the payment screen.

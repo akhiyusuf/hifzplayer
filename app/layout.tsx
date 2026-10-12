@@ -39,7 +39,7 @@ const arabic = Amiri_Quran({
 });
 
 export const metadata: Metadata = {
-  title: `${APP_NAME} — ${APP_TAGLINE}`,
+  title: `${APP_NAME}: ${APP_TAGLINE}`,
   description:
     "A mobile-first Quran reading and memorisation player with word-level audio timing, tajweed colouring, masked recall and relay practice.",
   appleWebApp: { capable: true, title: APP_NAME },

@@ -290,7 +290,7 @@ export function PlayerScreen(e) {
           if (a.vIdx !== e) {
             var n;
             eh(
-              "A range stays inside one verse — pick a second word in ".concat(
+              "A range stays inside one verse. Pick a second word in ".concat(
                 null === (n = r.verses[a.vIdx]) || void 0 === n
                   ? void 0
                   : n.key,
@@ -609,7 +609,7 @@ export function PlayerScreen(e) {
                     ],
                   }),
                   _jsx("span", {
-                    children: "Comparing elsewhere — nothing lost",
+                    children: "Comparing elsewhere. Nothing lost",
                   }),
                 ],
               }),
@@ -644,7 +644,7 @@ export function PlayerScreen(e) {
                 }),
                 _jsx("p", {
                   children:
-                    "This passage couldn’t be loaded. Check your connection and try again — your place is saved.",
+                    "This passage couldn’t be loaded. Check your connection and try again. Your place is saved.",
                 }),
               ],
             }),
@@ -691,7 +691,7 @@ export function PlayerScreen(e) {
             _jsx("div", { className: "spinner" }),
             _jsx("p", {
               children: ev
-                ? "Still loading — the connection looks slow."
+                ? "Still loading. The connection looks slow."
                 : "Loading passage…",
             }),
           ],
@@ -835,7 +835,7 @@ export function PlayerScreen(e) {
                   ],
                 }),
                 _jsx("span", {
-                  children: "Comparing elsewhere — nothing lost",
+                  children: "Comparing elsewhere. Nothing lost",
                 }),
               ],
             }),
@@ -956,8 +956,8 @@ export function PlayerScreen(e) {
                 style: { color: "var(--action-primary)", flex: "none" },
               }),
               ez.pendingLoopStart
-                ? "Start word set — tap the last word of the range"
-                : "Pinned — tap the last word of the range",
+                ? "Start word set: tap the last word of the range"
+                : "Pinned: tap the last word of the range",
             ],
           })
         : null,

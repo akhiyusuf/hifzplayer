@@ -34,7 +34,7 @@ export const USTADH_JOB = {
   id: "ustadh",
   name: "AI Ustadh",
   icon: "mic",
-  desc: "Recite into the mic — free coach interrupts on a miss",
+  desc: "Recite into the mic. Free coach interrupts on a miss",
 } as const;
 
 export const MODES = [

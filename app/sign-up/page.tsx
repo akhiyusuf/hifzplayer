@@ -6,7 +6,7 @@ import { EmailAuthForm } from "@/components/email-auth-form";
 import { safePath } from "@/lib/nav";
 
 export const metadata: Metadata = {
-  title: `Create account — ${APP_NAME}`,
+  title: `Create account · ${APP_NAME}`,
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";

@@ -131,7 +131,7 @@ function SetupForm({
           to={to}
           onFrom={setFrom}
           onTo={setTo}
-          eyebrow="Ayah range (optional — whole surah by default)"
+          eyebrow="Ayah range (optional; whole surah by default)"
         />
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
           <span className="label-eyebrow">Ayahs per day</span>
@@ -400,7 +400,7 @@ export function PracticePlanner() {
             }}
           />
           <p className="plan-hint">
-            Word Reps, Masked, and Relay stay on the open surah — free for everyone. AI Ustadh is coming soon.
+            Word Reps, Masked, and Relay stay on the open surah, free for everyone. AI Ustadh is coming soon.
           </p>
         </section>
       ) : editing || !plan ? (
@@ -428,7 +428,7 @@ export function PracticePlanner() {
         />
       )}
       <p className="plan-hint" style={{ marginTop: 8 }}>
-        <Link href="/home">Open a surah from Menu</Link> anytime — drills live on Mushaf or Focus.
+        <Link href="/home">Open a surah from Menu</Link> anytime. Drills live on Mushaf or Focus.
       </p>
     </div>
   );

@@ -42,7 +42,7 @@ export function validateGiftEmails(
     const want = parseGiftSeats(seats);
     if (emails.length !== want) {
       return {
-        error: want === 1 ? "Add one email." : `Add ${want} emails — one for each person.`,
+        error: want === 1 ? "Add one email." : `Add ${want} emails, one for each person.`,
       };
     }
   }

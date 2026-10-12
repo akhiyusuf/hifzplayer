@@ -22,8 +22,8 @@ describe("sign-up welcome email", () => {
 
   it("greets an unnamed reader without a blank", () => {
     const text = signUpWelcomeText({ name: null });
-    assert.match(text, /Assalamu alaikum —/);
-    assert.doesNotMatch(text, /Assalamu alaikum  —/);
+    assert.match(text, /Assalamu alaikum\./);
+    assert.doesNotMatch(text, /Assalamu alaikum  \./);
   });
 
   it("html version contains the brand and the key tips", () => {
