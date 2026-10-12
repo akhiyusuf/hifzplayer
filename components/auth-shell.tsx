@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { BrandLogo } from "@/components/brand-logo";
 import { Icon } from "@/components/icon";
 import { PLUS_NAME } from "@/lib/brand";
 
@@ -20,7 +21,10 @@ export function AuthShell({
         </Link>
         <h1>{title}</h1>
       </nav>
-      <div className="auth-shell">{children}</div>
+      <div className="auth-shell">
+        <BrandLogo variant="lockup" height={36} className="auth-brand-logo" />
+        {children}
+      </div>
     </main>
   );
 }
