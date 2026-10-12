@@ -35,9 +35,9 @@ export async function createStripeCheckout(opts: {
       : [];
   const productName = opts.gift
     ? seats > 1
-      ? `${PLUS_NAME} gift × ${seats} — ${plan.name}`
-      : `${PLUS_NAME} gift — ${plan.name}`
-    : `${PLUS_NAME} — ${plan.name}`;
+      ? `${PLUS_NAME} gift × ${seats}: ${plan.name}`
+      : `${PLUS_NAME} gift: ${plan.name}`
+    : `${PLUS_NAME}: ${plan.name}`;
   const meta: Record<string, string> = {
     planId: opts.planId,
     regionId: opts.region.id,
@@ -71,7 +71,7 @@ export async function createStripeCheckout(opts: {
           product_data: {
             name: productName,
             description: opts.gift
-              ? "Plus gift. They sign in with the gifted email — they do not need an account yet."
+              ? "Plus gift. They sign in with the gifted email; they do not need an account yet."
               : plan.blurb,
           },
           ...(plan.interval && !giftOnce ? { recurring: { interval: plan.interval } } : {}),

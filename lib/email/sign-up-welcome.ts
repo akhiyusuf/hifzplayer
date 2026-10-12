@@ -8,7 +8,7 @@ export function signUpWelcomeSubject() {
 }
 
 export function signUpWelcomeText(input: { name?: string | null }) {
-  const greeting = input.name?.trim() ? `Assalamu alaikum ${input.name.trim()} —` : "Assalamu alaikum —";
+  const greeting = input.name?.trim() ? `Assalamu alaikum ${input.name.trim()}.` : "Assalamu alaikum.";
   return [
     `${greeting} your ${APP_NAME} account is ready.`,
     "",
@@ -21,14 +21,14 @@ export function signUpWelcomeText(input: { name?: string | null }) {
     "",
     `Need help? Reply to this email or write to ${CONTACT_EMAIL}.`,
     "",
-    `— ${APP_NAME}`,
+    `${APP_NAME}`,
   ].join("\n");
 }
 
 export function signUpWelcomeHtml(input: { name?: string | null }) {
   const greeting = input.name?.trim()
-    ? `Assalamu alaikum ${input.name.trim()} —`
-    : "Assalamu alaikum —";
+    ? `Assalamu alaikum ${input.name.trim()}.`
+    : "Assalamu alaikum.";
   return renderEmailHtml({
     preheader: `Your ${APP_NAME} account is ready`,
     heading: "Your account is ready",

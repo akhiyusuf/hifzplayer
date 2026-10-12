@@ -3,7 +3,7 @@ import { APP_NAME, APP_TAGLINE } from "@/lib/brand";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${APP_NAME} — ${APP_TAGLINE}`,
+    name: `${APP_NAME}: ${APP_TAGLINE}`,
     short_name: APP_NAME,
     description:
       "Quran reading and memorisation player with word-level timing, tajweed colouring, masked recall and relay practice.",

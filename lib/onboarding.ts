@@ -45,7 +45,7 @@ export const ONBOARDING_POINTS = [
   {
     icon: "headphones" as const,
     title: "Listen for the days you already keep",
-    body: "Friday Kahf, night verses, morning — occasion lists you can open and look around. Playing a list is Diras Plus. The mushaf is not.",
+    body: "Friday Kahf, night verses, morning: occasion lists you can open and look around. Playing a list is Diras Plus. The mushaf is not.",
   },
   {
     icon: "brackets" as const,

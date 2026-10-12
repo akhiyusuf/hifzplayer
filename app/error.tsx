@@ -16,7 +16,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <h2>Something went wrong</h2>
           <p>
-            The app hit an unexpected error. Nothing you were reading is affected — try again, or go back to the
+            The app hit an unexpected error. Nothing you were reading is affected. Try again, or go back to the
             passage list.
           </p>
           {error.digest && (

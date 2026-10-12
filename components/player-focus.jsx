@@ -119,7 +119,7 @@ export function FocusRelayPage(e) {
       ? "Your turn \xb7 ".concat(u, " left")
       : "".concat(u, " ", 1 === u ? "turn" : "turns", " left"),
     hint: h
-      ? "Recite aloud — the reciter plays muted to pace you"
+      ? "Recite aloud. The reciter plays muted to pace you"
       : l.waitingTap
         ? "Tap play to begin"
         : undefined,

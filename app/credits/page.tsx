@@ -4,7 +4,7 @@ import { Icon } from "@/components/icon";
 import { APP_NAME } from "@/lib/brand";
 import { backHref } from "@/lib/nav";
 
-export const metadata: Metadata = { title: `Data & attributions — ${APP_NAME}` };
+export const metadata: Metadata = { title: `Data & attributions · ${APP_NAME}` };
 
 const SOURCES: {
   href: string;
@@ -17,7 +17,7 @@ const SOURCES: {
     href: "https://api-docs.quran.foundation/",
     icon: "book",
     title: "Quran text & audio",
-    body: "Quran Foundation — quran.com v4 API",
+    body: "Quran Foundation (quran.com v4 API)",
   },
   {
     href: "https://quran.com/about-us",
@@ -36,14 +36,14 @@ const SOURCES: {
     icon: "git-compare",
     title: "Confusable words",
     soon: true,
-    body: "Coming soon. QuranMorph — SinaLab, Birzeit University. Akra, Hammouda & Jarrar (2025), “QuranMorph: Morphologically Annotated Quranic Corpus”. Licensed CC-BY-4.0.",
+    body: "Coming soon. QuranMorph: SinaLab, Birzeit University. Akra, Hammouda & Jarrar (2025), “QuranMorph: Morphologically Annotated Quranic Corpus”. Licensed CC-BY-4.0.",
   },
   {
     href: "https://qul.tarteel.ai/",
     icon: "layers",
     title: "Recurring phrases",
     soon: true,
-    body: "Coming soon. Mutashabihat dataset — Quranic Universal Library (QUL).",
+    body: "Coming soon. Mutashabihat dataset: Quranic Universal Library (QUL).",
   },
 ];
 

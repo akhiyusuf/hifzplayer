@@ -70,7 +70,7 @@ export function WordRepChrome({
         ? `Word ${start}`
         : `Words ${start}–${end}`
       : start != null
-        ? `Pinned ${start} — tap the end`
+        ? `Pinned ${start}: tap the end`
         : "No pin yet";
 
   return (

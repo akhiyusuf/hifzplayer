@@ -842,9 +842,9 @@ body:has(.scrim) [class*="cl-userButton"]{
 .practise-job.on .practise-job-ic{background:var(--action-primary);color:var(--text-on-primary)}
 .practise-job.on .st b{color:var(--action-primary)}
 
-.brand-logo{position:relative;display:inline-block;line-height:0;flex:none;height:var(--brand-h,32px);width:var(--brand-w,auto)}
-.brand-logo img{display:block;width:100%;height:100%;object-fit:contain}
-.brand-logo .brand-logo-dark{display:none}
-[data-theme=dark] .brand-logo .brand-logo-light{display:none}
-[data-theme=dark] .brand-logo .brand-logo-dark{display:block}
+.brand-logo{position:relative;display:inline-block;line-height:0;flex:none;height:var(--brand-h,32px);width:var(--brand-w,auto);color:var(--action-primary)}
+.brand-logo svg{display:block;width:100%;height:100%}
+.brand-logo .brand-logo-d3{display:none}
+[data-theme=dark] .brand-logo .brand-logo-light-geom{display:none}
+[data-theme=dark] .brand-logo .brand-logo-d3{display:block}
 .landing-brand .landing-lockup{--brand-h:clamp(40px,9vw,56px);--brand-w:auto;aspect-ratio:4.087/1;height:clamp(40px,9vw,56px);width:auto}

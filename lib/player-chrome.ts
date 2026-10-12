@@ -405,11 +405,11 @@ export function maskedCutoffVisible(mode: string) {
 export const MASKED_CUTOFF = {
   label: "Unmask",
   detail: "Listen",
-  aria: "Stop mask — listen to this ayah",
+  aria: "Stop mask, listen to this ayah",
   unmask: "Unmask",
   listen: "Listen",
   unmaskAria: "Reveal all masked words",
-  listenAria: "Stop mask — listen to this ayah",
+  listenAria: "Stop mask, listen to this ayah",
 } as const;
 
 /** Same destination as Practice Listen / leavePractice. */

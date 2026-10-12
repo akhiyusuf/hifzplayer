@@ -46,7 +46,7 @@ function OccasionCard({
       type="button"
       className={`occ-card tap${locked ? " locked" : ""}`}
       onClick={onPlay}
-      aria-label={locked ? `${list.title} — Plus` : `Play ${list.title}`}
+      aria-label={locked ? `${list.title}: Plus` : `Play ${list.title}`}
     >
       <span className="occ-ar" lang="ar" dir="rtl">
         {list.arabic}

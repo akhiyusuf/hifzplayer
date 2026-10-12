@@ -5,7 +5,7 @@ import { googleSignInEnabled } from "@/lib/auth/config";
 import { APP_NAME, CONTACT_EMAIL, PLUS_NAME } from "@/lib/brand";
 import { backHref, legalPeerHref } from "@/lib/nav";
 
-export const metadata: Metadata = { title: `Terms — ${APP_NAME}` };
+export const metadata: Metadata = { title: `Terms · ${APP_NAME}` };
 
 export default async function TermsPage({
   searchParams,
@@ -62,7 +62,7 @@ export default async function TermsPage({
             You can read without an account. Sign in with email and a password. A code by email confirms a new
             account or resets a password.
             {googleOn ? " You can also continue with Google while that option is turned on." : ""} Keep the
-            password to yourself. An account is for one person — do not share a paid login so other people can
+            password to yourself. An account is for one person. Do not share a paid login so other people can
             use {PLUS_NAME} without paying.
           </p>
         </section>

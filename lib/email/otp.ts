@@ -7,7 +7,7 @@ export function otpEmailSubject() {
 
 export function otpEmailText(code: string) {
   return [
-    `Assalamu alaikum — your ${APP_NAME} password-reset code is ${code}.`,
+    `Assalamu alaikum. Your ${APP_NAME} password-reset code is ${code}.`,
     "",
     "It expires in 10 minutes. If you did not ask for this, ignore the email.",
     "",
@@ -19,6 +19,6 @@ export function otpEmailHtml(code: string) {
   return renderEmailHtml({
     preheader: `Your ${APP_NAME} password code is ${code}`,
     heading: "Reset your password",
-    bodyHtml: `<p style="margin:0 0 16px">Assalamu alaikum — your password-reset code is:</p><p style="margin:0 0 16px;font-size:32px;font-weight:700;letter-spacing:0.12em;font-family:Inter,Arial,Helvetica,sans-serif;color:#1A1712">${code}</p><p style="margin:0 0 16px">It expires in 10 minutes. If you did not ask for this, ignore this email.</p>`,
+    bodyHtml: `<p style="margin:0 0 16px">Assalamu alaikum. Your password-reset code is:</p><p style="margin:0 0 16px;font-size:32px;font-weight:700;letter-spacing:0.12em;font-family:Inter,Arial,Helvetica,sans-serif;color:#1A1712">${code}</p><p style="margin:0 0 16px">It expires in 10 minutes. If you did not ask for this, ignore this email.</p>`,
   });
 }

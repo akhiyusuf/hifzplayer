@@ -10,7 +10,7 @@ import { APP_NAME, PLUS_NAME } from "@/lib/brand";
 import { backHref } from "@/lib/nav";
 
 export const metadata: Metadata = {
-  title: `Account — ${APP_NAME}`,
+  title: `Account · ${APP_NAME}`,
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";
@@ -82,7 +82,7 @@ export default async function AccountPage({
       </div>
       <p className="pricing-note" style={{ textAlign: "center", maxWidth: 360 }}>
         Reading history stays on this device. Plus is stored on your account, so it follows you after you sign
-        in on another browser. Quote your account ID if something goes wrong — it is the same id in our logs.
+        in on another browser. Quote your account ID if something goes wrong; it is the same id in our logs.
         Paystack and Stripe hold the payment ledger; this account shows the plan that was granted.
       </p>
       <SignOutButton />

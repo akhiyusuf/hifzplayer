@@ -441,7 +441,7 @@ export function LandingFocusDemo({
     title = "Round 1";
     meta = isYou ? `Your turn · ${left} left` : `${left} ${left === 1 ? "turn" : "turns"} left`;
     hint = isYou
-      ? "Recite aloud. Replay paces you muted — Skip when you are done."
+      ? "Recite aloud. Replay paces you muted. Skip when you are done."
       : playing
         ? `${muallimName} is reciting…`
         : DRILL_HINTS.relay;

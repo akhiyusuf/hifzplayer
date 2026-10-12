@@ -173,7 +173,7 @@ export function PricingSuccess({
         </span>
         <h2>Gift sent</h2>
         <p>
-          Plus is on their Diras account. They should sign in with that email — we will email them a 6-digit
+          Plus is on their Diras account. They should sign in with that email. We will email them a 6-digit
           code. Your account stays as it was.
         </p>
         <div className="status-actions">
@@ -196,7 +196,7 @@ export function PricingSuccess({
           {state.until
             ? `${PLUS_NAME} is unlocked until ${new Date(state.until).toLocaleString()}.`
             : `${PLUS_NAME} is unlocked for one day.`}{" "}
-          No card was charged. When the day ends, reading stays free — Focus practice and listen lists need a paid plan.
+          No card was charged. When the day ends, reading stays free. Focus practice and listen lists need a paid plan.
         </p>
         <div className="status-actions">
           <Link className="btn-primary" href="/home">
@@ -223,7 +223,7 @@ export function PricingSuccess({
             : state.until
               ? `Your ${state.planId} plan is active until ${new Date(state.until).toLocaleDateString()}.`
               : `Your ${state.planId} plan is active.`}{" "}
-          A {APP_NAME} confirmation email follows this — separate from the Paystack or Stripe receipt.
+          A {APP_NAME} confirmation email follows this, separate from the Paystack or Stripe receipt.
         </p>
         <div className="status-actions">
           <Link className="btn-primary" href="/home">

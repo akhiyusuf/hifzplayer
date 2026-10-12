@@ -19,7 +19,7 @@ export type PaystackPlanRow = {
 };
 
 export function paystackPlanName(planId: RecurringPlanId) {
-  return `${PLUS_NAME} — ${planId === "monthly" ? "Monthly" : "Annual"}`;
+  return `${PLUS_NAME}: ${planId === "monthly" ? "Monthly" : "Annual"}`;
 }
 
 export function pickPaystackPlanCode(

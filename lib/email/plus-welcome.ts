@@ -19,7 +19,7 @@ export function plusWelcomeText(input: PlusWelcomeInput) {
       ? `Your free trial is active until ${new Date(input.until).toLocaleDateString("en-GB", { dateStyle: "long" })}.`
       : "Your free trial is active for one day.";
     return [
-      `Assalamu alaikum — your ${PLUS_NAME} free trial is on.`,
+      `Assalamu alaikum. Your ${PLUS_NAME} free trial is on.`,
       "",
       until,
       "No card was charged. When the day ends, Quran reading and Word Reps, Masked, and Relay stay free; the memorization planner and playlists need a paid plan.",
@@ -43,7 +43,7 @@ export function plusWelcomeText(input: PlusWelcomeInput) {
         : `This ${plan?.name.toLowerCase() || input.planId} plan is active.`;
 
   return [
-    `Assalamu alaikum — ${PLUS_NAME} is on.`,
+    `Assalamu alaikum. ${PLUS_NAME} is on.`,
     "",
     `Thank you for supporting ${APP_NAME}. Your ${plan?.name || input.planId} plan (${priced?.label || "paid"}, billed through ${processor}) is confirmed.`,
     until,
@@ -83,8 +83,8 @@ export function plusWelcomeHtml(input: PlusWelcomeInput) {
         : `This ${plan?.name.toLowerCase() || input.planId} plan is active.`;
 
   const intro = isTrial
-    ? `Assalamu alaikum — your ${PLUS_NAME} free trial is on. ${until} No card was charged.`
-    : `Assalamu alaikum — ${PLUS_NAME} is on. Thank you for supporting ${APP_NAME}. Your ${escapeHtml(plan?.name || input.planId)} plan (${escapeHtml(priced?.label || "paid")}, billed through ${escapeHtml(processor)}) is confirmed. ${escapeHtml(until)}`;
+    ? `Assalamu alaikum. Your ${PLUS_NAME} free trial is on. ${until} No card was charged.`
+    : `Assalamu alaikum. ${PLUS_NAME} is on. Thank you for supporting ${APP_NAME}. Your ${escapeHtml(plan?.name || input.planId)} plan (${escapeHtml(priced?.label || "paid")}, billed through ${escapeHtml(processor)}) is confirmed. ${escapeHtml(until)}`;
 
   return renderEmailHtml({
     preheader: `${PLUS_NAME} is active`,

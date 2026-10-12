@@ -63,7 +63,7 @@ describe("scorePassword", () => {
     assert.equal(r.acceptable, false);
   });
 
-  it("rejects 'Password1' as Fair (acceptable but not Strong — only 9 chars)", () => {
+  it("rejects 'Password1' as Fair (acceptable but not Strong; only 9 chars)", () => {
     const r = scorePassword("Password1");
     assert.equal(r.score, 3);
     assert.equal(r.label, "Good");

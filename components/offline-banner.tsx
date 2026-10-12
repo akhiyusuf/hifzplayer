@@ -9,7 +9,7 @@ export function OfflineBanner() {
   return (
     <div className="offline-banner" role="status">
       <Icon name="cloud-off" size={16} style={{ color: "var(--state-warning)", flex: "none" }} />
-      <span>You’re offline — showing cached text</span>
+      <span>You’re offline. Showing cached text</span>
     </div>
   );
 }
