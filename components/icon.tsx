@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 import {
   ArrowLeft,
+  BicepsFlexed,
   Book,
   BookOpen,
   Brackets,
@@ -60,6 +61,7 @@ import {
 
 const ICONS: Record<string, LucideIcon> = {
   "arrow-left": ArrowLeft,
+  "biceps-flexed": BicepsFlexed,
   book: Book,
   "book-open": BookOpen,
   brackets: Brackets,
