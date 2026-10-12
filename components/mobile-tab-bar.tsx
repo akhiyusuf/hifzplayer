@@ -13,7 +13,7 @@ export function MobileTabBar() {
 
   const tabs: { id: MobileTabId; href: string; label: string; icon: string }[] = [
     { id: "menu", href: "/home", label: "Menu", icon: "book-open" },
-    { id: "practice", href: "/practice", label: "Practice", icon: "brackets" },
+    { id: "practice", href: "/practice", label: "Practice", icon: "biceps-flexed" },
     { id: "playlists", href: "/listen", label: "Playlists", icon: "list" },
     { id: "settings", href: "/settings", label: "Settings", icon: "settings" },
   ];

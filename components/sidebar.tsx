@@ -10,7 +10,7 @@ import { usePlus } from "@/lib/plus";
 
 const ITEMS = [
   { href: "/home", label: "Menu", icon: "book-open", match: (p: string) => p === "/home" || p.startsWith("/roadmap") },
-  { href: "/practice", label: "Practice", icon: "brackets", match: (p: string) => p.startsWith("/practice") },
+  { href: "/practice", label: "Practice", icon: "biceps-flexed", match: (p: string) => p.startsWith("/practice") },
   { href: "/listen", label: "Playlists", icon: "list", match: (p: string) => p === "/listen" },
   { href: "/settings", label: "Settings", icon: "settings", match: (p: string) => p.startsWith("/settings") },
 ];
