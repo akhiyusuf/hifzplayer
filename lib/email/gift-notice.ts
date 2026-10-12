@@ -42,7 +42,7 @@ export function giftNoticeText(input: GiftNoticeInput) {
   return [
     lead,
     "",
-    `${PLUS_NAME} unlocks Word Reps, Masked, Relay, occasion lists, and extra word repeats. Quran reading stays free either way.`,
+    `${PLUS_NAME} unlocks the memorization planner and occasion lists. Quran reading and Word Reps, Masked, and Relay stay free either way.`,
     "",
     how,
     "",
@@ -74,7 +74,7 @@ export function giftNoticeHtml(input: GiftNoticeInput) {
   return renderEmailHtml({
     preheader: `Someone gifted you ${PLUS_NAME}`,
     heading: input.alreadyPlus && input.stacked ? "Extra time added" : `You got ${PLUS_NAME}`,
-    bodyHtml: `<p style="margin:0 0 16px">${escapeHtml(lead)}</p><p style="margin:0 0 16px">${PLUS_NAME} unlocks Word Reps, Masked, Relay, occasion lists, and extra word repeats. Quran reading stays free either way.</p><p style="margin:0 0 16px">${escapeHtml(how)}</p><p style="margin:0;font-size:14px;color:#5c554a">If you sign up with a different address, the gift will not attach.</p>`,
+    bodyHtml: `<p style="margin:0 0 16px">${escapeHtml(lead)}</p><p style="margin:0 0 16px">${PLUS_NAME} unlocks the memorization planner and occasion lists. Quran reading and Word Reps, Masked, and Relay stay free either way.</p><p style="margin:0 0 16px">${escapeHtml(how)}</p><p style="margin:0;font-size:14px;color:#5c554a">If you sign up with a different address, the gift will not attach.</p>`,
     cta: { label: "Open Diras", url: input.signUpUrl },
   });
 }

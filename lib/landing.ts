@@ -32,7 +32,7 @@ export const LANDING = {
   plusCta: "Try Plus free for 1 day",
   plusHref: "/pricing",
   demoKicker: "Live Focus · Al-ʿAṣr · no account",
-  freeLine: "Reading and word-sync audio stay free. Plus unlocks Word Reps, Masked, Relay, and playlists.",
+  freeLine: "Reading and word-sync audio stay free. Word Reps, Masked, and Relay are free too. Plus unlocks the memorization planner and playlists.",
   focusTitle: "Three jobs. One floor.",
   focusLead: "Same Word Reps, Masked, and Relay as in the app — try them above, then keep going in the mushaf.",
   jobs: [
@@ -98,7 +98,7 @@ export const LANDING = {
     },
   ],
   closeTitle: "Feel the difference in one day",
-  closeLead: `You already tried Focus above. Start the free ${PLUS_NAME} trial to keep that floor in the mushaf — or walk away; reading was always free.`,
+  closeLead: `You already tried Focus above. Keep practising in the mushaf for free. Start the free ${PLUS_NAME} trial for the planner and playlists — or walk away; reading was always free.`,
   closeCta: "Start free trial",
   closeHref: "/pricing",
 } as const;

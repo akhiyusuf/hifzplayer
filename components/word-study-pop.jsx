@@ -170,17 +170,14 @@ export function WordStudyPop(e) {
                   type: "button",
                   className: "sec".concat(pinActive ? " on" : ""),
                   "aria-pressed": !!pinActive,
-                  onClick: () =>
-                    plusOn
-                      ? onPinWord && onPinWord()
-                      : (ask("practice"), y()),
+                  onClick: () => onPinWord && onPinWord(),
                   children: [
                     _jsx(Icon, { name: "pin", size: 14 }),
                     "Pin",
                   ],
                 }),
                 WORD_REP_COUNTS.map((n) => {
-                  let locked = !plusOn;
+                  let locked = !1;
                   let inf = 0 === n;
                   return _jsx(
                     "button",
