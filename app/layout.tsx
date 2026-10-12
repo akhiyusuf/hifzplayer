@@ -7,7 +7,10 @@ import { ThemeProvider, themeInitScript } from "@/lib/theme";
 import { ToastProvider } from "@/lib/toast";
 import { APP_NAME, APP_TAGLINE } from "@/lib/brand";
 import { AuthRoot } from "@/components/auth-root";
+import { PostAuthGreeting } from "@/components/post-auth-greeting";
+import { Suspense } from "react";
 import { AppSidebar } from "@/components/sidebar";
+import { MobileTabBar } from "@/components/mobile-tab-bar";
 import "./globals.css";
 
 const display = Bricolage_Grotesque({
@@ -36,7 +39,7 @@ const arabic = Amiri_Quran({
 });
 
 export const metadata: Metadata = {
-  title: `${APP_NAME} — ${APP_TAGLINE}`,
+  title: `${APP_NAME}: ${APP_TAGLINE}`,
   description:
     "A mobile-first Quran reading and memorisation player with word-level audio timing, tajweed colouring, masked recall and relay practice.",
   appleWebApp: { capable: true, title: APP_NAME },
@@ -67,19 +70,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a className="skip-link" href="#main">
           Skip to content
         </a>
-        <ThemeProvider>
-          <ToastProvider>
-            <AuthRoot>
+        <AuthRoot>
+          <ThemeProvider>
+            <ToastProvider>
               <PlusProvider>
                 <AppDataProvider>
+                  <PostAuthGreeting />
                   <AppSidebar />
                   {children}
-                  <Analytics />
+                  <Suspense fallback={null}>
+                    <MobileTabBar />
+                  </Suspense>
+                  {process.env.VERCEL ? <Analytics /> : null}
                 </AppDataProvider>
               </PlusProvider>
-            </AuthRoot>
-          </ToastProvider>
-        </ThemeProvider>
+            </ToastProvider>
+          </ThemeProvider>
+        </AuthRoot>
       </body>
     </html>
   );

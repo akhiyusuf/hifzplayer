@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useUser } from "@clerk/nextjs";
 import { useMemo, useState } from "react";
+import { useAuth } from "@/components/auth-root";
 import { APP_NAME } from "@/lib/brand";
-import { clerkBrowserReady } from "@/lib/auth/config";
 import { PLUS_EXPLAIN } from "@/lib/billing/gates";
 import { GIFT_SEATS, parseGiftEmails } from "@/lib/billing/gift-parse";
 import { formatMoney, type Catalog, type PaidPlanId } from "@/lib/billing/plans";
@@ -18,34 +17,15 @@ export function PricingView(props: {
   canceled?: boolean;
   trialAvailable?: boolean;
   plusOn?: boolean;
+  accountsOn?: boolean;
 }) {
-  if (clerkBrowserReady()) return <PricingViewSigned {...props} />;
+  const auth = useAuth();
   return (
     <PricingForm
       {...props}
-      accountsOn={false}
-      signedIn={false}
-      accountEmail=""
-      trialAvailable={Boolean(props.trialAvailable)}
-      plusOn={Boolean(props.plusOn)}
-    />
-  );
-}
-
-function PricingViewSigned(props: {
-  region: RegionQuote;
-  processors: Processors;
-  canceled?: boolean;
-  trialAvailable?: boolean;
-  plusOn?: boolean;
-}) {
-  const { isLoaded, isSignedIn, user } = useUser();
-  return (
-    <PricingForm
-      {...props}
-      accountsOn
-      signedIn={Boolean(isLoaded && isSignedIn)}
-      accountEmail={user?.primaryEmailAddress?.emailAddress || ""}
+      accountsOn={Boolean(props.accountsOn)}
+      signedIn={auth.signedIn}
+      accountEmail={auth.email}
       trialAvailable={Boolean(props.trialAvailable)}
       plusOn={Boolean(props.plusOn)}
     />
@@ -209,7 +189,7 @@ function PricingForm({
       <div className="pricing-buy">
         {trialOn ? (
           <p className="pricing-note" role="status">
-            {PLUS_EXPLAIN.plusTitle} is on. Pick a plan below any time — your free trial (if any) does not renew.
+            {PLUS_EXPLAIN.plusTitle} is on. Pick a plan below any time. Your free trial (if any) does not renew.
           </p>
         ) : canTrial ? (
           <div className="pricing-trial">
@@ -334,7 +314,7 @@ function PricingForm({
         {gift ? (
           <p className="pricing-note">
             {signedIn
-              ? "Paste the emails first. We check who already has a Diras account — they do not need one yet. If they already have Plus, extra time stacks on top. For me still buys Plus for you."
+              ? "Paste the emails first. We check who already has a Diras account; they do not need one yet. If they already have Plus, extra time stacks on top. For me still buys Plus for you."
               : "Sign in to gift someone. You can gift an email even if they have not signed up yet."}
           </p>
         ) : null}

@@ -13,7 +13,7 @@ export default function NotFound() {
           <p>This page doesn’t exist. The passage list has everything the app can open.</p>
         </div>
         <div className="status-actions">
-          <Link className="btn-primary" href="/">
+          <Link className="btn-primary" href="/home">
             <Icon name="book-open" size={17} />
             Go to passages
           </Link>

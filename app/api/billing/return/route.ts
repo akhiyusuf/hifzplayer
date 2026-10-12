@@ -17,7 +17,7 @@ function paymentRedirect(dest: URL, ent?: Entitlement) {
 
 /**
  * Paystack/Stripe send the customer here as a top-level GET after payment.
- * Grant Plus on this response (cookie + Clerk), then redirect to the success page.
+ * Grant Plus on this response (cookie + Neon account), then redirect to the success page.
  * That way Plus is not lost if the success page JS never runs.
  */
 export async function GET(request: Request) {

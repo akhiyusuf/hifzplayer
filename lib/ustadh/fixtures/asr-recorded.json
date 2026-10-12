@@ -1,0 +1,2272 @@
+{
+ "recordedAt": "2026-10-05T21:39:26.806Z",
+ "takes": [
+  {
+   "label": "1:2 ayah",
+   "verseKey": "1:2",
+   "finalClipSec": 6.534,
+   "spokenStartMs": [
+    480,
+    1370,
+    2210,
+    2870
+   ],
+   "expect": {
+    "complete": true,
+    "missIndexes": []
+   },
+   "peeks": [
+    {
+     "atMs": 1500,
+     "voicedMs": 1020,
+     "clipSec": 1.5,
+     "heard": [
+      {
+       "word": "الحمد",
+       "start": 0.48,
+       "end": 1.24
+      },
+      {
+       "word": "لله",
+       "start": 1.24,
+       "end": 1.54
+      }
+     ]
+    },
+    {
+     "atMs": 3000,
+     "voicedMs": 2520,
+     "clipSec": 3,
+     "heard": [
+      {
+       "word": "الحمد",
+       "start": 0.48,
+       "end": 1.2
+      },
+      {
+       "word": "لله",
+       "start": 1.2,
+       "end": 2.12
+      },
+      {
+       "word": "رب",
+       "start": 2.12,
+       "end": 2.72
+      },
+      {
+       "word": "العالمين",
+       "start": 2.72,
+       "end": 3.48
+      }
+     ]
+    },
+    {
+     "atMs": 4500,
+     "voicedMs": 4020,
+     "clipSec": 4.5,
+     "heard": [
+      {
+       "word": "الحمد",
+       "start": 0.46,
+       "end": 1.24
+      },
+      {
+       "word": "لله",
+       "start": 1.24,
+       "end": 2.12
+      },
+      {
+       "word": "رب",
+       "start": 2.12,
+       "end": 2.7
+      },
+      {
+       "word": "العالمين",
+       "start": 2.7,
+       "end": 3.92
+      }
+     ]
+    },
+    {
+     "atMs": 6000,
+     "voicedMs": 5520,
+     "clipSec": 6,
+     "heard": [
+      {
+       "word": "الحمد",
+       "start": 0.44,
+       "end": 1.24
+      },
+      {
+       "word": "لله",
+       "start": 1.24,
+       "end": 2.14
+      },
+      {
+       "word": "رب",
+       "start": 2.14,
+       "end": 2.7
+      },
+      {
+       "word": "العالمين",
+       "start": 2.7,
+       "end": 5.4
+      }
+     ]
+    }
+   ],
+   "final": [
+    {
+     "word": "الحمد",
+     "start": 0.44,
+     "end": 1.24
+    },
+    {
+     "word": "لله",
+     "start": 1.24,
+     "end": 2.14
+    },
+    {
+     "word": "رب",
+     "start": 2.14,
+     "end": 2.7
+    },
+    {
+     "word": "العالمين",
+     "start": 2.7,
+     "end": 5.4
+    }
+   ],
+   "finalText": "الحمد لله رب العالمين",
+   "finalReplays": []
+  },
+  {
+   "label": "1:2 skip word 3",
+   "verseKey": "1:2",
+   "finalClipSec": 5.874,
+   "spokenStartMs": [
+    480,
+    1370,
+    null,
+    2210
+   ],
+   "expect": {
+    "missIndexes": [
+     2
+    ]
+   },
+   "peeks": [
+    {
+     "atMs": 1500,
+     "voicedMs": 1020,
+     "clipSec": 1.5,
+     "heard": [
+      {
+       "word": "الحمد",
+       "start": 0.48,
+       "end": 1.24
+      },
+      {
+       "word": "لله",
+       "start": 1.24,
+       "end": 1.54
+      }
+     ]
+    },
+    {
+     "atMs": 3000,
+     "voicedMs": 2520,
+     "clipSec": 3,
+     "heard": [
+      {
+       "word": "الحمد",
+       "start": 0.48,
+       "end": 1.22
+      },
+      {
+       "word": "لله",
+       "start": 1.22,
+       "end": 2.02
+      },
+      {
+       "word": "العالمين",
+       "start": 2.02,
+       "end": 3.46
+      }
+     ]
+    },
+    {
+     "atMs": 4500,
+     "voicedMs": 4020,
+     "clipSec": 4.5,
+     "heard": [
+      {
+       "word": "الحمد",
+       "start": 0.46,
+       "end": 1.24
+      },
+      {
+       "word": "لله",
+       "start": 1.24,
+       "end": 2.06
+      },
+      {
+       "word": "العالمين",
+       "start": 2.06,
+       "end": 3.86
+      }
+     ]
+    }
+   ],
+   "final": [
+    {
+     "word": "الحمد",
+     "start": 0.44,
+     "end": 1.26
+    },
+    {
+     "word": "لله",
+     "start": 1.26,
+     "end": 2.06
+    },
+    {
+     "word": "العالمين",
+     "start": 2.06,
+     "end": 4.76
+    }
+   ],
+   "finalText": "الحمد لله العالمين",
+   "finalReplays": [
+    {
+     "action": "replay_word",
+     "targetId": "wbw/001_002_003.mp3",
+     "wordIndex": 2,
+     "phraseId": "1:2:p0",
+     "missCount": 1,
+     "pos": 3,
+     "verseKey": "1:2"
+    }
+   ]
+  },
+  {
+   "label": "1:2 stop after 2",
+   "verseKey": "1:2",
+   "finalClipSec": 2.68,
+   "spokenStartMs": [
+    480,
+    1370,
+    null,
+    null
+   ],
+   "expect": {
+    "complete": false,
+    "missIndexes": [],
+    "firstMissMax": 2
+   },
+   "peeks": [
+    {
+     "atMs": 1500,
+     "voicedMs": 1020,
+     "clipSec": 1.5,
+     "heard": [
+      {
+       "word": "الحمد",
+       "start": 0.48,
+       "end": 1.24
+      },
+      {
+       "word": "لله",
+       "start": 1.24,
+       "end": 1.54
+      }
+     ]
+    }
+   ],
+   "final": [
+    {
+     "word": "الحمد",
+     "start": 0.44,
+     "end": 1.24
+    },
+    {
+     "word": "لله",
+     "start": 1.24,
+     "end": 1.98
+    }
+   ],
+   "finalText": "الحمد لله",
+   "finalReplays": [
+    {
+     "action": "replay_phrase",
+     "targetId": "1:2:p0",
+     "wordIndex": 2,
+     "phraseId": "1:2:p0",
+     "start": 0.44,
+     "end": 1.98,
+     "missCount": 1,
+     "pos": 3,
+     "verseKey": "1:2"
+    },
+    {
+     "action": "replay_phrase",
+     "targetId": "1:2:p0",
+     "wordIndex": 3,
+     "phraseId": "1:2:p0",
+     "start": 0.44,
+     "end": 1.98,
+     "missCount": 1,
+     "pos": 4,
+     "verseKey": "1:2"
+    }
+   ]
+  },
+  {
+   "label": "1:5 ayah",
+   "verseKey": "1:5",
+   "finalClipSec": 7.652,
+   "spokenStartMs": [
+    430,
+    1380,
+    2120,
+    3280
+   ],
+   "expect": {
+    "complete": true,
+    "missIndexes": []
+   },
+   "peeks": [
+    {
+     "atMs": 1500,
+     "voicedMs": 1070,
+     "clipSec": 1.5,
+     "heard": [
+      {
+       "word": "إِنَّاكَ",
+       "start": 0.42,
+       "end": 1.3
+      },
+      {
+       "word": "نَعْبُ",
+       "start": 1.3,
+       "end": 1.92
+      }
+     ]
+    },
+    {
+     "atMs": 3000,
+     "voicedMs": 2570,
+     "clipSec": 3,
+     "heard": [
+      {
+       "word": "إِيَّاكَ",
+       "start": 0.44,
+       "end": 1.28
+      },
+      {
+       "word": "نَعْبُدُ",
+       "start": 1.28,
+       "end": 2.12
+      },
+      {
+       "word": "وَإِيَّاكَ",
+       "start": 2.12,
+       "end": 3.48
+      }
+     ]
+    },
+    {
+     "atMs": 4500,
+     "voicedMs": 4070,
+     "clipSec": 4.5,
+     "heard": [
+      {
+       "word": "إياك",
+       "start": 0.44,
+       "end": 1.26
+      },
+      {
+       "word": "نعبد",
+       "start": 1.26,
+       "end": 1.94
+      },
+      {
+       "word": "وإياك",
+       "start": 1.94,
+       "end": 3.18
+      },
+      {
+       "word": "نستعين",
+       "start": 3.18,
+       "end": 4.4
+      }
+     ]
+    },
+    {
+     "atMs": 6000,
+     "voicedMs": 5570,
+     "clipSec": 6,
+     "heard": [
+      {
+       "word": "إياك",
+       "start": 0.42,
+       "end": 1.26
+      },
+      {
+       "word": "نعبد",
+       "start": 1.26,
+       "end": 1.96
+      },
+      {
+       "word": "وإياك",
+       "start": 1.96,
+       "end": 3.18
+      },
+      {
+       "word": "نستعين",
+       "start": 3.18,
+       "end": 4.38
+      }
+     ]
+    }
+   ],
+   "final": [
+    {
+     "word": "إياك",
+     "start": 0.42,
+     "end": 1.26
+    },
+    {
+     "word": "نعبد",
+     "start": 1.26,
+     "end": 1.96
+    },
+    {
+     "word": "وإياك",
+     "start": 1.96,
+     "end": 3.18
+    },
+    {
+     "word": "نستعين",
+     "start": 3.18,
+     "end": 4.38
+    }
+   ],
+   "finalText": "إياك نعبد وإياك نستعين",
+   "finalReplays": []
+  },
+  {
+   "label": "1:5 skip word 3",
+   "verseKey": "1:5",
+   "finalClipSec": 6.492,
+   "spokenStartMs": [
+    430,
+    1380,
+    null,
+    2120
+   ],
+   "expect": {
+    "missIndexes": [
+     2
+    ]
+   },
+   "peeks": [
+    {
+     "atMs": 1500,
+     "voicedMs": 1070,
+     "clipSec": 1.5,
+     "heard": [
+      {
+       "word": "إِنَّاكَ",
+       "start": 0.42,
+       "end": 1.3
+      },
+      {
+       "word": "نَعْبُ",
+       "start": 1.3,
+       "end": 1.92
+      }
+     ]
+    },
+    {
+     "atMs": 3000,
+     "voicedMs": 2570,
+     "clipSec": 3,
+     "heard": [
+      {
+       "word": "إِيَّاكَ",
+       "start": 0.44,
+       "end": 1.28
+      },
+      {
+       "word": "نَعْبُدُ",
+       "start": 1.28,
+       "end": 2.1
+      },
+      {
+       "word": "وَنَسْتَعِيَ",
+       "start": 2.1,
+       "end": 3
+      }
+     ]
+    },
+    {
+     "atMs": 4500,
+     "voicedMs": 4070,
+     "clipSec": 4.5,
+     "heard": [
+      {
+       "word": "إياك",
+       "start": 0.42,
+       "end": 1.26
+      },
+      {
+       "word": "نعبد",
+       "start": 1.26,
+       "end": 1.96
+      },
+      {
+       "word": "ونستعين",
+       "start": 1.96,
+       "end": 3.28
+      }
+     ]
+    },
+    {
+     "atMs": 6000,
+     "voicedMs": 5570,
+     "clipSec": 6,
+     "heard": [
+      {
+       "word": "إياك",
+       "start": 0.4,
+       "end": 1.26
+      },
+      {
+       "word": "نعبد",
+       "start": 1.26,
+       "end": 1.96
+      },
+      {
+       "word": "ونستعين",
+       "start": 1.96,
+       "end": 3.28
+      }
+     ]
+    }
+   ],
+   "final": [
+    {
+     "word": "إياك",
+     "start": 0.4,
+     "end": 1.26
+    },
+    {
+     "word": "نعبد",
+     "start": 1.26,
+     "end": 1.96
+    },
+    {
+     "word": "ونستعين",
+     "start": 1.96,
+     "end": 3.28
+    }
+   ],
+   "finalText": "إياك نعبد ونستعين",
+   "finalReplays": [
+    {
+     "action": "replay_phrase",
+     "targetId": "1:5:p0",
+     "wordIndex": 2,
+     "phraseId": "1:5:p0",
+     "start": 0.4,
+     "end": 3.28,
+     "missCount": 1,
+     "pos": 3,
+     "verseKey": "1:5"
+    },
+    {
+     "action": "replay_phrase",
+     "targetId": "1:5:p0",
+     "wordIndex": 3,
+     "phraseId": "1:5:p0",
+     "start": 0.4,
+     "end": 3.28,
+     "missCount": 1,
+     "pos": 4,
+     "verseKey": "1:5"
+    }
+   ]
+  },
+  {
+   "label": "1:5 stop after 2",
+   "verseKey": "1:5",
+   "finalClipSec": 2.59,
+   "spokenStartMs": [
+    430,
+    1380,
+    null,
+    null
+   ],
+   "expect": {
+    "complete": false,
+    "missIndexes": [],
+    "firstMissMax": 2
+   },
+   "peeks": [
+    {
+     "atMs": 1500,
+     "voicedMs": 1070,
+     "clipSec": 1.5,
+     "heard": [
+      {
+       "word": "إِنَّاكَ",
+       "start": 0.42,
+       "end": 1.3
+      },
+      {
+       "word": "نَعْبُ",
+       "start": 1.3,
+       "end": 1.92
+      }
+     ]
+    }
+   ],
+   "final": [
+    {
+     "word": "إياك",
+     "start": 0.4,
+     "end": 1.26
+    },
+    {
+     "word": "نعمد",
+     "start": 1.26,
+     "end": 1.98
+    }
+   ],
+   "finalText": "إياك نعمد",
+   "finalReplays": [
+    {
+     "action": "replay_phrase",
+     "targetId": "1:5:p0",
+     "wordIndex": 1,
+     "phraseId": "1:5:p0",
+     "start": 0.4,
+     "end": 1.98,
+     "missCount": 1,
+     "pos": 2,
+     "verseKey": "1:5"
+    },
+    {
+     "action": "replay_phrase",
+     "targetId": "1:5:p0",
+     "wordIndex": 2,
+     "phraseId": "1:5:p0",
+     "start": 0.4,
+     "end": 1.98,
+     "missCount": 1,
+     "pos": 3,
+     "verseKey": "1:5"
+    },
+    {
+     "action": "replay_phrase",
+     "targetId": "1:5:p0",
+     "wordIndex": 3,
+     "phraseId": "1:5:p0",
+     "start": 0.4,
+     "end": 1.98,
+     "missCount": 1,
+     "pos": 4,
+     "verseKey": "1:5"
+    }
+   ]
+  },
+  {
+   "label": "1:6 ayah",
+   "verseKey": "1:6",
+   "finalClipSec": 6.544,
+   "spokenStartMs": [
+    430,
+    1080,
+    2040
+   ],
+   "expect": {
+    "complete": true,
+    "missIndexes": []
+   },
+   "peeks": [
+    {
+     "atMs": 1500,
+     "voicedMs": 1070,
+     "clipSec": 1.5,
+     "heard": [
+      {
+       "word": "اهدنا",
+       "start": 0.4,
+       "end": 1.04
+      },
+      {
+       "word": "الصياد",
+       "start": 1.04,
+       "end": 1.78
+      }
+     ]
+    },
+    {
+     "atMs": 3000,
+     "voicedMs": 2570,
+     "clipSec": 3,
+     "heard": [
+      {
+       "word": "اهدنا",
+       "start": 0.4,
+       "end": 1.06
+      },
+      {
+       "word": "الصراط",
+       "start": 1.06,
+       "end": 1.94
+      },
+      {
+       "word": "المستقيم",
+       "start": 1.94,
+       "end": 3.34
+      }
+     ]
+    },
+    {
+     "atMs": 4500,
+     "voicedMs": 4070,
+     "clipSec": 4.5,
+     "heard": [
+      {
+       "word": "اهدنا",
+       "start": 0.4,
+       "end": 1.06
+      },
+      {
+       "word": "الصراط",
+       "start": 1.06,
+       "end": 1.94
+      },
+      {
+       "word": "المستقيم",
+       "start": 1.94,
+       "end": 3.46
+      }
+     ]
+    },
+    {
+     "atMs": 6000,
+     "voicedMs": 5570,
+     "clipSec": 6,
+     "heard": [
+      {
+       "word": "اهدنا",
+       "start": 0.4,
+       "end": 1.06
+      },
+      {
+       "word": "الصراط",
+       "start": 1.06,
+       "end": 1.94
+      },
+      {
+       "word": "المستقيم",
+       "start": 1.94,
+       "end": 3.7
+      }
+     ]
+    }
+   ],
+   "final": [
+    {
+     "word": "اهدنا",
+     "start": 0.4,
+     "end": 1.06
+    },
+    {
+     "word": "الصراط",
+     "start": 1.06,
+     "end": 1.94
+    },
+    {
+     "word": "المستقيم",
+     "start": 1.94,
+     "end": 3.72
+    }
+   ],
+   "finalText": "اهدنا الصراط المستقيم",
+   "finalReplays": []
+  },
+  {
+   "label": "1:6 skip word 2",
+   "verseKey": "1:6",
+   "finalClipSec": 5.584,
+   "spokenStartMs": [
+    430,
+    null,
+    1080
+   ],
+   "expect": {
+    "missIndexes": [
+     1
+    ]
+   },
+   "peeks": [
+    {
+     "atMs": 1500,
+     "voicedMs": 1070,
+     "clipSec": 1.5,
+     "heard": [
+      {
+       "word": "ايه",
+       "start": 0.42,
+       "end": 0.66
+      },
+      {
+       "word": "دين",
+       "start": 0.66,
+       "end": 1.02
+      },
+      {
+       "word": "اوه",
+       "start": 1.02,
+       "end": 1.28
+      },
+      {
+       "word": "موس",
+       "start": 1.28,
+       "end": 1.54
+      }
+     ]
+    },
+    {
+     "atMs": 3000,
+     "voicedMs": 2570,
+     "clipSec": 3,
+     "heard": [
+      {
+       "word": "إِهْدِنَا",
+       "start": 0.4,
+       "end": 1.16
+      },
+      {
+       "word": "الْمُسْتَقِيمِ",
+       "start": 1.16,
+       "end": 2.56
+      }
+     ]
+    },
+    {
+     "atMs": 4500,
+     "voicedMs": 4070,
+     "clipSec": 4.5,
+     "heard": [
+      {
+       "word": "إِهْدِنَا",
+       "start": 0.4,
+       "end": 1.16
+      },
+      {
+       "word": "الْمُسْتَقِيمِ",
+       "start": 1.16,
+       "end": 2.66
+      }
+     ]
+    }
+   ],
+   "final": [
+    {
+     "word": "إِهْدِنَا",
+     "start": 0.4,
+     "end": 1.16
+    },
+    {
+     "word": "الْمُسْتَقِيمِ",
+     "start": 1.16,
+     "end": 2.64
+    }
+   ],
+   "finalText": "إِهْدِنَا الْمُسْتَقِيمِ",
+   "finalReplays": [
+    {
+     "action": "replay_word",
+     "targetId": "wbw/001_006_002.mp3",
+     "wordIndex": 1,
+     "phraseId": "1:6:p0",
+     "missCount": 1,
+     "pos": 2,
+     "verseKey": "1:6"
+    }
+   ]
+  },
+  {
+   "label": "1:6 stop after 2",
+   "verseKey": "1:6",
+   "finalClipSec": 2.51,
+   "spokenStartMs": [
+    430,
+    1080,
+    null
+   ],
+   "expect": {
+    "complete": false,
+    "missIndexes": [],
+    "firstMissMax": 2
+   },
+   "peeks": [
+    {
+     "atMs": 1500,
+     "voicedMs": 1070,
+     "clipSec": 1.5,
+     "heard": [
+      {
+       "word": "اهدنا",
+       "start": 0.4,
+       "end": 1.04
+      },
+      {
+       "word": "الصياد",
+       "start": 1.04,
+       "end": 1.78
+      }
+     ]
+    }
+   ],
+   "final": [
+    {
+     "word": "اهدنا",
+     "start": 0.4,
+     "end": 1.06
+    },
+    {
+     "word": "الصراط",
+     "start": 1.06,
+     "end": 1.86
+    }
+   ],
+   "finalText": "اهدنا الصراط",
+   "finalReplays": [
+    {
+     "action": "replay_word",
+     "targetId": "wbw/001_006_003.mp3",
+     "wordIndex": 2,
+     "phraseId": "1:6:p0",
+     "missCount": 1,
+     "pos": 3,
+     "verseKey": "1:6"
+    }
+   ]
+  },
+  {
+   "label": "1:7 ayah",
+   "verseKey": "1:7",
+   "finalClipSec": 14.188,
+   "spokenStartMs": [
+    430,
+    1150,
+    2110,
+    3030,
+    4000,
+    4620,
+    5700,
+    6730,
+    7040
+   ],
+   "expect": {
+    "complete": true,
+    "missIndexes": []
+   },
+   "peeks": [
+    {
+     "atMs": 1500,
+     "voicedMs": 1070,
+     "clipSec": 1.5,
+     "heard": [
+      {
+       "word": "صراطاً",
+       "start": 0.38,
+       "end": 1.42
+      },
+      {
+       "word": "لتحرير",
+       "start": 1.42,
+       "end": 1.96
+      }
+     ]
+    },
+    {
+     "atMs": 3000,
+     "voicedMs": 2570,
+     "clipSec": 3,
+     "heard": [
+      {
+       "word": "صِرَاطَ",
+       "start": 0.38,
+       "end": 1.04
+      },
+      {
+       "word": "الَّذِينَ",
+       "start": 1.04,
+       "end": 2.04
+      },
+      {
+       "word": "أَنْعَمْتَ",
+       "start": 2.04,
+       "end": 3.02
+      }
+     ]
+    },
+    {
+     "atMs": 4500,
+     "voicedMs": 4070,
+     "clipSec": 4.5,
+     "heard": [
+      {
+       "word": "صِرَاطَ",
+       "start": 0.38,
+       "end": 1.1
+      },
+      {
+       "word": "الَّذِينَ",
+       "start": 1.1,
+       "end": 2.04
+      },
+      {
+       "word": "أَنْعَمْتَ",
+       "start": 2.04,
+       "end": 3.02
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 3.02,
+       "end": 4
+      },
+      {
+       "word": "غَيْرِ",
+       "start": 4,
+       "end": 4.5
+      }
+     ]
+    },
+    {
+     "atMs": 6000,
+     "voicedMs": 5570,
+     "clipSec": 6,
+     "heard": [
+      {
+       "word": "صِرَاطَ",
+       "start": 0.4,
+       "end": 1.1
+      },
+      {
+       "word": "الَّذِينَ",
+       "start": 1.1,
+       "end": 2.04
+      },
+      {
+       "word": "أَنْعَمْتَ",
+       "start": 2.04,
+       "end": 3.02
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 3.02,
+       "end": 3.96
+      },
+      {
+       "word": "غَيْرِ",
+       "start": 3.96,
+       "end": 4.56
+      },
+      {
+       "word": "الْمَغْضُوبِ",
+       "start": 4.56,
+       "end": 5.76
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 5.76,
+       "end": 6.48
+      }
+     ]
+    },
+    {
+     "atMs": 7500,
+     "voicedMs": 7070,
+     "clipSec": 7.5,
+     "heard": [
+      {
+       "word": "صِرَاطَ",
+       "start": 0.38,
+       "end": 1.12
+      },
+      {
+       "word": "الَّذِينَ",
+       "start": 1.12,
+       "end": 2.04
+      },
+      {
+       "word": "أَنْعَمْتَ",
+       "start": 2.04,
+       "end": 3.02
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 3.02,
+       "end": 3.96
+      },
+      {
+       "word": "غَيْرِ",
+       "start": 3.96,
+       "end": 4.56
+      },
+      {
+       "word": "الْمَغْضُوبِ",
+       "start": 4.56,
+       "end": 5.76
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 5.76,
+       "end": 6.76
+      },
+      {
+       "word": "وَلَى",
+       "start": 6.76,
+       "end": 7.34
+      },
+      {
+       "word": "الْبَرْبِ",
+       "start": 7.34,
+       "end": 7.56
+      }
+     ]
+    },
+    {
+     "atMs": 9000,
+     "voicedMs": 8570,
+     "clipSec": 9,
+     "heard": [
+      {
+       "word": "صِرَاطَ",
+       "start": 0.38,
+       "end": 1.1
+      },
+      {
+       "word": "الَّذِينَ",
+       "start": 1.1,
+       "end": 2.04
+      },
+      {
+       "word": "أَنْعَمْتَ",
+       "start": 2.04,
+       "end": 3.02
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 3.02,
+       "end": 3.96
+      },
+      {
+       "word": "غَيْرِ",
+       "start": 3.96,
+       "end": 4.56
+      },
+      {
+       "word": "الْمَغْضُوبِ",
+       "start": 4.56,
+       "end": 5.76
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 5.76,
+       "end": 6.76
+      },
+      {
+       "word": "وَلَا",
+       "start": 6.76,
+       "end": 7.14
+      },
+      {
+       "word": "الضَّاسِ",
+       "start": 7.14,
+       "end": 8.36
+      }
+     ]
+    },
+    {
+     "atMs": 10500,
+     "voicedMs": 10070,
+     "clipSec": 10.5,
+     "heard": [
+      {
+       "word": "صِرَاطَ",
+       "start": 0.38,
+       "end": 1.1
+      },
+      {
+       "word": "الَّذِينَ",
+       "start": 1.1,
+       "end": 2.04
+      },
+      {
+       "word": "أَنْعَمْتَ",
+       "start": 2.04,
+       "end": 3.02
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 3.02,
+       "end": 3.96
+      },
+      {
+       "word": "غَيْرِ",
+       "start": 3.96,
+       "end": 4.56
+      },
+      {
+       "word": "الْمَغْضُوبِ",
+       "start": 4.56,
+       "end": 5.7
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 5.7,
+       "end": 6.7
+      },
+      {
+       "word": "وَلَا",
+       "start": 6.7,
+       "end": 7.14
+      },
+      {
+       "word": "الضَّالِ",
+       "start": 7.14,
+       "end": 10.36
+      }
+     ]
+    },
+    {
+     "atMs": 12000,
+     "voicedMs": 11570,
+     "clipSec": 12,
+     "heard": [
+      {
+       "word": "صِرَاطَ",
+       "start": 0.3,
+       "end": 1.1
+      },
+      {
+       "word": "الَّذِينَ",
+       "start": 1.1,
+       "end": 2.04
+      },
+      {
+       "word": "أَنْعَمْتَ",
+       "start": 2.04,
+       "end": 3.02
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 3.02,
+       "end": 3.96
+      },
+      {
+       "word": "غَيْرِ",
+       "start": 3.96,
+       "end": 4.6
+      },
+      {
+       "word": "الْمَغْضُوبِ",
+       "start": 4.6,
+       "end": 5.7
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 5.7,
+       "end": 6.7
+      },
+      {
+       "word": "وَلَا",
+       "start": 6.7,
+       "end": 7.14
+      },
+      {
+       "word": "الضَّالِّينَ",
+       "start": 7.14,
+       "end": 11.98
+      }
+     ]
+    },
+    {
+     "atMs": 13500,
+     "voicedMs": 13070,
+     "clipSec": 13.5,
+     "heard": [
+      {
+       "word": "صِرَاطَ",
+       "start": 0.28,
+       "end": 1.12
+      },
+      {
+       "word": "الَّذِينَ",
+       "start": 1.12,
+       "end": 2.06
+      },
+      {
+       "word": "أَنْعَمْتَ",
+       "start": 2.06,
+       "end": 3.02
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 3.02,
+       "end": 3.94
+      },
+      {
+       "word": "غَيْرِ",
+       "start": 3.94,
+       "end": 4.6
+      },
+      {
+       "word": "الْمَغْضُوبِ",
+       "start": 4.6,
+       "end": 5.76
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 5.76,
+       "end": 6.7
+      },
+      {
+       "word": "وَلَا",
+       "start": 6.7,
+       "end": 7.14
+      },
+      {
+       "word": "الضَّالِّينَ",
+       "start": 7.14,
+       "end": 11.86
+      }
+     ]
+    }
+   ],
+   "final": [
+    {
+     "word": "صِرَاطَ",
+     "start": 0.36,
+     "end": 1.1
+    },
+    {
+     "word": "الَّذِينَ",
+     "start": 1.1,
+     "end": 2.04
+    },
+    {
+     "word": "أَنْعَمْتَ",
+     "start": 2.04,
+     "end": 3.02
+    },
+    {
+     "word": "عَلَيْهِمْ",
+     "start": 3.02,
+     "end": 3.96
+    },
+    {
+     "word": "غَيْرِ",
+     "start": 3.96,
+     "end": 4.6
+    },
+    {
+     "word": "الْمَغْضُوبِ",
+     "start": 4.6,
+     "end": 5.76
+    },
+    {
+     "word": "عَلَيْهِمْ",
+     "start": 5.76,
+     "end": 6.7
+    },
+    {
+     "word": "وَلَا",
+     "start": 6.7,
+     "end": 7.14
+    },
+    {
+     "word": "الضَّالِّينَ",
+     "start": 7.14,
+     "end": 11.7
+    }
+   ],
+   "finalText": "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ",
+   "finalReplays": []
+  },
+  {
+   "label": "1:7 skip word 5",
+   "verseKey": "1:7",
+   "finalClipSec": 13.568,
+   "spokenStartMs": [
+    430,
+    1150,
+    2110,
+    3030,
+    null,
+    4000,
+    5080,
+    6110,
+    6420
+   ],
+   "expect": {
+    "missIndexes": [
+     4
+    ]
+   },
+   "peeks": [
+    {
+     "atMs": 1500,
+     "voicedMs": 1070,
+     "clipSec": 1.5,
+     "heard": [
+      {
+       "word": "صراطاً",
+       "start": 0.38,
+       "end": 1.42
+      },
+      {
+       "word": "لَلَّهِ",
+       "start": 1.42,
+       "end": 1.96
+      }
+     ]
+    },
+    {
+     "atMs": 3000,
+     "voicedMs": 2570,
+     "clipSec": 3,
+     "heard": [
+      {
+       "word": "صِرَاطَ",
+       "start": 0.38,
+       "end": 1.04
+      },
+      {
+       "word": "الَّذِينَ",
+       "start": 1.04,
+       "end": 2.04
+      },
+      {
+       "word": "أَنْعَمْتَ",
+       "start": 2.04,
+       "end": 3.02
+      }
+     ]
+    },
+    {
+     "atMs": 4500,
+     "voicedMs": 4070,
+     "clipSec": 4.5,
+     "heard": [
+      {
+       "word": "صراط",
+       "start": 0.38,
+       "end": 1.06
+      },
+      {
+       "word": "الذين",
+       "start": 1.06,
+       "end": 2
+      },
+      {
+       "word": "أنعمت",
+       "start": 2,
+       "end": 3
+      },
+      {
+       "word": "عليهم",
+       "start": 3,
+       "end": 3.88
+      },
+      {
+       "word": "المغنرين",
+       "start": 3.88,
+       "end": 4.98
+      }
+     ]
+    },
+    {
+     "atMs": 6000,
+     "voicedMs": 5570,
+     "clipSec": 6,
+     "heard": [
+      {
+       "word": "صِرَاطَ",
+       "start": 0.4,
+       "end": 1.12
+      },
+      {
+       "word": "الَّذِينَ",
+       "start": 1.12,
+       "end": 2.04
+      },
+      {
+       "word": "أَنْعَمْتَ",
+       "start": 2.04,
+       "end": 3.02
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 3.02,
+       "end": 3.94
+      },
+      {
+       "word": "الْمَغْضُوبِ",
+       "start": 3.94,
+       "end": 5.08
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 5.08,
+       "end": 6.02
+      }
+     ]
+    },
+    {
+     "atMs": 7500,
+     "voicedMs": 7070,
+     "clipSec": 7.5,
+     "heard": [
+      {
+       "word": "صِرَاطَ",
+       "start": 0.38,
+       "end": 1.12
+      },
+      {
+       "word": "الَّذِينَ",
+       "start": 1.12,
+       "end": 2.04
+      },
+      {
+       "word": "أَنْعَمْتَ",
+       "start": 2.04,
+       "end": 3.02
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 3.02,
+       "end": 3.94
+      },
+      {
+       "word": "الْمَغْضُوبِ",
+       "start": 3.94,
+       "end": 5.14
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 5.14,
+       "end": 6.08
+      },
+      {
+       "word": "وَلَا",
+       "start": 6.08,
+       "end": 6.52
+      },
+      {
+       "word": "الظَّاسِينَ",
+       "start": 6.52,
+       "end": 7.98
+      }
+     ]
+    },
+    {
+     "atMs": 9000,
+     "voicedMs": 8570,
+     "clipSec": 9,
+     "heard": [
+      {
+       "word": "صِرَاطَ",
+       "start": 0.38,
+       "end": 1.1
+      },
+      {
+       "word": "الَّذِينَ",
+       "start": 1.1,
+       "end": 2.04
+      },
+      {
+       "word": "أَنْعَمْتَ",
+       "start": 2.04,
+       "end": 3.02
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 3.02,
+       "end": 3.94
+      },
+      {
+       "word": "الْمَغْضُوبِ",
+       "start": 3.94,
+       "end": 5.08
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 5.08,
+       "end": 6.14
+      },
+      {
+       "word": "وَلَا",
+       "start": 6.14,
+       "end": 6.5
+      },
+      {
+       "word": "الظَّالِينَ",
+       "start": 6.5,
+       "end": 9.48
+      }
+     ]
+    },
+    {
+     "atMs": 10500,
+     "voicedMs": 10070,
+     "clipSec": 10.5,
+     "heard": [
+      {
+       "word": "صِرَاطَ",
+       "start": 0.38,
+       "end": 1.1
+      },
+      {
+       "word": "الَّذِينَ",
+       "start": 1.1,
+       "end": 2.04
+      },
+      {
+       "word": "أَنْعَمْتَ",
+       "start": 2.04,
+       "end": 3.02
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 3.02,
+       "end": 3.94
+      },
+      {
+       "word": "الْمَغْضُوبِ",
+       "start": 3.94,
+       "end": 5.08
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 5.08,
+       "end": 6.08
+      },
+      {
+       "word": "وَلَا",
+       "start": 6.08,
+       "end": 6.52
+      },
+      {
+       "word": "الضَّالِينَ",
+       "start": 6.52,
+       "end": 10.5
+      }
+     ]
+    },
+    {
+     "atMs": 12000,
+     "voicedMs": 11570,
+     "clipSec": 12,
+     "heard": [
+      {
+       "word": "صِرَاطَ",
+       "start": 0.36,
+       "end": 1.12
+      },
+      {
+       "word": "الَّذِينَ",
+       "start": 1.12,
+       "end": 2.04
+      },
+      {
+       "word": "أَنْعَمْتَ",
+       "start": 2.04,
+       "end": 3.02
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 3.02,
+       "end": 3.94
+      },
+      {
+       "word": "الْمَغْضُوبِ",
+       "start": 3.94,
+       "end": 5.08
+      },
+      {
+       "word": "عَلَيْهِمْ",
+       "start": 5.08,
+       "end": 6.08
+      },
+      {
+       "word": "وَلَا",
+       "start": 6.08,
+       "end": 6.52
+      },
+      {
+       "word": "الضَّالِّينَ",
+       "start": 6.52,
+       "end": 10.92
+      }
+     ]
+    }
+   ],
+   "final": [
+    {
+     "word": "صِرَاطَ",
+     "start": 0.38,
+     "end": 1.12
+    },
+    {
+     "word": "الَّذِينَ",
+     "start": 1.12,
+     "end": 2.04
+    },
+    {
+     "word": "أَنْعَمْتَ",
+     "start": 2.04,
+     "end": 3.02
+    },
+    {
+     "word": "عَلَيْهِمْ",
+     "start": 3.02,
+     "end": 3.94
+    },
+    {
+     "word": "الْمَغْضُوبِ",
+     "start": 3.94,
+     "end": 5.12
+    },
+    {
+     "word": "عَلَيْهِمْ",
+     "start": 5.12,
+     "end": 6.08
+    },
+    {
+     "word": "وَلَا",
+     "start": 6.08,
+     "end": 6.52
+    },
+    {
+     "word": "الضَّالِينَ",
+     "start": 6.52,
+     "end": 10.64
+    }
+   ],
+   "finalText": "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِينَ",
+   "finalReplays": [
+    {
+     "action": "replay_word",
+     "targetId": "wbw/001_007_005.mp3",
+     "wordIndex": 4,
+     "phraseId": "1:7:p0",
+     "missCount": 1,
+     "pos": 5,
+     "verseKey": "1:7"
+    }
+   ]
+  },
+  {
+   "label": "1:7 stop after 5",
+   "verseKey": "1:7",
+   "finalClipSec": 5.09,
+   "spokenStartMs": [
+    430,
+    1150,
+    2110,
+    3030,
+    4000,
+    null,
+    null,
+    null,
+    null
+   ],
+   "expect": {
+    "complete": false,
+    "missIndexes": [],
+    "firstMissMax": 5
+   },
+   "peeks": [
+    {
+     "atMs": 1500,
+     "voicedMs": 1070,
+     "clipSec": 1.5,
+     "heard": [
+      {
+       "word": "صراطاً",
+       "start": 0.38,
+       "end": 1.42
+      },
+      {
+       "word": "لَلَّهِ",
+       "start": 1.42,
+       "end": 1.96
+      }
+     ]
+    },
+    {
+     "atMs": 3000,
+     "voicedMs": 2570,
+     "clipSec": 3,
+     "heard": [
+      {
+       "word": "صِرَاطَ",
+       "start": 0.38,
+       "end": 1.04
+      },
+      {
+       "word": "الَّذِينَ",
+       "start": 1.04,
+       "end": 2.04
+      },
+      {
+       "word": "أَنْعَمْتَ",
+       "start": 2.04,
+       "end": 3.02
+      }
+     ]
+    },
+    {
+     "atMs": 4500,
+     "voicedMs": 4070,
+     "clipSec": 4.5,
+     "heard": [
+      {
+       "word": "صراط",
+       "start": 0.3,
+       "end": 1.06
+      },
+      {
+       "word": "الذين",
+       "start": 1.06,
+       "end": 2
+      },
+      {
+       "word": "أنعمت",
+       "start": 2,
+       "end": 2.98
+      },
+      {
+       "word": "عليهم",
+       "start": 2.98,
+       "end": 3.88
+      },
+      {
+       "word": "غير",
+       "start": 3.88,
+       "end": 4.44
+      }
+     ]
+    }
+   ],
+   "final": [
+    {
+     "word": "صراط",
+     "start": 0.12,
+     "end": 1.06
+    },
+    {
+     "word": "الذين",
+     "start": 1.06,
+     "end": 2
+    },
+    {
+     "word": "أنعمت",
+     "start": 2,
+     "end": 2.96
+    },
+    {
+     "word": "عليهم",
+     "start": 2.96,
+     "end": 3.88
+    },
+    {
+     "word": "غير",
+     "start": 3.88,
+     "end": 4.44
+    }
+   ],
+   "finalText": "صراط الذين أنعمت عليهم غير",
+   "finalReplays": [
+    {
+     "action": "replay_phrase",
+     "targetId": "1:7:p0",
+     "wordIndex": 5,
+     "phraseId": "1:7:p0",
+     "start": 0.12,
+     "end": 4.44,
+     "missCount": 1,
+     "pos": 6,
+     "verseKey": "1:7"
+    },
+    {
+     "action": "replay_phrase",
+     "targetId": "1:7:p0",
+     "wordIndex": 6,
+     "phraseId": "1:7:p0",
+     "start": 0.12,
+     "end": 4.44,
+     "missCount": 1,
+     "pos": 7,
+     "verseKey": "1:7"
+    },
+    {
+     "action": "replay_phrase",
+     "targetId": "1:7:p0",
+     "wordIndex": 7,
+     "phraseId": "1:7:p0",
+     "start": 0.12,
+     "end": 4.44,
+     "missCount": 1,
+     "pos": 8,
+     "verseKey": "1:7"
+    },
+    {
+     "action": "replay_phrase",
+     "targetId": "1:7:p0",
+     "wordIndex": 8,
+     "phraseId": "1:7:p0",
+     "start": 0.12,
+     "end": 4.44,
+     "missCount": 1,
+     "pos": 9,
+     "verseKey": "1:7"
+    }
+   ]
+  },
+  {
+   "label": "112:4 ayah",
+   "verseKey": "112:4",
+   "finalClipSec": 5.805,
+   "spokenStartMs": [
+    430,
+    1060,
+    1540,
+    2450,
+    3360
+   ],
+   "expect": {
+    "complete": true,
+    "missIndexes": []
+   },
+   "peeks": [
+    {
+     "atMs": 1500,
+     "voicedMs": 1070,
+     "clipSec": 1.5,
+     "heard": [
+      {
+       "word": "وَلَمْ",
+       "start": 0.02,
+       "end": 1.14
+      },
+      {
+       "word": "يَكُمْ",
+       "start": 1.14,
+       "end": 1.52
+      }
+     ]
+    },
+    {
+     "atMs": 3000,
+     "voicedMs": 2570,
+     "clipSec": 3,
+     "heard": [
+      {
+       "word": "وَلَمْ",
+       "start": 0.42,
+       "end": 1.12
+      },
+      {
+       "word": "يَكُنْ",
+       "start": 1.12,
+       "end": 1.94
+      },
+      {
+       "word": "لَهُ",
+       "start": 1.94,
+       "end": 2.3
+      },
+      {
+       "word": "كُفُورًا",
+       "start": 2.3,
+       "end": 3.48
+      }
+     ]
+    },
+    {
+     "atMs": 4500,
+     "voicedMs": 4070,
+     "clipSec": 4.5,
+     "heard": [
+      {
+       "word": "وَلَمْ",
+       "start": 0.42,
+       "end": 1.14
+      },
+      {
+       "word": "يَكُنْ",
+       "start": 1.14,
+       "end": 1.94
+      },
+      {
+       "word": "لَهُ",
+       "start": 1.94,
+       "end": 2.3
+      },
+      {
+       "word": "كُفُوًا",
+       "start": 2.3,
+       "end": 3.16
+      },
+      {
+       "word": "أَحَدٌ",
+       "start": 3.16,
+       "end": 4.02
+      }
+     ]
+    }
+   ],
+   "final": [
+    {
+     "word": "وَلَمْ",
+     "start": 0.42,
+     "end": 1.14
+    },
+    {
+     "word": "يَكُنْ",
+     "start": 1.14,
+     "end": 1.94
+    },
+    {
+     "word": "لَهُ",
+     "start": 1.94,
+     "end": 2.3
+    },
+    {
+     "word": "كُفُوًا",
+     "start": 2.3,
+     "end": 3.16
+    },
+    {
+     "word": "أَحَدٍ",
+     "start": 3.16,
+     "end": 4.02
+    }
+   ],
+   "finalText": "وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٍ",
+   "finalReplays": []
+  },
+  {
+   "label": "112:4 skip word 3",
+   "verseKey": "112:4",
+   "finalClipSec": 4.895,
+   "spokenStartMs": [
+    430,
+    1060,
+    null,
+    1540,
+    2450
+   ],
+   "expect": {
+    "missIndexes": [
+     2
+    ]
+   },
+   "peeks": [
+    {
+     "atMs": 1500,
+     "voicedMs": 1070,
+     "clipSec": 1.5,
+     "heard": [
+      {
+       "word": "وَلَمْ",
+       "start": 0.02,
+       "end": 1.14
+      },
+      {
+       "word": "يَكُمْ",
+       "start": 1.14,
+       "end": 1.52
+      }
+     ]
+    },
+    {
+     "atMs": 3000,
+     "voicedMs": 2570,
+     "clipSec": 3,
+     "heard": [
+      {
+       "word": "وَلَمْ",
+       "start": 0.42,
+       "end": 1.12
+      },
+      {
+       "word": "يَكُنْ",
+       "start": 1.12,
+       "end": 1.62
+      },
+      {
+       "word": "كُفُواً",
+       "start": 1.62,
+       "end": 2.42
+      },
+      {
+       "word": "أَحَنُ",
+       "start": 2.42,
+       "end": 3
+      }
+     ]
+    },
+    {
+     "atMs": 4500,
+     "voicedMs": 4070,
+     "clipSec": 4.5,
+     "heard": [
+      {
+       "word": "وَلَمْ",
+       "start": 0.42,
+       "end": 1.12
+      },
+      {
+       "word": "يَكُنْ",
+       "start": 1.12,
+       "end": 1.62
+      },
+      {
+       "word": "كُفُواً",
+       "start": 1.62,
+       "end": 2.42
+      },
+      {
+       "word": "أَحَدٍ",
+       "start": 2.42,
+       "end": 3.14
+      }
+     ]
+    }
+   ],
+   "final": [
+    {
+     "word": "وَلَمْ",
+     "start": 0.42,
+     "end": 1.12
+    },
+    {
+     "word": "يَكُنْ",
+     "start": 1.12,
+     "end": 1.62
+    },
+    {
+     "word": "كُفُواً",
+     "start": 1.62,
+     "end": 2.42
+    },
+    {
+     "word": "أَحَدٍ",
+     "start": 2.42,
+     "end": 3.14
+    }
+   ],
+   "finalText": "وَلَمْ يَكُنْ كُفُواً أَحَدٍ",
+   "finalReplays": [
+    {
+     "action": "replay_word",
+     "targetId": "wbw/112_004_003.mp3",
+     "wordIndex": 2,
+     "phraseId": "112:4:p0",
+     "missCount": 1,
+     "pos": 3,
+     "verseKey": "112:4"
+    }
+   ]
+  },
+  {
+   "label": "112:4 stop after 3",
+   "verseKey": "112:4",
+   "finalClipSec": 2.92,
+   "spokenStartMs": [
+    430,
+    1060,
+    1540,
+    null,
+    null
+   ],
+   "expect": {
+    "complete": false,
+    "missIndexes": [],
+    "firstMissMax": 3
+   },
+   "peeks": [
+    {
+     "atMs": 1500,
+     "voicedMs": 1070,
+     "clipSec": 1.5,
+     "heard": [
+      {
+       "word": "وَلَمْ",
+       "start": 0.02,
+       "end": 1.14
+      },
+      {
+       "word": "يَكُمْ",
+       "start": 1.14,
+       "end": 1.52
+      }
+     ]
+    }
+   ],
+   "final": [
+    {
+     "word": "وَلَمْ",
+     "start": 0.42,
+     "end": 1.12
+    },
+    {
+     "word": "يَكُنْ",
+     "start": 1.12,
+     "end": 1.94
+    },
+    {
+     "word": "لَهُ",
+     "start": 1.94,
+     "end": 2.26
+    }
+   ],
+   "finalText": "وَلَمْ يَكُنْ لَهُ",
+   "finalReplays": [
+    {
+     "action": "replay_phrase",
+     "targetId": "112:4:p0",
+     "wordIndex": 3,
+     "phraseId": "112:4:p0",
+     "start": 0.42,
+     "end": 2.26,
+     "missCount": 1,
+     "pos": 4,
+     "verseKey": "112:4"
+    },
+    {
+     "action": "replay_phrase",
+     "targetId": "112:4:p0",
+     "wordIndex": 4,
+     "phraseId": "112:4:p0",
+     "start": 0.42,
+     "end": 2.26,
+     "missCount": 1,
+     "pos": 5,
+     "verseKey": "112:4"
+    }
+   ]
+  }
+ ]
+}

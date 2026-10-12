@@ -1,5 +1,7 @@
 "use client";
 
+import { retryAppError } from "@/lib/app-error";
+
 export default function GlobalError({ reset }: { reset: () => void }) {
   return (
     <html lang="en">
@@ -23,7 +25,8 @@ export default function GlobalError({ reset }: { reset: () => void }) {
             The app couldn’t start. Reloading usually fixes this.
           </p>
           <button
-            onClick={reset}
+            type="button"
+            onClick={() => retryAppError(reset)}
             style={{
               padding: "13px 24px",
               borderRadius: 8,

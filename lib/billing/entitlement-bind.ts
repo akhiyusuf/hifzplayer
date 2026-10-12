@@ -85,6 +85,65 @@ export function pickBestEntitlement<T extends PlusFields>(account: T | null, coo
   return untilMs(a) >= untilMs(c) ? a : c;
 }
 
+export type ClerkPlusStatus<T extends PlusFields> =
+  | { status: "none" }
+  | { status: "revoked" }
+  | { status: "ok"; ent: T };
+
+export type SignedInEntitlementPlan<T extends PlusFields> = {
+  ent: T | null;
+  persist: "write" | "clear" | "none";
+  saveToClerk: boolean;
+};
+
+function cookieNeedsWrite<T extends PlusFields>(raw: T | null, bound: T) {
+  if (!raw) return true;
+  return (
+    raw.userId !== bound.userId ||
+    raw.plus !== bound.plus ||
+    raw.until !== bound.until ||
+    raw.planId !== bound.planId ||
+    raw.ref !== bound.ref
+  );
+}
+
+/**
+ * Decide Plus for a signed-in visitor without touching cookies.
+ * Pages cannot call cookies().set(); only write when the cookie is actually stale.
+ */
+export function planSignedInEntitlement<T extends PlusFields>(
+  clerk: ClerkPlusStatus<T>,
+  rawCookie: T | null,
+  userId: string,
+  accountsOn: boolean,
+): SignedInEntitlementPlan<T> {
+  const cookie = entitlementForUser(rawCookie, userId, accountsOn);
+  if (clerk.status === "revoked") {
+    return { ent: null, persist: rawCookie ? "clear" : "none", saveToClerk: false };
+  }
+  if (clerk.status === "ok") {
+    const best = pickBestEntitlement(clerk.ent, cookie);
+    if (best) {
+      const bound = { ...best, userId };
+      return {
+        ent: bound,
+        persist: cookieNeedsWrite(rawCookie, bound) ? "write" : "none",
+        saveToClerk: false,
+      };
+    }
+  }
+  if (cookie) {
+    const bound = { ...cookie, userId };
+    const needsBind = !rawCookie?.userId;
+    return {
+      ent: bound,
+      persist: needsBind || cookieNeedsWrite(rawCookie, bound) ? "write" : "none",
+      saveToClerk: needsBind,
+    };
+  }
+  return { ent: null, persist: "none", saveToClerk: false };
+}
+
 export function addPlanPeriod(planId: string, from = new Date()): string | null {
   if (planId === "lifetime") return null;
   const d = new Date(from.getTime());

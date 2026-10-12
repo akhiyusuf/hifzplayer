@@ -30,6 +30,8 @@ describe("onboarding gate", () => {
     const blob = ONBOARDING_POINTS.map((p) => `${p.title} ${p.body}`).join(" ");
     assert.match(blob, /Play follows the words/);
     assert.match(blob, /never goes behind a wall/);
+    assert.doesNotMatch(blob, /Look around/);
+    assert.doesNotMatch(blob, /Plus unlocks Focus/i);
     assert.doesNotMatch(blob, /available on the App Store|Install now|Get it on Google Play/i);
   });
 });

@@ -1,5 +1,5 @@
 import { assignGiftsToEmails, giftHoldsForBuyer } from "@/lib/auth/gifts";
-import { clerkConfigured } from "@/lib/auth/config";
+import { accountsConfigured } from "@/lib/auth/config";
 import { signedInEmail, signedInUserId } from "@/lib/auth/session";
 import { appUrl } from "@/lib/billing/env";
 import {
@@ -14,7 +14,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  if (!clerkConfigured()) return unauthorized("Sign in to send this gift", { code: "SIGN_IN_REQUIRED" });
+  if (!accountsConfigured()) return unauthorized("Sign in to send this gift", { code: "SIGN_IN_REQUIRED" });
   const userId = await signedInUserId();
   if (!userId) return unauthorized("Sign in to send this gift", { code: "SIGN_IN_REQUIRED" });
 

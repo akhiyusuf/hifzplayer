@@ -6,12 +6,16 @@ import {
   OCCASION_PLAYLISTS,
   clampStopIndex,
   playlistHref,
+  playlistVerseIndex,
+  playlistVerseRefs,
   reciterDisplayName,
+  reciterPillName,
   reciterIdForStyle,
   reciterMatchesQuery,
   pickMuallimReciter,
   resolvePlaylist,
   stopLabel,
+  verseKeyLabel,
 } from "./playlists.ts";
 
 describe("occasion lists", () => {
@@ -88,6 +92,45 @@ describe("playlist urls", () => {
     assert.equal(clampStopIndex(list, -1), 0);
   });
 
+  it("lists only the playlist ayahs, not the rest of the surah", () => {
+    const night = OCCASION_PLAYLISTS.find((p) => p.id === "night");
+    assert.ok(night);
+    const refs = playlistVerseRefs(night);
+    assert.deepEqual(refs.slice(0, 3), [
+      { chapter: 2, verse: 255, stop: 0 },
+      { chapter: 2, verse: 285, stop: 1 },
+      { chapter: 2, verse: 286, stop: 1 },
+    ]);
+    assert.equal(
+      refs.some((ref) => ref.chapter === 2 && (ref.verse === 1 || ref.verse === 254 || ref.verse === 256)),
+      false,
+    );
+    assert.equal(playlistVerseIndex(night, 2), 3);
+    assert.equal(refs[3]?.chapter, 112);
+    assert.equal(refs.at(-1)?.chapter, 114);
+    const chapters = [
+      { id: 2, name_simple: "Al-Baqarah" },
+      { id: 112, name_simple: "Al-Ikhlas" },
+    ];
+    assert.equal(verseKeyLabel("2:255", chapters), "Al-Baqarah 255");
+    assert.equal(verseKeyLabel("112:1", chapters), "Al-Ikhlas 1");
+  });
+
+  it("keeps a multi-surah list in stop order", () => {
+    const sleep = OCCASION_PLAYLISTS.find((p) => p.id === "sleep");
+    assert.ok(sleep);
+    const refs = playlistVerseRefs(sleep);
+    assert.equal(refs.length, 60);
+    assert.equal(refs[0]?.chapter, 67);
+    assert.equal(refs[29]?.verse, 30);
+    assert.equal(playlistVerseIndex(sleep, 1), 30);
+    assert.equal(refs[30]?.chapter, 32);
+    assert.equal(
+      refs.some((ref) => ref.chapter !== 67 && ref.chapter !== 32),
+      false,
+    );
+  });
+
   it("labels a single ayah and a range", () => {
     const chapters = [{ id: 2, name_simple: "Al-Baqarah" }];
     assert.equal(stopLabel({ chapter: 2, from: 255, to: 255 }, chapters), "Al-Baqarah 255");
@@ -97,6 +140,9 @@ describe("playlist urls", () => {
   it("includes style only when present", () => {
     assert.equal(reciterDisplayName("Minshawi", "Murattal"), "Minshawi · Murattal");
     assert.equal(reciterDisplayName("Sudais", ""), "Sudais");
+    assert.equal(reciterPillName("Mohamed Siddiq al-Minshawi", "Murattal"), "Minshawi · Murattal");
+    assert.equal(reciterPillName("Sudais", "Murattal"), "Sudais · Murattal");
+    assert.equal(reciterPillName("Husary", ""), "Husary");
   });
 
   it("finds Muallim by style, not only by the reciter name", () => {

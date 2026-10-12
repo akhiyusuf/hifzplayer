@@ -45,12 +45,12 @@ export const ONBOARDING_POINTS = [
   {
     icon: "headphones" as const,
     title: "Listen for the days you already keep",
-    body: "Friday Kahf, night verses, morning — occasion lists you can open and look around. Playing a list is Diras Plus. The mushaf is not.",
+    body: "Friday Kahf, night verses, morning: occasion lists you can open and look around. Playing a list is Diras Plus. The mushaf is not.",
   },
   {
     icon: "brackets" as const,
     title: "Practise without losing the page",
-    body: "Word Reps, Masked, and Relay live on the player when you want them. Look around free. Play is Diras Plus. Reading never goes behind a wall.",
+    body: "Word Reps, Masked, and Relay live on the player when you want them. Those drills are free. Reading never goes behind a wall.",
   },
 ] as const;
 

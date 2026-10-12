@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "./icon";
 
 export function Sheet({
@@ -60,7 +61,7 @@ export function Sheet({
 
   const sidebar = side === "right";
 
-  return (
+  const node = (
     <div
       className={sidebar ? "scrim scrim-end" : "scrim"}
       onClick={(e) => {
@@ -89,4 +90,7 @@ export function Sheet({
       </div>
     </div>
   );
+
+  if (typeof document === "undefined") return node;
+  return createPortal(node, document.body);
 }

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { PLUS_NAME } from "@/lib/brand";
 import { recordGiftHold, renewGiftRecipients, assignGiftsToEmails, type GiftHold } from "@/lib/auth/gifts";
-import { clerkConfigured } from "@/lib/auth/config";
-import { clerkUserIdByEmail, plusFromClerk } from "@/lib/auth/plus";
+import { accountsConfigured } from "@/lib/auth/config";
+import { userIdByEmail, plusFromAccount } from "@/lib/auth/plus";
 import { grantPlusToAccount, signedInUserId } from "@/lib/auth/session";
 import { logBillingEvent, type BillingEvent } from "./analytics";
 import { grantFromPayment, periodEnd, publicEntitlement, type Entitlement } from "./entitlement";
@@ -131,7 +131,7 @@ async function persist(
 async function kindForUser(userId: string | null, plus: boolean): Promise<FulfillKind> {
   if (!plus) return "revoked";
   if (!userId) return "granted";
-  const existing = await plusFromClerk(userId);
+  const existing = await plusFromAccount(userId);
   return existing ? "renewed" : "granted";
 }
 
@@ -220,7 +220,7 @@ export async function fulfillPaystackReference(
     });
   }
 
-  const accountsOn = clerkConfigured();
+  const accountsOn = accountsConfigured();
   const signedIn = opts.signedInUserId === undefined ? await signedInUserId() : opts.signedInUserId;
   const owner = ownerForGrant({
     source: opts.source,
@@ -308,7 +308,7 @@ export async function fulfillStripeSession(
     }
   }
 
-  const accountsOn = clerkConfigured();
+  const accountsOn = accountsConfigured();
   const signedIn = opts.signedInUserId === undefined ? await signedInUserId() : opts.signedInUserId;
   const metaUser = session.metadata?.userId || resolved.userId;
   const owner = ownerForGrant({
@@ -388,7 +388,7 @@ export async function fulfillStripeInvoice(
 
   let userId = resolved.userId || metadata.userId || "";
   if (!userId && invoice.customer_email) {
-    userId = (await clerkUserIdByEmail(invoice.customer_email)) || "";
+    userId = (await userIdByEmail(invoice.customer_email)) || "";
   }
 
   const owner = { userId: userId || null };
@@ -421,7 +421,7 @@ export async function fulfillStripeSubscription(
   let userId = (!("error" in lookedUp) && lookedUp.userId) || metadata.userId || "";
   let resolved: PaidPlan;
   if ("error" in lookedUp) {
-    const existing = userId ? await plusFromClerk(userId) : null;
+    const existing = userId ? await plusFromAccount(userId) : null;
     if (!existing || !isPaidPlanId(existing.planId) || !isRegionId(existing.regionId)) {
       return fail(400, lookedUp.error, { processor: "stripe", source: opts.source });
     }
@@ -469,11 +469,11 @@ export async function fulfillPaystackSubscriptionEvent(
   let userId = "";
   if (!("error" in lookedUp) && lookedUp.userId) userId = lookedUp.userId;
   if (!userId && data.customer?.email) {
-    userId = (await clerkUserIdByEmail(data.customer.email)) || "";
+    userId = (await userIdByEmail(data.customer.email)) || "";
   }
   let resolved: PaidPlan;
   if ("error" in lookedUp) {
-    const existing = userId ? await plusFromClerk(userId) : null;
+    const existing = userId ? await plusFromAccount(userId) : null;
     if (!existing || !isPaidPlanId(existing.planId) || !isRegionId(existing.regionId)) {
       return fail(400, lookedUp.error, { processor: "paystack", source: opts.source });
     }

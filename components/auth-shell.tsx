@@ -1,11 +1,12 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { BrandLogo } from "@/components/brand-logo";
 import { Icon } from "@/components/icon";
 import { PLUS_NAME } from "@/lib/brand";
 
 export function AuthShell({
   title,
-  backHref = "/",
+  backHref = "/home",
   children,
 }: {
   title: string;
@@ -20,7 +21,10 @@ export function AuthShell({
         </Link>
         <h1>{title}</h1>
       </nav>
-      <div className="auth-shell">{children}</div>
+      <div className="auth-shell">
+        <BrandLogo variant="lockup" height={36} className="auth-brand-logo" />
+        {children}
+      </div>
     </main>
   );
 }
@@ -29,8 +33,11 @@ export function AccountsNotConfigured() {
   return (
     <>
       <p className="pricing-lead" style={{ textAlign: "center", maxWidth: 360 }}>
-        Sign-in is two keys. Add the Clerk integration on this Vercel project (or paste the publishable and
-        secret keys), redeploy, and this page becomes a real sign-in form.
+        Sign-in runs on the Cloudflare Worker. Accounts live in Neon. Add <code>DATABASE_URL</code> and{" "}
+        <code>AUTH_SECRET</code> (or <code>BILLING_SIGNING_SECRET</code>). Optional bot check: Turnstile{" "}
+        (<code>NEXT_PUBLIC_TURNSTILE_SITE_KEY</code> in wrangler vars + build env,{" "}
+        <code>TURNSTILE_SECRET_KEY</code> Worker secret). Tables are created on first sign-in. You do not paste
+        SQL.
       </p>
       <p className="pricing-note" style={{ textAlign: "center", maxWidth: 360 }}>
         Quran reading stays open either way. Accounts lock {PLUS_NAME} to you, not to a shared browser cookie.

@@ -3,7 +3,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./icon";
-import { isPaidRepeat } from "@/lib/billing/gates";
 import { WORD_REP_COUNTS, loopCountFace } from "@/lib/player-chrome";
 
 type Place = { top: number; left: number; flipped: boolean; arrowLeft: number };
@@ -19,6 +18,7 @@ export function WordRepBar({
   onAskPlus,
   onClose,
   onDismiss,
+  nudge = false,
 }: {
   pos: number;
   start: number | null;
@@ -32,6 +32,8 @@ export function WordRepBar({
   onClose: () => void;
   /** Cancel underline + count and stop drill audio. */
   onDismiss: () => void;
+  /** Pulse the multipliers after the range end is pinned. */
+  nudge?: boolean;
 }) {
   const wrapRef = useRef<HTMLSpanElement | null>(null);
   const popRef = useRef<HTMLDivElement | null>(null);
@@ -72,7 +74,7 @@ export function WordRepBar({
       window.removeEventListener("resize", placePop);
       window.removeEventListener("scroll", placePop, true);
     };
-  }, [pos, start, end, count, pinOnly]);
+  }, [pos, start, end, count, pinOnly, nudge]);
 
   useLayoutEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -130,13 +132,13 @@ export function WordRepBar({
           {pinOnly
             ? null
             : WORD_REP_COUNTS.map((n) => {
-                const locked = isPaidRepeat(n) && !plusOn;
+                const locked = false;
                 const on = count === n;
                 return (
                   <button
                     key={n}
                     type="button"
-                    className={`${on ? "on" : ""}${locked ? " locked" : ""}`}
+                    className={`${on ? "on" : ""}${locked ? " locked" : ""}${nudge ? " word-rep-nudge" : ""}`}
                     aria-pressed={on}
                     aria-label={
                       n === 0 ? "Repeat until you stop" : `Replay ${n} times`
@@ -150,8 +152,8 @@ export function WordRepBar({
           <button
             type="button"
             className="word-rep-dismiss"
-            aria-label="Cancel word replay"
-            onClick={onDismiss}
+            aria-label={pinOnly ? "Not this word" : "Cancel word replay"}
+            onClick={pinOnly ? onClose : onDismiss}
           >
             <Icon name="x" size={15} />
           </button>

@@ -3,9 +3,11 @@
 import type { CSSProperties } from "react";
 import {
   ArrowLeft,
+  BicepsFlexed,
   Book,
   BookOpen,
   Brackets,
+  Shapes,
   Headphones,
   Check,
   ChevronDown,
@@ -21,6 +23,7 @@ import {
   GitCompare,
   Layers,
   List,
+  Lock,
   GripVertical,
   Info,
   Languages,
@@ -59,9 +62,11 @@ import {
 
 const ICONS: Record<string, LucideIcon> = {
   "arrow-left": ArrowLeft,
+  "biceps-flexed": BicepsFlexed,
   book: Book,
   "book-open": BookOpen,
   brackets: Brackets,
+  shapes: Shapes,
   headphones: Headphones,
   check: Check,
   "chevron-down": ChevronDown,
@@ -77,6 +82,7 @@ const ICONS: Record<string, LucideIcon> = {
   "git-compare": GitCompare,
   layers: Layers,
   list: List,
+  lock: Lock,
   "grip-vertical": GripVertical,
   info: Info,
   languages: Languages,

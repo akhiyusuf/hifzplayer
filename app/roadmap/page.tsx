@@ -12,7 +12,7 @@ import {
   type RoadmapItem,
 } from "@/lib/roadmap";
 
-export const metadata: Metadata = { title: `What's coming — ${APP_NAME}` };
+export const metadata: Metadata = { title: `What's coming · ${APP_NAME}` };
 
 function Status({ item }: { item: RoadmapItem }) {
   return (
@@ -89,7 +89,7 @@ export default async function RoadmapPage({
       </nav>
       <div className="road-page">
         <p className="road-lead">
-          The mushaf stays. These are next — parked until the page was ready, and one new way to sit with the book.
+          The mushaf stays. These are next, parked until the page was ready, and one new way to sit with the book.
         </p>
         <AskPreview />
         <span className="label-eyebrow">On the page</span>

@@ -42,7 +42,7 @@ export const OCCASION_PLAYLISTS: Playlist[] = [
     id: "sleep",
     title: "Before sleep",
     arabic: "الملك",
-    blurb: "Al-Mulk, then As-Sajdah — a nightly listen many keep.",
+    blurb: "Al-Mulk, then As-Sajdah: a nightly listen many keep.",
     stops: [
       { chapter: 67, from: 1, to: 30 },
       { chapter: 32, from: 1, to: 30 },
@@ -86,7 +86,7 @@ export const OCCASION_PLAYLISTS: Playlist[] = [
     id: "ease",
     title: "Ease",
     arabic: "الشرح",
-    blurb: "Ad-Duha and Ash-Sharh, then Al-Fatihah — short surahs people play when they need ease.",
+    blurb: "Ad-Duha and Ash-Sharh, then Al-Fatihah: short surahs people play when they need ease.",
     stops: [
       { chapter: 93, from: 1, to: 11 },
       { chapter: 94, from: 1, to: 8 },
@@ -97,7 +97,7 @@ export const OCCASION_PLAYLISTS: Playlist[] = [
     id: "unwell",
     title: "When unwell",
     arabic: "الفاتحة",
-    blurb: "Al-Fatihah, Ayat al-Kursi, and the three Quls — as listening, not as treatment.",
+    blurb: "Al-Fatihah, Ayat al-Kursi, and the three Quls, as listening, not as treatment.",
     stops: [
       { chapter: 1, from: 1, to: 7 },
       { chapter: 2, from: 255, to: 255 },
@@ -115,6 +115,19 @@ export function reciterDisplayName(name: string, style?: string | null) {
   const trimmed = (name || "").trim() || "this reciter";
   const st = (style || "").trim();
   return st ? `${trimmed} · ${st}` : trimmed;
+}
+
+/** Compact label for tight pills (390px). Prefer surname · style. */
+export function reciterPillName(name: string, style?: string | null) {
+  const trimmed = (name || "").trim() || "Reciter";
+  const al = trimmed.match(/\b(?:al|el)-([A-Za-z][\w'-]*)$/i);
+  let short = al ? al[1] : trimmed;
+  if (!al) {
+    const parts = trimmed.split(/\s+/).filter(Boolean);
+    short = parts.length ? parts[parts.length - 1]! : trimmed;
+  }
+  const st = (style || "").trim();
+  return st ? `${short} · ${st}` : short;
 }
 
 export function isMuallimReciter(name: string, style?: string | null) {
@@ -166,7 +179,7 @@ export function bestOfPlaylist(reciterName: string, style?: string | null): Play
     id: BEST_OF_ID,
     title: `Best of ${shown}`,
     arabic: "",
-    blurb: "Loved passages in this recitation — the same ayahs, this voice.",
+    blurb: "Loved passages in this recitation: the same ayahs, this voice.",
     stops: BEST_OF_STOPS,
   };
 }
@@ -216,6 +229,46 @@ export function stopLabel(
   const name = chapters.find((c) => c.id === stop.chapter)?.name_simple || `Surah ${stop.chapter}`;
   if (stop.from === stop.to) return `${name} ${stop.from}`;
   return `${name} ${stop.from}–${stop.to}`;
+}
+
+export type PlaylistVerseRef = {
+  chapter: number;
+  verse: number;
+  stop: number;
+};
+
+/** Playlist order, one row per ayah. Does not fill in the rest of a surah. */
+export function playlistVerseRefs(list: Playlist): PlaylistVerseRef[] {
+  const refs: PlaylistVerseRef[] = [];
+  list.stops.forEach((stop, stopIndex) => {
+    for (let verse = stop.from; verse <= stop.to; verse++) {
+      refs.push({ chapter: stop.chapter, verse, stop: stopIndex });
+    }
+  });
+  return refs;
+}
+
+/** Index of the first ayah in a stop, inside `playlistVerseRefs`. */
+export function playlistVerseIndex(list: Playlist, stopIndex: number) {
+  const stop = clampStopIndex(list, stopIndex);
+  let index = 0;
+  for (let i = 0; i < stop; i++) {
+    const span = list.stops[i];
+    index += span.to - span.from + 1;
+  }
+  return index;
+}
+
+export function verseKeyLabel(
+  key: string,
+  chapters: { id: number; name_simple: string }[],
+) {
+  const [chapterRaw, verseRaw] = String(key || "").split(":");
+  const chapter = Number(chapterRaw);
+  const name =
+    chapters.find((item) => item.id === chapter)?.name_simple ||
+    (chapter ? `Surah ${chapter}` : "Verse");
+  return verseRaw ? `${name} ${verseRaw}` : name;
 }
 
 export function sortRecitersForBestOf<T extends { id: number }>(list: T[]): T[] {

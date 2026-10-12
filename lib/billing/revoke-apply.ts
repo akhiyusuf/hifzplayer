@@ -1,5 +1,5 @@
 import { revokeGiftsForBuyer } from "@/lib/auth/gifts";
-import { clerkPlusRevoked, revokePlusOnClerk } from "@/lib/auth/plus";
+import { accountPlusRevoked, revokePlusOnAccount } from "@/lib/auth/plus";
 import { logBillingEvent } from "./analytics";
 import { parseCheckoutMetadata } from "./match";
 import { verifyPaystackReference } from "./paystack";
@@ -17,7 +17,7 @@ import type Stripe from "stripe";
 const CANCELABLE_SUB = new Set(["active", "trialing", "past_due", "unpaid", "paused"]);
 
 async function stripAccount(userId: string, processor: Processor) {
-  await revokePlusOnClerk(userId);
+  await revokePlusOnAccount(userId);
   logBillingEvent({
     type: "revoked",
     ok: true,
@@ -107,7 +107,7 @@ export async function revokePlusFromPaystackDispute(data: unknown) {
     await revokeGiftsForBuyer(meta.buyerId || userId);
     return { revoked: true, hasUserId: true };
   }
-  if (await clerkPlusRevoked(userId)) return { revoked: true, hasUserId: true };
+  if (await accountPlusRevoked(userId)) return { revoked: true, hasUserId: true };
   return stripAccount(userId, "paystack");
 }
 
@@ -163,7 +163,7 @@ export async function revokePlusFromStripeDispute(dispute: Stripe.Dispute) {
         subId = subs.find((item) => CANCELABLE_SUB.has(item.status))?.id || "";
       }
     } catch {
-      /* still try Clerk revoke if we have a user id */
+      /* still try account revoke if we have a user id */
     }
   }
 
@@ -174,6 +174,6 @@ export async function revokePlusFromStripeDispute(dispute: Stripe.Dispute) {
     await revokeGiftsForBuyer(userId);
     return { revoked: true, hasUserId: true };
   }
-  if (await clerkPlusRevoked(userId)) return { revoked: true, hasUserId: true };
+  if (await accountPlusRevoked(userId)) return { revoked: true, hasUserId: true };
   return stripAccount(userId, "stripe");
 }

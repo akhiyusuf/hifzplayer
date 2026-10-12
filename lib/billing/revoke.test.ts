@@ -19,7 +19,7 @@ describe("Paystack dispute payload", () => {
     assert.equal(paystackDisputeReference(null), "");
   });
 
-  it("reads the Clerk user id from metadata or the nested transaction", () => {
+  it("reads the account id from metadata or the nested transaction", () => {
     assert.equal(userIdFromPaystackDispute({ metadata: { userId: "user_meta" } }), "user_meta");
     assert.equal(
       userIdFromPaystackDispute({ transaction: { metadata: { userId: "user_tx" } } }),

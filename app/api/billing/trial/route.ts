@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { clerkConfigured } from "@/lib/auth/config";
-import { clerkTrialUsedAt, markClerkTrialUsed } from "@/lib/auth/plus";
+import { accountsConfigured } from "@/lib/auth/config";
+import { trialUsedAt, markTrialUsed } from "@/lib/auth/plus";
 import { grantPlusToAccount, resolveEntitlement, signedInEmail, signedInUserId } from "@/lib/auth/session";
 import { logBillingEvent } from "@/lib/billing/analytics";
 import { countryFromHeaders } from "@/lib/billing/country";
@@ -27,16 +27,16 @@ async function readTrialUsedCookie() {
 }
 
 export async function POST(request: Request) {
-  const accountsOn = clerkConfigured();
+  const accountsOn = accountsConfigured();
   const userId = accountsOn ? await signedInUserId() : null;
   if (accountsOn && !userId) {
     return unauthorized(`Sign in to start your ${PLUS_NAME} trial`, { code: "SIGN_IN_REQUIRED" });
   }
 
   const entitlement = await resolveEntitlement();
-  const clerkUsed = userId ? Boolean(await clerkTrialUsedAt(userId)) : false;
+  const accountUsed = userId ? Boolean(await trialUsedAt(userId)) : false;
   const cookieUsed = Boolean(await readTrialUsedCookie());
-  const used = clerkUsed || cookieUsed;
+  const used = accountUsed || cookieUsed;
 
   if (!trialAvailable({ entitlement, trialUsed: used })) {
     if (entitlement) return badRequest(`You already have ${PLUS_NAME}.`);
@@ -51,10 +51,10 @@ export async function POST(request: Request) {
   const usedAt = new Date().toISOString();
   if (userId) {
     try {
-      await markClerkTrialUsed(userId, usedAt);
+      await markTrialUsed(userId, usedAt);
     } catch {
       logBillingEvent({
-        type: "clerk_save_failed",
+        type: "account_save_failed",
         processor: "trial",
         planId: "trial",
         regionId,

@@ -27,39 +27,40 @@ function applyTheme(dark: boolean, palette: PaletteId) {
   root.setAttribute("data-palette", palette);
 }
 
+function readDarkFromDom() {
+  return document.documentElement.getAttribute("data-theme") === "dark";
+}
+
+function readPaletteFromDom(): PaletteId {
+  return parsePalette(document.documentElement.getAttribute("data-palette"));
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [dark, setDarkState] = useState(false);
   const [palette, setPaletteState] = useState<PaletteId>(DEFAULT_PALETTE);
 
   useEffect(() => {
-    const root = document.documentElement;
-    setDarkState(root.getAttribute("data-theme") === "dark");
-    setPaletteState(parsePalette(root.getAttribute("data-palette")));
+    setDarkState(readDarkFromDom());
+    setPaletteState(readPaletteFromDom());
   }, []);
 
   const setDark = useCallback((next: boolean) => {
-    setDarkState((prev) => {
-      if (prev === next) return prev;
-      const current = parsePalette(document.documentElement.getAttribute("data-palette"));
-      applyTheme(next, current);
-      setStore(KEYS.dark, next);
-      return next;
-    });
+    // Read palette from the DOM so we never lose a concurrent colour change.
+    // Apply + persist outside setState so React Strict Mode cannot double-flip.
+    applyTheme(next, readPaletteFromDom());
+    setStore(KEYS.dark, next);
+    setDarkState(next);
   }, []);
 
   const toggle = useCallback(() => {
-    setDarkState((prev) => {
-      const next = !prev;
-      const current = parsePalette(document.documentElement.getAttribute("data-palette"));
-      applyTheme(next, current);
-      setStore(KEYS.dark, next);
-      return next;
-    });
-  }, []);
+    // Prefer the live DOM attribute over React state so a click before the
+    // mount sync (or after a forced storage write) still lands on the right value.
+    setDark(!readDarkFromDom());
+  }, [setDark]);
 
   const setPalette = useCallback((next: PaletteId) => {
     const id = parsePalette(next);
-    const night = document.documentElement.getAttribute("data-theme") === "dark";
+    const night = readDarkFromDom();
     setPaletteState(id);
     applyTheme(night, id);
     setStore(KEYS.palette, id);
