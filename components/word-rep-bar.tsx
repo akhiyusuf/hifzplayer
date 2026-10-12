@@ -3,7 +3,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./icon";
-import { isPaidRepeat } from "@/lib/billing/gates";
 import { WORD_REP_COUNTS, loopCountFace } from "@/lib/player-chrome";
 
 type Place = { top: number; left: number; flipped: boolean; arrowLeft: number };
@@ -133,7 +132,7 @@ export function WordRepBar({
           {pinOnly
             ? null
             : WORD_REP_COUNTS.map((n) => {
-                const locked = isPaidRepeat(n) && !plusOn;
+                const locked = false;
                 const on = count === n;
                 return (
                   <button

@@ -8,7 +8,6 @@ import {
 import { Icon } from "@/components/icon";
 import { Sheet } from "@/components/sheet";
 import { useAppData } from "@/lib/app-data";
-import { isPaidRelay, isPaidRepeat } from "@/lib/billing/gates";
 import { fetchTransliteration } from "@/lib/api";
 import {
   defaultRelaySetup,
@@ -506,9 +505,7 @@ _jsx("div", {
                                 kind: "qari",
                                 reciterId: Number(s.slice(1)),
                               }),
-                          isPaidRelay(r) && !plusOn
-                            ? ask("relay-qaris")
-                            : k(r));
+                          k(r));
                       },
                       children: [
                         _jsx("option", {
@@ -580,18 +577,13 @@ _jsx("div", {
         }),
       }),
       _jsxs("button", {
-        className: "btn-dashed".concat(!plusOn ? " locked" : ""),
+        className: "btn-dashed",
         onClick: () => {
-          let next = [...b, { kind: "qari", reciterId: m }];
-          if (isPaidRelay(next) && !plusOn) {
-            ask("relay-qaris");
-            return;
-          }
-          k(next);
+          k([...b, { kind: "qari", reciterId: m }]);
         },
         children: [
-          _jsx(Icon, { name: plusOn ? "plus" : "sparkles", size: 16 }),
-          plusOn ? "Add participant" : "Add another reciter",
+          _jsx(Icon, { name: "plus", size: 16 }),
+          "Add participant",
         ],
       }),
               _jsx("button", {
@@ -669,7 +661,7 @@ _jsx("div", {
             role: "group",
             "aria-label": "Rounds",
             children: z.map((e) => {
-              let locked = isPaidRepeat(e.value) && !plusOn;
+              let locked = !1;
               return _jsx(
                 "button",
                 {

@@ -400,7 +400,7 @@ export function PracticePlanner() {
             }}
           />
           <p className="plan-hint">
-            Word Reps, Masked, and Relay stay on the open surah — still Diras Plus. AI Ustadh is coming soon.
+            Word Reps, Masked, and Relay stay on the open surah — free for everyone. AI Ustadh is coming soon.
           </p>
         </section>
       ) : editing || !plan ? (

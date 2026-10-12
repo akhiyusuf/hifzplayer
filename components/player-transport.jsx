@@ -461,7 +461,7 @@ export function PlayerHead(e) {
             "aria-haspopup": "dialog",
             onClick: onPractice,
             children: [
-              _jsx(Icon, { name: "brackets", size: 16 }),
+              _jsx(Icon, { name: "shapes", size: 16 }),
               "Mode",
             ],
           })

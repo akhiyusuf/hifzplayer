@@ -50,7 +50,7 @@ export const ONBOARDING_POINTS = [
   {
     icon: "brackets" as const,
     title: "Practise without losing the page",
-    body: "Word Reps, Masked, and Relay live on the player when you want them. Those drills are Diras Plus. Reading never goes behind a wall.",
+    body: "Word Reps, Masked, and Relay live on the player when you want them. Those drills are free. Reading never goes behind a wall.",
   },
 ] as const;
 

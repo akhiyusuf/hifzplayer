@@ -374,10 +374,6 @@ export function PlayerScreen(e) {
           eu.beginRelay(draft.order, draft.vFrom, draft.vTo, draft.rounds);
           return;
         }
-        if (!plusOn) {
-          ask("practice");
-          return;
-        }
         if (eRelayUrlAsked.current) return;
         eRelayUrlAsked.current = !0;
         (eQuietUi("relay"), eb(!0));
@@ -729,10 +725,6 @@ export function PlayerScreen(e) {
       }
       if ("ustadh" === e && !USTADH_ENABLED) return;
       if ("relay" === e) {
-        if (!plusOn) {
-          ask("practice");
-          return;
-        }
         (eQuietUi("relay"), eb(!0));
         return;
       }

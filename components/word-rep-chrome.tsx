@@ -1,7 +1,6 @@
 "use client";
 
 import { Icon } from "./icon";
-import { isPaidRepeat } from "@/lib/billing/gates";
 import { WORD_REP_COUNTS, loopCountFace } from "@/lib/player-chrome";
 import { PracticeStrip } from "./practice-strip";
 
@@ -25,7 +24,7 @@ export function WordRepCountRow({
     <div className="rep-seg seg" role="group" aria-label="Repeat count">
       <span className="label-eyebrow">Repeats</span>
       {WORD_REP_COUNTS.map((n) => {
-        const locked = isPaidRepeat(n) && !plusOn;
+        const locked = false;
         const on = count === n;
         return (
           <button

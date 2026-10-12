@@ -42,7 +42,7 @@ export function PracticeSheet({
   const showExit = modeOnly && practiceSheetShowsExit(mode);
 
   return (
-    <Sheet title={modeOnly ? "Practice" : `Set up ${surahName}`} onClose={onClose}>
+    <Sheet title={modeOnly ? "Select a mode" : `Set up ${surahName}`} onClose={onClose}>
       {!modeOnly && (
         <PassageRange versesCount={versesCount} from={from} to={to} onFrom={setFrom} onTo={setTo} />
       )}

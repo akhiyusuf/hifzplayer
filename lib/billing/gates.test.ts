@@ -17,16 +17,16 @@ describe("repeat gating", () => {
     assert.equal(isPaidRepeat(2), false);
   });
 
-  it("locks three or more and unlimited", () => {
-    assert.equal(isPaidRepeat(3), true);
-    assert.equal(isPaidRepeat(5), true);
-    assert.equal(isPaidRepeat(10), true);
-    assert.equal(isPaidRepeat(0), true);
+  it("keeps three or more and unlimited free too", () => {
+    assert.equal(isPaidRepeat(3), false);
+    assert.equal(isPaidRepeat(5), false);
+    assert.equal(isPaidRepeat(10), false);
+    assert.equal(isPaidRepeat(0), false);
   });
 
-  it("clamps paid repeats unless Plus is on", () => {
-    assert.equal(clampRepeat(5, false), 2);
-    assert.equal(clampRepeat(0, false), 2);
+  it("never clamps repeats", () => {
+    assert.equal(clampRepeat(5, false), 5);
+    assert.equal(clampRepeat(0, false), 0);
     assert.equal(clampRepeat(5, true), 5);
     assert.equal(clampRepeat(1, false), 1);
   });
@@ -46,10 +46,6 @@ describe("Plus explanation copy", () => {
       true,
     );
     assert.equal(
-      PLUS_EXPLAIN.plus.some((line) => /Word Reps, Masked, and Relay/.test(line)),
-      true,
-    );
-    assert.equal(
       PLUS_EXPLAIN.plus.some((line) => /Occasion lists/.test(line)),
       true,
     );
@@ -58,10 +54,15 @@ describe("Plus explanation copy", () => {
       false,
     );
     assert.equal(
-      PLUS_EXPLAIN.plus.some((line) => /3×, 5×, 10×/.test(line)),
+      PLUS_EXPLAIN.free.some((line) => /3×, 5×, 10×/.test(line)),
       true,
     );
-    assert.match(PLUS_EXPLAIN.rowSub, /Word Reps/);
+    assert.equal(
+      PLUS_EXPLAIN.plus.some((line) => /3×|qari/.test(line)),
+      false,
+    );
+    assert.match(PLUS_EXPLAIN.rowSub, /Memorization planner/);
+    assert.doesNotMatch(PLUS_EXPLAIN.rowSub, /Word Reps/);
     assert.equal(
       PLUS_EXPLAIN.free.some((line) => /Colour themes/.test(line)),
       true,
@@ -85,20 +86,22 @@ describe("Plus explanation copy", () => {
     assert.match(plusCopyFor("practice").body, /Focus views stay free|Mushaf and Focus/i);
   });
 
-  it("pitches the memorization planner as Plus without ungating drills", () => {
+  it("pitches the memorization planner as Plus", () => {
     assert.match(plusCopyFor("planner").title, /planner/i);
     assert.match(plusCopyFor("planner").body, /New|Review|Revision|hifz/i);
-    assert.equal(isPaidFocusJob("word"), true);
-    assert.equal(isPaidFocusJob("masked"), true);
-    assert.equal(isPaidFocusJob("relay"), true);
   });
 });
 
 describe("Focus job gating", () => {
-  it("treats Word Reps, Masked, and Relay as Plus", () => {
-    assert.equal(isPaidFocusJob("word"), true);
-    assert.equal(isPaidFocusJob("masked"), true);
-    assert.equal(isPaidFocusJob("relay"), true);
+  it("treats Word Reps, Masked, and Relay as free", () => {
+    assert.equal(isPaidFocusJob("word"), false);
+    assert.equal(isPaidFocusJob("masked"), false);
+    assert.equal(isPaidFocusJob("relay"), false);
+    assert.equal(isFreePracticeJob("word"), true);
+    assert.equal(isFreePracticeJob("masked"), true);
+    assert.equal(isFreePracticeJob("relay"), true);
+    assert.ok(PLUS_EXPLAIN.free.some((l) => /Word Reps, Masked, and Relay/.test(l)));
+    assert.ok(!PLUS_EXPLAIN.plus.some((l) => /Word Reps|Masked/.test(l)));
   });
 
   it("leaves verse listen and the Focus view itself free to open", () => {
@@ -107,7 +110,6 @@ describe("Focus job gating", () => {
     assert.equal(isPaidFocusJob(""), false);
     assert.equal(isFreePracticeJob("ustadh"), false); // USTADH_ENABLED=false
     assert.equal(isFreePracticeJob("verse"), true);
-    assert.equal(isFreePracticeJob("word"), false);
   });
 });
 
@@ -117,10 +119,10 @@ describe("relay qari gating", () => {
     assert.equal(isPaidRelay([{ kind: "qari" }, { kind: "you" }]), false);
   });
 
-  it("locks a second qari", () => {
+  it("keeps a second qari free", () => {
     assert.equal(
       isPaidRelay([{ kind: "qari" }, { kind: "you" }, { kind: "qari" }]),
-      true,
+      false,
     );
   });
 });
