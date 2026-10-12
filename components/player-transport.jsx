@@ -456,13 +456,13 @@ export function PlayerHead(e) {
             className: "icon-btn sm labelled tap".concat(
               practiceOpen ? " on" : "",
             ),
-            "aria-label": "Practice",
+            "aria-label": "Mode",
             "aria-expanded": !!practiceOpen,
             "aria-haspopup": "dialog",
             onClick: onPractice,
             children: [
               _jsx(Icon, { name: "brackets", size: 16 }),
-              "Practice",
+              "Mode",
             ],
           })
         : null,
